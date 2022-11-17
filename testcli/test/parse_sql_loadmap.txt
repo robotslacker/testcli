@@ -1,0 +1,13 @@
+loadsqlmap xx.sql 
+
+
+loadsqlmap 中国.sql
+
+
+loadsqlmap xx.sql,yy.sql,zz.SQL
+
+
+loadsqlmap "D:\\aa.sql","f:\\xx.sql"
+
+loadsqlmap
+

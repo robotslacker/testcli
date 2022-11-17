@@ -1,0 +1,11 @@
+SPOOL XXX
+
+SPOOL OFFLINE
+
+SPOOL "xx.sql"
+
+SPOOL "xx.sql bb.sql"
+
+SPOOL "xx.SQLCODE
+  bb.SQLCODE
+  cc.sql"

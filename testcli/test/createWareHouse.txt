@@ -1,0 +1,27 @@
+// The request body is read from a file
+// ok
+###
+POST https://{{host}}:{{port}}/ares/cloud/service/createWareHouse   HTTP/1.1
+Accept: application/json
+Content-Type: application/json
+
+{
+  "customerId": "shi.zhao",
+  "wareHouseName": "HelloWorld",
+  "wareHouseImageTemplateName": "ZettaDatabase-4.0.0-rc6",
+  "wareHouseInstanceType": "T2_MICRO",
+  "instanceCount": 1,
+  "objectStorageGateWayScale": "1",
+  "fsStorageGateWayCount": 0,
+  "localStorageVolumeCount": 0,
+  "objectStorageGateWayVolumeCount": 1,
+  "objectStorageGateWayVolumeSize": 150,
+  "objectStorageGateWayInstanceType": "M5_XLARGE",
+  "objectStorageGateWayVolumeType": "gp2",
+  "fsStorageGateWayPerformanceMode": "generalPurpose",
+  "localStorageVolumeSize": 10240,
+  "localStorageVolumeType": "sc1"
+}
+
+###
+

@@ -1,0 +1,12 @@
+echo xxx.SQL
+  abc
+  
+  DEFAULT
+  
+  fdasfdasfadsfds
+  
+  
+  fads---
+  /fasdfads8fadsfdsafdas
+  
+echo off

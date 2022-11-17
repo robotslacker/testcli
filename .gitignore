@@ -1,0 +1,16 @@
+.idea/
+.cache/
+.vscode/settings.json
+.coverage/
+localtest/
+http/
+csv/
+stresstest/
+build/
+dist/
+*egg-info/
+
+*.pyc
+*.deb
+*.swp
+
