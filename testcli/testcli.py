@@ -7,7 +7,6 @@ import time
 from xml.sax import saxutils
 
 import setproctitle
-import shlex
 import click
 import configparser
 import hashlib
@@ -57,24 +56,8 @@ OFLAG_ECHO = 16
 
 
 class TestCli(object):
-    # 连接配置信息
-    # Database
-    # ClassName
-    # FullName
-    # JDBCURL
-    # ODBCURL
-    # JDBCProp
-    connection_configs = None
-
-    # 数据库连接的各种参数
-    db_url = None
-    db_username = None
-    db_password = None
-    db_type = None
-    db_driver_type = None
-    db_host = None
-    db_port = None
-    db_service_name = None
+    # 从配置文件中加载的连接配置信息
+    db_connectionConf = None
 
     # SQLCli的初始化参数
     logon = None
@@ -104,8 +87,8 @@ class TestCli(object):
             HeadlessMode=False,                     # 是否为无终端模式，无终端模式下，任何屏幕信息都不会被输出
             WorkerName='MAIN',                      # 程序别名，可用来区分不同的应用程序,
             logger=None,                            # 程序输出日志句柄
-            clientcharset='UTF-8',                  # 客户端字符集，在读取SQL文件时，采纳这个字符集，默认为UTF-8
-            resultcharset='UTF-8',                  # 输出字符集，在打印输出文件，日志的时候均采用这个字符集
+            clientCharset='UTF-8',                  # 客户端字符集，在读取SQL文件时，采纳这个字符集，默认为UTF-8
+            resultCharset='UTF-8',                  # 输出字符集，在打印输出文件，日志的时候均采用这个字符集
             profile=None,                           # 程序初始化执行脚本
             scripttimeout=-1,                       # 程序的脚本超时时间，默认为不限制
             suitename=None,                         # 程序所在的SuiteName
@@ -128,9 +111,6 @@ class TestCli(object):
         self.AppOptions = None                          # 应用程序的配置参数
         self.Encoding = None                            # 应用程序的Encoding信息
         self.prompt_app = None                          # PromptKit控制台
-        self.db_conn = None                             # 当前应用的数据库连接句柄
-        self.SessionName = None                         # 当前会话的Session的名字
-        self.db_conntype = None                         # 数据库连接方式，  JDBC或者是ODBC
         self.echofilename = None                        # 当前回显文件的文件名称
         self.Version = __version__                      # 当前程序版本
         self.ClientID = None                            # 远程连接时的客户端ID
@@ -139,11 +119,28 @@ class TestCli(object):
         self.PerfFileLocker = None                      # 进程锁, 用来在输出perf文件的时候控制并发写文件
         self.xlogfilename = None                        # xlog文件名
 
-        if clientcharset is not None:                   # 客户端脚本字符集
-            self.testOptions.set("SCRIPT_ENCODING", clientcharset)
-            self.testOptions.set("RESULT_ENCODING", resultcharset)
-        if resultcharset is not None:                   # 客户端结果字符集
-            self.testOptions.set("RESULT_ENCODING", resultcharset)
+        # 数据库连接的各种参数
+        # 每次连接后需要保存这些变量，下次可以直接重新连接，如果不填写相关信息，则默认上次连接信息
+        self.db_conn = None                             # 当前应用的数据库连接句柄
+        self.db_sessionName = None                      # 当前会话的Session的名字
+        self.db_url = None                              # 数据库连接URL
+        self.db_username = None                         # 数据库连接用户名
+        self.db_password = None                         # 数据库连接用户口令
+        self.db_driver = None                           # 数据库驱动方式 JDBC？ODBC
+        self.db_driverSchema = None                     # 数据库驱动类型  mysql? oracle？
+        self.db_driverType = None                       # 数据库驱动类型  tcp? mem?
+        self.db_host = None                             # 数据库连接主机
+        self.db_port = None                             # 数据库连接端口
+        self.db_service = None                          # 数据库连接服务
+        self.db_parameters = None                       # 数据库连接额外参数
+
+        # NLS处理，设置字符集
+        if clientCharset is not None:                   # 客户端脚本字符集
+            self.testOptions.set("SCRIPT_ENCODING", clientCharset)
+            self.testOptions.set("RESULT_ENCODING", resultCharset)
+        if resultCharset is not None:                   # 客户端结果字符集
+            self.testOptions.set("RESULT_ENCODING", resultCharset)
+
         self.WorkerName = WorkerName                    # 当前进程名称. 如果有参数传递，以参数为准
         self.profile = []                               # 程序的初始化脚本文件
         self.lastComment = None                       # 如果当前SQL之前的内容完全是注释，则注释带到这里
@@ -248,8 +245,8 @@ class TestCli(object):
 
         # 加载已经被隐式包含的数据库驱动，文件放置在TestCli\jlib下
         m_jlib_directory = os.path.join(os.path.dirname(__file__), "jlib")
-        if self.connection_configs is None:
-            self.connection_configs = []
+        if self.db_connectionConf is None:
+            self.db_connectionConf = []
         if self.AppOptions is not None:
             for row in self.AppOptions.items("driver"):
                 m_DriverName = None
@@ -296,18 +293,18 @@ class TestCli(object):
                                           os.path.join(m_jlib_directory, m_jar_filename) + "]")
                         except (configparser.NoSectionError, configparser.NoOptionError):
                             m_jar_filename = None
-                m_Jar_Config = {"ClassName": m_DriverName,
-                                "FullName": m_JarFullFileName,
-                                "JDBCURL": m_JDBCURL,
-                                "JDBCProp": m_JDBCProp,
-                                "Database": m_DatabaseType,
-                                "ODBCURL": m_ODBCURL}
-                self.connection_configs.append(m_Jar_Config)
+                jarConfig = {"ClassName": m_DriverName,
+                             "FullName": m_JarFullFileName,
+                             "JDBCURL": m_JDBCURL,
+                             "JDBCProp": m_JDBCProp,
+                             "Database": m_DatabaseType,
+                             "ODBCURL": m_ODBCURL}
+                self.db_connectionConf.append(jarConfig)
 
         # 设置Meta连接时候需要用到的JarList1
         m_JarList = []
-        for m_Jar_Config in self.connection_configs:
-            m_JarList.extend(m_Jar_Config["FullName"])
+        for jarConfig in self.db_connectionConf:
+            m_JarList.extend(jarConfig["FullName"])
         self.MetaHandler.setJVMJarList(m_JarList)
 
         # 对于子进程，连接到JOB管理服务
@@ -536,7 +533,7 @@ class TestCli(object):
     def load_driver(cls, arg, **_):
         if arg == "":  # 显示当前的Driver配置
             m_Result = []
-            for row in cls.connection_configs:
+            for row in cls.db_connectionConf:
                 m_Result.append([row["Database"], row["ClassName"], row["FullName"],
                                  row["JDBCURL"], row["ODBCURL"], row["JDBCProp"]])
             yield {
@@ -555,7 +552,7 @@ class TestCli(object):
         if len(options_parameters) == 1:
             m_DriverName = str(options_parameters[0])
             m_Result = []
-            for row in cls.connection_configs:
+            for row in cls.db_connectionConf:
                 if row["Database"] == m_DriverName:
                     m_Result.append([row["Database"], row["ClassName"], row["FullName"],
                                      row["JDBCURL"], row["ODBCURL"], row["JDBCProp"]])
@@ -580,12 +577,12 @@ class TestCli(object):
             if not os.path.isfile(m_DriverFullName):
                 raise TestCliException("Driver not loaded. file [" + m_DriverFullName + "] does not exist!")
             found = False
-            for nPos in range(0, len(cls.connection_configs)):
-                if cls.connection_configs[nPos]["Database"].upper() == m_DriverName.strip().upper():
-                    m_Config = cls.connection_configs[nPos]
+            for nPos in range(0, len(cls.db_connectionConf)):
+                if cls.db_connectionConf[nPos]["Database"].upper() == m_DriverName.strip().upper():
+                    m_Config = cls.db_connectionConf[nPos]
                     m_Config["FullName"] = [m_DriverFullName, ]
                     found = True
-                    cls.connection_configs[nPos] = m_Config
+                    cls.db_connectionConf[nPos] = m_Config
             if not found:
                 raise TestCliException("Driver not loaded. Please config it in configfile first.")
             yield {
@@ -615,26 +612,17 @@ class TestCli(object):
 
     # 连接数据库
     @staticmethod
-    def connect_db(cls,
-                   username: str = None,
-                   password: str = None,
-                   protocol: str = None,
-                   driver: str = None,
-                   driverType: str = None,
-                   hostinfo=None,
-                   service: str = None,
-                   properties=None,
-                   timeout: int = -1
-                   ):
+    def connect_db(cls, connectProperties, timeout: int = -1):
         # 如果当前的连接存在，且当前连接没有被保存，则断开当前的连接
+        # 如果当前连接已经被保存，这里不做任何操作
         if cls.db_conn is not None:
-            if cls.SessionName is None:
+            if cls.db_sessionName is None:
                 # 如果之前数据库连接没有被保存，则强制断开连接
                 cls.db_conn.close()
                 cls.db_conn = None
                 cls.cmdExecuteHandler.sqlConn = None
             else:
-                if cls.db_saved_conn[cls.SessionName][0] is None:
+                if cls.db_saved_conn[cls.db_sessionName][0] is None:
                     # 之前并没有保留数据库连接
                     cls.db_conn.close()
                     cls.db_conn = None
@@ -644,105 +632,108 @@ class TestCli(object):
         cls.db_conn = None
         cls.cmdExecuteHandler.sqlConn = None
 
-        if cls.connection_configs is None:
+        if cls.db_connectionConf is None:
             raise TestCliException("Please load driver first.")
 
         # 如果连接内容仅仅就一个mem，则连接到memory db上
-        if service.strip().upper() == "MEM":
-            if username is None:
-                username = "sa"
-            if password is None:
-                password = "sa"
-            if protocol is None:
-                protocol = "jdbc"
-            if driver is None:
-                driver = "h2mem"
-            if driverType is None:
-                driverType = "mem"
-            if hostinfo is None:
-                hostinfo = [{"HOST": "0.0.0.0", "PORT": 0}]
-            service = "X"
-        # 如果连接内容仅仅就一个META，则连接到内置的jobmanager db
-        if service.strip().upper() == "META":
-            if username is None:
-                username = "sa"
-            if password is None:
-                password = "sa"
-            if protocol is None:
-                protocol = "jdbc"
-            if driver is None:
-                driver = "h2tcp"
-            if driverType is None:
-                driverType = "tcp"
-            if hostinfo is None:
-                (host, port) = str(cls.testOptions.get("JOBMANAGER_METAURL")).replace("tcp://", "").split(":")
-                hostinfo = [{"HOST": host, "PORT": port}]
-            service = "mem:testclimeta"
+        if "localService" in connectProperties:
+            if connectProperties["localService"] == "mem":
+                # 内置一个mem，用户调试需要
+                connectProperties["service"] = "X"
+                connectProperties["username"] = "sa"
+                connectProperties["password"] = "sa"
+                connectProperties["driver"] = "jdbc"
+                connectProperties["driverSchema"] = "h2mem"
+                connectProperties["driverType"] = "mem"
+                connectProperties["host"] = "0.0.0.0"
+                connectProperties["port"] = 0
+            elif connectProperties["localService"] == "meta":
+                # 如果连接内容仅仅就一个META，则连接到内置的jobmanager db
+                connectProperties["service"] = "mem:testclimeta"
+                connectProperties["username"] = "sa"
+                connectProperties["password"] = "sa"
+                connectProperties["driver"] = "jdbc"
+                connectProperties["driverSchema"] = "h2tcp"
+                connectProperties["driverType"] = "tcp"
+                connectProperties["host"] = "0.0.0.0"
+                connectProperties["port"] = 0
+            else:
+                raise TestCliException("Invalid localservice. MEM|METADATA only.")
 
-        # 初始化连接参数
-        protocol = protocol.strip().upper()
-        cls.db_type = driver.strip().upper()
-        cls.db_port = hostinfo[0]["PORT"]
-        cls.db_driver_type = driverType
-        cls.db_service_name = service
+        print("connectProperties 2 = " + str(connectProperties))
 
         # 连接数据库
         try:
-            if protocol == 'JDBC':  # JDBC 连接数据库
+            if connectProperties["driver"] == 'jdbc':  # JDBC 连接数据库
                 # 加载所有的Jar包， 根据class的名字加载指定的文件
-                m_JarList = []
-                m_driverclass = ""
-                m_JDBCURL = ""
-                m_JDBCProp = ""
-                for m_Jar_Config in cls.connection_configs:
-                    m_JarList.extend(m_Jar_Config["FullName"])
-                for m_Jar_Config in cls.connection_configs:
-                    if m_Jar_Config["Database"].upper() == cls.db_type:
-                        m_driverclass = m_Jar_Config["ClassName"]
-                        m_JDBCURL = m_Jar_Config["JDBCURL"]
-                        m_JDBCProp = m_Jar_Config["JDBCProp"]
+                jarList = []
+                driverClass = ""
+                jdbcURL = None
+                jdbcProp = ""
+                for jarConfig in cls.db_connectionConf:
+                    jarList.extend(jarConfig["FullName"])
+                for jarConfig in cls.db_connectionConf:
+                    if jarConfig["Database"].upper() == str(connectProperties["driverSchema"]).upper():
+                        driverClass = jarConfig["ClassName"]
+                        jdbcURL = jarConfig["JDBCURL"]
+                        jdbcProp = jarConfig["JDBCProp"]
                         break
                 if "TESTCLI_DEBUG" in os.environ:
-                    print("Driver Jar List: " + str(m_JarList))
-                if m_JDBCURL is None:
-                    raise TestCliException("Unknown database [" + cls.db_type.upper() + "]." +
-                                           "Connect Failed. JDBCURL is None\n" +
-                                           "Maybe you forgot download jlib files. ")
-                m_JDBCURL = m_JDBCURL.replace("${host}", str(cls.db_host))
-                m_JDBCURL = m_JDBCURL.replace("${driver_type}", cls.db_driver_type)
-                if cls.db_port == "":
-                    m_JDBCURL = m_JDBCURL.replace(":${port}", "")
+                    print("Driver Jar list: " + str(jarList))
+                if jdbcURL is None:
+                    raise TestCliException("Unknown database [" + str(connectProperties["driverSchema"]) + "]." +
+                                           "Connect Failed. Missed configuration in conf/testcli.ini.")
+
+                # 如果本次连接没有指定相关参数，则默认使用上一次连接的参数
+                if "host" in connectProperties:
+                    jdbcURL = jdbcURL.replace("${host}", connectProperties["host"])
                 else:
-                    m_JDBCURL = m_JDBCURL.replace("${port}", str(cls.db_port))
-                m_JDBCURL = m_JDBCURL.replace("${service}", cls.db_service_name)
-                if m_driverclass is None:
+                    jdbcURL = jdbcURL.replace("${host}", cls.db_host)
+                if "port" in connectProperties:
+                    jdbcURL = jdbcURL.replace("${port}", connectProperties["port"])
+                else:
+                    if cls.db_port == "":
+                        jdbcURL = jdbcURL.replace(":${port}", "")
+                    else:
+                        jdbcURL = jdbcURL.replace("${port}", cls.db_port)
+                if "service" in connectProperties:
+                    jdbcURL = jdbcURL.replace("${service}", connectProperties["service"])
+                else:
+                    jdbcURL = jdbcURL.replace("${service}", cls.db_service)
+                if "driverType" in connectProperties:
+                    jdbcURL = jdbcURL.replace("${driver_type}", connectProperties["driverType"])
+                else:
+                    jdbcURL = jdbcURL.replace("${driver_type}", cls.db_service)
+
+                if driverClass is None:
                     raise TestCliException(
                         "Missed driver [" + cls.db_type.upper() + "] in config. Database Connect Failed. ")
-                m_jdbcconn_prop = {}
+                jdbcConnProp = {}
                 if cls.db_username is not None:
-                    m_jdbcconn_prop['user'] = cls.db_username
+                    jdbcConnProp['user'] = cls.db_username
                 if cls.db_password is not None:
-                    m_jdbcconn_prop['password'] = cls.db_password
-                if m_JDBCProp is not None:
-                    for row in m_JDBCProp.strip().split(','):
+                    jdbcConnProp['password'] = cls.db_password
+                if jdbcProp is not None:
+                    for row in jdbcProp.strip().split(','):
                         props = row.split(':')
                         if len(props) == 2:
                             m_PropName = str(props[0]).strip()
                             m_PropValue = str(props[1]).strip()
-                            m_jdbcconn_prop[m_PropName] = m_PropValue
+                            jdbcConnProp[m_PropName] = m_PropValue
+
                 # 将当前DB的连接字符串备份到变量中
                 cls.testOptions.set("CONNURL", str(cls.db_url))
-                cls.testOptions.set("CONNPROP", str(m_JDBCProp))
+                cls.testOptions.set("CONNPROP", str(jdbcProp))
                 if "TESTCLI_DEBUG" in os.environ:
-                    print("Connect to [" + m_JDBCURL + "]...")
+                    print("Connect to [" + jdbcURL + "]...")
                 retryCount = 0
                 while True:
                     try:
                         cls.db_conn = jdbcconnect(
-                            jclassname=m_driverclass,
-                            url=m_JDBCURL,
-                            driverArgs=m_jdbcconn_prop,
-                            jars=m_JarList,
+                            jclassname=driverClass,
+                            url=jdbcURL,
+                            driverArgs=jdbcConnProp,
+                            jars=jarList,
                             timeoutLimit=timeout)
                         break
                     except SQLCliJDBCTimeOutException as je:
@@ -757,7 +748,7 @@ class TestCli(object):
                         else:
                             time.sleep(2)
                             continue
-                cls.db_url = m_JDBCURL
+                cls.db_url = jdbcURL
                 cls.cmdExecuteHandler.sqlConn = cls.db_conn
         except TestCliException as se:  # Connecting to a database fail.
             raise se
@@ -772,7 +763,7 @@ class TestCli(object):
                 print("db_port = [" + str(cls.db_port) + "]")
                 print("db_service_name = [" + str(cls.db_service_name) + "]")
                 print("db_url = [" + str(cls.db_url) + "]")
-                print("jar_file = [" + str(cls.connection_configs) + "]")
+                print("jar_file = [" + str(cls.db_connectionConf) + "]")
             if str(e).find("SQLInvalidAuthorizationSpecException") != -1:
                 raise TestCliException(str(jpype.java.sql.SQLInvalidAuthorizationSpecException(e).getCause()))
             else:
@@ -866,7 +857,7 @@ class TestCli(object):
                     m_Result.append(['Connection', str(m_Session_Name), str(m_Connection[1]),
                                      '******', str(m_Connection[3])])
             if cls.db_conn is not None:
-                m_Result.append(['Current', str(cls.SessionName), str(cls.db_username), '******', str(cls.db_url)])
+                m_Result.append(['Current', str(cls.db_sessionName), str(cls.db_username), '******', str(cls.db_url)])
             if len(m_Result) == 0:
                 yield {
                     "title": None,
@@ -896,21 +887,21 @@ class TestCli(object):
                     "You don't have a saved session.")
             m_Session_Name = m_Parameters[1]
             del cls.db_saved_conn[m_Session_Name]
-            cls.SessionName = None
+            cls.db_sessionName = None
         elif m_Parameters[0].lower() == 'save':
             if cls.db_conn is None:
                 raise TestCliException(
                     "Please connect session first before save.")
             m_Session_Name = m_Parameters[1]
             cls.db_saved_conn[m_Session_Name] = [cls.db_conn, cls.db_username, cls.db_password, cls.db_url]
-            cls.SessionName = m_Session_Name
+            cls.db_sessionName = m_Session_Name
         elif m_Parameters[0].lower() == 'saveurl':
             if cls.db_conn is None:
                 raise TestCliException(
                     "Please connect session first before save.")
             m_Session_Name = m_Parameters[1]
             cls.db_saved_conn[m_Session_Name] = [None, cls.db_username, cls.db_password, cls.db_url]
-            cls.SessionName = m_Session_Name
+            cls.db_sessionName = m_Session_Name
         elif m_Parameters[0].lower() == 'restore':
             m_Session_Name = m_Parameters[1]
             if m_Session_Name in cls.db_saved_conn:
@@ -930,7 +921,7 @@ class TestCli(object):
                 else:
                     cls.db_conn = cls.db_saved_conn[m_Session_Name][0]
                     cls.cmdExecuteHandler.sqlConn = cls.db_conn
-                    cls.SessionName = m_Session_Name
+                    cls.db_sessionName = m_Session_Name
             else:
                 raise TestCliException(
                     "Session [" + m_Session_Name + "] does not exist. Please save it first.")
@@ -1168,156 +1159,145 @@ class TestCli(object):
 
     # 设置一些选项
     @staticmethod
-    def set_options(cls, arg, **_):
-        if arg is None:
-            raise TestCliException("Missing required argument. set parameter parameter_value.")
-        elif arg == "":  # 显示所有的配置
-            m_Result = []
+    def set_options(cls, options):
+        optionName = options["optionName"]
+        optionValue = options["optionValue"]
+
+        if optionName is None:
+            # SET如果没有参数，则显示所有的选项出来
+            result = []
             for row in cls.testOptions.getOptionList():
                 if not row["Hidden"]:
-                    m_Result.append([row["Name"], row["Value"], row["Comments"]])
+                    result.append([row["Name"], row["Value"], row["Comments"]])
             yield {
                 "title": "Current Options: ",
-                "rows": m_Result,
+                "rows": result,
                 "headers": ["Name", "Value", "Comments"],
                 "columnTypes": None,
                 "status": None
             }
+            return
         else:
-            options_parameters = str(arg).split()
-            if len(options_parameters) == 1:
-                # 如果没有设置参数，则补充一个None作为参数的值
-                options_parameters.append("")
+            if optionValue is None:
+                # SET如果没有指定设置值，则设置值默认为空
+                optionValue = ""
 
-            # 处理DEBUG选项
-            if options_parameters[0].upper() == "DEBUG":
-                if options_parameters[1].upper() == 'ON':
-                    os.environ['TESTCLI_DEBUG'] = "1"
-                elif options_parameters[1].upper() == 'OFF':
-                    if 'TESTCLI_DEBUG' in os.environ:
-                        del os.environ['TESTCLI_DEBUG']
-                else:
-                    raise TestCliException("SQLCLI-00000: "
-                                           "Unknown option [" + str(options_parameters[1]) + "]. ON/OFF only.")
-
-            # 处理AUTOCOMMIT选项
-            if options_parameters[0].upper() == "AUTOCOMMIT":
-                if cls.db_conn is None:
-                    raise TestCliException("Not connected.")
-                if options_parameters[1].upper() == 'FALSE':
-                    cls.db_conn.setAutoCommit(False)
-                elif options_parameters[1].upper() == 'TRUE':
-                    cls.db_conn.setAutoCommit(True)
-                else:
-                    raise TestCliException("SQLCLI-00000: "
-                                           "Unknown option [" + str(options_parameters[1]) + "]. True/False only.")
-                return [{
-                    "title": None,
-                    "rows": None,
-                    "headers": None,
-                    "columnTypes": None,
-                    "status": None
-                }, ]
-
-            # 处理JOBMANAGER选项
-            if options_parameters[0].upper() == "JOBMANAGER":
-                if options_parameters[1].upper() == 'ON' and cls.testOptions.get("JOBMANAGER").upper() == "OFF":
-                    # 本次打开，之前为OFF
-                    # 连接到Meta服务上
-                    cls.MetaHandler.StartAsServer(p_ServerParameter=None)
-                    # 标记JOB队列管理使用的数据库连接
-                    if cls.MetaHandler.dbConn is not None:
-                        os.environ["TESTCLI_JOBMANAGERURL"] = cls.MetaHandler.MetaURL
-                        cls.JobHandler.setMetaConn(cls.MetaHandler.dbConn)
-                        cls.TransactionHandler.setMetaConn(cls.MetaHandler.dbConn)
-                        cls.testOptions.set("JOBMANAGER", "ON")
-                        cls.testOptions.set("JOBMANAGER_METAURL", cls.MetaHandler.MetaURL)
-                elif options_parameters[1].upper() == 'OFF' and cls.testOptions.get("JOBMANAGER").upper() == "ON":
-                    del os.environ["TESTCLI_JOBMANAGERURL"]
-                    cls.testOptions.set("JOBMANAGER", "OFF")
-                    cls.testOptions.set("JOBMANAGER_METAURL", '')
-                    cls.MetaHandler.ShutdownServer()
-                else:
-                    raise TestCliException("SQLCLI-00000: "
-                                           "Unknown option [" + str(options_parameters[1]) +
-                                           "] for JOBMANAGER. ON/OFF only.")
-
-            # 对于子进程，连接到JOB管理服务
-            if options_parameters[0].upper() == "JOBMANAGER_METAURL":
-                if cls.testOptions.get("JOBMANAGER") == "ON":
-                    raise TestCliException("SQLCLI-00000: "
-                                           "You can't act as worker rule while option JOBMANAGER is ON")
-                m_JobManagerURL = options_parameters[1]
-                if len(m_JobManagerURL) == 0:
-                    # 退出Meta的连接
-                    cls.MetaHandler.DisConnectServer()
-                    cls.JobHandler.setMetaConn(None)
-                    cls.TransactionHandler.setMetaConn(None)
-                    cls.testOptions.set("JOBMANAGER_METAURL", "")
-                else:
-                    # 对于被主进程调用的进程，则不需要考虑, 连接到主进程的Meta服务
-                    cls.MetaHandler.ConnectServer(m_JobManagerURL)
-                    cls.JobHandler.setMetaConn(cls.MetaHandler.db_conn)
-                    cls.TransactionHandler.setMetaConn(cls.MetaHandler.db_conn)
-                    cls.testOptions.set("JOBMANAGER_METAURL", m_JobManagerURL)
-
-            # 如果不是已知的选项，则直接抛出到SQL引擎
-            if options_parameters[0].startswith('@'):
-                m_ParameterValue = " ".join(options_parameters[1:])
-                options_values = shlex.shlex(m_ParameterValue)
-                options_values.whitespace = ' '
-                options_values.quotes = '^'
-                options_values.whitespace_split = True
-                options_values = list(options_values)
-                if len(options_values) == 1:
-                    if options_values[0][0] == '^':
-                        options_values[0] = options_values[0][1:]
-                    if options_values[0][-1] == '^':
-                        options_values[0] = options_values[0][:-1]
-                    try:
-                        option_value = str(eval(str(options_values[0])))
-                    except (NameError, ValueError, SyntaxError):
-                        option_value = str(options_values[0])
-                    cls.testOptions.set(options_parameters[0], option_value)
-                elif len(options_values) == 2:
-                    if options_values[0][0] == '^':
-                        options_values[0] = options_values[0][1:]
-                    if options_values[0][-1] == '^':
-                        options_values[0] = options_values[0][:-1]
-                    if options_values[1][0] == '^':
-                        options_values[1] = options_values[1][1:]
-                    if options_values[1][-1] == '^':
-                        options_values[1] = options_values[1][:-1]
-                    try:
-                        option_value1 = str(eval(str(options_values[0])))
-                    except (NameError, ValueError, SyntaxError):
-                        option_value1 = str(options_values[0])
-                    try:
-                        option_value2 = str(eval(str(options_values[1])))
-                    except (NameError, ValueError, SyntaxError):
-                        option_value2 = str(options_values[1])
-                    cls.testOptions.set(options_parameters[0], option_value1, option_value2)
-                else:
-                    raise TestCliException("SQLCLI-00000: "
-                                           "Wrong set command. Please use [set @parameter_name parametervalue]")
-                yield {
-                    "title": None,
-                    "rows": None,
-                    "headers": None,
-                    "columnTypes": None,
-                    "status": None
-                }
-            elif cls.testOptions.get(options_parameters[0].upper()) is not None:
-                cls.testOptions.set(options_parameters[0].upper(), " ".join(options_parameters[1:]))
-                yield {
-                    "title": None,
-                    "rows": None,
-                    "headers": None,
-                    "columnTypes": None,
-                    "status": None
-                }
+        # 处理DEBUG选项
+        if optionName.upper() == "DEBUG":
+            if optionValue.upper() == 'ON':
+                os.environ['TESTCLI_DEBUG'] = "1"
+            elif optionValue.upper() == 'OFF':
+                if 'TESTCLI_DEBUG' in os.environ:
+                    del os.environ['TESTCLI_DEBUG']
             else:
-                raise CommandNotFound
+                raise TestCliException("SQLCLI-00000: "
+                                       "Unknown option [" + str(optionValue) + "]. ON/OFF only.")
+            return [{
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": None
+            }, ]
+
+        # 处理AUTOCOMMIT选项
+        if optionName.upper() == "AUTOCOMMIT":
+            if cls.db_conn is None:
+                raise TestCliException("Not connected.")
+            if optionValue.upper() == 'FALSE':
+                cls.db_conn.setAutoCommit(False)
+            elif optionValue.upper() == 'TRUE':
+                cls.db_conn.setAutoCommit(True)
+            else:
+                raise TestCliException("SQLCLI-00000: "
+                                       "Unknown option [" + str(optionValue) + "]. True/False only.")
+            return [{
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": None
+            }, ]
+
+        # 处理JOBMANAGER选项
+        if optionName.upper() == "JOBMANAGER":
+            if optionValue.upper() == 'ON' and cls.testOptions.get("JOBMANAGER").upper() == "OFF":
+                # 本次打开，之前为OFF
+                # 连接到Meta服务上
+                cls.MetaHandler.StartAsServer(p_ServerParameter=None)
+                # 标记JOB队列管理使用的数据库连接
+                if cls.MetaHandler.dbConn is not None:
+                    os.environ["TESTCLI_JOBMANAGERURL"] = cls.MetaHandler.MetaURL
+                    cls.JobHandler.setMetaConn(cls.MetaHandler.dbConn)
+                    cls.TransactionHandler.setMetaConn(cls.MetaHandler.dbConn)
+                    cls.testOptions.set("JOBMANAGER", "ON")
+                    cls.testOptions.set("JOBMANAGER_METAURL", cls.MetaHandler.MetaURL)
+            elif optionValue.upper() == 'OFF' and cls.testOptions.get("JOBMANAGER").upper() == "ON":
+                del os.environ["TESTCLI_JOBMANAGERURL"]
+                cls.testOptions.set("JOBMANAGER", "OFF")
+                cls.testOptions.set("JOBMANAGER_METAURL", '')
+                cls.MetaHandler.ShutdownServer()
+            else:
+                raise TestCliException("SQLCLI-00000: "
+                                       "Unknown option [" + str(optionValue) + "] for JOBMANAGER. ON/OFF only.")
+            return [{
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": None
+            }, ]
+
+        # 对于子进程，连接到JOB管理服务
+        if optionName.upper() == "JOBMANAGER_METAURL":
+            if cls.testOptions.get("JOBMANAGER") == "ON":
+                raise TestCliException("SQLCLI-00000: "
+                                       "You can't act as worker rule while option JOBMANAGER is ON")
+            jobManagerURL = optionValue
+            if len(jobManagerURL) == 0:
+                # 退出Meta的连接
+                cls.MetaHandler.DisConnectServer()
+                cls.JobHandler.setMetaConn(None)
+                cls.TransactionHandler.setMetaConn(None)
+                cls.testOptions.set("JOBMANAGER_METAURL", "")
+            else:
+                # 对于被主进程调用的进程，则不需要考虑, 连接到主进程的Meta服务
+                cls.MetaHandler.ConnectServer(jobManagerURL)
+                cls.JobHandler.setMetaConn(cls.MetaHandler.db_conn)
+                cls.TransactionHandler.setMetaConn(cls.MetaHandler.db_conn)
+                cls.testOptions.set("JOBMANAGER_METAURL", jobManagerURL)
+            return [{
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": None
+            }, ]
+
+        # 如果特殊的选项，有可能时用户自己定义的变量
+        if optionName.startswith('@'):
+            cls.testOptions.set(optionName[1], optionValue)
+            return [{
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": None
+            }, ]
+
+        # 查看是否属于定义的选项
+        if cls.testOptions.get(optionName.upper()) is not None:
+            cls.testOptions.set(optionName.upper(), optionValue)
+            return [{
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": None
+            }, ]
+        else:
+            # 不认识的配置选项按照SQL命令处理
+            raise CommandNotFound
 
     # 切换程序运行空间
     @staticmethod

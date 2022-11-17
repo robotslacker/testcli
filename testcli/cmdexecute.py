@@ -757,11 +757,11 @@ class CmdExecute(object):
                  ret_CommandSplitResultsWithComments, ret_CommandHints,
                  ret_errorCode, ret_errorMsg) \
                     = SQLAnalyze(statement)
-                print("ret_bCommandCompleted=" + str(ret_bCommandCompleted))
-                print("ret_CommandSplitResults=" + str(ret_CommandSplitResults))
-                print("ret_CommandSplitResultsWithComments=" + str(ret_CommandSplitResultsWithComments))
-                print("ret_errorCode=" + str(ret_errorCode))
-                print("ret_errorMsg=" + str(ret_errorMsg))
+                # print("ret_bCommandCompleted=" + str(ret_bCommandCompleted))
+                # print("ret_CommandSplitResults=" + str(ret_CommandSplitResults))
+                # print("ret_CommandSplitResultsWithComments=" + str(ret_CommandSplitResultsWithComments))
+                # print("ret_errorCode=" + str(ret_errorCode))
+                # print("ret_errorMsg=" + str(ret_errorMsg))
             elif nameSpace == "API":
                 (ret_bCommandCompleted, ret_CommandSplitResults,
                  ret_CommandSplitResultsWithComments, ret_CommandHints,
@@ -781,7 +781,6 @@ class CmdExecute(object):
         for pos in range(0, len(ret_CommandSplitResults)):
             # 处理解析前的语句
             if self.testOptions.get("NAMESPACE") == "SQL":
-                print("xxxx = " + str(ret_CommandSplitResultsWithComments[pos]))
                 formattedCommand = SQLFormatWithPrefix(ret_CommandSplitResultsWithComments[pos])
             if self.testOptions.get("NAMESPACE") == "API":
                 formattedCommand = APIFormatWithPrefix(ret_CommandSplitResultsWithComments[pos])
@@ -799,7 +798,6 @@ class CmdExecute(object):
 
             # 处理解析后的命令
             parseObject = dict(ret_CommandSplitResults[pos])
-            print("parseObject=" + str(parseObject))
 
             if parseObject["name"] == "ECHO":
                 # 将后续内容回显到指定的文件中
@@ -834,12 +832,11 @@ class CmdExecute(object):
             elif parseObject["name"] == "CONNECT":
                 # 执行CONNECT命令
                 if self.testOptions.get("NAMESPACE") == "SQL":
-                    if "params" in parseObject:
-                        for commandResult in self.cliHandler.connect_db(
-                                cls=self.cliHandler,
-                                service=parseObject["params"][0]
-                        ):
-                            yield commandResult
+                    for commandResult in self.cliHandler.connect_db(
+                            cls=self.cliHandler,
+                            connectProperties=parseObject
+                    ):
+                        yield commandResult
                     continue
                 else:
                     yield {
@@ -848,6 +845,14 @@ class CmdExecute(object):
                         "script": commandScriptFile
                     }
                     continue
+            elif parseObject["name"] == "SET":
+                # 执行SET命令
+                for commandResult in self.cliHandler.set_options(
+                        cls=self.cliHandler,
+                        options=parseObject
+                ):
+                    yield commandResult
+                continue
             elif parseObject["name"] == "DISCONNECT":
                 # 执行DISCONNECT命令
                 if self.testOptions.get("NAMESPACE") == "SQL":

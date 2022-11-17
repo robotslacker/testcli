@@ -59,7 +59,7 @@ connect
      ;
 
 connectlocal
-     : CONNECT connectService
+     : CONNECT CONNECT_SLASH connectlocalService
      ;
 
 connectjdbc
@@ -105,6 +105,10 @@ connectService
         : CONNECT_STRING
         ;
 
+connectlocalService
+        : CONNECT_STRING
+        ;
+
 connectParameterName
         : CONNECT_STRING
         ;
@@ -130,7 +134,7 @@ session
         : SESSION (SAVE|RELEASE|RESTORE|SAVECONFIG|SHOW) String? CRLF?
         ;
 
-expression
+singleExpression
         : (String 
         | DOT 
         | SLASH 
@@ -140,6 +144,19 @@ expression
         | SQUARE_OPEN 
         | SQUARE_CLOSE 
         | DOUBLE_QUOTE 
+        | SINGLE_QUOTE )
+        ;
+
+expression
+        : (String
+        | DOT
+        | SLASH
+        | BRACKET_OPEN
+        | BRACKET_CLOSE
+        | ESCAPE
+        | SQUARE_OPEN
+        | SQUARE_CLOSE
+        | DOUBLE_QUOTE
         | SINGLE_QUOTE )+
         ;
 
@@ -183,7 +200,7 @@ internal
 
 // 16：SET 语句
 set 
-        : SET expression+ (SEMICOLON)? CRLF? 
+        : SET singleExpression+ (SEMICOLON)? CRLF?
         ;
 
 // 17：内嵌脚本

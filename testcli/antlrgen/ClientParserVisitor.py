@@ -104,6 +104,11 @@ class ClientParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ClientParser#connectlocalService.
+    def visitConnectlocalService(self, ctx:ClientParser.ConnectlocalServiceContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ClientParser#connectParameterName.
     def visitConnectParameterName(self, ctx:ClientParser.ConnectParameterNameContext):
         return self.visitChildren(ctx)
@@ -131,6 +136,11 @@ class ClientParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by ClientParser#session.
     def visitSession(self, ctx:ClientParser.SessionContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ClientParser#singleExpression.
+    def visitSingleExpression(self, ctx:ClientParser.SingleExpressionContext):
         return self.visitChildren(ctx)
 
 

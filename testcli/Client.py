@@ -89,7 +89,7 @@ if __name__ == '__main__':
     defaultNameSpace = "SQL"
 
     isFinished, parsedObjects, originScripts, hints, errorCode, errorMsg = \
-        parse("connect admin/123456@jdbc:linkoopdb:tcp://192.168.10.20:9105/ldb", defaultNameSpace=defaultNameSpace)
+        parse("set xxx yyy zzz ddd ", defaultNameSpace=defaultNameSpace)
     print("isFInsished = " + str(isFinished))
     if isFinished:
         parsedLenth = len(parsedObjects)

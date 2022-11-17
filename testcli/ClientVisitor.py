@@ -277,12 +277,11 @@ class ClientVisitor(ClientParserVisitor):
         parsedObject = {'name': 'CONNECT'}
 
         # 用户信息
-        if ctx.connectjdbc() is not None:
-            result, script, hint, code, message = self.visit(ctx.connectjdbc())
-            parsedObject.update(result)
-
         if ctx.connectlocal() is not None:
             result, script, hint, code, message = self.visit(ctx.connectlocal())
+            parsedObject.update(result)
+        if ctx.connectjdbc() is not None:
+            result, script, hint, code, message = self.visit(ctx.connectjdbc())
             parsedObject.update(result)
 
         # 获取源文件
@@ -300,7 +299,9 @@ class ClientVisitor(ClientParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
+        self.originScripts.append(originScript)
         self.parsedObject.append(parsedObject)
+        self.hints.append(hint)
         self.errorCode.append(errorCode)
         self.errorMsg.append(errorMsg)
 
@@ -308,6 +309,9 @@ class ClientVisitor(ClientParserVisitor):
 
     def visitConnectjdbc(self, ctx: ClientParser.ConnectjdbcContext):
         parsedObject = {}
+        if ctx.connectUserInfo() is not None:
+            result, script, hint, code, message = self.visit(ctx.connectUserInfo())
+            parsedObject.update(result)
         if ctx.connectDriver() is not None:
             result, script, hint, code, message = self.visit(ctx.connectDriver())
             parsedObject.update(result)
@@ -349,9 +353,31 @@ class ClientVisitor(ClientParserVisitor):
 
     def visitConnectlocal(self, ctx: ClientParser.ConnectlocalContext):
         parsedObject = {}
-        if ctx.connectService() is not None:
-            result, script, hint, code, message = self.visit(ctx.connectService())
+        if ctx.connectlocalService() is not None:
+            result, script, hint, code, message = self.visit(ctx.connectlocalService())
             parsedObject.update(result)
+
+        # 获取源文件
+        start, end = self.getSourceInterval(ctx)
+        tokens = ctx.parser._input.tokens[start:end+1]
+        originScript = self.getSource(tokens)
+
+        # 获取提示信息
+        hint = self.getHint(tokens)
+
+        # 获取错误代码
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = -1
+            errorMsg = ctx.exception.message
+
+        return parsedObject, originScript, hint, errorCode, errorMsg
+
+    def visitConnectlocalService(self, ctx: ClientParser.ConnectlocalServiceContext):
+        parsedObject = {}
+        if ctx.CONNECT_STRING() is not None:
+            parsedObject.update({'localService': ctx.CONNECT_STRING().getText()})
 
         # 获取源文件
         start, end = self.getSourceInterval(ctx)
@@ -395,6 +421,7 @@ class ClientVisitor(ClientParserVisitor):
     # connect中的用户信息
     def visitConnectUserInfo(self, ctx: ClientParser.ConnectUserInfoContext):
         parsedObject = {}
+
         # 用户名
         if ctx.connectUser() is not None:
             result, script, hint, code, message = self.visit(ctx.connectUser())
@@ -741,9 +768,9 @@ class ClientVisitor(ClientParserVisitor):
         for expression in ctx.expression():
             result, script, hint, code, message = self.visit(expression)
             expression_list.append(result)
-        
+
         parsedObject.update({'scriptList': expression_list})
-        
+
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
         # 源文件
@@ -938,24 +965,45 @@ class ClientVisitor(ClientParserVisitor):
 
         return  parsedObject, originScript, hint, errorCode, errorMsg
 
+    def visitSingleExpression(self, ctx: ClientParser.SingleExpressionContext):
+        expression = ctx.getText()
 
-    def visitExpression(self, ctx:ClientParser.ExpressionContext):
-
+        # 获取源文件
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
         originScript = self.getSource(tokens)
-        # 提示信息
+
+        # 获取提示信息
         hint = self.getHint(tokens)
+
+        # 获取错误代码
         errorCode = 0
         errorMsg = None
-        if (ctx.exception is not None):
+        if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
-            self.isFinished = False
 
-        
-        return  originScript, originScript, hint, errorCode, errorMsg
+        return expression, originScript, hint, errorCode, errorMsg
+
+    def visitExpression(self, ctx: ClientParser.ExpressionContext):
+        expression = ctx.getText()
+
+        # 获取源文件
+        start, end = self.getSourceInterval(ctx)
+        tokens = ctx.parser._input.tokens[start:end+1]
+        originScript = self.getSource(tokens)
+
+        # 获取提示信息
+        hint = self.getHint(tokens)
+
+        # 获取错误代码
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = -1
+            errorMsg = ctx.exception.message
+
+        return expression, originScript, hint, errorCode, errorMsg
 
 
     # Visit a parse tree produced by ClientParser#internal.
@@ -991,30 +1039,37 @@ class ClientVisitor(ClientParserVisitor):
 
         return  parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitSet(self, ctx:ClientParser.SetContext):
-        
-        parsedObject = {'name': 'SET' , 'rule': ctx.getRuleIndex() }
+    def visitSet(self, ctx: ClientParser.SetContext):
+        parsedObject = {'name': 'SET'}
     
         expression_list = []
-        for expression in ctx.expression():
-            result, script, hint, code, message =  self.visit(expression)
+        for expression in ctx.singleExpression():
+            result, script, hint, code, message = self.visit(expression)
             expression_list.append(result)
-        
-        parsedObject.update({'expression' : expression_list})
 
-        
+        print("expresslist = " + str(expression_list))
+        if len(expression_list) >= 1:
+            parsedObject.update({'optionName': expression_list[0]})
+        if len(expression_list) >= 2:
+            parsedObject.update({'optionValue': expression_list[1]})
+        if len(expression_list) >= 3:
+            for i in range(2, len(expression_list)):
+                parsedObject.update({("optionValue" + str(iter)): expression_list[i]})
+
+        # 获取源文件
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
         originScript = self.getSource(tokens)
-        # 提示信息
+
+        # 获取提示信息
         hint = self.getHint(tokens)
+
+        # 获取错误代码
         errorCode = 0
         errorMsg = None
-        if (ctx.exception is not None):
+        if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
-            self.isFinished = False
 
         self.parsedObject.append(parsedObject)
         self.originScripts.append(originScript)
@@ -1022,10 +1077,9 @@ class ClientVisitor(ClientParserVisitor):
         self.errorCode.append(errorCode)
         self.errorMsg.append(errorMsg)
 
-        return  parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, originScript, hint, errorCode, errorMsg
 
-
-    # 
+    #
     def visitScript(self, ctx:ClientParser.ScriptContext):
         errorCode = 0
         errorMsg = None
