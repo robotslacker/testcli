@@ -67,8 +67,8 @@ def cli(
         sqlmap=sqlmap,
         nologo=nologo,
         sqlperf=sqlperf,
-        clientcharset=clientcharset,
-        resultcharset=resultcharset,
+        clientCharset=clientcharset,
+        resultCharset=resultcharset,
         profile=profile,
         scripttimeout=scripttimeout,
         namespace=namespace

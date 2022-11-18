@@ -5,11 +5,9 @@ options {
     caseInsensitive = false;
 }
 
-prog: commands EOF;
+prog: command EOF;
 
-commands: command+;
-
-command: 
+command:
       exit
       | quit
       | use
@@ -31,6 +29,7 @@ command:
       | loopUntil
       | assert
       | sql
+      | EOF
       ;
 
 // Exit 
@@ -50,7 +49,7 @@ use:
 
 // sleep
 sleep
-        : SLEEP (INT|DECIMAL) CRLF?
+        : SLEEP INT CRLF?
         ;
 
 // connect 
@@ -65,7 +64,7 @@ connectlocal
 connectjdbc
         : CONNECT (connectUserInfo (CONNECT_AT)?)
           (connectDriver CONNECT_COLON connectDriverSchema CONNECT_COLON (connectDriverType CONNECT_COLON)? CONNECT_DASH
-          connectHost (connectPort)? CONNECT_SLASH connectService)?
+          connectHost (connectPort)? (CONNECT_SLASH | CONNECT_COLON) connectService)?
           (CONNECT_QUESTION connectParameters)?
         ;
 
@@ -200,7 +199,7 @@ internal
 
 // 16：SET 语句
 set 
-        : SET singleExpression+ (SEMICOLON)? CRLF?
+        : SET (singleExpression+)? (SEMICOLON)? CRLF?
         ;
 
 // 17：内嵌脚本
@@ -329,9 +328,9 @@ sql
         | sqlDelete
         | sqlSelect
         | sqlDeclare
+        | sqlDrop
         | sqlCreateProcedure
         | CRLF
-        | sqlUnknown
         ;
 
 sqlCreate
@@ -358,6 +357,10 @@ sqlSelect
         : SQL_SELECT SQL_END CRLF?
         ;
 
+sqlDrop
+        : SQL_DROP SQL_END CRLF?
+        ;
+
 sqlDeclare
         : SQL_DECLARE  
           SQL_SLASH CRLF?
@@ -367,11 +370,3 @@ sqlCreateProcedure
         : SQL_CREATE_PROCEDURE 
           SQL_SLASH CRLF?
         ;
-
-sqlUnknown
-        : (String  | INT | DECIMAL | CRLF | COMMA |
-            SEMICOLON | COLON | DOT | SLASH | BRACKET_OPEN | BRACKET_CLOSE | SQUARE_OPEN |
-            SQUARE_CLOSE | DOUBLE_QUOTE | SINGLE_QUOTE | SPACE)+
-        ;
-
-    

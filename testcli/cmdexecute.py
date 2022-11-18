@@ -11,8 +11,6 @@ import decimal
 import random
 import traceback
 from .testcliexception import TestCliException
-from .commandanalyze import execute
-from .commandanalyze import CommandNotFound
 from .sqlclijdbc import SQLCliJDBCException
 from .sqlclijdbc import SQLCliJDBCLargeObject
 from .sqlclijdbc import SQLCliJDBCTimeOutException
@@ -386,10 +384,6 @@ class CmdExecute(object):
             status = None
         return title, result, headers, columnTypes, status, fetchStatus, rowcount, cursor.warnings
 
-    @staticmethod
-    def GeneralAnalyze(command: str):
-        return True, [command, ], [command, ], [{}, ]
-
     def executeAPIStatement(self, api: str, apiHints, startTime):
         yield {"type": "error", "message": "还没有实现呢"}
 
@@ -483,7 +477,7 @@ class CmdExecute(object):
                             # 检查Until条件，如果达到Until条件，退出
                             bAssertSuccessful = False
                             for loopResult in \
-                                    self.run("__internal__ test assert " + loopUntil):
+                                    self.runStatement("__internal__ test assert " + loopUntil):
                                 if loopResult["type"] == "result":
                                     if loopResult["status"].startswith("Assert Successful"):
                                         bAssertSuccessful = True
@@ -497,7 +491,7 @@ class CmdExecute(object):
                                 if "TESTCLI_DEBUG" in os.environ:
                                     print("[DEBUG] SQL(LOOP " + str(nLoopPos) + ")=[" + str(sql) + "]")
 
-                                for loopResult in self.run(sql):
+                                for loopResult in self.runStatement(sql):
                                     # 最后一次执行的结果将被传递到外层，作为SQL返回结果
                                     if loopResult["type"] == "result":
                                         sqlStatus = 0
@@ -646,7 +640,9 @@ class CmdExecute(object):
                                     "java.sql.SQLTransactionRollbackException:",
                                     "java.sql.SQLTransientConnectionException:",
                                     "java.sql.SQLFeatureNotSupportedException",
-                                    "com.microsoft.sqlserver.jdbc.", ]:
+                                    "com.microsoft.sqlserver.jdbc.",
+                                    "org.h2.jdbc.JdbcSQLSyntaxErrorException:"
+                                    ]:
                     if sqlErrorMessage.startswith(errorPrefix):
                         sqlErrorMessage = sqlErrorMessage[len(errorPrefix):].strip()
 
@@ -696,45 +692,189 @@ class CmdExecute(object):
                 else:
                     yield {"type": "error", "message": sqlErrorMessage}
 
-    def run(self, statement: str, commandScriptFile: str, nameSpace: str):
-        """
-        返回的结果可能是多种类型，处理的时候需要根据type的结果来判断具体的数据格式：
-        SQL解析结果：
-        {
-            "type": "parse",
-            "rawCommand": "原始命令语句",
-            "formattedCommand": "被排版后的命令语句（包含注释信息）",
-            "rewrotedCommand": "被改写后的命令语句（已经被排版过），如果不存在改写，则不存在",
-            "script"："Command当前执行的脚本名称"
-        }
-        Command执行结果：
-        {
-            "type": "result",
-            "title": "表头信息",
-            "rows": "结果数据集",
-            "headers": "结果集的header定义，列名信息",
-            "columnTypes": "列类型，字符串格式",
-            "status": "返回结果汇总消息"
-        }
-        Command错误信息：
-        {
-            "type": "error",
-            "message": "错误描述"
-        }
-        Command回显信息：
-        {
-            "type": "error",
-            "message": "错误描述",
-            "script"："Command当前执行的脚本名称"
-        }
+    '''
+        重写指定的语句
+        在正式执行之前，对语句进行重新，替换掉MAPPING或者环境变量中的信息
+        输入：
+            statement              原语句
+            commandScriptFile      语句所在的脚本文件（用于MAPPING，做映射使用)
+        输出：
+            statement              修改后的语句，可能和原语句相同
+            rewrotedCommandHistory 改写历史记录
+    '''
+    def rewriteRunStatement(self, statement: str, commandScriptFile: str):
+        # 命令可能会被多次改写
+        rewrotedCommandHistory = []
 
-        支持的SQLHint包括:
-        -- [Hint]  order              -- SQLCli将会把随后的SQL语句进行排序输出，原程序的输出顺序被忽略
-        -- [Hint]  scenario:XXXX      -- 相关SQL的场景名称
-        -- [Hint]  scenario:XXXX:P1   -- 相关SQL的场景名称以及SQL优先级，如果应用程序指定了限制的优先级，则只运行指定的优先级脚本
-        -- .....
-        """
+        # 如果打开了回写，并且指定了输出文件，且SQL被改写过，输出改写后的SQL
+        if self.testOptions.get("TESTREWRITE").upper() == 'ON':
+            while True:
+                beforeRewriteStatement = statement
+                afterRewriteStatement = self.mappingHandler.RewriteSQL(commandScriptFile, beforeRewriteStatement)
+                if beforeRewriteStatement != afterRewriteStatement:  # 命令已经发生了改变
+                    # 记录被改写的命令
+                    if self.testOptions.get("NAMESPACE") == "SQL":
+                        rewrotedCommandHistory.append(
+                            SQLFormatWithPrefix("Your SQL has been changed to:\n" + afterRewriteStatement, 'REWROTED '))
+                    if self.testOptions.get("NAMESPACE") == "API":
+                        rewrotedCommandHistory.append(
+                            APIFormatWithPrefix("Your API has been changed to:\n" + afterRewriteStatement, 'REWROTED '))
+                    statement = afterRewriteStatement
+                else:
+                    # 一直循环到没有任何东西可以被替换
+                    break
 
+        # ${random(1,100)}
+        # 处理脚本中的随机数问题
+        rawStatement = statement
+        match_obj = re.search(
+            r"\${random_int\((\s+)?(\d+)(\s+)?,(\s+)?(\d+)(\s+)?\)}",
+            statement,
+            re.IGNORECASE | re.DOTALL)
+        if match_obj:
+            searchResult = match_obj.group(0)
+            randomStart = int(match_obj.group(2))
+            randomEnd = int(match_obj.group(5))
+            statement = statement.replace(searchResult, str(random.randint(randomStart, randomEnd)))
+            if rawStatement != statement:
+                rewrotedCommandHistory.append(statement)
+
+        # 检查SQL中是否包含特殊内容，如果有，改写SQL
+        # 特殊内容都有：
+        # 1. ${LastcommandResult(.*)}       # .* JQ Parse Pattern
+        # 2. ${var}
+        #    用户定义的变量
+        match_obj = re.search(r"\${LastcommandResult\((.*?)\)}", statement, re.IGNORECASE | re.DOTALL)
+        if match_obj:
+            searchResult = match_obj.group(0)
+            m_JQPattern = match_obj.group(1)
+            statement = statement.replace(searchResult, self.jqparse(obj=self.lastJsonCommandResult, path=m_JQPattern))
+            if self.testOptions.get("SILENT").upper() == 'ON':
+                # SILENT模式下不打印任何日志
+                pass
+            else:
+                # 记录被JQ表达式改写的SQL
+                if self.testOptions.get("NAMESPACE") == "SQL":
+                    rewrotedCommandHistory.append(
+                        SQLFormatWithPrefix("Your SQL has been changed to:\n" + statement, 'REWROTED '))
+                if self.testOptions.get("NAMESPACE") == "API":
+                    rewrotedCommandHistory.append(
+                        APIFormatWithPrefix("Your API has been changed to:\n" + statement, 'REWROTED '))
+
+        # ${var}
+        bMatched = False
+        while True:
+            match_obj = re.search(r"\${(.*?)}", statement, re.IGNORECASE | re.DOTALL)
+            if match_obj:
+                bMatched = True
+                searchResult = match_obj.group(0)
+                varName = str(match_obj.group(1)).strip()
+                # 首先判断是否为一个Env函数
+                varValue = '#UNDEFINE_VAR#'
+                if varName.upper().startswith("ENV(") and varName.upper().endswith(")"):
+                    envName = varName[4:-1].strip()
+                    if envName in os.environ:
+                        varValue = os.environ[envName]
+                else:
+                    varValue = self.testOptions.get(varName)
+                    if varValue is None:
+                        varValue = self.testOptions.get('@' + varName)
+                        if varValue is None:
+                            varValue = '#UNDEFINE_VAR#'
+                # 替换相应的变量信息
+                statement = statement.replace(searchResult, varValue)
+                continue
+            else:
+                break
+        if bMatched:
+            # 记录被变量信息改写的命令
+            if self.testOptions.get("NAMESPACE") == "SQL":
+                rewrotedCommandHistory.append(
+                    SQLFormatWithPrefix("Your SQL has been changed to:\n" + statement, 'REWROTED '))
+            if self.testOptions.get("NAMESPACE") == "API":
+                rewrotedCommandHistory.append(
+                    APIFormatWithPrefix("Your API has been changed to:\n" + statement, 'REWROTED '))
+
+        return statement, rewrotedCommandHistory
+
+    '''
+        处理命令行的Hint信息
+        输入：
+            commandHints            字符串方式的Hint输入
+        输出:
+            commandHintList         用Key-Value方式返回的Hint信息                          
+    '''
+    @staticmethod
+    def parseHints(commandHints: list):
+        commandHintList = {}
+
+        for commandHint in commandHints:
+            # [Hint]  Scenario:XXXX   -- 相关SQL的Scenariox信息，仅仅作为日志信息供查看
+            match_obj = re.search(
+                r"^Scenario:(.*)", commandHint, re.IGNORECASE | re.DOTALL)
+            if match_obj:
+                senario = match_obj.group(1)
+                # 如果只有一个内容， 规则是:Scenario:ScenarioName
+                commandHintList["Scenario"] = senario
+                continue
+
+            # [Hint]  order           -- SQLCli将会把随后的SQL语句进行排序输出，原程序的输出顺序被忽略
+            match_obj = re.search(r"^order", commandHint, re.IGNORECASE | re.DOTALL)
+            if match_obj:
+                commandHintList["Order"] = True
+                continue
+
+            # [Hint]  LogFilter      -- SQLCli会过滤随后显示的输出信息，对于符合过滤条件的，将会被过滤
+            match_obj = re.search(
+                r"^LogFilter(\s+)(.*)", commandHint, re.IGNORECASE | re.DOTALL)
+            if match_obj:
+                # 可能有多个Filter信息
+                sqlFilter = match_obj.group(5).strip()
+                if "LogFilter" in commandHintList:
+                    commandHintList["LogFilter"].append(sqlFilter)
+                else:
+                    commandHintList["LogFilter"] = [sqlFilter, ]
+                continue
+
+            # [Hint]  LogMask      -- SQLCli会掩码随后显示的输出信息，对于符合掩码条件的，将会被掩码
+            match_obj = re.search(
+                r"^LogMask(\s+)(.*)", commandHint, re.IGNORECASE | re.DOTALL)
+            if match_obj:
+                sqlMask = match_obj.group(5).strip()
+                if "LogMask" in commandHintList:
+                    commandHintList["LogMask"].append(sqlMask)
+                else:
+                    commandHintList["LogMask"] = [sqlMask]
+                continue
+
+            # [Hint]  SQL_DIRECT   -- SQLCli执行的时候将不再尝试解析语句，而是直接解析执行
+            match_obj = re.search(r"^SQL_DIRECT", commandHint, re.IGNORECASE | re.DOTALL)
+            if match_obj:
+                commandHintList["SQL_DIRECT"] = True
+                continue
+
+            # [Hint]  SQL_PREPARE   -- SQLCli执行的时候将首先尝试解析语句，随后执行
+            match_obj = re.search(r"^SQL_PREPARE", commandHint, re.IGNORECASE | re.DOTALL)
+            if match_obj:
+                commandHintList["SQL_PREPARE"] = True
+                continue
+
+            # [Hint]  Loop   -- 循环执行特定的SQL
+            # --[Hint] LOOP [LoopTimes] UNTIL [EXPRESSION] INTERVAL [INTERVAL]
+            match_obj = re.search(
+                r"^LOOP\s+(\d+)\s+UNTIL\s+(.*)\s+INTERVAL\s+(\d+)(\s+)?",
+                commandHint, re.IGNORECASE | re.DOTALL)
+            if match_obj:
+                commandHintList["SQL_LOOP"] = {
+                    "LoopTimes": match_obj.group(4),
+                    "LoopUntil": match_obj.group(5),
+                    "LoopInterval": match_obj.group(6)
+                }
+                continue
+
+        return commandHintList
+
+    def runStatement(self, statement: str, commandScriptFile: str, nameSpace: str):
         # Remove spaces and EOL
         statement = statement.strip()
         formattedCommand = None
@@ -744,42 +884,117 @@ class CmdExecute(object):
         # 记录脚本的文件名
         self.script = commandScriptFile
 
+        # DEBUG模式下，打印当前计划要执行的语句
         if "TESTCLI_DEBUG" in os.environ:
             if self.testOptions.get("NAMESPACE") == "SQL":
                 print("[DEBUG] SQL Command=[" + str(statement) + "]")
             elif self.testOptions.get("NAMESPACE") == "API":
                 print("[DEBUG] API Command=[" + str(statement) + "]")
 
+        # 开始解析语句
         try:
-            # 分析语句
-            if nameSpace == "SQL":
-                (ret_bCommandCompleted, ret_CommandSplitResults,
-                 ret_CommandSplitResultsWithComments, ret_CommandHints,
-                 ret_errorCode, ret_errorMsg) \
-                    = SQLAnalyze(statement)
-                # print("ret_bCommandCompleted=" + str(ret_bCommandCompleted))
-                # print("ret_CommandSplitResults=" + str(ret_CommandSplitResults))
-                # print("ret_CommandSplitResultsWithComments=" + str(ret_CommandSplitResultsWithComments))
-                # print("ret_errorCode=" + str(ret_errorCode))
-                # print("ret_errorMsg=" + str(ret_errorMsg))
-            elif nameSpace == "API":
-                (ret_bCommandCompleted, ret_CommandSplitResults,
-                 ret_CommandSplitResultsWithComments, ret_CommandHints,
-                 ret_errorCode, ret_errorMsg) \
-                    = APIAnalyze(statement)
-            else:
-                raise TestCliException("不支持的运行空间【" + str(nameSpace)+ "】")
+            ret_CommandSplitResults = []
+            ret_CommandSplitResultsWithComments = []
+            ret_CommandHints = []
+
+            # 将所有的语句分拆开，按照行，依次投喂给解析器，以获得被Antlr分拆后的运行结果
+            currentStatement = None
+            currentStatementWithComments = None
+            currentHints = []
+            statementLines = statement.split('\n')
+            for nPos in range(0, len(statementLines)):
+                statementLine = statementLines[nPos]
+
+                # 将上次没有结束的行和当前行放在一起, 再次看是否已经结束
+                if currentStatement is None:
+                    currentStatement = statementLine
+                else:
+                    currentStatement = currentStatement + '\n' + statementLine
+                if currentStatementWithComments is None:
+                    currentStatementWithComments = statementLine
+                else:
+                    currentStatementWithComments = currentStatementWithComments + '\n' + statementLine
+
+                if self.testOptions.get("NAMESPACE") == "SQL":
+                    (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+                        = SQLAnalyze(currentStatement)
+                    if ret_CommandSplitResult is None:
+                        if ret_errorCode != 0:
+                            # 语句已经出错，且不是一个空语句
+                            ret_CommandSplitResults.append(
+                                {'name': 'UNKNOWN',
+                                 'statement': currentStatement,
+                                 'reason': ret_errorMsg}
+                            )
+                            # 解析前的语句
+                            ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+                            # 所有的提示信息
+                            ret_CommandHints.append(currentHints)
+                            # 清空语句的变量
+                            currentStatement = None
+                            currentStatementWithComments = None
+                            continue
+                        # 没有任何有效的语句，可能是空行或者完全的注释
+                        # 对于注释中的Hint信息需要保留下来
+                        pattern = r"^(\s+)?--(\s+)?\[(\s+)?Hint(\s+)?\](.*)"
+                        matchObj = re.match(pattern, statementLine, re.IGNORECASE)
+                        if matchObj:
+                            currentHints.append(matchObj.group(5).strip())
+                        # 解析后的语句
+                        ret_CommandSplitResults.append(None)
+                        # 解析前的语句
+                        ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+                        # 对于非有效语句，Hint不在当前语句中体现，而是要等到下次有意义的语句进行处理
+                        ret_CommandHints.append([])
+                        # 清空语句的变量
+                        currentStatement = None
+                        currentStatementWithComments = None
+                        continue
+                    if isFinished:
+                        # 语句已经结束, 记录语句解析的结果
+                        # 解析后的语句
+                        ret_CommandSplitResults.append(ret_CommandSplitResult)
+                        # 解析前的语句
+                        ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+                        # 所有的提示信息
+                        ret_CommandHints.append(currentHints)
+                        # 清空语句的变量
+                        currentStatement = None
+                        currentStatementWithComments = None
+                    else:
+                        if nPos == (len(statementLines) - 1):
+                            # 都最后一行了，实在不能再等了，全部打包，管它呢
+                            ret_CommandSplitResults.append(
+                                {'name': 'UNKNOWN',
+                                 'statement': currentStatement,
+                                 'reason': "missing SQL_END at '<EOF>'"}
+                            )
+                            # 解析前的语句
+                            ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+                            # 所有的提示信息
+                            ret_CommandHints.append(currentHints)
+                            # 清空语句的变量
+                            currentStatement = None
+                            currentStatementWithComments = None
+                elif self.testOptions.get("NAMESPACE") == "API":
+                    (ret_bCommandCompleted, ret_CommandSplitResults,
+                     ret_CommandSplitResultsWithComments, ret_CommandHints,
+                     ret_errorCode, ret_errorMsg) \
+                        = APIAnalyze(statement)
+                else:
+                    raise TestCliException("不支持的运行空间【" + str(nameSpace) + "】")
         except Exception:
             if "TESTCLI_DEBUG" in os.environ:
                 print('traceback.print_exc():\n%s' % traceback.print_exc())
                 print('traceback.format_exc():\n%s' % traceback.format_exc())
-            print('traceback.print_exc():\n%s' % traceback.print_exc())
-            print('traceback.format_exc():\n%s' % traceback.format_exc())
             raise TestCliException("TESTCLI-0000 Internal error. Parse failed.")
 
-        # 分析SQL语句
+        # 开始执行语句
         for pos in range(0, len(ret_CommandSplitResults)):
-            # 处理解析前的语句
+            # 记录命令开始时间
+            start = time.time()
+
+            # 首先打印原有语句
             if self.testOptions.get("NAMESPACE") == "SQL":
                 formattedCommand = SQLFormatWithPrefix(ret_CommandSplitResultsWithComments[pos])
             if self.testOptions.get("NAMESPACE") == "API":
@@ -792,13 +1007,66 @@ class CmdExecute(object):
                     "type": "parse",
                     "rawCommand": None,
                     "formattedCommand": formattedCommand,
-                    "rewrotedCommand": None,
+                    "rewrotedCommand": [],
                     "script": commandScriptFile
                 }
+
+            # 如果是空语句，不需要执行，但可能是完全注释行
+            # 也可能是一个解析错误的语句
+            if ret_CommandSplitResults[pos] is None:
+                # 返回命令的解析信息
+                continue
+
+            # 处理超时时间问题
+            if self.scriptTimeOut > 0:
+                if self.scriptTimeOut <= time.time() - self.getStartTime():
+                    commandErrorMessage = "TESTCLI-0000: Script Timeout " \
+                                         "(" + str(round(self.scriptTimeOut, 2)) + \
+                                         ") expired. Abort this Script."
+                    yield {"type": "error", "message": commandErrorMessage}
+                    raise EOFError
+                else:
+                    if self.testOptions.get("NAMESPACE") == "SQL":
+                        if self.sqlTimeOut > 0:
+                            if self.scriptTimeOut - (time.time() - self.getStartTime()) < self.sqlTimeOut:
+                                # 脚本超时剩余时间更少，执行较少的那个超时控制
+                                self.timeOutMode = "SCRIPT"
+                                self.timeout = self.scriptTimeOut - (time.time() - self.getStartTime())
+                            else:
+                                self.timeOutMode = "COMMAND"
+                                self.timeout = self.sqlTimeOut
+                        else:
+                            self.timeOutMode = "SCRIPT"
+                            self.timeout = self.scriptTimeOut - (time.time() - self.getStartTime())
+                    if self.testOptions.get("NAMESPACE") == "API":
+                        if self.apiTimeOut > 0:
+                            if self.scriptTimeOut - (time.time() - self.getStartTime()) < self.apiTimeOut:
+                                # 脚本超时剩余时间更少，执行较少的那个超时控制
+                                self.timeOutMode = "SCRIPT"
+                                self.timeout = self.scriptTimeOut - (time.time() - self.getStartTime())
+                            else:
+                                self.timeOutMode = "COMMAND"
+                                self.timeout = self.apiTimeOut
+                        else:
+                            self.timeOutMode = "SCRIPT"
+                            self.timeout = self.scriptTimeOut - (time.time() - self.getStartTime())
+            elif self.testOptions.get("NAMESPACE") == "SQL" and self.sqlTimeOut > 0:
+                # 没有设置SCRIPT的超时时间，只设置了COMMAND的超时时间
+                self.timeOutMode = "COMMAND"
+                self.timeout = self.sqlTimeOut
+            elif self.testOptions.get("NAMESPACE") == "API" and self.apiTimeOut > 0:
+                # 没有设置SCRIPT的超时时间，只设置了COMMAND的超时时间
+                self.timeOutMode = "COMMAND"
+                self.timeout = self.apiTimeOut
+            else:
+                # 什么超时时间都没有设置
+                self.timeOutMode = None
+                self.timeout = -1
 
             # 处理解析后的命令
             parseObject = dict(ret_CommandSplitResults[pos])
 
+            # 处理各种命令
             if parseObject["name"] == "ECHO":
                 # 将后续内容回显到指定的文件中
                 for commandResult in self.cliHandler.echo_input(
@@ -819,8 +1087,8 @@ class CmdExecute(object):
                 continue
             elif parseObject["name"] in ["EXIT", "QUIT"]:
                 # 执行脚本文件
-                if "param" in parseObject.keys():
-                    exitValue = parseObject["param"]
+                if "exitValue" in parseObject.keys():
+                    exitValue = parseObject["exitValue"]
                 else:
                     exitValue = 0
                 for commandResult in self.cliHandler.exit(
@@ -868,439 +1136,51 @@ class CmdExecute(object):
                         "script": commandScriptFile
                     }
                     continue
-            elif parseObject["name"] in ["SELECT", "CREATE", "PROCEDURE", "Unknown"]:
+            elif parseObject["name"] in ["SELECT", "CREATE", "INSERT", "DROP", "PROCEDURE"]:
+                sqlCommand = parseObject["statement"]
+                # 根据语句中的变量或者其他定义信息来重写当前语句
+                sqlCommand, rewrotedCommandList = self.rewriteRunStatement(
+                    statement=sqlCommand,
+                    commandScriptFile=commandScriptFile
+                )
+                if len(rewrotedCommandList) != 0:
+                    # 如果命令被发生了改写，要打印改写记录
+                    yield {
+                        "type": "parse",
+                        "rawCommand": None,
+                        "formattedCommand": None,
+                        "rewrotedCommand": rewrotedCommandList,
+                        "script": commandScriptFile
+                    }
+
                 # 处理Hints信息
-                sqlHints = {}
-                for commandHint in list(ret_CommandHints):
-                    pass
-                if parseObject["name"] == "Unknown":
-                    sqlCommand = ret_CommandSplitResultsWithComments[pos]
-                else:
-                    sqlCommand = parseObject["statement"]
+                commandHintList = self.parseHints(list(ret_CommandHints[pos]))
+
                 # 执行SQL语句
                 for result in self.executeSQLStatement(
                         sql=sqlCommand,
-                        sqlHints=sqlHints,
+                        sqlHints=commandHintList,
                         startTime=0):
                     yield result
+            elif parseObject["name"] in ["USE"]:
+                for commandResult in self.cliHandler.set_nameSpace(
+                        cls=self.cliHandler,
+                        nameSpace=parseObject["nameSpace"]
+                ):
+                    yield commandResult
                 continue
+            elif parseObject["name"] in ["SLEEP"]:
+                for commandResult in self.cliHandler.sleep(
+                        cls=self.cliHandler,
+                        sleepTime=parseObject["sleepTime"]
+                ):
+                    yield commandResult
+                continue
+            elif parseObject["name"] in ["UNKNOWN"]:
+                yield {"type": "error",
+                       "message": "TESTCLI_0000:  " + parseObject["reason"]}
             else:
                 raise TestCliException("FDDFSFDFSDSFD " + str(parseObject["name"]))
-
-            rawCommand = ret_CommandSplitResults[pos]                # 记录原始命令
-            commandErrorMessage = ""                                 # 错误日志信息
-            commandStatus = 0                                        # 命令运行结果， 0 成功， 1 失败
-            # 如果当前是在回显一个文件，则不再做任何处理，直接返回
-            if self.echofile is not None and \
-                    not re.match(r'echo\s+off', rawCommand, re.IGNORECASE):
-                yield {
-                    "type": "echo",
-                    "message": rawCommand,
-                    "script": commandScriptFile
-                }
-                continue
-
-            # 当前要被执行的命令，这个命令可能被随后的注释或者替换规则改写
-            command = rawCommand
-            # 记录带有注释信息的命令
-            commandWithComment = ret_CommandSplitResultsWithComments[pos]
-            # 命令可能会被多次改写
-            rewrotedCommandList = []
-
-            # 分析SQLHint信息
-            commandHintList = ret_CommandHints[pos]                         # SQL提示信息，其中Scenario用作日志处理
-
-            # 如果打开了回显，并且指定了输出文件，且SQL被改写过，输出改写后的SQL
-            if self.testOptions.get("TESTREWRITE").upper() == 'ON':
-                old_command = command
-                command = self.mappingHandler.RewriteSQL(commandScriptFile, old_command)
-                if old_command != command:    # 命令已经发生了改变
-                    # 记录被改写的命令
-                    if self.testOptions.get("NAMESPACE") == "SQL":
-                        rewrotedCommandList.append(
-                            SQLFormatWithPrefix("Your SQL has been changed to:\n" + command, 'REWROTED '))
-                    if self.testOptions.get("NAMESPACE") == "API":
-                        rewrotedCommandList.append(
-                            APIFormatWithPrefix("Your API has been changed to:\n" + command, 'REWROTED '))
-
-            # 如果是空语句，不需要执行，但可能是完全注释行
-            if len(command.strip()) == 0:
-                # 返回命令的解析信息
-                yield {
-                    "type": "parse",
-                    "rawCommand": rawCommand,
-                    "formattedCommand": formattedCommand,
-                    "rewrotedCommand": rewrotedCommandList,
-                    "script": commandScriptFile
-                }
-                continue
-
-            # 检查SQL中是否包含特殊内容，如果有，改写SQL
-            # 特殊内容都有：
-            # 1. ${LastcommandResult(.*)}       # .* JQ Parse Pattern
-            # 2. ${var}
-            #    用户定义的变量
-            match_obj = re.search(r"\${LastcommandResult\((.*?)\)}", command, re.IGNORECASE | re.DOTALL)
-            if match_obj:
-                searchResult = match_obj.group(0)
-                m_JQPattern = match_obj.group(1)
-                command = command.replace(searchResult, self.jqparse(obj=self.lastJsonCommandResult, path=m_JQPattern))
-                if self.testOptions.get("SILENT").upper() == 'ON':
-                    # SILENT模式下不打印任何日志
-                    pass
-                else:
-                    # 记录被JQ表达式改写的SQL
-                    if self.testOptions.get("NAMESPACE") == "SQL":
-                        rewrotedCommandList.append(
-                            SQLFormatWithPrefix("Your SQL has been changed to:\n" + command, 'REWROTED '))
-                    if self.testOptions.get("NAMESPACE") == "SQL":
-                        rewrotedCommandList.append(
-                            APIFormatWithPrefix("Your API has been changed to:\n" + command, 'REWROTED '))
-
-            # ${random(1,100)}
-            # 处理脚本中的随机数问题
-            match_obj = re.search(
-                r"\${random_int\((\s+)?(\d+)(\s+)?,(\s+)?(\d+)(\s+)?\)}",
-                command,
-                re.IGNORECASE | re.DOTALL)
-            if match_obj:
-                searchResult = match_obj.group(0)
-                randomStart = int(match_obj.group(2))
-                randomEnd = int(match_obj.group(5))
-                command = command.replace(searchResult, str(random.randint(randomStart, randomEnd)))
-
-            # ${var}
-            bMatched = False
-            while True:
-                match_obj = re.search(r"\${(.*?)}", command, re.IGNORECASE | re.DOTALL)
-                if match_obj:
-                    bMatched = True
-                    searchResult = match_obj.group(0)
-                    varName = str(match_obj.group(1)).strip()
-                    # 首先判断是否为一个Env函数
-                    varValue = '#UNDEFINE_VAR#'
-                    if varName.upper().startswith("ENV(") and varName.upper().endswith(")"):
-                        envName = varName[4:-1].strip()
-                        if envName in os.environ:
-                            varValue = os.environ[envName]
-                    else:
-                        varValue = self.testOptions.get(varName)
-                        if varValue is None:
-                            varValue = self.testOptions.get('@' + varName)
-                            if varValue is None:
-                                varValue = '#UNDEFINE_VAR#'
-                    # 替换相应的变量信息
-                    command = command.replace(searchResult, varValue)
-                    continue
-                else:
-                    break
-            if bMatched:
-                # 记录被变量信息改写的命令
-                if self.testOptions.get("NAMESPACE") == "SQL":
-                    rewrotedCommandList.append(
-                        SQLFormatWithPrefix("Your SQL has been changed to:\n" + command, 'REWROTED '))
-                if self.testOptions.get("NAMESPACE") == "SQL":
-                    rewrotedCommandList.append(
-                        APIFormatWithPrefix("Your API has been changed to:\n" + command, 'REWROTED '))
-
-            # 返回SQL的解析信息
-            yield {
-                "type": "parse",
-                "rawCommand": rawCommand,
-                "formattedCommand": formattedCommand,
-                "rewrotedCommand": rewrotedCommandList,
-                "script": commandScriptFile
-            }
-
-            # 记录命令开始时间
-            start = time.time()
-            try:
-                self.sqlTimeOut = int(self.testOptions.get("SQL_TIMEOUT"))
-            except ValueError:
-                self.sqlTimeOut = -1
-            try:
-                self.apiTimeOut = int(self.testOptions.get("API_TIMEOUT"))
-            except ValueError:
-                self.apiTimeOut = -1
-            try:
-                self.scriptTimeOut = int(self.testOptions.get("SCRIPT_TIMEOUT"))
-            except ValueError:
-                self.scriptTimeOut = -1
-
-            # 执行语句
-            try:
-                # 处理超时时间问题
-                if self.scriptTimeOut > 0:
-                    if self.scriptTimeOut <= time.time() - self.getStartTime():
-                        # 脚本还没有执行，就发现已经超时
-                        if command.upper() not in ["EXIT", "QUIT"]:
-                            commandErrorMessage = "TESTCLI-0000: Script Timeout " \
-                                                 "(" + str(round(self.scriptTimeOut, 2)) + \
-                                                 ") expired. Abort this Script."
-                            yield {"type": "error", "message": commandErrorMessage}
-                        raise EOFError
-                    else:
-                        if self.sqlTimeOut > 0:
-                            if self.scriptTimeOut - (time.time() - self.getStartTime()) < self.sqlTimeOut:
-                                # 脚本超时剩余时间已经比SQL超时要多
-                                self.timeOutMode = "SCRIPT"
-                                self.timeout = self.scriptTimeOut - (time.time() - self.getStartTime())
-                            else:
-                                self.timeOutMode = "COMMAND"
-                                if self.testOptions.get("NAMESPACE") == "SQL":
-                                    self.timeout = self.sqlTimeOut
-                                if self.testOptions.get("NAMESPACE") == "API":
-                                    self.timeout = self.apiTimeOut
-                        else:
-                            self.timeOutMode = "SCRIPT"
-                            self.timeout = self.scriptTimeOut - (time.time() - self.getStartTime())
-                elif self.sqlTimeOut > 0:
-                    # 没有设置SCRIPT的超时时间，只设置了COMMAND的超时时间
-                    self.timeOutMode = "COMMAND"
-                    if self.testOptions.get("NAMESPACE") == "SQL":
-                        self.timeout = self.sqlTimeOut
-                    if self.testOptions.get("NAMESPACE") == "API":
-                        self.timeout = self.apiTimeOut
-                else:
-                    # 什么超时时间都没有设置
-                    self.timeOutMode = None
-                    if self.testOptions.get("NAMESPACE") == "SQL":
-                        self.timeout = self.sqlTimeOut
-                    if self.testOptions.get("NAMESPACE") == "API":
-                        self.timeout = self.apiTimeOut
-
-                # 首先尝试这是一个特殊命令，如果返回CommandNotFound，则认为其是一个标准SQL
-                for commandResult in execute(self.cliHandler, command,  timeout=self.timeout):
-                    # 保存之前的运行结果
-                    if "type" not in commandResult.keys():
-                        commandResult.update({"type": "result"})
-                    if commandResult["type"] == "result" and \
-                            ((command.lower().startswith("__internal__") or
-                              command.lower().startswith("loaddriver")) or
-                             command.lower().startswith("host")):
-                        # 如果存在SQL_LOOP信息，则需要反复执行上一个SQL
-                        if "SQL_LOOP" in commandHintList.keys():
-                            if "TESTCLI_DEBUG" in os.environ:
-                                print("[DEBUG] LOOP=" + str(commandHintList["SQL_LOOP"]))
-                            # 循环执行SQL列表，构造参数列表
-                            loopTimes = int(commandHintList["SQL_LOOP"]["LoopTimes"])
-                            loopInterval = int(commandHintList["SQL_LOOP"]["LoopInterval"])
-                            loopUntil = commandHintList["SQL_LOOP"]["LoopUntil"]
-                            if loopInterval < 0:
-                                loopTimes = 0
-                                if "TESTCLI_DEBUG" in os.environ:
-                                    raise TestCliException(
-                                        "SQLLoop Hint Error, Unexpected LoopInterval: " + str(loopInterval))
-                            if loopTimes < 0:
-                                if "TESTCLI_DEBUG" in os.environ:
-                                    raise TestCliException(
-                                        "SQLLoop Hint Error, Unexpected LoopTime: " + str(loopTimes))
-
-                            # 保存Silent设置
-                            oldSilentMode = self.testOptions.get("SILENT")
-                            oldTimingMode = self.testOptions.get("TIMING")
-                            oldTimeMode = self.testOptions.get("TIME")
-                            self.testOptions.set("SILENT", "ON")
-                            self.testOptions.set("TIMING", "OFF")
-                            self.testOptions.set("TIME", "OFF")
-                            # 对于循环语句，由于循环语句的判断表达式会根据之前LastSQLResult作为判断。所以这里不再保留
-                            self.lastJsonCommandResult = None
-
-                            for nLoopPos in range(1, loopTimes):
-                                # 检查Until条件，如果达到Until条件，退出
-                                bAssertSuccessful = False
-                                for loopCommandResult in \
-                                        self.run("__internal__ test assert " + loopUntil):
-                                    if loopCommandResult["type"] == "result":
-                                        if loopCommandResult["status"].startswith("Assert Successful"):
-                                            bAssertSuccessful = True
-                                        break
-                                if bAssertSuccessful:
-                                    break
-                                else:
-                                    # 测试失败, 等待一段时间后，开始下一次检查
-                                    time.sleep(loopInterval)
-                                    if "TESTCLI_DEBUG" in os.environ:
-                                        print("[DEBUG] SQL(LOOP " + str(nLoopPos) + ")=[" + str(command) + "]")
-                                    for loopCommandResult in self.run(command):
-                                        # 最后一次执行的结果将被传递到外层，作为SQL返回结果
-                                        if loopCommandResult["type"] == "result":
-                                            commandStatus = 0
-                                            commandResult["title"] = commandResult["title"]
-                                            commandResult["rows"] = commandResult["rows"]
-                                            commandResult["headers"] = commandResult["headers"]
-                                            commandResult["columnTypes"] = commandResult["columnTypes"]
-                                            commandResult["status"] = commandResult["status"]
-                                        if loopCommandResult["type"] == "error":
-                                            commandStatus = 1
-                                            commandErrorMessage = commandResult["message"]
-                            self.testOptions.set("TIME", oldTimeMode)
-                            self.testOptions.set("TIMING", oldTimingMode)
-                            self.testOptions.set("SILENT", oldSilentMode)
-
-                        # 保存之前的运行结果
-                        result = commandResult["rows"]
-
-                        # 如果Hints中有order字样，对结果进行排序后再输出
-                        if "Order" in commandHintList.keys() and result is not None:
-                            if "TESTCLI_DEBUG" in os.environ:
-                                print("[DEBUG] Apply Sort for this result 1.")
-                            self.sortresult(result)
-
-                        # 如果Hint中存在LogFilter，则结果集中过滤指定的输出信息
-                        if "LogFilter" in sqlHints.keys() and result is not None:
-                            for sqlFilter in commandHintList["LogFilter"]:
-                                for item in result[:]:
-                                    if "TESTCLI_DEBUG" in os.environ:
-                                        print("[DEBUG] Apply Filter: " + str(''.join(str(item))) +
-                                              " with " + sqlFilter)
-                                    if re.match(sqlFilter, ''.join(str(item)), re.IGNORECASE):
-                                        result.remove(item)
-                                        continue
-
-                        # 如果Hint中存在LogMask,则掩码指定的输出信息
-                        if "LogMask" in commandHintList.keys() and result is not None:
-                            for i in range(0, len(result)):
-                                rowResult = list(result[i])
-                                bDataChanged = False
-                                for j in range(0, len(rowResult)):
-                                    if rowResult[j] is None:
-                                        continue
-                                    output = str(rowResult[j])
-                                    for sqlMaskString in commandHintList["LogMask"]:
-                                        sqlMaskList = sqlMaskString.split("=>")
-                                        if len(sqlMaskList) == 2:
-                                            sqlMaskPattern = sqlMaskList[0]
-                                            sqlMaskTarget = sqlMaskList[1]
-                                            if "TESTCLI_DEBUG" in os.environ:
-                                                print("[DEBUG] Apply Mask: " + output +
-                                                      " with " + sqlMaskPattern + "=>" + sqlMaskTarget)
-                                            try:
-                                                beforeReplace = output
-                                                nIterCount = 0
-                                                while True:
-                                                    # 循环多次替代，一直到没有可替代为止
-                                                    afterReplace = re.sub(sqlMaskPattern, sqlMaskTarget,
-                                                                          beforeReplace, re.IGNORECASE)
-                                                    if afterReplace == beforeReplace or nIterCount > 99:
-                                                        newOutput = afterReplace
-                                                        break
-                                                    beforeReplace = afterReplace
-                                                    nIterCount = nIterCount + 1
-                                                if newOutput != output:
-                                                    bDataChanged = True
-                                                    rowResult[j] = newOutput
-                                            except re.error:
-                                                if "TESTCLI_DEBUG" in os.environ:
-                                                    print('[DEBUG] traceback.print_exc():\n%s'
-                                                          % traceback.print_exc())
-                                                    print('[DEBUG] traceback.format_exc():\n%s'
-                                                          % traceback.format_exc())
-                                        else:
-                                            if "TESTCLI_DEBUG" in os.environ:
-                                                print("[DEBUG] LogMask Hint Error: " + str(commandHintList["LogMask"]))
-                                if bDataChanged:
-                                    result[i] = tuple(rowResult)
-
-                        # 处理Status
-                        status = commandResult["status"]
-                        if "LogMask" in commandHintList.keys() and status is not None:
-                            for sqlMaskString in commandHintList["LogMask"]:
-                                sqlMaskList = sqlMaskString.split("=>")
-                                if len(sqlMaskList) == 2:
-                                    sqlMaskPattern = sqlMaskList[0]
-                                    sqlMaskTarget = sqlMaskList[1]
-                                    if "TESTCLI_DEBUG" in os.environ:
-                                        print("[DEBUG] Apply Mask: " + status +
-                                              " with " + sqlMaskPattern + "=>" + sqlMaskTarget)
-                                    try:
-                                        beforeReplace = status
-                                        nIterCount = 0
-                                        while True:
-                                            # 循环多次替代，最多99次，一直到没有可替代为止
-                                            afterReplace = re.sub(sqlMaskPattern, sqlMaskTarget,
-                                                                  beforeReplace, re.IGNORECASE)
-                                            if afterReplace == beforeReplace or nIterCount > 99:
-                                                status = afterReplace
-                                                break
-                                            beforeReplace = afterReplace
-                                            nIterCount = nIterCount + 1
-                                    except re.error:
-                                        if "TESTCLI_DEBUG" in os.environ:
-                                            print('[DEBUG] traceback.print_exc():\n%s'
-                                                  % traceback.print_exc())
-                                            print('[DEBUG] traceback.format_exc():\n%s'
-                                                  % traceback.format_exc())
-                                    else:
-                                        if "TESTCLI_DEBUG" in os.environ:
-                                            print("[DEBUG] LogMask Hint Error: " + str(commandHintList["LogMask"]))
-
-                        if "LogFilter" in commandHintList.keys() and status is not None:
-                            for sqlFilter in commandHintList["LogFilter"]:
-                                if "TESTCLI_DEBUG" in os.environ:
-                                    print("[DEBUG] Apply Filter: " + str(''.join(str(status))) +
-                                          " with " + sqlFilter)
-                                if re.match(sqlFilter, status, re.IGNORECASE):
-                                    status = None
-                                    continue
-
-                        # 返回运行结果
-                        commandResult["rows"] = result
-                        commandResult["status"] = status
-                        if commandResult["rows"] is None:
-                            rowCount = 0
-                        else:
-                            rowCount = len(commandResult["rows"])
-                        self.lastJsonCommandResult = {"desc": commandResult["headers"],
-                                                      "type": commandResult["type"],
-                                                      "rows": rowCount,
-                                                      "elapsed": time.time() - start,
-                                                      "result": commandResult["rows"],
-                                                      "status": status,
-                                                      "warnings": ""}
-                        # 如果TERMOUT为关闭，不在返回结果信息
-                        if self.testOptions.get('TERMOUT').upper() == 'OFF':
-                            commandResult["rows"] = []
-                            commandResult["title"] = ""
-                    yield commandResult
-            except SQLCliJDBCTimeOutException:
-                # 处理超时时间问题
-                if command.upper() not in ["EXIT", "QUIT"]:
-                    if self.timeOutMode == "SCRIPT":
-                        commandErrorMessage = "TESTCLI-0000: Script Timeout " \
-                                             "(" + str(self.scriptTimeOut) + \
-                                             ") expired. Abort this command."
-                    else:
-                        commandErrorMessage = "TESTCLI-0000: Command Timeout " \
-                                             "(" + str(self.sqlTimeOut) + \
-                                             ") expired. Abort this command."
-                    yield {"type": "error", "message": commandErrorMessage}
-            except CommandNotFound:
-                # 既然不是特殊语句，那就是普通语句，根据NAMESPACE来处理
-                # 处理SQL语句
-                if self.testOptions.get("NAMESPACE") == "SQL":
-                    for result in self.executeSQLStatement(command, commandHintList, start):
-                        yield result
-                elif self.testOptions.get("NAMESPACE") == "API":
-                    for result in self.executeAPIStatement(command, commandHintList, start):
-                        yield result
-            except EOFError:
-                # EOFError是程序退出的标志，退出应用程序
-                raise EOFError
-            except Exception as e:
-                # 只有在WHENEVER_SQLERROR==EXIT的时候，才会由前面的错误代码抛出错误到这里
-                commandStatus = 1
-                commandErrorMessage = str(e).strip()
-                # 如果要求出错退出，就立刻退出，否则打印日志信息
-                if self.testOptions.get("WHENEVER_SQLERROR") == "EXIT":
-                    raise e
-                else:
-                    if "TESTCLI_DEBUG" in os.environ:
-                        print('traceback.print_exc():\n%s' % traceback.print_exc())
-                        print('traceback.format_exc():\n%s' % traceback.format_exc())
-                        print("traceback.pid():" + str(os.getpid()))
-                    self.lastJsonCommandResult = None
-                    yield {"type": "error", "message": commandErrorMessage}
 
             # 如果需要，打印语句执行时间
             end = time.time()
@@ -1310,16 +1190,5 @@ class CmdExecute(object):
             if self.testOptions.get("SILENT").upper() == 'OFF':
                 yield {
                     "type": "statistics",
-                    "StartedTime": start,
                     "elapsed": self.lastElapsedTime,
-                    "rawCommand": rawCommand,
-                    "Command": command,
-                    "commandStatus": commandStatus,
-                    "errorMessage": commandErrorMessage,
-                    "thread_name": self.workerName,
-                    "scenario": self.scenario,
-                    "transaction": self.transaction
                 }
-        # 当前命令文件已经执行完毕，清空Scenario
-        if commandScriptFile is not None:
-            self.scenario = ''

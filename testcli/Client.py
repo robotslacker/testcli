@@ -56,8 +56,13 @@ def parse(script, defaultNameSpace=None):
     parser.addErrorListener(parser_listener)
     tree = parser.prog()
 
+    if parser.getNumberOfSyntaxErrors() > 0:
+        print("fdsafasdfdsa leleilei")
+        print("msg=" + str(parser_listener.msg))
+
     visitor = ClientVisitor(token, defaultNameSpace)
     result = visitor.visit(tree)
+
 
     return result
 
@@ -89,8 +94,9 @@ if __name__ == '__main__':
     defaultNameSpace = "SQL"
 
     isFinished, parsedObjects, originScripts, hints, errorCode, errorMsg = \
-        parse("set xxx yyy zzz ddd ", defaultNameSpace=defaultNameSpace)
-    print("isFInsished = " + str(isFinished))
+        parse("aaa", defaultNameSpace=defaultNameSpace)
+
+    print("isFinsished = " + str(isFinished))
     if isFinished:
         parsedLenth = len(parsedObjects)
         for i in range(0, len(parsedObjects)):

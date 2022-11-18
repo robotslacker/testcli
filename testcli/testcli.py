@@ -448,14 +448,6 @@ class TestCli(object):
             hidden=False
         )
 
-        # 切换用户执行空间
-        register_special_command(
-            handler=self.execute_internal_use,
-            command="__USE__",
-            description="切换用户执行空间",
-            hidden=False
-        )
-
         # 执行特殊的命令
         register_special_command(
             handler=self.execute_internal_command,
@@ -647,6 +639,7 @@ class TestCli(object):
                 connectProperties["driverType"] = "mem"
                 connectProperties["host"] = "0.0.0.0"
                 connectProperties["port"] = 0
+                connectProperties["parameters"] = {}
             elif connectProperties["localService"] == "meta":
                 # 如果连接内容仅仅就一个META，则连接到内置的jobmanager db
                 connectProperties["service"] = "mem:testclimeta"
@@ -657,15 +650,41 @@ class TestCli(object):
                 connectProperties["driverType"] = "tcp"
                 connectProperties["host"] = "0.0.0.0"
                 connectProperties["port"] = 0
+                connectProperties["parameters"] = {}
             else:
                 raise TestCliException("Invalid localservice. MEM|METADATA only.")
 
-        print("connectProperties 2 = " + str(connectProperties))
-
         # 连接数据库
         try:
+            # 如果当前未指定参数，缺省为上一次连接的参数
+            if "driverSchema" not in connectProperties:
+                connectProperties["driverSchema"] = cls.db_driverSchema
+            if "username" not in connectProperties:
+                connectProperties["username"] = cls.db_username
+            if "password" not in connectProperties:
+                connectProperties["password"] = cls.db_password
+            if "driver" not in connectProperties:
+                connectProperties["driver"] = cls.db_driver
+            if "driverSchema" not in connectProperties:
+                connectProperties["driverSchema"] = cls.db_driverSchema
+            if "driverType" not in connectProperties:
+                connectProperties["driverType"] = cls.db_driverType
+            if "host" not in connectProperties:
+                connectProperties["host"] = cls.db_host
+            if "port" not in connectProperties:
+                connectProperties["port"] = int(cls.db_port)
+            if "service" not in connectProperties:
+                connectProperties["service"] = cls.db_service
+            if "parameters" not in connectProperties:
+                connectProperties["parameters"] = cls.db_parameters
+
             if connectProperties["driver"] == 'jdbc':  # JDBC 连接数据库
-                # 加载所有的Jar包， 根据class的名字加载指定的文件
+                if connectProperties["driverSchema"] is None:
+                    # 必须指定数据库驱动类型
+                    raise TestCliException("Unknown database [" + str(connectProperties["driverSchema"]) + "]." +
+                                           "Connect Failed. Missed configuration in conf/testcli.ini.")
+
+                # 读取配置文件，判断随后JPype连接的时候使用具体哪一个Jar包
                 jarList = []
                 driverClass = ""
                 jdbcURL = None
@@ -678,54 +697,45 @@ class TestCli(object):
                         jdbcURL = jarConfig["JDBCURL"]
                         jdbcProp = jarConfig["JDBCProp"]
                         break
-                if "TESTCLI_DEBUG" in os.environ:
-                    print("Driver Jar list: " + str(jarList))
                 if jdbcURL is None:
+                    # 没有找到Jar包
                     raise TestCliException("Unknown database [" + str(connectProperties["driverSchema"]) + "]." +
                                            "Connect Failed. Missed configuration in conf/testcli.ini.")
 
-                # 如果本次连接没有指定相关参数，则默认使用上一次连接的参数
-                if "host" in connectProperties:
-                    jdbcURL = jdbcURL.replace("${host}", connectProperties["host"])
-                else:
-                    jdbcURL = jdbcURL.replace("${host}", cls.db_host)
-                if "port" in connectProperties:
-                    jdbcURL = jdbcURL.replace("${port}", connectProperties["port"])
-                else:
-                    if cls.db_port == "":
-                        jdbcURL = jdbcURL.replace(":${port}", "")
-                    else:
-                        jdbcURL = jdbcURL.replace("${port}", cls.db_port)
-                if "service" in connectProperties:
-                    jdbcURL = jdbcURL.replace("${service}", connectProperties["service"])
-                else:
-                    jdbcURL = jdbcURL.replace("${service}", cls.db_service)
-                if "driverType" in connectProperties:
-                    jdbcURL = jdbcURL.replace("${driver_type}", connectProperties["driverType"])
-                else:
-                    jdbcURL = jdbcURL.replace("${driver_type}", cls.db_service)
-
+                # 如果没有指定数据库类型，则无法进行数据库连接
                 if driverClass is None:
                     raise TestCliException(
-                        "Missed driver [" + cls.db_type.upper() + "] in config. Database Connect Failed. ")
+                        "Missed driver config [" + connectProperties["driverSchema"] + "]. Database Connect Failed. ")
+
+                # 替换连接字符串中的变量信息
+                # 连接字符串中可以出现的变量有：  ${host} ${port} ${service} ${driverType}
+                jdbcURL = jdbcURL.replace("${host}", connectProperties["host"])
+                jdbcURL = jdbcURL.replace("${port}", str(connectProperties["port"]))
+                if cls.db_port is None:
+                    jdbcURL = jdbcURL.replace(":${port}", "")
+                else:
+                    jdbcURL = jdbcURL.replace("${port}", str(cls.db_port))
+                jdbcURL = jdbcURL.replace("${service}", connectProperties["service"])
+                jdbcURL = jdbcURL.replace("${driverType}", connectProperties["driverType"])
+
+                # 构造连接参数
                 jdbcConnProp = {}
                 if cls.db_username is not None:
-                    jdbcConnProp['user'] = cls.db_username
+                    jdbcConnProp['user'] = connectProperties["username"]
                 if cls.db_password is not None:
-                    jdbcConnProp['password'] = cls.db_password
+                    jdbcConnProp['password'] = connectProperties["password"]
+                # 处理连接参数中的属性信息，既包括配置文件中提供的参数，也包括连接命令行中输入的
                 if jdbcProp is not None:
                     for row in jdbcProp.strip().split(','):
                         props = row.split(':')
                         if len(props) == 2:
-                            m_PropName = str(props[0]).strip()
-                            m_PropValue = str(props[1]).strip()
-                            jdbcConnProp[m_PropName] = m_PropValue
+                            propName = str(props[0]).strip()
+                            propValue = str(props[1]).strip()
+                            jdbcConnProp[propName] = propValue
+                for propName, propValue in connectProperties["parameters"].items():
+                    jdbcConnProp[propName] = propValue
 
-                # 将当前DB的连接字符串备份到变量中
-                cls.testOptions.set("CONNURL", str(cls.db_url))
-                cls.testOptions.set("CONNPROP", str(jdbcProp))
-                if "TESTCLI_DEBUG" in os.environ:
-                    print("Connect to [" + jdbcURL + "]...")
+                # 尝试数据库连接，保持一定的重试次数，一直到连接上
                 retryCount = 0
                 while True:
                     try:
@@ -748,20 +758,43 @@ class TestCli(object):
                         else:
                             time.sleep(2)
                             continue
+
+                # 将当前DB的连接字符串备份到变量中， 便于SET命令展示
+                cls.testOptions.set("CONNURL", str(jdbcURL))
+                cls.testOptions.set("CONNSCHEMA", str(connectProperties["username"]))
+
+                # 成功连接后，保留当前连接的所有信息，以便下一次连接
                 cls.db_url = jdbcURL
+                cls.db_username = connectProperties["username"]
+                cls.db_password = connectProperties["password"]
+                cls.db_driver = connectProperties["driver"]
+                cls.db_driverSchema = connectProperties["driverSchema"]
+                cls.db_driverType = connectProperties["driverType"]
+                cls.db_host = connectProperties["host"]
+                cls.db_port = connectProperties["port"]
+                cls.db_service = connectProperties["service"]
+                cls.db_parameters = connectProperties["parameters"]
+
+                # 保存连接句柄
                 cls.cmdExecuteHandler.sqlConn = cls.db_conn
+            else:
+                raise TestCliException("Current driver [" + str(connectProperties["driver"]) + "] is not supported.")
         except TestCliException as se:  # Connecting to a database fail.
             raise se
         except Exception as e:  # Connecting to a database fail.
             if "TESTCLI_DEBUG" in os.environ:
                 print('traceback.print_exc():\n%s' % traceback.print_exc())
                 print('traceback.format_exc():\n%s' % traceback.format_exc())
+                print("db_sessionName = [" + str(cls.db_sessionName) + "]")
                 print("db_user = [" + str(cls.db_username) + "]")
                 print("db_pass = [" + str(cls.db_password) + "]")
-                print("db_type = [" + str(cls.db_type) + "]")
+                print("db_driver = [" + str(cls.db_driver) + "]")
+                print("db_driverSchema = [" + str(cls.db_driverSchema) + "]")
+                print("db_driverType = [" + str(cls.db_driverType) + "]")
                 print("db_host = [" + str(cls.db_host) + "]")
                 print("db_port = [" + str(cls.db_port) + "]")
-                print("db_service_name = [" + str(cls.db_service_name) + "]")
+                print("db_service = [" + str(cls.db_service) + "]")
+                print("db_parameters = [" + str(cls.db_parameters) + "]")
                 print("db_url = [" + str(cls.db_url) + "]")
                 print("jar_file = [" + str(cls.db_connectionConf) + "]")
             if str(e).find("SQLInvalidAuthorizationSpecException") != -1:
@@ -954,48 +987,48 @@ class TestCli(object):
                 "status": "Session restored Successful."
             }
 
-    # 休息一段时间, 如果收到SHUTDOWN信号的时候，立刻终止SLEEP
+    # 休息一段时间
     @staticmethod
-    def sleep(cls, arg, **kwargs):
-        if cls:
-            pass
-        if not arg:
-            message = "Missing required argument, sleep [seconds]."
-            return [{
-                "title": None,
-                "rows": None,
-                "headers": None,
-                "columnTypes": None,
-                "status": message
-            }]
-        try:
-            m_Sleep_Time = int(arg)
-            if m_Sleep_Time <= 0:
-                message = "Parameter must be a valid number, sleep [seconds]."
-                return [{
-                    "title": None,
-                    "rows": None,
-                    "headers": None,
-                    "columnTypes": None,
-                    "status": message
-                }]
-            m_TimeOutLimit = int(kwargs.get('timeout'))
-            if m_TimeOutLimit != -1 and m_TimeOutLimit < m_Sleep_Time:
-                # 有超时限制，最多休息道超时的时间
-                time.sleep(m_TimeOutLimit)
-                raise SQLCliJDBCTimeOutException("TimeOut")
+    def sleep(cls, sleepTime: int):
+        sleepTimeOut = -1
+
+        nameSpace = cls.testOptions.get("NAMESPACE")
+        scriptTimeOut = int(cls.testOptions.get("SCRIPT_TIMEOUT"))
+        if nameSpace == "SQL":
+            sqlTimeOut = int(cls.testOptions.get("SQL_TIMEOUT"))
+            if scriptTimeOut != -1:
+                if scriptTimeOut < sqlTimeOut:
+                    sleepTimeOut = scriptTimeOut
             else:
-                time.sleep(m_Sleep_Time)
-        except ValueError:
-            message = "Parameter must be a number, sleep [seconds]."
+                if sqlTimeOut != -1:
+                    sleepTimeOut = sqlTimeOut
+        if nameSpace == "API":
+            apiTimeOut = int(cls.testOptions.get("API_TIMEOUT"))
+            if scriptTimeOut != -1:
+                if scriptTimeOut < apiTimeOut:
+                    sleepTimeOut = scriptTimeOut
+            else:
+                if apiTimeOut != -1:
+                    sleepTimeOut = apiTimeOut
+
+        if sleepTime <= 0:
+            message = "Parameter must be a valid number, sleep [seconds]."
             return [{
+                "type": "result",
                 "title": None,
                 "rows": None,
                 "headers": None,
                 "columnTypes": None,
                 "status": message
             }]
+        if sleepTimeOut != -1 and sleepTimeOut < sleepTime:
+            # 有超时限制，最多休息到超时的时间
+            time.sleep(sleepTimeOut)
+            raise SQLCliJDBCTimeOutException("TimeOut")
+        else:
+            time.sleep(sleepTime)
         return [{
+            "type": "result",
             "title": None,
             "rows": None,
             "headers": None,
@@ -1065,7 +1098,7 @@ class TestCli(object):
                     # 分段执行执行的语句
                     for command in commandList:
                         for executeResult in \
-                                cls.cmdExecuteHandler.run(
+                                cls.cmdExecuteHandler.runStatement(
                                     statement=command["script"],
                                     commandScriptFile=os.path.expanduser(scriptFile),
                                     nameSpace=command["nameSpace"]
@@ -1078,7 +1111,7 @@ class TestCli(object):
                         "rows": None,
                         "headers": None,
                         "columnTypes": None,
-                        "status": "Execute script [" + str(scriptFile) + "] failed. " + repr(e)
+                        "status": "Execute script [" + str(os.path.abspath(scriptFile)) + "] failed. " + repr(e)
                     }
 
     # 将当前及随后的输出打印到指定的文件中
@@ -1160,8 +1193,14 @@ class TestCli(object):
     # 设置一些选项
     @staticmethod
     def set_options(cls, options):
-        optionName = options["optionName"]
-        optionValue = options["optionValue"]
+        if "optionName" in options:
+            optionName = options["optionName"]
+        else:
+            optionName = None
+        if "optionValue" in options:
+            optionValue = options["optionValue"]
+        else:
+            optionValue = ""
 
         if optionName is None:
             # SET如果没有参数，则显示所有的选项出来
@@ -1170,6 +1209,7 @@ class TestCli(object):
                 if not row["Hidden"]:
                     result.append([row["Name"], row["Value"], row["Comments"]])
             yield {
+                "type": "result",
                 "title": "Current Options: ",
                 "rows": result,
                 "headers": ["Name", "Value", "Comments"],
@@ -1177,10 +1217,6 @@ class TestCli(object):
                 "status": None
             }
             return
-        else:
-            if optionValue is None:
-                # SET如果没有指定设置值，则设置值默认为空
-                optionValue = ""
 
         # 处理DEBUG选项
         if optionName.upper() == "DEBUG":
@@ -1193,6 +1229,7 @@ class TestCli(object):
                 raise TestCliException("SQLCLI-00000: "
                                        "Unknown option [" + str(optionValue) + "]. ON/OFF only.")
             return [{
+                "type": "result",
                 "title": None,
                 "rows": None,
                 "headers": None,
@@ -1212,6 +1249,7 @@ class TestCli(object):
                 raise TestCliException("SQLCLI-00000: "
                                        "Unknown option [" + str(optionValue) + "]. True/False only.")
             return [{
+                "type": "result",
                 "title": None,
                 "rows": None,
                 "headers": None,
@@ -1241,6 +1279,7 @@ class TestCli(object):
                 raise TestCliException("SQLCLI-00000: "
                                        "Unknown option [" + str(optionValue) + "] for JOBMANAGER. ON/OFF only.")
             return [{
+                "type": "result",
                 "title": None,
                 "rows": None,
                 "headers": None,
@@ -1267,6 +1306,7 @@ class TestCli(object):
                 cls.TransactionHandler.setMetaConn(cls.MetaHandler.db_conn)
                 cls.testOptions.set("JOBMANAGER_METAURL", jobManagerURL)
             return [{
+                "type": "result",
                 "title": None,
                 "rows": None,
                 "headers": None,
@@ -1278,6 +1318,7 @@ class TestCli(object):
         if optionName.startswith('@'):
             cls.testOptions.set(optionName[1], optionValue)
             return [{
+                "type": "result",
                 "title": None,
                 "rows": None,
                 "headers": None,
@@ -1289,6 +1330,7 @@ class TestCli(object):
         if cls.testOptions.get(optionName.upper()) is not None:
             cls.testOptions.set(optionName.upper(), optionValue)
             return [{
+                "type": "result",
                 "title": None,
                 "rows": None,
                 "headers": None,
@@ -1301,23 +1343,16 @@ class TestCli(object):
 
     # 切换程序运行空间
     @staticmethod
-    def execute_internal_use(cls, arg, **_):
-        # 处理应用的空间切换
-        match_obj = re.match(r"(\s+)?NAMESPACE(.*)$", arg, re.IGNORECASE | re.DOTALL)
-        if match_obj:
-            newNameSpace = match_obj.group(2).strip().upper()
-            if newNameSpace.endswith(";"):
-                newNameSpace = newNameSpace[0:-1].strip()
-            cls.testOptions.set("NAMESPACE", newNameSpace)
-            yield {
-                "title": None,
-                "rows": None,
-                "headers": None,
-                "columnTypes": None,
-                "status": "Current NameSpace: " + str(newNameSpace) + "."
-            }
-            return
-        return
+    def set_nameSpace(cls, nameSpace: str):
+        cls.testOptions.set("NAMESPACE", nameSpace)
+        yield {
+            "type": "result",
+            "title": None,
+            "rows": None,
+            "headers": None,
+            "columnTypes": None,
+            "status": "Current NameSpace: " + str(nameSpace) + "."
+        }
 
     # 执行特殊的命令
     @staticmethod
@@ -1580,7 +1615,7 @@ class TestCli(object):
 
             # 执行指定的SQL
             for result in \
-                    self.cmdExecuteHandler.run(
+                    self.cmdExecuteHandler.runStatement(
                         statement=text,
                         commandScriptFile="Console",
                         nameSpace=self.nameSpace):
@@ -1588,7 +1623,7 @@ class TestCli(object):
                 show_result(result)
                 if result["type"] == "statistics":
                     if self.testOptions.get('TIMING').upper() == 'ON':
-                        self.echo('Running time elapsed: %9.2f Seconds' % result["elapsed"])
+                        self.echo('Running time elapsed: %9.2f seconds' % result["elapsed"])
                     if self.testOptions.get('TIME').upper() == 'ON':
                         self.echo('Current clock time  :' + strftime("%Y-%m-%d %H:%M:%S", localtime()))
             # 返回正确执行的消息

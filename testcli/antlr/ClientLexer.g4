@@ -55,17 +55,23 @@ LOADDRIVER: 'LOADDRIVER';
 
 // 回显示模式
 ECHO_OPEN   : 'ECHO' .*? (CRLF | EOF) ->pushMode(EchoMode);
+
 // HTTP 请求进入Http处理模式
 HTTP_OPEN   : '###' .*? CRLF ->pushMode(HttpMode);
+
 // 脚本模式
 SCRIPT_OPEN : '> {%' ->pushMode(ScriptMode);
+
 // 注释模式
 COMMENT_OPEN: '//' .*? CRLF ->channel(HIDDEN);
+
 // --提示
 MINUS_MINUS_HINT   : '--' ' '* '[Hint]' .*? CRLF ->channel(HINT_CHANNEL);
+
 // --SQL注释
 MINUS_MINUS_COMMENT   : '--' .*? (CRLF | EOF) ->channel(COMMENT_CHANNEL);
 HASH_COMMENT      : '#' ~'#' .*? CRLF ->channel(COMMENT_CHANNEL);
+
 // SQL创建语句
 SQL_CREATE: 'CREATE' -> mode(SQLStatementMode) ;
 SQL_INSERT: 'INSERT' -> mode(SQLStatementMode) ;
@@ -74,6 +80,7 @@ SQL_SELECT: 'SELECT' -> mode(SQLStatementMode) ;
 SQL_DELETE: 'DELETE'  -> mode(SQLStatementMode) ;
 SQL_REPLACE: 'REPLACE' -> mode(SQLStatementMode);
 SQL_DECLARE: 'DECLARE' -> mode(SQLProcedureMode) ;
+SQL_DROP:   'DROP' -> mode(SQLStatementMode) ;
 SQL_CREATE_PROCEDURE: ('CREATE' | 'REPLACE' | ' '+ | 'OR')+ ('PROCEDURE'|'FUNCTION') ->mode(SQLProcedureMode);
 
 INT : DIGIT+ ;

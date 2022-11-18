@@ -14,11 +14,6 @@ class ClientParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ClientParser#commands.
-    def visitCommands(self, ctx:ClientParser.CommandsContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by ClientParser#command.
     def visitCommand(self, ctx:ClientParser.CommandContext):
         return self.visitChildren(ctx)
@@ -329,6 +324,11 @@ class ClientParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ClientParser#sqlDrop.
+    def visitSqlDrop(self, ctx:ClientParser.SqlDropContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ClientParser#sqlDeclare.
     def visitSqlDeclare(self, ctx:ClientParser.SqlDeclareContext):
         return self.visitChildren(ctx)
@@ -336,11 +336,6 @@ class ClientParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by ClientParser#sqlCreateProcedure.
     def visitSqlCreateProcedure(self, ctx:ClientParser.SqlCreateProcedureContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ClientParser#sqlUnknown.
-    def visitSqlUnknown(self, ctx:ClientParser.SqlUnknownContext):
         return self.visitChildren(ctx)
 
 

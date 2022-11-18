@@ -12,21 +12,22 @@ from .antlrgen.ClientParser import ClientParser
 from .ClientVisitor import ClientVisitor
 
 
-class ClientErrorListener(ErrorListener):
-    __slots__ = 'num_errors'
-
+class SQLClientErrorListener(ErrorListener):
+    # 自定义错误输出记录
     def __init__(self):
         super().__init__()
-        self.num_errors = 0
-        self.msg = []
+        self.errorCode = 0
+        self.isFinished = True
+        self.errorMsg = ""
 
     def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
-        self.num_errors = self.num_errors + 1
-
-        errMsg = "行{}:{}  {} ".format(str(line), str(column), msg)
-
-        self.msg.append(errMsg)
-
+        if str(msg).startswith("missing SQL_END"):
+            self.isFinished = False
+            self.errorCode = 1
+            self.errorMsg = str(msg)
+        else:
+            self.errorCode = 1
+            self.errorMsg = "line{}:{}  {} ".format(str(line), str(column), msg)
         super().syntaxError(recognizer, offendingSymbol, line, column, msg, e)
 
 
@@ -282,6 +283,7 @@ def SQLFormatWithPrefix(p_szCommentSQLScript, p_szOutputPrefix=""):
             formattedString = formattedString + '\n' + p_szOutputPrefix + bSQLPrefix + commentSQLLists[pos]
         if len(commentSQLLists[pos].strip()) != 0:
             bSQLPrefix = '   > '
+
     return formattedString
 
 
@@ -295,17 +297,29 @@ def SQLAnalyze(sqlCommandPlainText, defaultNameSpace="SQL"):
     stream = InputStream(sqlCommandPlainText)
     lexer = ClientLexer(stream)
     lexer.removeErrorListeners()
-    lexer_listener = ClientErrorListener()
+    lexer_listener = SQLClientErrorListener()
     lexer.addErrorListener(lexer_listener)
 
     token = CommonTokenStream(lexer)
     parser = ClientParser(token)
     parser.removeErrorListeners()
-    parser_listener = ClientErrorListener()
+    parser_listener = SQLClientErrorListener()
     parser.addErrorListener(parser_listener)
     tree = parser.prog()
 
     visitor = ClientVisitor(token, defaultNameSpace)
     (isFinished, parsedObjects, originScripts, hints, errorCode, errorMsg) = visitor.visit(tree)
 
-    return isFinished, parsedObjects, sqlCommandPlainText, hints, errorCode, errorMsg
+    # 词法和语法解析，任何一个失败，都认为失败
+    if not lexer_listener.isFinished:
+        isFinished = False
+    if not parser_listener.isFinished:
+        isFinished = False
+
+    if lexer_listener.errorCode != 0:
+        errorCode = lexer_listener.errorCode
+        errorMsg = lexer_listener.errorMsg
+    if parser_listener.errorCode != 0:
+        errorCode = parser_listener.errorCode
+        errorMsg = parser_listener.errorMsg
+    return isFinished, parsedObjects, originScripts, hints, errorCode, errorMsg

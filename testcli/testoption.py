@@ -116,11 +116,11 @@ class TestOptions(object):
         self.testOptionList.append({"Name": "CONNURL",
                                     "Value": "",
                                     "Comments": 'Connection URL',
-                                    "Hidden": True})
-        self.testOptionList.append({"Name": "CONNPROP",
+                                    "Hidden": False})
+        self.testOptionList.append({"Name": "CONNSCHEMA",
                                     "Value": "",
-                                    "Comments": 'Connection Props',
-                                    "Hidden": True})
+                                    "Comments": 'Current DB schema',
+                                    "Hidden": False})
         self.testOptionList.append({"Name": "SILENT",
                                     "Value": "OFF",
                                     "Comments": '',
@@ -149,11 +149,6 @@ class TestOptions(object):
                                     "Hidden": False})
         self.testOptionList.append({"Name": "API_TIMEOUT",
                                     "Value": -1,
-                                    "Comments": '',
-                                    "Hidden": False})
-
-        self.testOptionList.append({"Name": "PRIORITY",
-                                    "Value": "",
                                     "Comments": '',
                                     "Hidden": False})
 
