@@ -305,8 +305,7 @@ def AttachJVM(jars=None, libs=None):
             print("JVM started: class.path=[" + jpype.java.lang.System.getProperty('java.class.path') + "]")
             print("JVM Version: [" + ".".join([str(x) for x in getattr(jpype, "getJVMVersion")()]) + "]")
 
-    if not getattr(jpype, "isThreadAttachedToJVM")():
-        getattr(jpype, "attachThreadToJVM")()
+    if jpype.java.lang.Thread.isAttached():
         jpype.java.lang.Thread.currentThread().setContextClassLoader(jpype.java.lang.ClassLoader.getSystemClassLoader())
     if _jdbc_name_to_const is None:
         types = jpype.java.sql.Types

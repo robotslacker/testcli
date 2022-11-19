@@ -13,7 +13,7 @@ websockets
 pydantic
 uvicorn[standard]
 fastapi
-mysql.connector
+mysql-connector
 paramiko
 robotframework
 gitpython
@@ -23,3 +23,4 @@ numpy
 pandas
 requests
 jsonpath
+antlr4-python3-runtime

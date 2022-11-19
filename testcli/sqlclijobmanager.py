@@ -1127,7 +1127,7 @@ class JOBManager(object):
         # 获得当前的Worker_Tag
         m_Job = self.getJobByProcessID(os.getpid())
         if m_Job is None:
-            raise TestCliException("TESTCLI-00000:  This is not a job process at all. What are you waiting for?")
+            raise TestCliException("TestCli-0000:  This is not a job process at all. What are you waiting for?")
 
         # 获得进程的Worker信息
         m_Worker = m_Job.getWorkerByProcessID(os.getpid())
@@ -1337,7 +1337,7 @@ class JOBManager(object):
     def Process_Command(self, p_szCommand: str):
         if self.MetaConn is None:
             # 如果没有Meta连接，直接退出
-            return None, None, None, None, "TESTCLI-00000: JOB Manager is not started. command abort!"
+            return None, None, None, None, "TestCli-0000: JOB Manager is not started. command abort!"
 
         m_szSQL = p_szCommand.strip()
 

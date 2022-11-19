@@ -1,4 +1,4 @@
-# Generated from C:/Work/testcli/testcli/antlr\ClientParser.g4 by ANTLR 4.10.1
+# Generated from C:/Work/testcli/testcli/antlr\APIParser.g4 by ANTLR 4.10.1
 # encoding: utf-8
 from antlr4 import *
 from io import StringIO
@@ -207,9 +207,9 @@ def serializedATN():
         454,470,474,486,491,496,501,506,511,516,521,526,531
     ]
 
-class ClientParser ( Parser ):
+class APIParser ( Parser ):
 
-    grammarFileName = "ClientParser.g4"
+    grammarFileName = "APIParser.g4"
 
     atn = ATNDeserializer().deserialize(serializedATN())
 
@@ -478,14 +478,14 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def command(self):
-            return self.getTypedRuleContext(ClientParser.CommandContext,0)
+            return self.getTypedRuleContext(APIParser.CommandContext,0)
 
 
         def EOF(self):
-            return self.getToken(ClientParser.EOF, 0)
+            return self.getToken(APIParser.EOF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_prog
+            return APIParser.RULE_prog
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitProg" ):
@@ -498,14 +498,14 @@ class ClientParser ( Parser ):
 
     def prog(self):
 
-        localctx = ClientParser.ProgContext(self, self._ctx, self.state)
+        localctx = APIParser.ProgContext(self, self._ctx, self.state)
         self.enterRule(localctx, 0, self.RULE_prog)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 132
             self.command()
             self.state = 133
-            self.match(ClientParser.EOF)
+            self.match(APIParser.EOF)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -523,94 +523,94 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def exit(self):
-            return self.getTypedRuleContext(ClientParser.ExitContext,0)
+            return self.getTypedRuleContext(APIParser.ExitContext,0)
 
 
         def quit(self):
-            return self.getTypedRuleContext(ClientParser.QuitContext,0)
+            return self.getTypedRuleContext(APIParser.QuitContext,0)
 
 
         def use(self):
-            return self.getTypedRuleContext(ClientParser.UseContext,0)
+            return self.getTypedRuleContext(APIParser.UseContext,0)
 
 
         def sleep(self):
-            return self.getTypedRuleContext(ClientParser.SleepContext,0)
+            return self.getTypedRuleContext(APIParser.SleepContext,0)
 
 
         def connect(self):
-            return self.getTypedRuleContext(ClientParser.ConnectContext,0)
+            return self.getTypedRuleContext(APIParser.ConnectContext,0)
 
 
         def disconnect(self):
-            return self.getTypedRuleContext(ClientParser.DisconnectContext,0)
+            return self.getTypedRuleContext(APIParser.DisconnectContext,0)
 
 
         def session(self):
-            return self.getTypedRuleContext(ClientParser.SessionContext,0)
+            return self.getTypedRuleContext(APIParser.SessionContext,0)
 
 
         def start(self):
-            return self.getTypedRuleContext(ClientParser.StartContext,0)
+            return self.getTypedRuleContext(APIParser.StartContext,0)
 
 
         def loadmap(self):
-            return self.getTypedRuleContext(ClientParser.LoadmapContext,0)
+            return self.getTypedRuleContext(APIParser.LoadmapContext,0)
 
 
         def wheneverError(self):
-            return self.getTypedRuleContext(ClientParser.WheneverErrorContext,0)
+            return self.getTypedRuleContext(APIParser.WheneverErrorContext,0)
 
 
         def spool(self):
-            return self.getTypedRuleContext(ClientParser.SpoolContext,0)
+            return self.getTypedRuleContext(APIParser.SpoolContext,0)
 
 
         def loadDriver(self):
-            return self.getTypedRuleContext(ClientParser.LoadDriverContext,0)
+            return self.getTypedRuleContext(APIParser.LoadDriverContext,0)
 
 
         def set_(self):
-            return self.getTypedRuleContext(ClientParser.SetContext,0)
+            return self.getTypedRuleContext(APIParser.SetContext,0)
 
 
         def internal(self):
-            return self.getTypedRuleContext(ClientParser.InternalContext,0)
+            return self.getTypedRuleContext(APIParser.InternalContext,0)
 
 
         def script(self):
-            return self.getTypedRuleContext(ClientParser.ScriptContext,0)
+            return self.getTypedRuleContext(APIParser.ScriptContext,0)
 
 
         def http(self):
-            return self.getTypedRuleContext(ClientParser.HttpContext,0)
+            return self.getTypedRuleContext(APIParser.HttpContext,0)
 
 
         def loop(self):
-            return self.getTypedRuleContext(ClientParser.LoopContext,0)
+            return self.getTypedRuleContext(APIParser.LoopContext,0)
 
 
         def echo(self):
-            return self.getTypedRuleContext(ClientParser.EchoContext,0)
+            return self.getTypedRuleContext(APIParser.EchoContext,0)
 
 
         def loopUntil(self):
-            return self.getTypedRuleContext(ClientParser.LoopUntilContext,0)
+            return self.getTypedRuleContext(APIParser.LoopUntilContext,0)
 
 
         def assert_(self):
-            return self.getTypedRuleContext(ClientParser.AssertContext,0)
+            return self.getTypedRuleContext(APIParser.AssertContext,0)
 
 
         def sql(self):
-            return self.getTypedRuleContext(ClientParser.SqlContext,0)
+            return self.getTypedRuleContext(APIParser.SqlContext,0)
 
 
         def EOF(self):
-            return self.getToken(ClientParser.EOF, 0)
+            return self.getToken(APIParser.EOF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_command
+            return APIParser.RULE_command
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitCommand" ):
@@ -623,7 +623,7 @@ class ClientParser ( Parser ):
 
     def command(self):
 
-        localctx = ClientParser.CommandContext(self, self._ctx, self.state)
+        localctx = APIParser.CommandContext(self, self._ctx, self.state)
         self.enterRule(localctx, 2, self.RULE_command)
         try:
             self.state = 157
@@ -758,7 +758,7 @@ class ClientParser ( Parser ):
             elif la_ == 22:
                 self.enterOuterAlt(localctx, 22)
                 self.state = 156
-                self.match(ClientParser.EOF)
+                self.match(APIParser.EOF)
                 pass
 
 
@@ -779,16 +779,16 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def EXIT(self):
-            return self.getToken(ClientParser.EXIT, 0)
+            return self.getToken(APIParser.EXIT, 0)
 
         def INT(self):
-            return self.getToken(ClientParser.INT, 0)
+            return self.getToken(APIParser.INT, 0)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_exit
+            return APIParser.RULE_exit
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitExit" ):
@@ -801,27 +801,27 @@ class ClientParser ( Parser ):
 
     def exit(self):
 
-        localctx = ClientParser.ExitContext(self, self._ctx, self.state)
+        localctx = APIParser.ExitContext(self, self._ctx, self.state)
         self.enterRule(localctx, 4, self.RULE_exit)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 159
-            self.match(ClientParser.EXIT)
+            self.match(APIParser.EXIT)
             self.state = 161
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.INT:
+            if _la==APIParser.INT:
                 self.state = 160
-                self.match(ClientParser.INT)
+                self.match(APIParser.INT)
 
 
             self.state = 164
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 163
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -841,16 +841,16 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def QUIT(self):
-            return self.getToken(ClientParser.QUIT, 0)
+            return self.getToken(APIParser.QUIT, 0)
 
         def INT(self):
-            return self.getToken(ClientParser.INT, 0)
+            return self.getToken(APIParser.INT, 0)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_quit
+            return APIParser.RULE_quit
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitQuit" ):
@@ -863,27 +863,27 @@ class ClientParser ( Parser ):
 
     def quit(self):
 
-        localctx = ClientParser.QuitContext(self, self._ctx, self.state)
+        localctx = APIParser.QuitContext(self, self._ctx, self.state)
         self.enterRule(localctx, 6, self.RULE_quit)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 166
-            self.match(ClientParser.QUIT)
+            self.match(APIParser.QUIT)
             self.state = 168
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.INT:
+            if _la==APIParser.INT:
                 self.state = 167
-                self.match(ClientParser.INT)
+                self.match(APIParser.INT)
 
 
             self.state = 171
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 170
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -903,19 +903,19 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def USE(self):
-            return self.getToken(ClientParser.USE, 0)
+            return self.getToken(APIParser.USE, 0)
 
         def API(self):
-            return self.getToken(ClientParser.API, 0)
+            return self.getToken(APIParser.API, 0)
 
         def SQL(self):
-            return self.getToken(ClientParser.SQL, 0)
+            return self.getToken(APIParser.SQL, 0)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_use
+            return APIParser.RULE_use
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitUse" ):
@@ -928,16 +928,16 @@ class ClientParser ( Parser ):
 
     def use(self):
 
-        localctx = ClientParser.UseContext(self, self._ctx, self.state)
+        localctx = APIParser.UseContext(self, self._ctx, self.state)
         self.enterRule(localctx, 8, self.RULE_use)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 173
-            self.match(ClientParser.USE)
+            self.match(APIParser.USE)
             self.state = 174
             _la = self._input.LA(1)
-            if not(_la==ClientParser.API or _la==ClientParser.SQL):
+            if not(_la==APIParser.API or _la==APIParser.SQL):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -945,9 +945,9 @@ class ClientParser ( Parser ):
             self.state = 176
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 175
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -967,16 +967,16 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def SLEEP(self):
-            return self.getToken(ClientParser.SLEEP, 0)
+            return self.getToken(APIParser.SLEEP, 0)
 
         def INT(self):
-            return self.getToken(ClientParser.INT, 0)
+            return self.getToken(APIParser.INT, 0)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_sleep
+            return APIParser.RULE_sleep
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitSleep" ):
@@ -989,21 +989,21 @@ class ClientParser ( Parser ):
 
     def sleep(self):
 
-        localctx = ClientParser.SleepContext(self, self._ctx, self.state)
+        localctx = APIParser.SleepContext(self, self._ctx, self.state)
         self.enterRule(localctx, 10, self.RULE_sleep)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 178
-            self.match(ClientParser.SLEEP)
+            self.match(APIParser.SLEEP)
             self.state = 179
-            self.match(ClientParser.INT)
+            self.match(APIParser.INT)
             self.state = 181
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 180
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -1023,15 +1023,15 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def connectjdbc(self):
-            return self.getTypedRuleContext(ClientParser.ConnectjdbcContext,0)
+            return self.getTypedRuleContext(APIParser.ConnectjdbcContext,0)
 
 
         def connectlocal(self):
-            return self.getTypedRuleContext(ClientParser.ConnectlocalContext,0)
+            return self.getTypedRuleContext(APIParser.ConnectlocalContext,0)
 
 
         def getRuleIndex(self):
-            return ClientParser.RULE_connect
+            return APIParser.RULE_connect
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitConnect" ):
@@ -1044,7 +1044,7 @@ class ClientParser ( Parser ):
 
     def connect(self):
 
-        localctx = ClientParser.ConnectContext(self, self._ctx, self.state)
+        localctx = APIParser.ConnectContext(self, self._ctx, self.state)
         self.enterRule(localctx, 12, self.RULE_connect)
         try:
             self.enterOuterAlt(localctx, 1)
@@ -1079,17 +1079,17 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def CONNECT(self):
-            return self.getToken(ClientParser.CONNECT, 0)
+            return self.getToken(APIParser.CONNECT, 0)
 
         def CONNECT_SLASH(self):
-            return self.getToken(ClientParser.CONNECT_SLASH, 0)
+            return self.getToken(APIParser.CONNECT_SLASH, 0)
 
         def connectlocalService(self):
-            return self.getTypedRuleContext(ClientParser.ConnectlocalServiceContext,0)
+            return self.getTypedRuleContext(APIParser.ConnectlocalServiceContext,0)
 
 
         def getRuleIndex(self):
-            return ClientParser.RULE_connectlocal
+            return APIParser.RULE_connectlocal
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitConnectlocal" ):
@@ -1102,14 +1102,14 @@ class ClientParser ( Parser ):
 
     def connectlocal(self):
 
-        localctx = ClientParser.ConnectlocalContext(self, self._ctx, self.state)
+        localctx = APIParser.ConnectlocalContext(self, self._ctx, self.state)
         self.enterRule(localctx, 14, self.RULE_connectlocal)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 187
-            self.match(ClientParser.CONNECT)
+            self.match(APIParser.CONNECT)
             self.state = 188
-            self.match(ClientParser.CONNECT_SLASH)
+            self.match(APIParser.CONNECT_SLASH)
             self.state = 189
             self.connectlocalService()
         except RecognitionException as re:
@@ -1129,60 +1129,60 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def CONNECT(self):
-            return self.getToken(ClientParser.CONNECT, 0)
+            return self.getToken(APIParser.CONNECT, 0)
 
         def connectUserInfo(self):
-            return self.getTypedRuleContext(ClientParser.ConnectUserInfoContext,0)
+            return self.getTypedRuleContext(APIParser.ConnectUserInfoContext,0)
 
 
         def connectDriver(self):
-            return self.getTypedRuleContext(ClientParser.ConnectDriverContext,0)
+            return self.getTypedRuleContext(APIParser.ConnectDriverContext,0)
 
 
         def CONNECT_COLON(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.CONNECT_COLON)
+                return self.getTokens(APIParser.CONNECT_COLON)
             else:
-                return self.getToken(ClientParser.CONNECT_COLON, i)
+                return self.getToken(APIParser.CONNECT_COLON, i)
 
         def connectDriverSchema(self):
-            return self.getTypedRuleContext(ClientParser.ConnectDriverSchemaContext,0)
+            return self.getTypedRuleContext(APIParser.ConnectDriverSchemaContext,0)
 
 
         def CONNECT_DASH(self):
-            return self.getToken(ClientParser.CONNECT_DASH, 0)
+            return self.getToken(APIParser.CONNECT_DASH, 0)
 
         def connectHost(self):
-            return self.getTypedRuleContext(ClientParser.ConnectHostContext,0)
+            return self.getTypedRuleContext(APIParser.ConnectHostContext,0)
 
 
         def connectService(self):
-            return self.getTypedRuleContext(ClientParser.ConnectServiceContext,0)
+            return self.getTypedRuleContext(APIParser.ConnectServiceContext,0)
 
 
         def CONNECT_QUESTION(self):
-            return self.getToken(ClientParser.CONNECT_QUESTION, 0)
+            return self.getToken(APIParser.CONNECT_QUESTION, 0)
 
         def connectParameters(self):
-            return self.getTypedRuleContext(ClientParser.ConnectParametersContext,0)
+            return self.getTypedRuleContext(APIParser.ConnectParametersContext,0)
 
 
         def CONNECT_SLASH(self):
-            return self.getToken(ClientParser.CONNECT_SLASH, 0)
+            return self.getToken(APIParser.CONNECT_SLASH, 0)
 
         def CONNECT_AT(self):
-            return self.getToken(ClientParser.CONNECT_AT, 0)
+            return self.getToken(APIParser.CONNECT_AT, 0)
 
         def connectDriverType(self):
-            return self.getTypedRuleContext(ClientParser.ConnectDriverTypeContext,0)
+            return self.getTypedRuleContext(APIParser.ConnectDriverTypeContext,0)
 
 
         def connectPort(self):
-            return self.getTypedRuleContext(ClientParser.ConnectPortContext,0)
+            return self.getTypedRuleContext(APIParser.ConnectPortContext,0)
 
 
         def getRuleIndex(self):
-            return ClientParser.RULE_connectjdbc
+            return APIParser.RULE_connectjdbc
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitConnectjdbc" ):
@@ -1195,61 +1195,61 @@ class ClientParser ( Parser ):
 
     def connectjdbc(self):
 
-        localctx = ClientParser.ConnectjdbcContext(self, self._ctx, self.state)
+        localctx = APIParser.ConnectjdbcContext(self, self._ctx, self.state)
         self.enterRule(localctx, 16, self.RULE_connectjdbc)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 191
-            self.match(ClientParser.CONNECT)
+            self.match(APIParser.CONNECT)
 
             self.state = 192
             self.connectUserInfo()
             self.state = 194
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CONNECT_AT:
+            if _la==APIParser.CONNECT_AT:
                 self.state = 193
-                self.match(ClientParser.CONNECT_AT)
+                self.match(APIParser.CONNECT_AT)
 
 
             self.state = 213
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.JDBC:
+            if _la==APIParser.JDBC:
                 self.state = 196
                 self.connectDriver()
                 self.state = 197
-                self.match(ClientParser.CONNECT_COLON)
+                self.match(APIParser.CONNECT_COLON)
                 self.state = 198
                 self.connectDriverSchema()
                 self.state = 199
-                self.match(ClientParser.CONNECT_COLON)
+                self.match(APIParser.CONNECT_COLON)
                 self.state = 203
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==ClientParser.CONNECT_STRING:
+                if _la==APIParser.CONNECT_STRING:
                     self.state = 200
                     self.connectDriverType()
                     self.state = 201
-                    self.match(ClientParser.CONNECT_COLON)
+                    self.match(APIParser.CONNECT_COLON)
 
 
                 self.state = 205
-                self.match(ClientParser.CONNECT_DASH)
+                self.match(APIParser.CONNECT_DASH)
                 self.state = 206
                 self.connectHost()
                 self.state = 208
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==ClientParser.CONNECT_PORT:
+                if _la==APIParser.CONNECT_PORT:
                     self.state = 207
                     self.connectPort()
 
 
                 self.state = 210
                 _la = self._input.LA(1)
-                if not(_la==ClientParser.CONNECT_SLASH or _la==ClientParser.CONNECT_COLON):
+                if not(_la==APIParser.CONNECT_SLASH or _la==APIParser.CONNECT_COLON):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -1261,9 +1261,9 @@ class ClientParser ( Parser ):
             self.state = 217
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CONNECT_QUESTION:
+            if _la==APIParser.CONNECT_QUESTION:
                 self.state = 215
-                self.match(ClientParser.CONNECT_QUESTION)
+                self.match(APIParser.CONNECT_QUESTION)
                 self.state = 216
                 self.connectParameters()
 
@@ -1285,18 +1285,18 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def connectUser(self):
-            return self.getTypedRuleContext(ClientParser.ConnectUserContext,0)
+            return self.getTypedRuleContext(APIParser.ConnectUserContext,0)
 
 
         def CONNECT_SLASH(self):
-            return self.getToken(ClientParser.CONNECT_SLASH, 0)
+            return self.getToken(APIParser.CONNECT_SLASH, 0)
 
         def connectPassword(self):
-            return self.getTypedRuleContext(ClientParser.ConnectPasswordContext,0)
+            return self.getTypedRuleContext(APIParser.ConnectPasswordContext,0)
 
 
         def getRuleIndex(self):
-            return ClientParser.RULE_connectUserInfo
+            return APIParser.RULE_connectUserInfo
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitConnectUserInfo" ):
@@ -1309,7 +1309,7 @@ class ClientParser ( Parser ):
 
     def connectUserInfo(self):
 
-        localctx = ClientParser.ConnectUserInfoContext(self, self._ctx, self.state)
+        localctx = APIParser.ConnectUserInfoContext(self, self._ctx, self.state)
         self.enterRule(localctx, 18, self.RULE_connectUserInfo)
         self._la = 0 # Token type
         try:
@@ -1319,9 +1319,9 @@ class ClientParser ( Parser ):
             self.state = 222
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CONNECT_SLASH:
+            if _la==APIParser.CONNECT_SLASH:
                 self.state = 220
-                self.match(ClientParser.CONNECT_SLASH)
+                self.match(APIParser.CONNECT_SLASH)
                 self.state = 221
                 self.connectPassword()
 
@@ -1343,10 +1343,10 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def JDBC(self):
-            return self.getToken(ClientParser.JDBC, 0)
+            return self.getToken(APIParser.JDBC, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_connectDriver
+            return APIParser.RULE_connectDriver
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitConnectDriver" ):
@@ -1359,12 +1359,12 @@ class ClientParser ( Parser ):
 
     def connectDriver(self):
 
-        localctx = ClientParser.ConnectDriverContext(self, self._ctx, self.state)
+        localctx = APIParser.ConnectDriverContext(self, self._ctx, self.state)
         self.enterRule(localctx, 20, self.RULE_connectDriver)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 224
-            self.match(ClientParser.JDBC)
+            self.match(APIParser.JDBC)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -1382,10 +1382,10 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def CONNECT_STRING(self):
-            return self.getToken(ClientParser.CONNECT_STRING, 0)
+            return self.getToken(APIParser.CONNECT_STRING, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_connectDriverSchema
+            return APIParser.RULE_connectDriverSchema
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitConnectDriverSchema" ):
@@ -1398,12 +1398,12 @@ class ClientParser ( Parser ):
 
     def connectDriverSchema(self):
 
-        localctx = ClientParser.ConnectDriverSchemaContext(self, self._ctx, self.state)
+        localctx = APIParser.ConnectDriverSchemaContext(self, self._ctx, self.state)
         self.enterRule(localctx, 22, self.RULE_connectDriverSchema)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 226
-            self.match(ClientParser.CONNECT_STRING)
+            self.match(APIParser.CONNECT_STRING)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -1421,10 +1421,10 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def CONNECT_STRING(self):
-            return self.getToken(ClientParser.CONNECT_STRING, 0)
+            return self.getToken(APIParser.CONNECT_STRING, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_connectDriverType
+            return APIParser.RULE_connectDriverType
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitConnectDriverType" ):
@@ -1437,12 +1437,12 @@ class ClientParser ( Parser ):
 
     def connectDriverType(self):
 
-        localctx = ClientParser.ConnectDriverTypeContext(self, self._ctx, self.state)
+        localctx = APIParser.ConnectDriverTypeContext(self, self._ctx, self.state)
         self.enterRule(localctx, 24, self.RULE_connectDriverType)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 228
-            self.match(ClientParser.CONNECT_STRING)
+            self.match(APIParser.CONNECT_STRING)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -1460,13 +1460,13 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def IPV4(self):
-            return self.getToken(ClientParser.IPV4, 0)
+            return self.getToken(APIParser.IPV4, 0)
 
         def CONNECT_STRING(self):
-            return self.getToken(ClientParser.CONNECT_STRING, 0)
+            return self.getToken(APIParser.CONNECT_STRING, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_connectHost
+            return APIParser.RULE_connectHost
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitConnectHost" ):
@@ -1479,14 +1479,14 @@ class ClientParser ( Parser ):
 
     def connectHost(self):
 
-        localctx = ClientParser.ConnectHostContext(self, self._ctx, self.state)
+        localctx = APIParser.ConnectHostContext(self, self._ctx, self.state)
         self.enterRule(localctx, 26, self.RULE_connectHost)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 230
             _la = self._input.LA(1)
-            if not(_la==ClientParser.IPV4 or _la==ClientParser.CONNECT_STRING):
+            if not(_la==APIParser.IPV4 or _la==APIParser.CONNECT_STRING):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -1508,10 +1508,10 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def CONNECT_STRING(self):
-            return self.getToken(ClientParser.CONNECT_STRING, 0)
+            return self.getToken(APIParser.CONNECT_STRING, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_connectUser
+            return APIParser.RULE_connectUser
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitConnectUser" ):
@@ -1524,12 +1524,12 @@ class ClientParser ( Parser ):
 
     def connectUser(self):
 
-        localctx = ClientParser.ConnectUserContext(self, self._ctx, self.state)
+        localctx = APIParser.ConnectUserContext(self, self._ctx, self.state)
         self.enterRule(localctx, 28, self.RULE_connectUser)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 232
-            self.match(ClientParser.CONNECT_STRING)
+            self.match(APIParser.CONNECT_STRING)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -1547,10 +1547,10 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def CONNECT_STRING(self):
-            return self.getToken(ClientParser.CONNECT_STRING, 0)
+            return self.getToken(APIParser.CONNECT_STRING, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_connectPassword
+            return APIParser.RULE_connectPassword
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitConnectPassword" ):
@@ -1563,12 +1563,12 @@ class ClientParser ( Parser ):
 
     def connectPassword(self):
 
-        localctx = ClientParser.ConnectPasswordContext(self, self._ctx, self.state)
+        localctx = APIParser.ConnectPasswordContext(self, self._ctx, self.state)
         self.enterRule(localctx, 30, self.RULE_connectPassword)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 234
-            self.match(ClientParser.CONNECT_STRING)
+            self.match(APIParser.CONNECT_STRING)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -1586,10 +1586,10 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def CONNECT_PORT(self):
-            return self.getToken(ClientParser.CONNECT_PORT, 0)
+            return self.getToken(APIParser.CONNECT_PORT, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_connectPort
+            return APIParser.RULE_connectPort
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitConnectPort" ):
@@ -1602,12 +1602,12 @@ class ClientParser ( Parser ):
 
     def connectPort(self):
 
-        localctx = ClientParser.ConnectPortContext(self, self._ctx, self.state)
+        localctx = APIParser.ConnectPortContext(self, self._ctx, self.state)
         self.enterRule(localctx, 32, self.RULE_connectPort)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 236
-            self.match(ClientParser.CONNECT_PORT)
+            self.match(APIParser.CONNECT_PORT)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -1625,10 +1625,10 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def CONNECT_STRING(self):
-            return self.getToken(ClientParser.CONNECT_STRING, 0)
+            return self.getToken(APIParser.CONNECT_STRING, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_connectService
+            return APIParser.RULE_connectService
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitConnectService" ):
@@ -1641,12 +1641,12 @@ class ClientParser ( Parser ):
 
     def connectService(self):
 
-        localctx = ClientParser.ConnectServiceContext(self, self._ctx, self.state)
+        localctx = APIParser.ConnectServiceContext(self, self._ctx, self.state)
         self.enterRule(localctx, 34, self.RULE_connectService)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 238
-            self.match(ClientParser.CONNECT_STRING)
+            self.match(APIParser.CONNECT_STRING)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -1664,10 +1664,10 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def CONNECT_STRING(self):
-            return self.getToken(ClientParser.CONNECT_STRING, 0)
+            return self.getToken(APIParser.CONNECT_STRING, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_connectlocalService
+            return APIParser.RULE_connectlocalService
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitConnectlocalService" ):
@@ -1680,12 +1680,12 @@ class ClientParser ( Parser ):
 
     def connectlocalService(self):
 
-        localctx = ClientParser.ConnectlocalServiceContext(self, self._ctx, self.state)
+        localctx = APIParser.ConnectlocalServiceContext(self, self._ctx, self.state)
         self.enterRule(localctx, 36, self.RULE_connectlocalService)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 240
-            self.match(ClientParser.CONNECT_STRING)
+            self.match(APIParser.CONNECT_STRING)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -1703,10 +1703,10 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def CONNECT_STRING(self):
-            return self.getToken(ClientParser.CONNECT_STRING, 0)
+            return self.getToken(APIParser.CONNECT_STRING, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_connectParameterName
+            return APIParser.RULE_connectParameterName
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitConnectParameterName" ):
@@ -1719,12 +1719,12 @@ class ClientParser ( Parser ):
 
     def connectParameterName(self):
 
-        localctx = ClientParser.ConnectParameterNameContext(self, self._ctx, self.state)
+        localctx = APIParser.ConnectParameterNameContext(self, self._ctx, self.state)
         self.enterRule(localctx, 38, self.RULE_connectParameterName)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 242
-            self.match(ClientParser.CONNECT_STRING)
+            self.match(APIParser.CONNECT_STRING)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -1742,10 +1742,10 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def CONNECT_STRING(self):
-            return self.getToken(ClientParser.CONNECT_STRING, 0)
+            return self.getToken(APIParser.CONNECT_STRING, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_connectParameterValue
+            return APIParser.RULE_connectParameterValue
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitConnectParameterValue" ):
@@ -1758,12 +1758,12 @@ class ClientParser ( Parser ):
 
     def connectParameterValue(self):
 
-        localctx = ClientParser.ConnectParameterValueContext(self, self._ctx, self.state)
+        localctx = APIParser.ConnectParameterValueContext(self, self._ctx, self.state)
         self.enterRule(localctx, 40, self.RULE_connectParameterValue)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 244
-            self.match(ClientParser.CONNECT_STRING)
+            self.match(APIParser.CONNECT_STRING)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -1781,18 +1781,18 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def connectParameterName(self):
-            return self.getTypedRuleContext(ClientParser.ConnectParameterNameContext,0)
+            return self.getTypedRuleContext(APIParser.ConnectParameterNameContext,0)
 
 
         def CONNECT_EQUAL(self):
-            return self.getToken(ClientParser.CONNECT_EQUAL, 0)
+            return self.getToken(APIParser.CONNECT_EQUAL, 0)
 
         def connectParameterValue(self):
-            return self.getTypedRuleContext(ClientParser.ConnectParameterValueContext,0)
+            return self.getTypedRuleContext(APIParser.ConnectParameterValueContext,0)
 
 
         def getRuleIndex(self):
-            return ClientParser.RULE_connectParameter
+            return APIParser.RULE_connectParameter
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitConnectParameter" ):
@@ -1805,14 +1805,14 @@ class ClientParser ( Parser ):
 
     def connectParameter(self):
 
-        localctx = ClientParser.ConnectParameterContext(self, self._ctx, self.state)
+        localctx = APIParser.ConnectParameterContext(self, self._ctx, self.state)
         self.enterRule(localctx, 42, self.RULE_connectParameter)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 246
             self.connectParameterName()
             self.state = 247
-            self.match(ClientParser.CONNECT_EQUAL)
+            self.match(APIParser.CONNECT_EQUAL)
             self.state = 248
             self.connectParameterValue()
         except RecognitionException as re:
@@ -1833,19 +1833,19 @@ class ClientParser ( Parser ):
 
         def connectParameter(self, i:int=None):
             if i is None:
-                return self.getTypedRuleContexts(ClientParser.ConnectParameterContext)
+                return self.getTypedRuleContexts(APIParser.ConnectParameterContext)
             else:
-                return self.getTypedRuleContext(ClientParser.ConnectParameterContext,i)
+                return self.getTypedRuleContext(APIParser.ConnectParameterContext,i)
 
 
         def CONNECT_PARA_AND(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.CONNECT_PARA_AND)
+                return self.getTokens(APIParser.CONNECT_PARA_AND)
             else:
-                return self.getToken(ClientParser.CONNECT_PARA_AND, i)
+                return self.getToken(APIParser.CONNECT_PARA_AND, i)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_connectParameters
+            return APIParser.RULE_connectParameters
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitConnectParameters" ):
@@ -1858,7 +1858,7 @@ class ClientParser ( Parser ):
 
     def connectParameters(self):
 
-        localctx = ClientParser.ConnectParametersContext(self, self._ctx, self.state)
+        localctx = APIParser.ConnectParametersContext(self, self._ctx, self.state)
         self.enterRule(localctx, 44, self.RULE_connectParameters)
         self._la = 0 # Token type
         try:
@@ -1868,19 +1868,19 @@ class ClientParser ( Parser ):
             self.state = 257
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CONNECT_PARA_AND:
+            if _la==APIParser.CONNECT_PARA_AND:
                 self.state = 253 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 while True:
                     self.state = 251
-                    self.match(ClientParser.CONNECT_PARA_AND)
+                    self.match(APIParser.CONNECT_PARA_AND)
                     self.state = 252
                     self.connectParameter()
                     self.state = 255 
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if not (_la==ClientParser.CONNECT_PARA_AND):
+                    if not (_la==APIParser.CONNECT_PARA_AND):
                         break
 
 
@@ -1902,26 +1902,26 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def DISCONNECT(self):
-            return self.getToken(ClientParser.DISCONNECT, 0)
+            return self.getToken(APIParser.DISCONNECT, 0)
 
         def expression(self, i:int=None):
             if i is None:
-                return self.getTypedRuleContexts(ClientParser.ExpressionContext)
+                return self.getTypedRuleContexts(APIParser.ExpressionContext)
             else:
-                return self.getTypedRuleContext(ClientParser.ExpressionContext,i)
+                return self.getTypedRuleContext(APIParser.ExpressionContext,i)
 
 
         def INT(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.INT)
+                return self.getTokens(APIParser.INT)
             else:
-                return self.getToken(ClientParser.INT, i)
+                return self.getToken(APIParser.INT, i)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_disconnect
+            return APIParser.RULE_disconnect
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitDisconnect" ):
@@ -1934,27 +1934,27 @@ class ClientParser ( Parser ):
 
     def disconnect(self):
 
-        localctx = ClientParser.DisconnectContext(self, self._ctx, self.state)
+        localctx = APIParser.DisconnectContext(self, self._ctx, self.state)
         self.enterRule(localctx, 46, self.RULE_disconnect)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 259
-            self.match(ClientParser.DISCONNECT)
+            self.match(APIParser.DISCONNECT)
             self.state = 264
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << ClientParser.DOT) | (1 << ClientParser.SLASH) | (1 << ClientParser.BRACKET_OPEN) | (1 << ClientParser.BRACKET_CLOSE) | (1 << ClientParser.SQUARE_OPEN) | (1 << ClientParser.SQUARE_CLOSE) | (1 << ClientParser.DOUBLE_QUOTE) | (1 << ClientParser.SINGLE_QUOTE) | (1 << ClientParser.ESCAPE) | (1 << ClientParser.INT) | (1 << ClientParser.String))) != 0):
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << APIParser.DOT) | (1 << APIParser.SLASH) | (1 << APIParser.BRACKET_OPEN) | (1 << APIParser.BRACKET_CLOSE) | (1 << APIParser.SQUARE_OPEN) | (1 << APIParser.SQUARE_CLOSE) | (1 << APIParser.DOUBLE_QUOTE) | (1 << APIParser.SINGLE_QUOTE) | (1 << APIParser.ESCAPE) | (1 << APIParser.INT) | (1 << APIParser.String))) != 0):
                 self.state = 262
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
-                if token in [ClientParser.DOT, ClientParser.SLASH, ClientParser.BRACKET_OPEN, ClientParser.BRACKET_CLOSE, ClientParser.SQUARE_OPEN, ClientParser.SQUARE_CLOSE, ClientParser.DOUBLE_QUOTE, ClientParser.SINGLE_QUOTE, ClientParser.ESCAPE, ClientParser.String]:
+                if token in [APIParser.DOT, APIParser.SLASH, APIParser.BRACKET_OPEN, APIParser.BRACKET_CLOSE, APIParser.SQUARE_OPEN, APIParser.SQUARE_CLOSE, APIParser.DOUBLE_QUOTE, APIParser.SINGLE_QUOTE, APIParser.ESCAPE, APIParser.String]:
                     self.state = 260
                     self.expression()
                     pass
-                elif token in [ClientParser.INT]:
+                elif token in [APIParser.INT]:
                     self.state = 261
-                    self.match(ClientParser.INT)
+                    self.match(APIParser.INT)
                     pass
                 else:
                     raise NoViableAltException(self)
@@ -1966,9 +1966,9 @@ class ClientParser ( Parser ):
             self.state = 268
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 267
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -1988,31 +1988,31 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def SESSION(self):
-            return self.getToken(ClientParser.SESSION, 0)
+            return self.getToken(APIParser.SESSION, 0)
 
         def SAVE(self):
-            return self.getToken(ClientParser.SAVE, 0)
+            return self.getToken(APIParser.SAVE, 0)
 
         def RELEASE(self):
-            return self.getToken(ClientParser.RELEASE, 0)
+            return self.getToken(APIParser.RELEASE, 0)
 
         def RESTORE(self):
-            return self.getToken(ClientParser.RESTORE, 0)
+            return self.getToken(APIParser.RESTORE, 0)
 
         def SAVECONFIG(self):
-            return self.getToken(ClientParser.SAVECONFIG, 0)
+            return self.getToken(APIParser.SAVECONFIG, 0)
 
         def SHOW(self):
-            return self.getToken(ClientParser.SHOW, 0)
+            return self.getToken(APIParser.SHOW, 0)
 
         def String(self):
-            return self.getToken(ClientParser.String, 0)
+            return self.getToken(APIParser.String, 0)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_session
+            return APIParser.RULE_session
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitSession" ):
@@ -2025,16 +2025,16 @@ class ClientParser ( Parser ):
 
     def session(self):
 
-        localctx = ClientParser.SessionContext(self, self._ctx, self.state)
+        localctx = APIParser.SessionContext(self, self._ctx, self.state)
         self.enterRule(localctx, 48, self.RULE_session)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 270
-            self.match(ClientParser.SESSION)
+            self.match(APIParser.SESSION)
             self.state = 271
             _la = self._input.LA(1)
-            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << ClientParser.SAVE) | (1 << ClientParser.RELEASE) | (1 << ClientParser.RESTORE) | (1 << ClientParser.SAVECONFIG) | (1 << ClientParser.SHOW))) != 0)):
+            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << APIParser.SAVE) | (1 << APIParser.RELEASE) | (1 << APIParser.RESTORE) | (1 << APIParser.SAVECONFIG) | (1 << APIParser.SHOW))) != 0)):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -2042,17 +2042,17 @@ class ClientParser ( Parser ):
             self.state = 273
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.String:
+            if _la==APIParser.String:
                 self.state = 272
-                self.match(ClientParser.String)
+                self.match(APIParser.String)
 
 
             self.state = 276
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 275
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -2072,37 +2072,37 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def String(self):
-            return self.getToken(ClientParser.String, 0)
+            return self.getToken(APIParser.String, 0)
 
         def DOT(self):
-            return self.getToken(ClientParser.DOT, 0)
+            return self.getToken(APIParser.DOT, 0)
 
         def SLASH(self):
-            return self.getToken(ClientParser.SLASH, 0)
+            return self.getToken(APIParser.SLASH, 0)
 
         def BRACKET_OPEN(self):
-            return self.getToken(ClientParser.BRACKET_OPEN, 0)
+            return self.getToken(APIParser.BRACKET_OPEN, 0)
 
         def BRACKET_CLOSE(self):
-            return self.getToken(ClientParser.BRACKET_CLOSE, 0)
+            return self.getToken(APIParser.BRACKET_CLOSE, 0)
 
         def ESCAPE(self):
-            return self.getToken(ClientParser.ESCAPE, 0)
+            return self.getToken(APIParser.ESCAPE, 0)
 
         def SQUARE_OPEN(self):
-            return self.getToken(ClientParser.SQUARE_OPEN, 0)
+            return self.getToken(APIParser.SQUARE_OPEN, 0)
 
         def SQUARE_CLOSE(self):
-            return self.getToken(ClientParser.SQUARE_CLOSE, 0)
+            return self.getToken(APIParser.SQUARE_CLOSE, 0)
 
         def DOUBLE_QUOTE(self):
-            return self.getToken(ClientParser.DOUBLE_QUOTE, 0)
+            return self.getToken(APIParser.DOUBLE_QUOTE, 0)
 
         def SINGLE_QUOTE(self):
-            return self.getToken(ClientParser.SINGLE_QUOTE, 0)
+            return self.getToken(APIParser.SINGLE_QUOTE, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_singleExpression
+            return APIParser.RULE_singleExpression
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitSingleExpression" ):
@@ -2115,14 +2115,14 @@ class ClientParser ( Parser ):
 
     def singleExpression(self):
 
-        localctx = ClientParser.SingleExpressionContext(self, self._ctx, self.state)
+        localctx = APIParser.SingleExpressionContext(self, self._ctx, self.state)
         self.enterRule(localctx, 50, self.RULE_singleExpression)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 278
             _la = self._input.LA(1)
-            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << ClientParser.DOT) | (1 << ClientParser.SLASH) | (1 << ClientParser.BRACKET_OPEN) | (1 << ClientParser.BRACKET_CLOSE) | (1 << ClientParser.SQUARE_OPEN) | (1 << ClientParser.SQUARE_CLOSE) | (1 << ClientParser.DOUBLE_QUOTE) | (1 << ClientParser.SINGLE_QUOTE) | (1 << ClientParser.ESCAPE) | (1 << ClientParser.String))) != 0)):
+            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << APIParser.DOT) | (1 << APIParser.SLASH) | (1 << APIParser.BRACKET_OPEN) | (1 << APIParser.BRACKET_CLOSE) | (1 << APIParser.SQUARE_OPEN) | (1 << APIParser.SQUARE_CLOSE) | (1 << APIParser.DOUBLE_QUOTE) | (1 << APIParser.SINGLE_QUOTE) | (1 << APIParser.ESCAPE) | (1 << APIParser.String))) != 0)):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -2145,66 +2145,66 @@ class ClientParser ( Parser ):
 
         def String(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.String)
+                return self.getTokens(APIParser.String)
             else:
-                return self.getToken(ClientParser.String, i)
+                return self.getToken(APIParser.String, i)
 
         def DOT(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.DOT)
+                return self.getTokens(APIParser.DOT)
             else:
-                return self.getToken(ClientParser.DOT, i)
+                return self.getToken(APIParser.DOT, i)
 
         def SLASH(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.SLASH)
+                return self.getTokens(APIParser.SLASH)
             else:
-                return self.getToken(ClientParser.SLASH, i)
+                return self.getToken(APIParser.SLASH, i)
 
         def BRACKET_OPEN(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.BRACKET_OPEN)
+                return self.getTokens(APIParser.BRACKET_OPEN)
             else:
-                return self.getToken(ClientParser.BRACKET_OPEN, i)
+                return self.getToken(APIParser.BRACKET_OPEN, i)
 
         def BRACKET_CLOSE(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.BRACKET_CLOSE)
+                return self.getTokens(APIParser.BRACKET_CLOSE)
             else:
-                return self.getToken(ClientParser.BRACKET_CLOSE, i)
+                return self.getToken(APIParser.BRACKET_CLOSE, i)
 
         def ESCAPE(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.ESCAPE)
+                return self.getTokens(APIParser.ESCAPE)
             else:
-                return self.getToken(ClientParser.ESCAPE, i)
+                return self.getToken(APIParser.ESCAPE, i)
 
         def SQUARE_OPEN(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.SQUARE_OPEN)
+                return self.getTokens(APIParser.SQUARE_OPEN)
             else:
-                return self.getToken(ClientParser.SQUARE_OPEN, i)
+                return self.getToken(APIParser.SQUARE_OPEN, i)
 
         def SQUARE_CLOSE(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.SQUARE_CLOSE)
+                return self.getTokens(APIParser.SQUARE_CLOSE)
             else:
-                return self.getToken(ClientParser.SQUARE_CLOSE, i)
+                return self.getToken(APIParser.SQUARE_CLOSE, i)
 
         def DOUBLE_QUOTE(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.DOUBLE_QUOTE)
+                return self.getTokens(APIParser.DOUBLE_QUOTE)
             else:
-                return self.getToken(ClientParser.DOUBLE_QUOTE, i)
+                return self.getToken(APIParser.DOUBLE_QUOTE, i)
 
         def SINGLE_QUOTE(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.SINGLE_QUOTE)
+                return self.getTokens(APIParser.SINGLE_QUOTE)
             else:
-                return self.getToken(ClientParser.SINGLE_QUOTE, i)
+                return self.getToken(APIParser.SINGLE_QUOTE, i)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_expression
+            return APIParser.RULE_expression
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitExpression" ):
@@ -2217,7 +2217,7 @@ class ClientParser ( Parser ):
 
     def expression(self):
 
-        localctx = ClientParser.ExpressionContext(self, self._ctx, self.state)
+        localctx = APIParser.ExpressionContext(self, self._ctx, self.state)
         self.enterRule(localctx, 52, self.RULE_expression)
         self._la = 0 # Token type
         try:
@@ -2229,7 +2229,7 @@ class ClientParser ( Parser ):
                 if _alt == 1:
                     self.state = 280
                     _la = self._input.LA(1)
-                    if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << ClientParser.DOT) | (1 << ClientParser.SLASH) | (1 << ClientParser.BRACKET_OPEN) | (1 << ClientParser.BRACKET_CLOSE) | (1 << ClientParser.SQUARE_OPEN) | (1 << ClientParser.SQUARE_CLOSE) | (1 << ClientParser.DOUBLE_QUOTE) | (1 << ClientParser.SINGLE_QUOTE) | (1 << ClientParser.ESCAPE) | (1 << ClientParser.String))) != 0)):
+                    if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << APIParser.DOT) | (1 << APIParser.SLASH) | (1 << APIParser.BRACKET_OPEN) | (1 << APIParser.BRACKET_CLOSE) | (1 << APIParser.SQUARE_OPEN) | (1 << APIParser.SQUARE_CLOSE) | (1 << APIParser.DOUBLE_QUOTE) | (1 << APIParser.SINGLE_QUOTE) | (1 << APIParser.ESCAPE) | (1 << APIParser.String))) != 0)):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
@@ -2258,32 +2258,32 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def START(self):
-            return self.getToken(ClientParser.START, 0)
+            return self.getToken(APIParser.START, 0)
 
         def expression(self, i:int=None):
             if i is None:
-                return self.getTypedRuleContexts(ClientParser.ExpressionContext)
+                return self.getTypedRuleContexts(APIParser.ExpressionContext)
             else:
-                return self.getTypedRuleContext(ClientParser.ExpressionContext,i)
+                return self.getTypedRuleContext(APIParser.ExpressionContext,i)
 
 
         def COMMA(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.COMMA)
+                return self.getTokens(APIParser.COMMA)
             else:
-                return self.getToken(ClientParser.COMMA, i)
+                return self.getToken(APIParser.COMMA, i)
 
         def LOOP(self):
-            return self.getToken(ClientParser.LOOP, 0)
+            return self.getToken(APIParser.LOOP, 0)
 
         def INT(self):
-            return self.getToken(ClientParser.INT, 0)
+            return self.getToken(APIParser.INT, 0)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_start
+            return APIParser.RULE_start
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitStart" ):
@@ -2296,13 +2296,13 @@ class ClientParser ( Parser ):
 
     def start(self):
 
-        localctx = ClientParser.StartContext(self, self._ctx, self.state)
+        localctx = APIParser.StartContext(self, self._ctx, self.state)
         self.enterRule(localctx, 54, self.RULE_start)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 285
-            self.match(ClientParser.START)
+            self.match(APIParser.START)
             self.state = 288 
             self._errHandler.sync(self)
             _la = self._input.LA(1)
@@ -2310,13 +2310,13 @@ class ClientParser ( Parser ):
                 self.state = 288
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
-                if token in [ClientParser.DOT, ClientParser.SLASH, ClientParser.BRACKET_OPEN, ClientParser.BRACKET_CLOSE, ClientParser.SQUARE_OPEN, ClientParser.SQUARE_CLOSE, ClientParser.DOUBLE_QUOTE, ClientParser.SINGLE_QUOTE, ClientParser.ESCAPE, ClientParser.String]:
+                if token in [APIParser.DOT, APIParser.SLASH, APIParser.BRACKET_OPEN, APIParser.BRACKET_CLOSE, APIParser.SQUARE_OPEN, APIParser.SQUARE_CLOSE, APIParser.DOUBLE_QUOTE, APIParser.SINGLE_QUOTE, APIParser.ESCAPE, APIParser.String]:
                     self.state = 286
                     self.expression()
                     pass
-                elif token in [ClientParser.COMMA]:
+                elif token in [APIParser.COMMA]:
                     self.state = 287
-                    self.match(ClientParser.COMMA)
+                    self.match(APIParser.COMMA)
                     pass
                 else:
                     raise NoViableAltException(self)
@@ -2324,31 +2324,31 @@ class ClientParser ( Parser ):
                 self.state = 290 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << ClientParser.COMMA) | (1 << ClientParser.DOT) | (1 << ClientParser.SLASH) | (1 << ClientParser.BRACKET_OPEN) | (1 << ClientParser.BRACKET_CLOSE) | (1 << ClientParser.SQUARE_OPEN) | (1 << ClientParser.SQUARE_CLOSE) | (1 << ClientParser.DOUBLE_QUOTE) | (1 << ClientParser.SINGLE_QUOTE) | (1 << ClientParser.ESCAPE) | (1 << ClientParser.String))) != 0)):
+                if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << APIParser.COMMA) | (1 << APIParser.DOT) | (1 << APIParser.SLASH) | (1 << APIParser.BRACKET_OPEN) | (1 << APIParser.BRACKET_CLOSE) | (1 << APIParser.SQUARE_OPEN) | (1 << APIParser.SQUARE_CLOSE) | (1 << APIParser.DOUBLE_QUOTE) | (1 << APIParser.SINGLE_QUOTE) | (1 << APIParser.ESCAPE) | (1 << APIParser.String))) != 0)):
                     break
 
             self.state = 293
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.LOOP:
+            if _la==APIParser.LOOP:
                 self.state = 292
-                self.match(ClientParser.LOOP)
+                self.match(APIParser.LOOP)
 
 
             self.state = 296
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.INT:
+            if _la==APIParser.INT:
                 self.state = 295
-                self.match(ClientParser.INT)
+                self.match(APIParser.INT)
 
 
             self.state = 299
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 298
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -2368,26 +2368,26 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def LOADMAP(self):
-            return self.getToken(ClientParser.LOADMAP, 0)
+            return self.getToken(APIParser.LOADMAP, 0)
 
         def expression(self, i:int=None):
             if i is None:
-                return self.getTypedRuleContexts(ClientParser.ExpressionContext)
+                return self.getTypedRuleContexts(APIParser.ExpressionContext)
             else:
-                return self.getTypedRuleContext(ClientParser.ExpressionContext,i)
+                return self.getTypedRuleContext(APIParser.ExpressionContext,i)
 
 
         def COMMA(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.COMMA)
+                return self.getTokens(APIParser.COMMA)
             else:
-                return self.getToken(ClientParser.COMMA, i)
+                return self.getToken(APIParser.COMMA, i)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_loadmap
+            return APIParser.RULE_loadmap
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitLoadmap" ):
@@ -2400,13 +2400,13 @@ class ClientParser ( Parser ):
 
     def loadmap(self):
 
-        localctx = ClientParser.LoadmapContext(self, self._ctx, self.state)
+        localctx = APIParser.LoadmapContext(self, self._ctx, self.state)
         self.enterRule(localctx, 56, self.RULE_loadmap)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 301
-            self.match(ClientParser.LOADMAP)
+            self.match(APIParser.LOADMAP)
             self.state = 304 
             self._errHandler.sync(self)
             _la = self._input.LA(1)
@@ -2414,13 +2414,13 @@ class ClientParser ( Parser ):
                 self.state = 304
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
-                if token in [ClientParser.DOT, ClientParser.SLASH, ClientParser.BRACKET_OPEN, ClientParser.BRACKET_CLOSE, ClientParser.SQUARE_OPEN, ClientParser.SQUARE_CLOSE, ClientParser.DOUBLE_QUOTE, ClientParser.SINGLE_QUOTE, ClientParser.ESCAPE, ClientParser.String]:
+                if token in [APIParser.DOT, APIParser.SLASH, APIParser.BRACKET_OPEN, APIParser.BRACKET_CLOSE, APIParser.SQUARE_OPEN, APIParser.SQUARE_CLOSE, APIParser.DOUBLE_QUOTE, APIParser.SINGLE_QUOTE, APIParser.ESCAPE, APIParser.String]:
                     self.state = 302
                     self.expression()
                     pass
-                elif token in [ClientParser.COMMA]:
+                elif token in [APIParser.COMMA]:
                     self.state = 303
-                    self.match(ClientParser.COMMA)
+                    self.match(APIParser.COMMA)
                     pass
                 else:
                     raise NoViableAltException(self)
@@ -2428,15 +2428,15 @@ class ClientParser ( Parser ):
                 self.state = 306 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << ClientParser.COMMA) | (1 << ClientParser.DOT) | (1 << ClientParser.SLASH) | (1 << ClientParser.BRACKET_OPEN) | (1 << ClientParser.BRACKET_CLOSE) | (1 << ClientParser.SQUARE_OPEN) | (1 << ClientParser.SQUARE_CLOSE) | (1 << ClientParser.DOUBLE_QUOTE) | (1 << ClientParser.SINGLE_QUOTE) | (1 << ClientParser.ESCAPE) | (1 << ClientParser.String))) != 0)):
+                if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << APIParser.COMMA) | (1 << APIParser.DOT) | (1 << APIParser.SLASH) | (1 << APIParser.BRACKET_OPEN) | (1 << APIParser.BRACKET_CLOSE) | (1 << APIParser.SQUARE_OPEN) | (1 << APIParser.SQUARE_CLOSE) | (1 << APIParser.DOUBLE_QUOTE) | (1 << APIParser.SINGLE_QUOTE) | (1 << APIParser.ESCAPE) | (1 << APIParser.String))) != 0)):
                     break
 
             self.state = 309
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 308
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -2456,19 +2456,19 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def WHENEVER_ERROR(self):
-            return self.getToken(ClientParser.WHENEVER_ERROR, 0)
+            return self.getToken(APIParser.WHENEVER_ERROR, 0)
 
         def CONTINUE(self):
-            return self.getToken(ClientParser.CONTINUE, 0)
+            return self.getToken(APIParser.CONTINUE, 0)
 
         def EXIT(self):
-            return self.getToken(ClientParser.EXIT, 0)
+            return self.getToken(APIParser.EXIT, 0)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_wheneverError
+            return APIParser.RULE_wheneverError
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitWheneverError" ):
@@ -2481,16 +2481,16 @@ class ClientParser ( Parser ):
 
     def wheneverError(self):
 
-        localctx = ClientParser.WheneverErrorContext(self, self._ctx, self.state)
+        localctx = APIParser.WheneverErrorContext(self, self._ctx, self.state)
         self.enterRule(localctx, 58, self.RULE_wheneverError)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 311
-            self.match(ClientParser.WHENEVER_ERROR)
+            self.match(APIParser.WHENEVER_ERROR)
             self.state = 312
             _la = self._input.LA(1)
-            if not(_la==ClientParser.EXIT or _la==ClientParser.CONTINUE):
+            if not(_la==APIParser.EXIT or _la==APIParser.CONTINUE):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -2498,9 +2498,9 @@ class ClientParser ( Parser ):
             self.state = 314
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 313
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -2520,16 +2520,16 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def SPOOL(self):
-            return self.getToken(ClientParser.SPOOL, 0)
+            return self.getToken(APIParser.SPOOL, 0)
 
         def String(self):
-            return self.getToken(ClientParser.String, 0)
+            return self.getToken(APIParser.String, 0)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_spool
+            return APIParser.RULE_spool
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitSpool" ):
@@ -2542,21 +2542,21 @@ class ClientParser ( Parser ):
 
     def spool(self):
 
-        localctx = ClientParser.SpoolContext(self, self._ctx, self.state)
+        localctx = APIParser.SpoolContext(self, self._ctx, self.state)
         self.enterRule(localctx, 60, self.RULE_spool)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 316
-            self.match(ClientParser.SPOOL)
+            self.match(APIParser.SPOOL)
             self.state = 317
-            self.match(ClientParser.String)
+            self.match(APIParser.String)
             self.state = 319
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 318
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -2576,19 +2576,19 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def ECHO_OPEN(self):
-            return self.getToken(ClientParser.ECHO_OPEN, 0)
+            return self.getToken(APIParser.ECHO_OPEN, 0)
 
         def EchoBlock(self):
-            return self.getToken(ClientParser.EchoBlock, 0)
+            return self.getToken(APIParser.EchoBlock, 0)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def EOF(self):
-            return self.getToken(ClientParser.EOF, 0)
+            return self.getToken(APIParser.EOF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_echo
+            return APIParser.RULE_echo
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitEcho" ):
@@ -2601,22 +2601,22 @@ class ClientParser ( Parser ):
 
     def echo(self):
 
-        localctx = ClientParser.EchoContext(self, self._ctx, self.state)
+        localctx = APIParser.EchoContext(self, self._ctx, self.state)
         self.enterRule(localctx, 62, self.RULE_echo)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 321
-            self.match(ClientParser.ECHO_OPEN)
+            self.match(APIParser.ECHO_OPEN)
             self.state = 322
-            self.match(ClientParser.EchoBlock)
+            self.match(APIParser.EchoBlock)
             self.state = 324
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,32,self._ctx)
             if la_ == 1:
                 self.state = 323
                 _la = self._input.LA(1)
-                if not(_la==ClientParser.EOF or _la==ClientParser.CRLF):
+                if not(_la==APIParser.EOF or _la==APIParser.CRLF):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -2640,26 +2640,26 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def LOADDRIVER(self):
-            return self.getToken(ClientParser.LOADDRIVER, 0)
+            return self.getToken(APIParser.LOADDRIVER, 0)
 
         def expression(self, i:int=None):
             if i is None:
-                return self.getTypedRuleContexts(ClientParser.ExpressionContext)
+                return self.getTypedRuleContexts(APIParser.ExpressionContext)
             else:
-                return self.getTypedRuleContext(ClientParser.ExpressionContext,i)
+                return self.getTypedRuleContext(APIParser.ExpressionContext,i)
 
 
         def COMMA(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.COMMA)
+                return self.getTokens(APIParser.COMMA)
             else:
-                return self.getToken(ClientParser.COMMA, i)
+                return self.getToken(APIParser.COMMA, i)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_loadDriver
+            return APIParser.RULE_loadDriver
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitLoadDriver" ):
@@ -2672,27 +2672,27 @@ class ClientParser ( Parser ):
 
     def loadDriver(self):
 
-        localctx = ClientParser.LoadDriverContext(self, self._ctx, self.state)
+        localctx = APIParser.LoadDriverContext(self, self._ctx, self.state)
         self.enterRule(localctx, 64, self.RULE_loadDriver)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 326
-            self.match(ClientParser.LOADDRIVER)
+            self.match(APIParser.LOADDRIVER)
             self.state = 331
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << ClientParser.COMMA) | (1 << ClientParser.DOT) | (1 << ClientParser.SLASH) | (1 << ClientParser.BRACKET_OPEN) | (1 << ClientParser.BRACKET_CLOSE) | (1 << ClientParser.SQUARE_OPEN) | (1 << ClientParser.SQUARE_CLOSE) | (1 << ClientParser.DOUBLE_QUOTE) | (1 << ClientParser.SINGLE_QUOTE) | (1 << ClientParser.ESCAPE) | (1 << ClientParser.String))) != 0):
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << APIParser.COMMA) | (1 << APIParser.DOT) | (1 << APIParser.SLASH) | (1 << APIParser.BRACKET_OPEN) | (1 << APIParser.BRACKET_CLOSE) | (1 << APIParser.SQUARE_OPEN) | (1 << APIParser.SQUARE_CLOSE) | (1 << APIParser.DOUBLE_QUOTE) | (1 << APIParser.SINGLE_QUOTE) | (1 << APIParser.ESCAPE) | (1 << APIParser.String))) != 0):
                 self.state = 329
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
-                if token in [ClientParser.DOT, ClientParser.SLASH, ClientParser.BRACKET_OPEN, ClientParser.BRACKET_CLOSE, ClientParser.SQUARE_OPEN, ClientParser.SQUARE_CLOSE, ClientParser.DOUBLE_QUOTE, ClientParser.SINGLE_QUOTE, ClientParser.ESCAPE, ClientParser.String]:
+                if token in [APIParser.DOT, APIParser.SLASH, APIParser.BRACKET_OPEN, APIParser.BRACKET_CLOSE, APIParser.SQUARE_OPEN, APIParser.SQUARE_CLOSE, APIParser.DOUBLE_QUOTE, APIParser.SINGLE_QUOTE, APIParser.ESCAPE, APIParser.String]:
                     self.state = 327
                     self.expression()
                     pass
-                elif token in [ClientParser.COMMA]:
+                elif token in [APIParser.COMMA]:
                     self.state = 328
-                    self.match(ClientParser.COMMA)
+                    self.match(APIParser.COMMA)
                     pass
                 else:
                     raise NoViableAltException(self)
@@ -2704,9 +2704,9 @@ class ClientParser ( Parser ):
             self.state = 335
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 334
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -2726,20 +2726,20 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def INTERNAL(self):
-            return self.getToken(ClientParser.INTERNAL, 0)
+            return self.getToken(APIParser.INTERNAL, 0)
 
         def expression(self, i:int=None):
             if i is None:
-                return self.getTypedRuleContexts(ClientParser.ExpressionContext)
+                return self.getTypedRuleContexts(APIParser.ExpressionContext)
             else:
-                return self.getTypedRuleContext(ClientParser.ExpressionContext,i)
+                return self.getTypedRuleContext(APIParser.ExpressionContext,i)
 
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_internal
+            return APIParser.RULE_internal
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitInternal" ):
@@ -2752,13 +2752,13 @@ class ClientParser ( Parser ):
 
     def internal(self):
 
-        localctx = ClientParser.InternalContext(self, self._ctx, self.state)
+        localctx = APIParser.InternalContext(self, self._ctx, self.state)
         self.enterRule(localctx, 66, self.RULE_internal)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 337
-            self.match(ClientParser.INTERNAL)
+            self.match(APIParser.INTERNAL)
             self.state = 339 
             self._errHandler.sync(self)
             _la = self._input.LA(1)
@@ -2768,15 +2768,15 @@ class ClientParser ( Parser ):
                 self.state = 341 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << ClientParser.DOT) | (1 << ClientParser.SLASH) | (1 << ClientParser.BRACKET_OPEN) | (1 << ClientParser.BRACKET_CLOSE) | (1 << ClientParser.SQUARE_OPEN) | (1 << ClientParser.SQUARE_CLOSE) | (1 << ClientParser.DOUBLE_QUOTE) | (1 << ClientParser.SINGLE_QUOTE) | (1 << ClientParser.ESCAPE) | (1 << ClientParser.String))) != 0)):
+                if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << APIParser.DOT) | (1 << APIParser.SLASH) | (1 << APIParser.BRACKET_OPEN) | (1 << APIParser.BRACKET_CLOSE) | (1 << APIParser.SQUARE_OPEN) | (1 << APIParser.SQUARE_CLOSE) | (1 << APIParser.DOUBLE_QUOTE) | (1 << APIParser.SINGLE_QUOTE) | (1 << APIParser.ESCAPE) | (1 << APIParser.String))) != 0)):
                     break
 
             self.state = 344
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 343
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -2796,23 +2796,23 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def SET(self):
-            return self.getToken(ClientParser.SET, 0)
+            return self.getToken(APIParser.SET, 0)
 
         def SEMICOLON(self):
-            return self.getToken(ClientParser.SEMICOLON, 0)
+            return self.getToken(APIParser.SEMICOLON, 0)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def singleExpression(self, i:int=None):
             if i is None:
-                return self.getTypedRuleContexts(ClientParser.SingleExpressionContext)
+                return self.getTypedRuleContexts(APIParser.SingleExpressionContext)
             else:
-                return self.getTypedRuleContext(ClientParser.SingleExpressionContext,i)
+                return self.getTypedRuleContext(APIParser.SingleExpressionContext,i)
 
 
         def getRuleIndex(self):
-            return ClientParser.RULE_set
+            return APIParser.RULE_set
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitSet" ):
@@ -2825,17 +2825,17 @@ class ClientParser ( Parser ):
 
     def set_(self):
 
-        localctx = ClientParser.SetContext(self, self._ctx, self.state)
+        localctx = APIParser.SetContext(self, self._ctx, self.state)
         self.enterRule(localctx, 68, self.RULE_set)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 346
-            self.match(ClientParser.SET)
+            self.match(APIParser.SET)
             self.state = 352
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << ClientParser.DOT) | (1 << ClientParser.SLASH) | (1 << ClientParser.BRACKET_OPEN) | (1 << ClientParser.BRACKET_CLOSE) | (1 << ClientParser.SQUARE_OPEN) | (1 << ClientParser.SQUARE_CLOSE) | (1 << ClientParser.DOUBLE_QUOTE) | (1 << ClientParser.SINGLE_QUOTE) | (1 << ClientParser.ESCAPE) | (1 << ClientParser.String))) != 0):
+            if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << APIParser.DOT) | (1 << APIParser.SLASH) | (1 << APIParser.BRACKET_OPEN) | (1 << APIParser.BRACKET_CLOSE) | (1 << APIParser.SQUARE_OPEN) | (1 << APIParser.SQUARE_CLOSE) | (1 << APIParser.DOUBLE_QUOTE) | (1 << APIParser.SINGLE_QUOTE) | (1 << APIParser.ESCAPE) | (1 << APIParser.String))) != 0):
                 self.state = 348 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
@@ -2845,7 +2845,7 @@ class ClientParser ( Parser ):
                     self.state = 350 
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << ClientParser.DOT) | (1 << ClientParser.SLASH) | (1 << ClientParser.BRACKET_OPEN) | (1 << ClientParser.BRACKET_CLOSE) | (1 << ClientParser.SQUARE_OPEN) | (1 << ClientParser.SQUARE_CLOSE) | (1 << ClientParser.DOUBLE_QUOTE) | (1 << ClientParser.SINGLE_QUOTE) | (1 << ClientParser.ESCAPE) | (1 << ClientParser.String))) != 0)):
+                    if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << APIParser.DOT) | (1 << APIParser.SLASH) | (1 << APIParser.BRACKET_OPEN) | (1 << APIParser.BRACKET_CLOSE) | (1 << APIParser.SQUARE_OPEN) | (1 << APIParser.SQUARE_CLOSE) | (1 << APIParser.DOUBLE_QUOTE) | (1 << APIParser.SINGLE_QUOTE) | (1 << APIParser.ESCAPE) | (1 << APIParser.String))) != 0)):
                         break
 
 
@@ -2853,17 +2853,17 @@ class ClientParser ( Parser ):
             self.state = 355
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.SEMICOLON:
+            if _la==APIParser.SEMICOLON:
                 self.state = 354
-                self.match(ClientParser.SEMICOLON)
+                self.match(APIParser.SEMICOLON)
 
 
             self.state = 358
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 357
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -2883,16 +2883,16 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def SCRIPT_OPEN(self):
-            return self.getToken(ClientParser.SCRIPT_OPEN, 0)
+            return self.getToken(APIParser.SCRIPT_OPEN, 0)
 
         def ScriptBlock(self):
-            return self.getToken(ClientParser.ScriptBlock, 0)
+            return self.getToken(APIParser.ScriptBlock, 0)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_script
+            return APIParser.RULE_script
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitScript" ):
@@ -2905,21 +2905,21 @@ class ClientParser ( Parser ):
 
     def script(self):
 
-        localctx = ClientParser.ScriptContext(self, self._ctx, self.state)
+        localctx = APIParser.ScriptContext(self, self._ctx, self.state)
         self.enterRule(localctx, 70, self.RULE_script)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 360
-            self.match(ClientParser.SCRIPT_OPEN)
+            self.match(APIParser.SCRIPT_OPEN)
             self.state = 361
-            self.match(ClientParser.ScriptBlock)
+            self.match(APIParser.ScriptBlock)
             self.state = 363
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 362
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -2939,20 +2939,20 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def HTTP_OPEN(self):
-            return self.getToken(ClientParser.HTTP_OPEN, 0)
+            return self.getToken(APIParser.HTTP_OPEN, 0)
 
         def httpMessage(self):
-            return self.getTypedRuleContext(ClientParser.HttpMessageContext,0)
+            return self.getTypedRuleContext(APIParser.HttpMessageContext,0)
 
 
         def HTTP_CLOSE(self):
-            return self.getToken(ClientParser.HTTP_CLOSE, 0)
+            return self.getToken(APIParser.HTTP_CLOSE, 0)
 
         def EOF(self):
-            return self.getToken(ClientParser.EOF, 0)
+            return self.getToken(APIParser.EOF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_http
+            return APIParser.RULE_http
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitHttp" ):
@@ -2965,18 +2965,18 @@ class ClientParser ( Parser ):
 
     def http(self):
 
-        localctx = ClientParser.HttpContext(self, self._ctx, self.state)
+        localctx = APIParser.HttpContext(self, self._ctx, self.state)
         self.enterRule(localctx, 72, self.RULE_http)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 365
-            self.match(ClientParser.HTTP_OPEN)
+            self.match(APIParser.HTTP_OPEN)
             self.state = 366
             self.httpMessage()
             self.state = 367
             _la = self._input.LA(1)
-            if not(_la==ClientParser.EOF or _la==ClientParser.HTTP_CLOSE):
+            if not(_la==APIParser.EOF or _la==APIParser.HTTP_CLOSE):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -2998,19 +2998,19 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def httpRequestLine(self):
-            return self.getTypedRuleContext(ClientParser.HttpRequestLineContext,0)
+            return self.getTypedRuleContext(APIParser.HttpRequestLineContext,0)
 
 
         def httpHeaderFields(self):
-            return self.getTypedRuleContext(ClientParser.HttpHeaderFieldsContext,0)
+            return self.getTypedRuleContext(APIParser.HttpHeaderFieldsContext,0)
 
 
         def httpMessageBody(self):
-            return self.getTypedRuleContext(ClientParser.HttpMessageBodyContext,0)
+            return self.getTypedRuleContext(APIParser.HttpMessageBodyContext,0)
 
 
         def getRuleIndex(self):
-            return ClientParser.RULE_httpMessage
+            return APIParser.RULE_httpMessage
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitHttpMessage" ):
@@ -3023,7 +3023,7 @@ class ClientParser ( Parser ):
 
     def httpMessage(self):
 
-        localctx = ClientParser.HttpMessageContext(self, self._ctx, self.state)
+        localctx = APIParser.HttpMessageContext(self, self._ctx, self.state)
         self.enterRule(localctx, 74, self.RULE_httpMessage)
         self._la = 0 # Token type
         try:
@@ -3035,7 +3035,7 @@ class ClientParser ( Parser ):
             self.state = 372
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF or _la==ClientParser.String or _la==ClientParser.HttpMultipartBoundary or _la==ClientParser.HttpMessageBodyOperate:
+            if _la==APIParser.CRLF or _la==APIParser.String or _la==APIParser.HttpMultipartBoundary or _la==APIParser.HttpMessageBodyOperate:
                 self.state = 371
                 self.httpMessageBody()
 
@@ -3057,18 +3057,18 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def httpMethod(self):
-            return self.getTypedRuleContext(ClientParser.HttpMethodContext,0)
+            return self.getTypedRuleContext(APIParser.HttpMethodContext,0)
 
 
         def httpRequestTarget(self):
-            return self.getTypedRuleContext(ClientParser.HttpRequestTargetContext,0)
+            return self.getTypedRuleContext(APIParser.HttpRequestTargetContext,0)
 
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_httpRequestLine
+            return APIParser.RULE_httpRequestLine
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitHttpRequestLine" ):
@@ -3081,7 +3081,7 @@ class ClientParser ( Parser ):
 
     def httpRequestLine(self):
 
-        localctx = ClientParser.HttpRequestLineContext(self, self._ctx, self.state)
+        localctx = APIParser.HttpRequestLineContext(self, self._ctx, self.state)
         self.enterRule(localctx, 76, self.RULE_httpRequestLine)
         try:
             self.enterOuterAlt(localctx, 1)
@@ -3090,7 +3090,7 @@ class ClientParser ( Parser ):
             self.state = 375
             self.httpRequestTarget()
             self.state = 376
-            self.match(ClientParser.CRLF)
+            self.match(APIParser.CRLF)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -3108,10 +3108,10 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def HttpMethod(self):
-            return self.getToken(ClientParser.HttpMethod, 0)
+            return self.getToken(APIParser.HttpMethod, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_httpMethod
+            return APIParser.RULE_httpMethod
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitHttpMethod" ):
@@ -3124,12 +3124,12 @@ class ClientParser ( Parser ):
 
     def httpMethod(self):
 
-        localctx = ClientParser.HttpMethodContext(self, self._ctx, self.state)
+        localctx = APIParser.HttpMethodContext(self, self._ctx, self.state)
         self.enterRule(localctx, 78, self.RULE_httpMethod)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 378
-            self.match(ClientParser.HttpMethod)
+            self.match(APIParser.HttpMethod)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -3147,10 +3147,10 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def HttpRequestTarget(self):
-            return self.getToken(ClientParser.HttpRequestTarget, 0)
+            return self.getToken(APIParser.HttpRequestTarget, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_httpRequestTarget
+            return APIParser.RULE_httpRequestTarget
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitHttpRequestTarget" ):
@@ -3163,12 +3163,12 @@ class ClientParser ( Parser ):
 
     def httpRequestTarget(self):
 
-        localctx = ClientParser.HttpRequestTargetContext(self, self._ctx, self.state)
+        localctx = APIParser.HttpRequestTargetContext(self, self._ctx, self.state)
         self.enterRule(localctx, 80, self.RULE_httpRequestTarget)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 380
-            self.match(ClientParser.HttpRequestTarget)
+            self.match(APIParser.HttpRequestTarget)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -3187,13 +3187,13 @@ class ClientParser ( Parser ):
 
         def httpHeaderField(self, i:int=None):
             if i is None:
-                return self.getTypedRuleContexts(ClientParser.HttpHeaderFieldContext)
+                return self.getTypedRuleContexts(APIParser.HttpHeaderFieldContext)
             else:
-                return self.getTypedRuleContext(ClientParser.HttpHeaderFieldContext,i)
+                return self.getTypedRuleContext(APIParser.HttpHeaderFieldContext,i)
 
 
         def getRuleIndex(self):
-            return ClientParser.RULE_httpHeaderFields
+            return APIParser.RULE_httpHeaderFields
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitHttpHeaderFields" ):
@@ -3206,7 +3206,7 @@ class ClientParser ( Parser ):
 
     def httpHeaderFields(self):
 
-        localctx = ClientParser.HttpHeaderFieldsContext(self, self._ctx, self.state)
+        localctx = APIParser.HttpHeaderFieldsContext(self, self._ctx, self.state)
         self.enterRule(localctx, 82, self.RULE_httpHeaderFields)
         self._la = 0 # Token type
         try:
@@ -3214,7 +3214,7 @@ class ClientParser ( Parser ):
             self.state = 385
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==ClientParser.HttpFieldName:
+            while _la==APIParser.HttpFieldName:
                 self.state = 382
                 self.httpHeaderField()
                 self.state = 387
@@ -3238,18 +3238,18 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def httpFieldName(self):
-            return self.getTypedRuleContext(ClientParser.HttpFieldNameContext,0)
+            return self.getTypedRuleContext(APIParser.HttpFieldNameContext,0)
 
 
         def FIELD_COLON(self):
-            return self.getToken(ClientParser.FIELD_COLON, 0)
+            return self.getToken(APIParser.FIELD_COLON, 0)
 
         def httpFieldValue(self):
-            return self.getTypedRuleContext(ClientParser.HttpFieldValueContext,0)
+            return self.getTypedRuleContext(APIParser.HttpFieldValueContext,0)
 
 
         def getRuleIndex(self):
-            return ClientParser.RULE_httpHeaderField
+            return APIParser.RULE_httpHeaderField
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitHttpHeaderField" ):
@@ -3262,14 +3262,14 @@ class ClientParser ( Parser ):
 
     def httpHeaderField(self):
 
-        localctx = ClientParser.HttpHeaderFieldContext(self, self._ctx, self.state)
+        localctx = APIParser.HttpHeaderFieldContext(self, self._ctx, self.state)
         self.enterRule(localctx, 84, self.RULE_httpHeaderField)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 388
             self.httpFieldName()
             self.state = 389
-            self.match(ClientParser.FIELD_COLON)
+            self.match(APIParser.FIELD_COLON)
             self.state = 390
             self.httpFieldValue()
         except RecognitionException as re:
@@ -3289,10 +3289,10 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def HttpFieldName(self):
-            return self.getToken(ClientParser.HttpFieldName, 0)
+            return self.getToken(APIParser.HttpFieldName, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_httpFieldName
+            return APIParser.RULE_httpFieldName
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitHttpFieldName" ):
@@ -3305,12 +3305,12 @@ class ClientParser ( Parser ):
 
     def httpFieldName(self):
 
-        localctx = ClientParser.HttpFieldNameContext(self, self._ctx, self.state)
+        localctx = APIParser.HttpFieldNameContext(self, self._ctx, self.state)
         self.enterRule(localctx, 86, self.RULE_httpFieldName)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 392
-            self.match(ClientParser.HttpFieldName)
+            self.match(APIParser.HttpFieldName)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -3328,13 +3328,13 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def HttpFieldValue(self):
-            return self.getToken(ClientParser.HttpFieldValue, 0)
+            return self.getToken(APIParser.HttpFieldValue, 0)
 
         def HttpFieldValueEnd(self):
-            return self.getToken(ClientParser.HttpFieldValueEnd, 0)
+            return self.getToken(APIParser.HttpFieldValueEnd, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_httpFieldValue
+            return APIParser.RULE_httpFieldValue
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitHttpFieldValue" ):
@@ -3347,14 +3347,14 @@ class ClientParser ( Parser ):
 
     def httpFieldValue(self):
 
-        localctx = ClientParser.HttpFieldValueContext(self, self._ctx, self.state)
+        localctx = APIParser.HttpFieldValueContext(self, self._ctx, self.state)
         self.enterRule(localctx, 88, self.RULE_httpFieldValue)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 394
-            self.match(ClientParser.HttpFieldValue)
+            self.match(APIParser.HttpFieldValue)
             self.state = 395
-            self.match(ClientParser.HttpFieldValueEnd)
+            self.match(APIParser.HttpFieldValueEnd)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -3373,20 +3373,20 @@ class ClientParser ( Parser ):
 
         def httpMultipart(self, i:int=None):
             if i is None:
-                return self.getTypedRuleContexts(ClientParser.HttpMultipartContext)
+                return self.getTypedRuleContexts(APIParser.HttpMultipartContext)
             else:
-                return self.getTypedRuleContext(ClientParser.HttpMultipartContext,i)
+                return self.getTypedRuleContext(APIParser.HttpMultipartContext,i)
 
 
         def httpMessageBodyContent(self, i:int=None):
             if i is None:
-                return self.getTypedRuleContexts(ClientParser.HttpMessageBodyContentContext)
+                return self.getTypedRuleContexts(APIParser.HttpMessageBodyContentContext)
             else:
-                return self.getTypedRuleContext(ClientParser.HttpMessageBodyContentContext,i)
+                return self.getTypedRuleContext(APIParser.HttpMessageBodyContentContext,i)
 
 
         def getRuleIndex(self):
-            return ClientParser.RULE_httpMessageBody
+            return APIParser.RULE_httpMessageBody
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitHttpMessageBody" ):
@@ -3399,7 +3399,7 @@ class ClientParser ( Parser ):
 
     def httpMessageBody(self):
 
-        localctx = ClientParser.HttpMessageBodyContext(self, self._ctx, self.state)
+        localctx = APIParser.HttpMessageBodyContext(self, self._ctx, self.state)
         self.enterRule(localctx, 90, self.RULE_httpMessageBody)
         self._la = 0 # Token type
         try:
@@ -3411,11 +3411,11 @@ class ClientParser ( Parser ):
                 self.state = 399
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
-                if token in [ClientParser.HttpMultipartBoundary]:
+                if token in [APIParser.HttpMultipartBoundary]:
                     self.state = 397
                     self.httpMultipart()
                     pass
-                elif token in [ClientParser.CRLF, ClientParser.String, ClientParser.HttpMessageBodyOperate]:
+                elif token in [APIParser.CRLF, APIParser.String, APIParser.HttpMessageBodyOperate]:
                     self.state = 398
                     self.httpMessageBodyContent()
                     pass
@@ -3425,7 +3425,7 @@ class ClientParser ( Parser ):
                 self.state = 401 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==ClientParser.CRLF or _la==ClientParser.String or _la==ClientParser.HttpMultipartBoundary or _la==ClientParser.HttpMessageBodyOperate):
+                if not (_la==APIParser.CRLF or _la==APIParser.String or _la==APIParser.HttpMultipartBoundary or _la==APIParser.HttpMessageBodyOperate):
                     break
 
         except RecognitionException as re:
@@ -3445,17 +3445,17 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def HttpMultipartBoundaryEnd(self):
-            return self.getToken(ClientParser.HttpMultipartBoundaryEnd, 0)
+            return self.getToken(APIParser.HttpMultipartBoundaryEnd, 0)
 
         def httpMultipartBoundary(self, i:int=None):
             if i is None:
-                return self.getTypedRuleContexts(ClientParser.HttpMultipartBoundaryContext)
+                return self.getTypedRuleContexts(APIParser.HttpMultipartBoundaryContext)
             else:
-                return self.getTypedRuleContext(ClientParser.HttpMultipartBoundaryContext,i)
+                return self.getTypedRuleContext(APIParser.HttpMultipartBoundaryContext,i)
 
 
         def getRuleIndex(self):
-            return ClientParser.RULE_httpMultipart
+            return APIParser.RULE_httpMultipart
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitHttpMultipart" ):
@@ -3468,7 +3468,7 @@ class ClientParser ( Parser ):
 
     def httpMultipart(self):
 
-        localctx = ClientParser.HttpMultipartContext(self, self._ctx, self.state)
+        localctx = APIParser.HttpMultipartContext(self, self._ctx, self.state)
         self.enterRule(localctx, 92, self.RULE_httpMultipart)
         self._la = 0 # Token type
         try:
@@ -3482,11 +3482,11 @@ class ClientParser ( Parser ):
                 self.state = 406 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==ClientParser.HttpMultipartBoundary):
+                if not (_la==APIParser.HttpMultipartBoundary):
                     break
 
             self.state = 408
-            self.match(ClientParser.HttpMultipartBoundaryEnd)
+            self.match(APIParser.HttpMultipartBoundaryEnd)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -3504,19 +3504,19 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def httpBoundaryDelimiter(self):
-            return self.getTypedRuleContext(ClientParser.HttpBoundaryDelimiterContext,0)
+            return self.getTypedRuleContext(APIParser.HttpBoundaryDelimiterContext,0)
 
 
         def httpHeaderFields(self):
-            return self.getTypedRuleContext(ClientParser.HttpHeaderFieldsContext,0)
+            return self.getTypedRuleContext(APIParser.HttpHeaderFieldsContext,0)
 
 
         def httpMessageBodyContent(self):
-            return self.getTypedRuleContext(ClientParser.HttpMessageBodyContentContext,0)
+            return self.getTypedRuleContext(APIParser.HttpMessageBodyContentContext,0)
 
 
         def getRuleIndex(self):
-            return ClientParser.RULE_httpMultipartBoundary
+            return APIParser.RULE_httpMultipartBoundary
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitHttpMultipartBoundary" ):
@@ -3529,7 +3529,7 @@ class ClientParser ( Parser ):
 
     def httpMultipartBoundary(self):
 
-        localctx = ClientParser.HttpMultipartBoundaryContext(self, self._ctx, self.state)
+        localctx = APIParser.HttpMultipartBoundaryContext(self, self._ctx, self.state)
         self.enterRule(localctx, 94, self.RULE_httpMultipartBoundary)
         try:
             self.enterOuterAlt(localctx, 1)
@@ -3556,10 +3556,10 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def HttpMultipartBoundary(self):
-            return self.getToken(ClientParser.HttpMultipartBoundary, 0)
+            return self.getToken(APIParser.HttpMultipartBoundary, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_httpBoundaryDelimiter
+            return APIParser.RULE_httpBoundaryDelimiter
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitHttpBoundaryDelimiter" ):
@@ -3572,12 +3572,12 @@ class ClientParser ( Parser ):
 
     def httpBoundaryDelimiter(self):
 
-        localctx = ClientParser.HttpBoundaryDelimiterContext(self, self._ctx, self.state)
+        localctx = APIParser.HttpBoundaryDelimiterContext(self, self._ctx, self.state)
         self.enterRule(localctx, 96, self.RULE_httpBoundaryDelimiter)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 414
-            self.match(ClientParser.HttpMultipartBoundary)
+            self.match(APIParser.HttpMultipartBoundary)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -3596,20 +3596,20 @@ class ClientParser ( Parser ):
 
         def httpMessageBodyOperate(self, i:int=None):
             if i is None:
-                return self.getTypedRuleContexts(ClientParser.HttpMessageBodyOperateContext)
+                return self.getTypedRuleContexts(APIParser.HttpMessageBodyOperateContext)
             else:
-                return self.getTypedRuleContext(ClientParser.HttpMessageBodyOperateContext,i)
+                return self.getTypedRuleContext(APIParser.HttpMessageBodyOperateContext,i)
 
 
         def httpMessageBodyOther(self, i:int=None):
             if i is None:
-                return self.getTypedRuleContexts(ClientParser.HttpMessageBodyOtherContext)
+                return self.getTypedRuleContexts(APIParser.HttpMessageBodyOtherContext)
             else:
-                return self.getTypedRuleContext(ClientParser.HttpMessageBodyOtherContext,i)
+                return self.getTypedRuleContext(APIParser.HttpMessageBodyOtherContext,i)
 
 
         def getRuleIndex(self):
-            return ClientParser.RULE_httpMessageBodyContent
+            return APIParser.RULE_httpMessageBodyContent
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitHttpMessageBodyContent" ):
@@ -3622,7 +3622,7 @@ class ClientParser ( Parser ):
 
     def httpMessageBodyContent(self):
 
-        localctx = ClientParser.HttpMessageBodyContentContext(self, self._ctx, self.state)
+        localctx = APIParser.HttpMessageBodyContentContext(self, self._ctx, self.state)
         self.enterRule(localctx, 98, self.RULE_httpMessageBodyContent)
         try:
             self.enterOuterAlt(localctx, 1)
@@ -3634,11 +3634,11 @@ class ClientParser ( Parser ):
                     self.state = 418
                     self._errHandler.sync(self)
                     token = self._input.LA(1)
-                    if token in [ClientParser.HttpMessageBodyOperate]:
+                    if token in [APIParser.HttpMessageBodyOperate]:
                         self.state = 416
                         self.httpMessageBodyOperate()
                         pass
-                    elif token in [ClientParser.CRLF, ClientParser.String]:
+                    elif token in [APIParser.CRLF, APIParser.String]:
                         self.state = 417
                         self.httpMessageBodyOther()
                         pass
@@ -3669,10 +3669,10 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def HttpMessageBodyOperate(self):
-            return self.getToken(ClientParser.HttpMessageBodyOperate, 0)
+            return self.getToken(APIParser.HttpMessageBodyOperate, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_httpMessageBodyOperate
+            return APIParser.RULE_httpMessageBodyOperate
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitHttpMessageBodyOperate" ):
@@ -3685,12 +3685,12 @@ class ClientParser ( Parser ):
 
     def httpMessageBodyOperate(self):
 
-        localctx = ClientParser.HttpMessageBodyOperateContext(self, self._ctx, self.state)
+        localctx = APIParser.HttpMessageBodyOperateContext(self, self._ctx, self.state)
         self.enterRule(localctx, 100, self.RULE_httpMessageBodyOperate)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 422
-            self.match(ClientParser.HttpMessageBodyOperate)
+            self.match(APIParser.HttpMessageBodyOperate)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -3709,18 +3709,18 @@ class ClientParser ( Parser ):
 
         def String(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.String)
+                return self.getTokens(APIParser.String)
             else:
-                return self.getToken(ClientParser.String, i)
+                return self.getToken(APIParser.String, i)
 
         def CRLF(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.CRLF)
+                return self.getTokens(APIParser.CRLF)
             else:
-                return self.getToken(ClientParser.CRLF, i)
+                return self.getToken(APIParser.CRLF, i)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_httpMessageBodyOther
+            return APIParser.RULE_httpMessageBodyOther
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitHttpMessageBodyOther" ):
@@ -3733,7 +3733,7 @@ class ClientParser ( Parser ):
 
     def httpMessageBodyOther(self):
 
-        localctx = ClientParser.HttpMessageBodyOtherContext(self, self._ctx, self.state)
+        localctx = APIParser.HttpMessageBodyOtherContext(self, self._ctx, self.state)
         self.enterRule(localctx, 102, self.RULE_httpMessageBodyOther)
         self._la = 0 # Token type
         try:
@@ -3745,7 +3745,7 @@ class ClientParser ( Parser ):
                 if _alt == 1:
                     self.state = 424
                     _la = self._input.LA(1)
-                    if not(_la==ClientParser.CRLF or _la==ClientParser.String):
+                    if not(_la==APIParser.CRLF or _la==APIParser.String):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
@@ -3775,37 +3775,37 @@ class ClientParser ( Parser ):
 
         def LOOP(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.LOOP)
+                return self.getTokens(APIParser.LOOP)
             else:
-                return self.getToken(ClientParser.LOOP, i)
+                return self.getToken(APIParser.LOOP, i)
 
         def BEGIN(self):
-            return self.getToken(ClientParser.BEGIN, 0)
+            return self.getToken(APIParser.BEGIN, 0)
 
         def UNTIL(self):
-            return self.getToken(ClientParser.UNTIL, 0)
+            return self.getToken(APIParser.UNTIL, 0)
 
         def expression(self):
-            return self.getTypedRuleContext(ClientParser.ExpressionContext,0)
+            return self.getTypedRuleContext(APIParser.ExpressionContext,0)
 
 
         def INTERVAL(self):
-            return self.getToken(ClientParser.INTERVAL, 0)
+            return self.getToken(APIParser.INTERVAL, 0)
 
         def INT(self):
-            return self.getToken(ClientParser.INT, 0)
+            return self.getToken(APIParser.INT, 0)
 
         def END(self):
-            return self.getToken(ClientParser.END, 0)
+            return self.getToken(APIParser.END, 0)
 
         def CRLF(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.CRLF)
+                return self.getTokens(APIParser.CRLF)
             else:
-                return self.getToken(ClientParser.CRLF, i)
+                return self.getToken(APIParser.CRLF, i)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_loopUntil
+            return APIParser.RULE_loopUntil
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitLoopUntil" ):
@@ -3818,41 +3818,41 @@ class ClientParser ( Parser ):
 
     def loopUntil(self):
 
-        localctx = ClientParser.LoopUntilContext(self, self._ctx, self.state)
+        localctx = APIParser.LoopUntilContext(self, self._ctx, self.state)
         self.enterRule(localctx, 104, self.RULE_loopUntil)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 429
-            self.match(ClientParser.LOOP)
+            self.match(APIParser.LOOP)
             self.state = 430
-            self.match(ClientParser.BEGIN)
+            self.match(APIParser.BEGIN)
             self.state = 431
-            self.match(ClientParser.UNTIL)
+            self.match(APIParser.UNTIL)
             self.state = 432
             self.expression()
             self.state = 433
-            self.match(ClientParser.INTERVAL)
+            self.match(APIParser.INTERVAL)
             self.state = 434
-            self.match(ClientParser.INT)
+            self.match(APIParser.INT)
             self.state = 436
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 435
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
             self.state = 438
-            self.match(ClientParser.LOOP)
+            self.match(APIParser.LOOP)
             self.state = 439
-            self.match(ClientParser.END)
+            self.match(APIParser.END)
             self.state = 441
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 440
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -3873,37 +3873,37 @@ class ClientParser ( Parser ):
 
         def LOOP(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.LOOP)
+                return self.getTokens(APIParser.LOOP)
             else:
-                return self.getToken(ClientParser.LOOP, i)
+                return self.getToken(APIParser.LOOP, i)
 
         def BEGIN(self):
-            return self.getToken(ClientParser.BEGIN, 0)
+            return self.getToken(APIParser.BEGIN, 0)
 
         def loopPair(self, i:int=None):
             if i is None:
-                return self.getTypedRuleContexts(ClientParser.LoopPairContext)
+                return self.getTypedRuleContexts(APIParser.LoopPairContext)
             else:
-                return self.getTypedRuleContext(ClientParser.LoopPairContext,i)
+                return self.getTypedRuleContext(APIParser.LoopPairContext,i)
 
 
         def END(self):
-            return self.getToken(ClientParser.END, 0)
+            return self.getToken(APIParser.END, 0)
 
         def CRLF(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.CRLF)
+                return self.getTokens(APIParser.CRLF)
             else:
-                return self.getToken(ClientParser.CRLF, i)
+                return self.getToken(APIParser.CRLF, i)
 
         def COMMA(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.COMMA)
+                return self.getTokens(APIParser.COMMA)
             else:
-                return self.getToken(ClientParser.COMMA, i)
+                return self.getToken(APIParser.COMMA, i)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_loop
+            return APIParser.RULE_loop
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitLoop" ):
@@ -3916,23 +3916,23 @@ class ClientParser ( Parser ):
 
     def loop(self):
 
-        localctx = ClientParser.LoopContext(self, self._ctx, self.state)
+        localctx = APIParser.LoopContext(self, self._ctx, self.state)
         self.enterRule(localctx, 106, self.RULE_loop)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 443
-            self.match(ClientParser.LOOP)
+            self.match(APIParser.LOOP)
             self.state = 444
-            self.match(ClientParser.BEGIN)
+            self.match(APIParser.BEGIN)
             self.state = 445
             self.loopPair()
             self.state = 450
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==ClientParser.COMMA:
+            while _la==APIParser.COMMA:
                 self.state = 446
-                self.match(ClientParser.COMMA)
+                self.match(APIParser.COMMA)
                 self.state = 447
                 self.loopPair()
                 self.state = 452
@@ -3942,17 +3942,17 @@ class ClientParser ( Parser ):
             self.state = 454
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 453
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
             self.state = 456
-            self.match(ClientParser.LOOP)
+            self.match(APIParser.LOOP)
             self.state = 457
-            self.match(ClientParser.END)
+            self.match(APIParser.END)
             self.state = 458
-            self.match(ClientParser.CRLF)
+            self.match(APIParser.CRLF)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -3970,17 +3970,17 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def String(self):
-            return self.getToken(ClientParser.String, 0)
+            return self.getToken(APIParser.String, 0)
 
         def COLON(self):
-            return self.getToken(ClientParser.COLON, 0)
+            return self.getToken(APIParser.COLON, 0)
 
         def expression(self):
-            return self.getTypedRuleContext(ClientParser.ExpressionContext,0)
+            return self.getTypedRuleContext(APIParser.ExpressionContext,0)
 
 
         def getRuleIndex(self):
-            return ClientParser.RULE_loopPair
+            return APIParser.RULE_loopPair
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitLoopPair" ):
@@ -3993,14 +3993,14 @@ class ClientParser ( Parser ):
 
     def loopPair(self):
 
-        localctx = ClientParser.LoopPairContext(self, self._ctx, self.state)
+        localctx = APIParser.LoopPairContext(self, self._ctx, self.state)
         self.enterRule(localctx, 108, self.RULE_loopPair)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 460
-            self.match(ClientParser.String)
+            self.match(APIParser.String)
             self.state = 461
-            self.match(ClientParser.COLON)
+            self.match(APIParser.COLON)
             self.state = 462
             self.expression()
         except RecognitionException as re:
@@ -4020,26 +4020,26 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def ASSERT(self):
-            return self.getToken(ClientParser.ASSERT, 0)
+            return self.getToken(APIParser.ASSERT, 0)
 
         def expression(self, i:int=None):
             if i is None:
-                return self.getTypedRuleContexts(ClientParser.ExpressionContext)
+                return self.getTypedRuleContexts(APIParser.ExpressionContext)
             else:
-                return self.getTypedRuleContext(ClientParser.ExpressionContext,i)
+                return self.getTypedRuleContext(APIParser.ExpressionContext,i)
 
 
         def COMMA(self, i:int=None):
             if i is None:
-                return self.getTokens(ClientParser.COMMA)
+                return self.getTokens(APIParser.COMMA)
             else:
-                return self.getToken(ClientParser.COMMA, i)
+                return self.getToken(APIParser.COMMA, i)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_assert
+            return APIParser.RULE_assert
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitAssert" ):
@@ -4052,21 +4052,21 @@ class ClientParser ( Parser ):
 
     def assert_(self):
 
-        localctx = ClientParser.AssertContext(self, self._ctx, self.state)
+        localctx = APIParser.AssertContext(self, self._ctx, self.state)
         self.enterRule(localctx, 110, self.RULE_assert)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 464
-            self.match(ClientParser.ASSERT)
+            self.match(APIParser.ASSERT)
             self.state = 465
             self.expression()
             self.state = 470
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==ClientParser.COMMA:
+            while _la==APIParser.COMMA:
                 self.state = 466
-                self.match(ClientParser.COMMA)
+                self.match(APIParser.COMMA)
                 self.state = 467
                 self.expression()
                 self.state = 472
@@ -4076,9 +4076,9 @@ class ClientParser ( Parser ):
             self.state = 474
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 473
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -4098,46 +4098,46 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def sqlCreate(self):
-            return self.getTypedRuleContext(ClientParser.SqlCreateContext,0)
+            return self.getTypedRuleContext(APIParser.SqlCreateContext,0)
 
 
         def sqlReplace(self):
-            return self.getTypedRuleContext(ClientParser.SqlReplaceContext,0)
+            return self.getTypedRuleContext(APIParser.SqlReplaceContext,0)
 
 
         def sqlInsert(self):
-            return self.getTypedRuleContext(ClientParser.SqlInsertContext,0)
+            return self.getTypedRuleContext(APIParser.SqlInsertContext,0)
 
 
         def sqlUpdate(self):
-            return self.getTypedRuleContext(ClientParser.SqlUpdateContext,0)
+            return self.getTypedRuleContext(APIParser.SqlUpdateContext,0)
 
 
         def sqlDelete(self):
-            return self.getTypedRuleContext(ClientParser.SqlDeleteContext,0)
+            return self.getTypedRuleContext(APIParser.SqlDeleteContext,0)
 
 
         def sqlSelect(self):
-            return self.getTypedRuleContext(ClientParser.SqlSelectContext,0)
+            return self.getTypedRuleContext(APIParser.SqlSelectContext,0)
 
 
         def sqlDeclare(self):
-            return self.getTypedRuleContext(ClientParser.SqlDeclareContext,0)
+            return self.getTypedRuleContext(APIParser.SqlDeclareContext,0)
 
 
         def sqlDrop(self):
-            return self.getTypedRuleContext(ClientParser.SqlDropContext,0)
+            return self.getTypedRuleContext(APIParser.SqlDropContext,0)
 
 
         def sqlCreateProcedure(self):
-            return self.getTypedRuleContext(ClientParser.SqlCreateProcedureContext,0)
+            return self.getTypedRuleContext(APIParser.SqlCreateProcedureContext,0)
 
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_sql
+            return APIParser.RULE_sql
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitSql" ):
@@ -4150,61 +4150,61 @@ class ClientParser ( Parser ):
 
     def sql(self):
 
-        localctx = ClientParser.SqlContext(self, self._ctx, self.state)
+        localctx = APIParser.SqlContext(self, self._ctx, self.state)
         self.enterRule(localctx, 112, self.RULE_sql)
         try:
             self.state = 486
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [ClientParser.SQL_CREATE]:
+            if token in [APIParser.SQL_CREATE]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 476
                 self.sqlCreate()
                 pass
-            elif token in [ClientParser.SQL_REPLACE]:
+            elif token in [APIParser.SQL_REPLACE]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 477
                 self.sqlReplace()
                 pass
-            elif token in [ClientParser.SQL_INSERT]:
+            elif token in [APIParser.SQL_INSERT]:
                 self.enterOuterAlt(localctx, 3)
                 self.state = 478
                 self.sqlInsert()
                 pass
-            elif token in [ClientParser.SQL_UPDATE]:
+            elif token in [APIParser.SQL_UPDATE]:
                 self.enterOuterAlt(localctx, 4)
                 self.state = 479
                 self.sqlUpdate()
                 pass
-            elif token in [ClientParser.SQL_DELETE]:
+            elif token in [APIParser.SQL_DELETE]:
                 self.enterOuterAlt(localctx, 5)
                 self.state = 480
                 self.sqlDelete()
                 pass
-            elif token in [ClientParser.SQL_SELECT]:
+            elif token in [APIParser.SQL_SELECT]:
                 self.enterOuterAlt(localctx, 6)
                 self.state = 481
                 self.sqlSelect()
                 pass
-            elif token in [ClientParser.SQL_DECLARE]:
+            elif token in [APIParser.SQL_DECLARE]:
                 self.enterOuterAlt(localctx, 7)
                 self.state = 482
                 self.sqlDeclare()
                 pass
-            elif token in [ClientParser.SQL_DROP]:
+            elif token in [APIParser.SQL_DROP]:
                 self.enterOuterAlt(localctx, 8)
                 self.state = 483
                 self.sqlDrop()
                 pass
-            elif token in [ClientParser.SQL_CREATE_PROCEDURE]:
+            elif token in [APIParser.SQL_CREATE_PROCEDURE]:
                 self.enterOuterAlt(localctx, 9)
                 self.state = 484
                 self.sqlCreateProcedure()
                 pass
-            elif token in [ClientParser.CRLF]:
+            elif token in [APIParser.CRLF]:
                 self.enterOuterAlt(localctx, 10)
                 self.state = 485
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
                 pass
             else:
                 raise NoViableAltException(self)
@@ -4226,16 +4226,16 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def SQL_CREATE(self):
-            return self.getToken(ClientParser.SQL_CREATE, 0)
+            return self.getToken(APIParser.SQL_CREATE, 0)
 
         def SQL_END(self):
-            return self.getToken(ClientParser.SQL_END, 0)
+            return self.getToken(APIParser.SQL_END, 0)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_sqlCreate
+            return APIParser.RULE_sqlCreate
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitSqlCreate" ):
@@ -4248,21 +4248,21 @@ class ClientParser ( Parser ):
 
     def sqlCreate(self):
 
-        localctx = ClientParser.SqlCreateContext(self, self._ctx, self.state)
+        localctx = APIParser.SqlCreateContext(self, self._ctx, self.state)
         self.enterRule(localctx, 114, self.RULE_sqlCreate)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 488
-            self.match(ClientParser.SQL_CREATE)
+            self.match(APIParser.SQL_CREATE)
             self.state = 489
-            self.match(ClientParser.SQL_END)
+            self.match(APIParser.SQL_END)
             self.state = 491
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 490
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -4282,16 +4282,16 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def SQL_REPLACE(self):
-            return self.getToken(ClientParser.SQL_REPLACE, 0)
+            return self.getToken(APIParser.SQL_REPLACE, 0)
 
         def SQL_END(self):
-            return self.getToken(ClientParser.SQL_END, 0)
+            return self.getToken(APIParser.SQL_END, 0)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_sqlReplace
+            return APIParser.RULE_sqlReplace
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitSqlReplace" ):
@@ -4304,21 +4304,21 @@ class ClientParser ( Parser ):
 
     def sqlReplace(self):
 
-        localctx = ClientParser.SqlReplaceContext(self, self._ctx, self.state)
+        localctx = APIParser.SqlReplaceContext(self, self._ctx, self.state)
         self.enterRule(localctx, 116, self.RULE_sqlReplace)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 493
-            self.match(ClientParser.SQL_REPLACE)
+            self.match(APIParser.SQL_REPLACE)
             self.state = 494
-            self.match(ClientParser.SQL_END)
+            self.match(APIParser.SQL_END)
             self.state = 496
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 495
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -4338,16 +4338,16 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def SQL_INSERT(self):
-            return self.getToken(ClientParser.SQL_INSERT, 0)
+            return self.getToken(APIParser.SQL_INSERT, 0)
 
         def SQL_END(self):
-            return self.getToken(ClientParser.SQL_END, 0)
+            return self.getToken(APIParser.SQL_END, 0)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_sqlInsert
+            return APIParser.RULE_sqlInsert
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitSqlInsert" ):
@@ -4360,21 +4360,21 @@ class ClientParser ( Parser ):
 
     def sqlInsert(self):
 
-        localctx = ClientParser.SqlInsertContext(self, self._ctx, self.state)
+        localctx = APIParser.SqlInsertContext(self, self._ctx, self.state)
         self.enterRule(localctx, 118, self.RULE_sqlInsert)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 498
-            self.match(ClientParser.SQL_INSERT)
+            self.match(APIParser.SQL_INSERT)
             self.state = 499
-            self.match(ClientParser.SQL_END)
+            self.match(APIParser.SQL_END)
             self.state = 501
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 500
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -4394,16 +4394,16 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def SQL_UPDATE(self):
-            return self.getToken(ClientParser.SQL_UPDATE, 0)
+            return self.getToken(APIParser.SQL_UPDATE, 0)
 
         def SQL_END(self):
-            return self.getToken(ClientParser.SQL_END, 0)
+            return self.getToken(APIParser.SQL_END, 0)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_sqlUpdate
+            return APIParser.RULE_sqlUpdate
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitSqlUpdate" ):
@@ -4416,21 +4416,21 @@ class ClientParser ( Parser ):
 
     def sqlUpdate(self):
 
-        localctx = ClientParser.SqlUpdateContext(self, self._ctx, self.state)
+        localctx = APIParser.SqlUpdateContext(self, self._ctx, self.state)
         self.enterRule(localctx, 120, self.RULE_sqlUpdate)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 503
-            self.match(ClientParser.SQL_UPDATE)
+            self.match(APIParser.SQL_UPDATE)
             self.state = 504
-            self.match(ClientParser.SQL_END)
+            self.match(APIParser.SQL_END)
             self.state = 506
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 505
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -4450,16 +4450,16 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def SQL_DELETE(self):
-            return self.getToken(ClientParser.SQL_DELETE, 0)
+            return self.getToken(APIParser.SQL_DELETE, 0)
 
         def SQL_END(self):
-            return self.getToken(ClientParser.SQL_END, 0)
+            return self.getToken(APIParser.SQL_END, 0)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_sqlDelete
+            return APIParser.RULE_sqlDelete
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitSqlDelete" ):
@@ -4472,21 +4472,21 @@ class ClientParser ( Parser ):
 
     def sqlDelete(self):
 
-        localctx = ClientParser.SqlDeleteContext(self, self._ctx, self.state)
+        localctx = APIParser.SqlDeleteContext(self, self._ctx, self.state)
         self.enterRule(localctx, 122, self.RULE_sqlDelete)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 508
-            self.match(ClientParser.SQL_DELETE)
+            self.match(APIParser.SQL_DELETE)
             self.state = 509
-            self.match(ClientParser.SQL_END)
+            self.match(APIParser.SQL_END)
             self.state = 511
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 510
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -4506,16 +4506,16 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def SQL_SELECT(self):
-            return self.getToken(ClientParser.SQL_SELECT, 0)
+            return self.getToken(APIParser.SQL_SELECT, 0)
 
         def SQL_END(self):
-            return self.getToken(ClientParser.SQL_END, 0)
+            return self.getToken(APIParser.SQL_END, 0)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_sqlSelect
+            return APIParser.RULE_sqlSelect
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitSqlSelect" ):
@@ -4528,21 +4528,21 @@ class ClientParser ( Parser ):
 
     def sqlSelect(self):
 
-        localctx = ClientParser.SqlSelectContext(self, self._ctx, self.state)
+        localctx = APIParser.SqlSelectContext(self, self._ctx, self.state)
         self.enterRule(localctx, 124, self.RULE_sqlSelect)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 513
-            self.match(ClientParser.SQL_SELECT)
+            self.match(APIParser.SQL_SELECT)
             self.state = 514
-            self.match(ClientParser.SQL_END)
+            self.match(APIParser.SQL_END)
             self.state = 516
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 515
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -4562,16 +4562,16 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def SQL_DROP(self):
-            return self.getToken(ClientParser.SQL_DROP, 0)
+            return self.getToken(APIParser.SQL_DROP, 0)
 
         def SQL_END(self):
-            return self.getToken(ClientParser.SQL_END, 0)
+            return self.getToken(APIParser.SQL_END, 0)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_sqlDrop
+            return APIParser.RULE_sqlDrop
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitSqlDrop" ):
@@ -4584,21 +4584,21 @@ class ClientParser ( Parser ):
 
     def sqlDrop(self):
 
-        localctx = ClientParser.SqlDropContext(self, self._ctx, self.state)
+        localctx = APIParser.SqlDropContext(self, self._ctx, self.state)
         self.enterRule(localctx, 126, self.RULE_sqlDrop)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 518
-            self.match(ClientParser.SQL_DROP)
+            self.match(APIParser.SQL_DROP)
             self.state = 519
-            self.match(ClientParser.SQL_END)
+            self.match(APIParser.SQL_END)
             self.state = 521
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 520
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -4618,16 +4618,16 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def SQL_DECLARE(self):
-            return self.getToken(ClientParser.SQL_DECLARE, 0)
+            return self.getToken(APIParser.SQL_DECLARE, 0)
 
         def SQL_SLASH(self):
-            return self.getToken(ClientParser.SQL_SLASH, 0)
+            return self.getToken(APIParser.SQL_SLASH, 0)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_sqlDeclare
+            return APIParser.RULE_sqlDeclare
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitSqlDeclare" ):
@@ -4640,21 +4640,21 @@ class ClientParser ( Parser ):
 
     def sqlDeclare(self):
 
-        localctx = ClientParser.SqlDeclareContext(self, self._ctx, self.state)
+        localctx = APIParser.SqlDeclareContext(self, self._ctx, self.state)
         self.enterRule(localctx, 128, self.RULE_sqlDeclare)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 523
-            self.match(ClientParser.SQL_DECLARE)
+            self.match(APIParser.SQL_DECLARE)
             self.state = 524
-            self.match(ClientParser.SQL_SLASH)
+            self.match(APIParser.SQL_SLASH)
             self.state = 526
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 525
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:
@@ -4674,16 +4674,16 @@ class ClientParser ( Parser ):
             self.parser = parser
 
         def SQL_CREATE_PROCEDURE(self):
-            return self.getToken(ClientParser.SQL_CREATE_PROCEDURE, 0)
+            return self.getToken(APIParser.SQL_CREATE_PROCEDURE, 0)
 
         def SQL_SLASH(self):
-            return self.getToken(ClientParser.SQL_SLASH, 0)
+            return self.getToken(APIParser.SQL_SLASH, 0)
 
         def CRLF(self):
-            return self.getToken(ClientParser.CRLF, 0)
+            return self.getToken(APIParser.CRLF, 0)
 
         def getRuleIndex(self):
-            return ClientParser.RULE_sqlCreateProcedure
+            return APIParser.RULE_sqlCreateProcedure
 
         def accept(self, visitor:ParseTreeVisitor):
             if hasattr( visitor, "visitSqlCreateProcedure" ):
@@ -4696,21 +4696,21 @@ class ClientParser ( Parser ):
 
     def sqlCreateProcedure(self):
 
-        localctx = ClientParser.SqlCreateProcedureContext(self, self._ctx, self.state)
+        localctx = APIParser.SqlCreateProcedureContext(self, self._ctx, self.state)
         self.enterRule(localctx, 130, self.RULE_sqlCreateProcedure)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 528
-            self.match(ClientParser.SQL_CREATE_PROCEDURE)
+            self.match(APIParser.SQL_CREATE_PROCEDURE)
             self.state = 529
-            self.match(ClientParser.SQL_SLASH)
+            self.match(APIParser.SQL_SLASH)
             self.state = 531
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==ClientParser.CRLF:
+            if _la==APIParser.CRLF:
                 self.state = 530
-                self.match(ClientParser.CRLF)
+                self.match(APIParser.CRLF)
 
 
         except RecognitionException as re:

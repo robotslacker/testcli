@@ -257,7 +257,7 @@ class CmdExecute(object):
                 return p_column
             else:
                 # 其他类型直接返回
-                raise SQLCliJDBCException("TESTCLI-00000: Unknown column type [" +
+                raise SQLCliJDBCException("TestCli-0000: Unknown column type [" +
                                           str(p_columntype) + ":" + str(type(p_column)) +
                                           "] in format_column")
 
@@ -620,11 +620,11 @@ class CmdExecute(object):
                 # 处理超时时间问题
                 if sql.upper() not in ["EXIT", "QUIT"]:
                     if self.timeOutMode == "SCRIPT":
-                        sqlErrorMessage = "TESTCLI-0000: Script Timeout " \
+                        sqlErrorMessage = "TestCli-000: Script Timeout " \
                                              "(" + str(self.scriptTimeOut) + \
                                              ") expired. Abort this command."
                     else:
-                        sqlErrorMessage = "TESTCLI-0000: SQL Timeout " \
+                        sqlErrorMessage = "TestCli-000: SQL Timeout " \
                                              "(" + str(self.sqlTimeOut) + \
                                              ") expired. Abort this command."
                     yield {"type": "error", "message": sqlErrorMessage}
@@ -987,7 +987,7 @@ class CmdExecute(object):
             if "TESTCLI_DEBUG" in os.environ:
                 print('traceback.print_exc():\n%s' % traceback.print_exc())
                 print('traceback.format_exc():\n%s' % traceback.format_exc())
-            raise TestCliException("TESTCLI-0000 Internal error. Parse failed.")
+            raise TestCliException("TestCli-000 Internal error. Parse failed.")
 
         # 开始执行语句
         for pos in range(0, len(ret_CommandSplitResults)):
@@ -1020,7 +1020,7 @@ class CmdExecute(object):
             # 处理超时时间问题
             if self.scriptTimeOut > 0:
                 if self.scriptTimeOut <= time.time() - self.getStartTime():
-                    commandErrorMessage = "TESTCLI-0000: Script Timeout " \
+                    commandErrorMessage = "TestCli-000: Script Timeout " \
                                          "(" + str(round(self.scriptTimeOut, 2)) + \
                                          ") expired. Abort this Script."
                     yield {"type": "error", "message": commandErrorMessage}
@@ -1136,7 +1136,10 @@ class CmdExecute(object):
                         "script": commandScriptFile
                     }
                     continue
-            elif parseObject["name"] in ["SELECT", "CREATE", "INSERT", "DROP", "PROCEDURE"]:
+            elif parseObject["name"] in [
+                "SELECT", "DELETE", "CREATE", "INSERT", "DROP",
+                "PROCEDURE"
+            ]:
                 sqlCommand = parseObject["statement"]
                 # 根据语句中的变量或者其他定义信息来重写当前语句
                 sqlCommand, rewrotedCommandList = self.rewriteRunStatement(

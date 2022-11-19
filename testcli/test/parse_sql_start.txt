@@ -1,8 +1,0 @@
-start aa.sql
-
-start aa.sql,bb.sql loop 10
-
-start cc.sql , dd.sql loop 40
-
-
-start "d:\\abc.sql", "f:\\def.sql"

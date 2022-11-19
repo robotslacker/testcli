@@ -31,7 +31,7 @@ from .sqlclijdbc import SQLCliJDBCTimeOutException
 from .sqlclijdbc import SQLCliJDBCException
 
 from .cmdexecute import CmdExecute
-from .sqlparse import SQLMapping
+from .cmdmapping import CMDMapping
 from .testwrapper import TestWrapper
 from .hdfswrapper import HDFSWrapper
 from .sshwrapper import SshWrapper
@@ -96,7 +96,7 @@ class TestCli(object):
             namespace=None,                         # 程序的默认命名空间
     ):
         self.db_saved_conn = {}                         # 数据库Session备份
-        self.SQLMappingHandler = SQLMapping()           # 函数句柄，处理SQLMapping信息
+        self.CMDMappingHandler = CMDMapping()           # 函数句柄，处理SQLMapping信息
         self.cmdExecuteHandler = CmdExecute()           # 函数句柄，具体来执行语句
         self.testOptions = TestOptions()                # 程序运行中各种参数
         self.TestHandler = TestWrapper()                # 测试管理
@@ -212,7 +212,7 @@ class TestCli(object):
         self.cmdExecuteHandler.script = script
         self.cmdExecuteHandler.testOptions = self.testOptions
         self.cmdExecuteHandler.workerName = self.WorkerName
-        self.cmdExecuteHandler.SQLMappingHandler = self.SQLMappingHandler
+        self.cmdExecuteHandler.CMDMappingHandler = self.CMDMappingHandler
 
         self.TestHandler.SQLOptions = self.testOptions
         self.DataHandler.SQLOptions = self.testOptions
@@ -1764,11 +1764,13 @@ class TestCli(object):
                     self.TransactionHandler.TransactionFail(m_Transaction.Transaction_Name)
             # TestCliException只有在被设置了WHENEVER_SQLERROR为EXIT的时候，才会被捕获到
 
-        # 退出进程
+        # 退出进程, 如果要求不显示logo，则也不会显示Disconnected字样
         if self.exitValue == 0:
-            self.echo("Disconnected.")
+            if not self.nologo:
+                self.echo("Disconnected.")
         else:
-            self.echo("Disconnected with [" + str(self.exitValue) + "].")
+            if not self.nologo:
+                self.echo("Disconnected with [" + str(self.exitValue) + "].")
 
         # 关闭LogFile
         if self.logfile is not None:

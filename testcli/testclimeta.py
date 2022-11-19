@@ -52,7 +52,7 @@ class TestCliMeta(object):
             m_MetaDriverFile = os.path.join(os.path.dirname(__file__),
                                             "jlib", m_AppOptions.get("meta_driver", "filename"))
             if not os.path.exists(m_MetaDriverFile):
-                raise TestCliException("TESTCLI-00000: "
+                raise TestCliException("TestCli-0000: "
                                        "TestCliMeta:: Driver file [" + m_MetaDriverFile +
                                        "] does not exist! JobManager Aborted!")
             m_MetaDriverURL = m_AppOptions.get("meta_driver", "jdbcurl")
@@ -60,7 +60,7 @@ class TestCliMeta(object):
                                       driver_args={'user': 'sa', 'password': 'sa'},
                                       jars=self.JarList)
             if self.dbConn is None:
-                raise TestCliException("TESTCLI-00000: "
+                raise TestCliException("TestCli-0000: "
                                        "TestCliMeta:: Connect to meta failed! JobManager Aborted!")
             # 设置AutoCommit为False
             self.dbConn.setAutoCommit(False)
@@ -84,7 +84,7 @@ class TestCliMeta(object):
                     self.MetaPort = 0
                 m_PortFileLocker.release()
                 if self.MetaPort == 0:
-                    raise TestCliException("TESTCLI-00000: "
+                    raise TestCliException("TestCli-0000: "
                                            "TestCliMeta:: Can't get avalable port! JobManager Aborted!")
 
             # 启动一个TCP Server，用来给其他后续的H2连接（主要是子进程）
@@ -200,7 +200,7 @@ class TestCliMeta(object):
             if "TESTCLI_DEBUG" in os.environ:
                 print('traceback.print_exc():\n%s' % traceback.print_exc())
                 print('traceback.format_exc():\n%s' % traceback.format_exc())
-            raise TestCliException("TESTCLI-00000: "
+            raise TestCliException("TestCli-0000: "
                                    "TestCliMeta:: " + str(e) + " JobManager Aborted!")
 
     def ConnectServer(self, p_MetaServerURL):

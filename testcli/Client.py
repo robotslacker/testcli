@@ -4,9 +4,9 @@ from antlr4 import *
 from antlr4 import InputStream
 import json
 
-from antlrgen.ClientLexer import ClientLexer
-from antlrgen.ClientParser import ClientParser
-from ClientVisitor import ClientVisitor
+from antlrgen.SQLLexer import SQLLexer
+from antlrgen.SQLParser import SQLParser
+from sqlvisitor import ClientVisitor
 from antlr4.error.ErrorListener import ErrorListener
 
 """
@@ -44,13 +44,13 @@ class ClientErrorListener(ErrorListener):
 
 def parse(script, defaultNameSpace=None):
     stream = InputStream(script)
-    lexer = ClientLexer(stream)
+    lexer = SQLLexer(stream)
     lexer.removeErrorListeners()
     lexer_listener = ClientErrorListener()
     lexer.addErrorListener(lexer_listener)
 
     token = CommonTokenStream(lexer)
-    parser = ClientParser(token)
+    parser = SQLParser(token)
     parser.removeErrorListeners()
     parser_listener = ClientErrorListener()
     parser.addErrorListener(parser_listener)

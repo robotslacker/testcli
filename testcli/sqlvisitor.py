@@ -2,17 +2,12 @@
 from antlr4.Token import Token
 import re
 
-if __name__ is not None and "." in __name__:
-    from .antlrgen.ClientParser import ClientParser
-    from .antlrgen.ClientParserVisitor import ClientParserVisitor
-    from .antlrgen.ClientLexer import ClientLexer
-else:
-    from antlrgen.ClientParser import ClientParser
-    from antlrgen.ClientParserVisitor import ClientParserVisitor
-    from antlrgen.ClientLexer import ClientLexer
+from .antlrgen.SQLParser import SQLParser
+from .antlrgen.SQLParserVisitor import SQLParserVisitor
+from .antlrgen.SQLLexer import SQLLexer
 
 
-class ClientVisitor(ClientParserVisitor):
+class SQLVisitor(SQLParserVisitor):
     def __init__(self, tokens, defaultNameSpace=None):
         # 词法符号表
         self.tokens = tokens
@@ -45,7 +40,7 @@ class ClientVisitor(ClientParserVisitor):
         start, end = ctx.getSourceInterval()
         while start > 0:
             token = ctx.parser._input.tokens[start-1]
-            if token.channel != ClientLexer.HINT_CHANNEL:
+            if token.channel != SQLLexer.HINT_CHANNEL:
                 break
             start -= 1
         return start, end
@@ -87,7 +82,7 @@ class ClientVisitor(ClientParserVisitor):
     def getHint(tokens):
         hints = []
         for token in tokens:
-            if token.channel == ClientLexer.HINT_CHANNEL:
+            if token.channel == SQLLexer.HINT_CHANNEL:
                 # 使用提示[Hint]分割字符串 
                 pattern = r"\[ *Hint *\]"
                 hint_arr = re.split(pattern, token.text, flags=re.IGNORECASE)
@@ -122,14 +117,14 @@ class ClientVisitor(ClientParserVisitor):
             errorCode: 错误码列表
             errorMsg: 错误信息列表
     """
-    def visitProg(self, ctx: ClientParser.ProgContext):
+    def visitProg(self, ctx: SQLParser.ProgContext):
         self.visitChildren(ctx)
         return self.isFinished, self.parsedObject, self.originScripts, self.hints, self.errorCode, self.errorMsg
     
-    def visitCommand(self, ctx: ClientParser.CommandContext):
+    def visitCommand(self, ctx: SQLParser.CommandContext):
         return self.visitChildren(ctx)
         
-    def visitExit(self, ctx: ClientParser.ExitContext):
+    def visitExit(self, ctx: SQLParser.ExitContext):
         parsedObject = {'name': 'EXIT'}
         
         if ctx.INT() is not None:
@@ -159,7 +154,7 @@ class ClientVisitor(ClientParserVisitor):
         self.errorMsg = errorMsg
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitQuit(self, ctx: ClientParser.QuitContext):
+    def visitQuit(self, ctx: SQLParser.QuitContext):
         parsedObject = {'name': 'QUIT'}
         
         if ctx.INT() is not None:
@@ -189,7 +184,7 @@ class ClientVisitor(ClientParserVisitor):
         self.errorMsg = errorMsg
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitUse(self, ctx: ClientParser.UseContext):
+    def visitUse(self, ctx: SQLParser.UseContext):
         parsedObject = {'name': 'USE'}
         nameSpace = None
         if ctx.API() is not None:
@@ -220,7 +215,7 @@ class ClientVisitor(ClientParserVisitor):
         self.errorMsg = errorMsg
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitSleep(self, ctx: ClientParser.SleepContext):
+    def visitSleep(self, ctx: SQLParser.SleepContext):
         parsedObject = {
             'name': 'SLEEP',
             "sleepTime": int(ctx.INT().getText())
@@ -248,7 +243,7 @@ class ClientVisitor(ClientParserVisitor):
         self.errorMsg = errorMsg
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitConnect(self, ctx: ClientParser.ConnectContext):
+    def visitConnect(self, ctx: SQLParser.ConnectContext):
         parsedObject = {'name': 'CONNECT'}
 
         # 用户信息
@@ -281,7 +276,7 @@ class ClientVisitor(ClientParserVisitor):
         self.errorMsg = errorMsg
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitConnectjdbc(self, ctx: ClientParser.ConnectjdbcContext):
+    def visitConnectjdbc(self, ctx: SQLParser.ConnectjdbcContext):
         parsedObject = {}
         if ctx.connectUserInfo() is not None:
             result, script, hint, code, message = self.visit(ctx.connectUserInfo())
@@ -325,7 +320,7 @@ class ClientVisitor(ClientParserVisitor):
 
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitConnectlocal(self, ctx: ClientParser.ConnectlocalContext):
+    def visitConnectlocal(self, ctx: SQLParser.ConnectlocalContext):
         parsedObject = {}
         if ctx.connectlocalService() is not None:
             result, script, hint, code, message = self.visit(ctx.connectlocalService())
@@ -348,7 +343,7 @@ class ClientVisitor(ClientParserVisitor):
 
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitConnectlocalService(self, ctx: ClientParser.ConnectlocalServiceContext):
+    def visitConnectlocalService(self, ctx: SQLParser.ConnectlocalServiceContext):
         parsedObject = {}
         if ctx.CONNECT_STRING() is not None:
             parsedObject.update({'localService': ctx.CONNECT_STRING().getText()})
@@ -370,7 +365,7 @@ class ClientVisitor(ClientParserVisitor):
 
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitConnectService(self, ctx: ClientParser.ConnectServiceContext):
+    def visitConnectService(self, ctx: SQLParser.ConnectServiceContext):
         parsedObject = {}
         if ctx.CONNECT_STRING() is not None:
             parsedObject.update({'service': ctx.CONNECT_STRING().getText()})
@@ -393,7 +388,7 @@ class ClientVisitor(ClientParserVisitor):
         return parsedObject, originScript, hint, errorCode, errorMsg
 
     # connect中的用户信息
-    def visitConnectUserInfo(self, ctx: ClientParser.ConnectUserInfoContext):
+    def visitConnectUserInfo(self, ctx: SQLParser.ConnectUserInfoContext):
         parsedObject = {}
 
         # 用户名
@@ -423,7 +418,7 @@ class ClientVisitor(ClientParserVisitor):
 
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitConnectUser(self, ctx: ClientParser.ConnectUserContext):
+    def visitConnectUser(self, ctx: SQLParser.ConnectUserContext):
         parsedObject = {}
         if ctx.CONNECT_STRING() is not None:
             parsedObject.update({'username': ctx.CONNECT_STRING().getText()})
@@ -445,7 +440,7 @@ class ClientVisitor(ClientParserVisitor):
 
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitConnectPassword(self, ctx: ClientParser.ConnectPasswordContext):
+    def visitConnectPassword(self, ctx: SQLParser.ConnectPasswordContext):
         parsedObject = {}
         if ctx.CONNECT_STRING() is not None:
             parsedObject.update({'password': ctx.CONNECT_STRING().getText()})
@@ -467,7 +462,7 @@ class ClientVisitor(ClientParserVisitor):
 
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitConnectDriver(self, ctx: ClientParser.ConnectDriverContext):
+    def visitConnectDriver(self, ctx: SQLParser.ConnectDriverContext):
         parsedObject = {}
         if ctx.JDBC() is not None:
             parsedObject.update({'driver': "jdbc"})
@@ -489,7 +484,7 @@ class ClientVisitor(ClientParserVisitor):
 
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitConnectDriverSchema(self, ctx: ClientParser.ConnectDriverSchemaContext):
+    def visitConnectDriverSchema(self, ctx: SQLParser.ConnectDriverSchemaContext):
         parsedObject = {}
         if ctx.CONNECT_STRING() is not None:
             parsedObject.update({'driverSchema': ctx.CONNECT_STRING().getText()})
@@ -511,7 +506,7 @@ class ClientVisitor(ClientParserVisitor):
 
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitConnectDriverType(self, ctx: ClientParser.ConnectDriverSchemaContext):
+    def visitConnectDriverType(self, ctx: SQLParser.ConnectDriverSchemaContext):
         parsedObject = {}
         if ctx.CONNECT_STRING() is not None:
             parsedObject.update({'driverType': ctx.CONNECT_STRING().getText()})
@@ -533,7 +528,7 @@ class ClientVisitor(ClientParserVisitor):
 
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitConnectHost(self, ctx: ClientParser.ConnectHostContext):
+    def visitConnectHost(self, ctx: SQLParser.ConnectHostContext):
         parsedObject = {'host': ctx.getText()}
 
         # 获取源文件
@@ -552,7 +547,7 @@ class ClientVisitor(ClientParserVisitor):
             errorMsg = ctx.exception.message
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitConnectPort(self, ctx: ClientParser.ConnectPortContext):
+    def visitConnectPort(self, ctx: SQLParser.ConnectPortContext):
         parsedObject = {'port': int(ctx.getText().replace(":", ""))}
 
         # 获取源文件
@@ -571,7 +566,7 @@ class ClientVisitor(ClientParserVisitor):
             errorMsg = ctx.exception.message
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitConnectParameters(self, ctx: ClientParser.ConnectParametersContext):
+    def visitConnectParameters(self, ctx: SQLParser.ConnectParametersContext):
         parsedObject = {}
 
         # 连接参数信息
@@ -596,7 +591,7 @@ class ClientVisitor(ClientParserVisitor):
 
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitConnectParameter(self, ctx: ClientParser.ConnectParameterContext):
+    def visitConnectParameter(self, ctx: SQLParser.ConnectParameterContext):
         parsedObject = {}
 
         if ctx.connectParameterName() is not None:
@@ -623,7 +618,7 @@ class ClientVisitor(ClientParserVisitor):
             errorMsg = ctx.exception.message
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitConnectParameterName(self, ctx: ClientParser.ConnectParameterNameContext):
+    def visitConnectParameterName(self, ctx: SQLParser.ConnectParameterNameContext):
         parsedObject = {'parameterName': ctx.getText()}
 
         # 获取源文件
@@ -642,7 +637,7 @@ class ClientVisitor(ClientParserVisitor):
             errorMsg = ctx.exception.message
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitConnectParameterValue(self, ctx: ClientParser.ConnectParameterValueContext):
+    def visitConnectParameterValue(self, ctx: SQLParser.ConnectParameterValueContext):
         parsedObject = {'parameterValue': ctx.getText()}
 
         # 获取源文件
@@ -661,7 +656,7 @@ class ClientVisitor(ClientParserVisitor):
             errorMsg = ctx.exception.message
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitDisconnect(self, ctx: ClientParser.DisconnectContext):
+    def visitDisconnect(self, ctx: SQLParser.DisconnectContext):
         parsedObject = {'name': 'DISCONNECT'}
 
         # 获取源文件
@@ -686,7 +681,7 @@ class ClientVisitor(ClientParserVisitor):
         self.errorMsg = errorMsg
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitEcho(self, ctx: ClientParser.EchoContext):
+    def visitEcho(self, ctx: SQLParser.EchoContext):
         parsedObject = {'name': 'ECHO'}
 
         # 删除BLOCK 末尾的 ECHO OFF
@@ -726,7 +721,7 @@ class ClientVisitor(ClientParserVisitor):
         self.errorMsg = errorMsg
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitStart(self, ctx: ClientParser.StartContext):
+    def visitStart(self, ctx: SQLParser.StartContext):
         parsedObject = {'name': 'START'}
         if ctx.INT() is not None:
             parsedObject.update({'loopTimes': int(ctx.INT().getText())})
@@ -761,7 +756,7 @@ class ClientVisitor(ClientParserVisitor):
 
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitSingleExpression(self, ctx: ClientParser.SingleExpressionContext):
+    def visitSingleExpression(self, ctx: SQLParser.SingleExpressionContext):
         expression = ctx.getText()
 
         # 获取源文件
@@ -781,7 +776,7 @@ class ClientVisitor(ClientParserVisitor):
 
         return expression, originScript, hint, errorCode, errorMsg
 
-    def visitExpression(self, ctx: ClientParser.ExpressionContext):
+    def visitExpression(self, ctx: SQLParser.ExpressionContext):
         expression = ctx.getText()
 
         # 获取源文件
@@ -801,7 +796,7 @@ class ClientVisitor(ClientParserVisitor):
 
         return expression, originScript, hint, errorCode, errorMsg
 
-    def visitSet(self, ctx: ClientParser.SetContext):
+    def visitSet(self, ctx: SQLParser.SetContext):
         parsedObject = {'name': 'SET'}
 
         expression_list = []
@@ -840,7 +835,7 @@ class ClientVisitor(ClientParserVisitor):
 
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitSession(self, ctx:ClientParser.SessionContext):
+    def visitSession(self, ctx:SQLParser.SessionContext):
 
         if ctx.SAVE() is not None:
             type = 'SAVE'
@@ -879,7 +874,7 @@ class ClientVisitor(ClientParserVisitor):
 
         return  parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitLoadmap(self, ctx:ClientParser.LoadmapContext):
+    def visitLoadmap(self, ctx:SQLParser.LoadmapContext):
         
         parsedObject = {'name': 'LOADMAP' , 'rule': ctx.getRuleIndex() }
     
@@ -912,7 +907,7 @@ class ClientVisitor(ClientParserVisitor):
 
         return  parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitWheneverError(self, ctx:ClientParser.WheneverErrorContext):
+    def visitWheneverError(self, ctx:SQLParser.WheneverErrorContext):
         param = None
         if ctx.CONTINUE() is not None:
             param = ctx.CONTINUE().getText()
@@ -942,7 +937,7 @@ class ClientVisitor(ClientParserVisitor):
 
         return  parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitSpool(self, ctx: ClientParser.SpoolContext):
+    def visitSpool(self, ctx: SQLParser.SpoolContext):
         content = ctx.String().getText()
         
         parsedObject = {'name': 'SPOOL', 'param': content}
@@ -968,7 +963,7 @@ class ClientVisitor(ClientParserVisitor):
 
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitLoadDriver(self, ctx:ClientParser.LoadmapContext):
+    def visitLoadDriver(self, ctx:SQLParser.LoadmapContext):
         
         parsedObject = {'name': 'LOADDRIVER' , 'rule': ctx.getRuleIndex() }
     
@@ -1001,8 +996,8 @@ class ClientVisitor(ClientParserVisitor):
 
         return  parsedObject, originScript, hint, errorCode, errorMsg
 
-    # Visit a parse tree produced by ClientParser#internal.
-    def visitInternal(self, ctx:ClientParser.InternalContext):
+    # Visit a parse tree produced by SQLParser#internal.
+    def visitInternal(self, ctx:SQLParser.InternalContext):
         
         parsedObject = {'name': 'INTERNAL' , 'rule': ctx.getRuleIndex() }
 
@@ -1034,7 +1029,7 @@ class ClientVisitor(ClientParserVisitor):
 
         return  parsedObject, originScript, hint, errorCode, errorMsg
     #
-    def visitScript(self, ctx:ClientParser.ScriptContext):
+    def visitScript(self, ctx:SQLParser.ScriptContext):
         errorCode = 0
         errorMsg = None
         
@@ -1070,467 +1065,8 @@ class ClientVisitor(ClientParserVisitor):
 
         return  parsedObject, originScript, hint, errorCode, errorMsg
 
-
-    """
-        Http消息节点
-    """
-    def visitHttp(self, ctx:ClientParser.HttpContext):
-        
-        # 如果名字空间是 SQL HTTP语句就不解析
-        if self.defaultNameSpace == 'MYSQL':
-            return None
-
-        parsedObject = {'name': 'HTTP', 'rule': ctx.getRuleIndex() }
-        
-        # HTTP_OPEN的格式是 ### STRING的格式
-        # 分割STRING作为title属性返回
-        title = ctx.HTTP_OPEN().getText().partition(' ')[2]
-        
-        if (title is not None) and title != '':
-            title = title.splitlines()[0].strip()
-
-        if (title is not None) and (title != ''):
-            parsedObject.update({ 'title': title })
-        
-        #  HTTP消息的处理
-        result, script, hint, code, message =  self.visit(ctx.httpMessage())
-        parsedObject.update(result)
-
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-        errorCode = 0
-        errorMsg = None
-
-        # 异常结束
-        if (ctx.exception is not None):
-            errorCode = -1
-            errorMsg = ctx.exception.message
-            self.isFinished = False
-        
-        # 是否是###结束分界符结束
-        if (ctx.HTTP_CLOSE() is None):
-            errorCode = -1
-            self.isFinished = False
-
-
-        self.parsedObject.append(parsedObject)
-        self.originScripts.append(originScript)
-        self.hints.append(hint)
-        self.errorCode.append(errorCode)
-        self.errorMsg.append(errorMsg)
-
-        return  parsedObject, originScript, hint, errorCode, errorMsg
-
-    """
-        处理HTTP消息规范部分
-    """
-    def visitHttpMessage(self, ctx:ClientParser.HttpMessageContext):
-        
-        parsedObject = {}
-        
-        # 处理请求行
-        result, script, hint, code, message =  self.visit(ctx.httpRequestLine())
-        parsedObject.update(result)
-        
-        # 处理请求域
-        if(ctx.httpHeaderFields() is not None):
-            result, script, hint, code, message =  self.visit(ctx.httpHeaderFields())
-            parsedObject.update(result)
-        
-        # 请求消息体
-        if(ctx.httpMessageBody() is not None):
-            result, script, hint, code, message =  self.visit(ctx.httpMessageBody())
-            parsedObject.update(result)
-        
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-        errorCode = 0
-        errorMsg = None
-        if (ctx.exception is not None):
-            errorCode = -1
-            errorMsg = ctx.exception.message
-        
-        return  parsedObject, originScript, hint, errorCode, errorMsg
-        
-
-    """
-        处理请求行
-    """
-    def visitHttpRequestLine(self, ctx:ClientParser.HttpRequestLineContext):
-        parsedObject = {}
-        
-        # 请求方法
-        result, script, hint, code, message =  self.visit(ctx.httpMethod())
-        parsedObject.update(result)
-        
-        # 请求目标
-        result, script, hint, code, message =  self.visit(ctx.httpRequestTarget())
-        parsedObject.update(result)
-        
-        # 请求目标中有http版本信息
-        # 分离Http版本号和Http请求目标地址
-        if result['httpRequestTarget'] is not None:
-            data = result['httpRequestTarget'].split('HTTP/',1)
-            if(len(data)>1):
-                parsedObject.update({'httpRequestTarget': data[0].strip(), 'httpVersion': 'HTTP/'+data[1]})
-        
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-
-        errorCode = 0
-        errorMsg = None
-        if (ctx.exception is not None):
-            errorCode = -1
-            errorMsg = ctx.exception.message
-        
-        return  parsedObject, originScript, hint, errorCode, errorMsg
-
-
-    """
-        处理请求方法
-    """
-    def visitHttpMethod(self, ctx:ClientParser.HttpMethodContext):
-        
-        parsedObject = {}
-
-        # 直接复制请求方法
-        if(ctx.HttpMethod() is not None):
-            parsedObject.update({'httpMethod':ctx.HttpMethod().getText()})
-        
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-        errorCode = 0
-        errorMsg = None
-        if (ctx.exception is not None):
-            errorCode = -1
-            errorMsg = ctx.exception.message
-
-        return  parsedObject, originScript, hint, errorCode, errorMsg
-
-
-    """
-        处理请求目标
-    """
-    def visitHttpRequestTarget(self, ctx:ClientParser.HttpRequestTargetContext):
-
-        parsedObject = { 'httpRequestTarget':None}
-        if (ctx.HttpRequestTarget() is not None):
-            parsedObject.update({'httpRequestTarget':ctx.HttpRequestTarget().getText()})
-        
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-        errorCode = 0
-        errorMsg = None
-        if (ctx.exception is not None):
-            errorCode = -1
-            errorMsg = ctx.exception.message
-
-        return  parsedObject, originScript, hint, errorCode, errorMsg
-
-
-    """
-        处理请求域
-    """
-    def visitHttpHeaderFields(self, ctx:ClientParser.HttpHeaderFieldsContext):
-        parsedObject = {}
-        
-        # 多个请求域定义
-        for field in ctx.httpHeaderField():
-            result, script, hint, code, message = self.visit(field)
-            parsedObject.update(result)
-
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-        errorCode = 0
-        errorMsg = None
-        if (ctx.exception is not None):
-            errorCode = -1
-            errorMsg = ctx.exception.message
-    
-        return  parsedObject, originScript, hint, errorCode, errorMsg
-
-
-    """
-        处理请求域定义
-    """
-    def visitHttpHeaderField(self, ctx:ClientParser.HttpHeaderFieldContext):
-        parsedObject = {}
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-        errorCode = 0
-        errorMsg = None
-        if (ctx.exception is not None):
-            errorCode = -1
-            errorMsg = ctx.exception.message
-        
-        # 请求域定义名称
-        result, script, hint, code, message = self.visit(ctx.httpFieldName())
-        key = result['value']
-        # 请求域定义值
-        result, script, hint, code, message = self.visit(ctx.httpFieldValue())
-        value = result['value']
-        
-        # 合并生成新的KV值
-        parsedObject.update({key: value})
-
-        return  parsedObject, originScript, hint, errorCode, errorMsg
-
-
-    """
-        处理请求域定义名称部分
-    """
-    def visitHttpFieldName(self, ctx:ClientParser.HttpFieldNameContext):
-        parsedObject = { 'value': ctx.HttpFieldName().getText() }
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-        errorCode = 0
-        errorMsg = None
-        if (ctx.exception is not None):
-            errorCode = -1
-            errorMsg = ctx.exception.message
-        
-        return  parsedObject, originScript, hint, errorCode, errorMsg
-
-
-
-    """
-        处理请求域定义值部分
-    """
-    def visitHttpFieldValue(self, ctx:ClientParser.HttpFieldValueContext):
-        
-        parsedObject = {'value': ctx.HttpFieldValue().getText()}
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-        errorCode = 0
-        errorMsg = None
-        if (ctx.exception is not None):
-            errorCode = -1
-            errorMsg = ctx.exception.message
-        
-        return  parsedObject, originScript, hint, errorCode, errorMsg
-
-
-    """
-        处理消息体
-    """
-    def visitHttpMessageBody(self, ctx:ClientParser.HttpMessageBodyContext):
-        
-        parsedObject = {}
-        # 普通消息体内容可能有多个部分，只保留了最后一个部分
-        # 合规的消息体不会产生这种情况
-        for content in ctx.httpMessageBodyContent():
-            result, script, hint, code, message = self.visit(content)
-            parsedObject.update(result)
-        
-        # 处理multipart boundary
-        for boundary in ctx.httpMultipart(): 
-            result, script, hint, code, message = self.visit(boundary)
-            parsedObject.update(result)
-        
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-        errorCode = 0
-        errorMsg = None
-        if (ctx.exception is not None):
-            errorCode = -1
-            errorMsg = ctx.exception.message
-        
-        return  parsedObject, originScript, hint, errorCode, errorMsg
-
-
-    """
-        处理multipart
-    """
-    def visitHttpMultipart(self, ctx:ClientParser.HttpMultipartContext):
-
-        parsedObject = {}
-        
-        # 多个boundary 
-        multipart = []
-        for boundary in ctx.httpMultipartBoundary():
-            result, script, hint, code, message = self.visit(boundary)
-            multipart.append(result)
-        
-        if len(multipart) > 0:
-            parsedObject.update({'multipart': multipart})
-        
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-        errorCode = 0
-        errorMsg = None
-        if (ctx.exception is not None):
-            errorCode = -1
-            errorMsg = ctx.exception.message
-        
-        return  parsedObject, originScript, hint, errorCode, errorMsg
-
-    """
-        处理multipart boundary部分
-    """
-    def visitHttpMultipartBoundary(self, ctx:ClientParser.HttpMultipartBoundaryContext):
-        parsedObject = {}
-        
-        # 处理boundary的请求域部分
-        if ctx.httpHeaderFields() is not None:
-            result, script, hint, code, message = self.visit(ctx.httpHeaderFields())
-            parsedObject.update(result)
-
-        # 处理boundary的内容部分
-        if ctx.httpMessageBodyContent() is not None:
-            result, script, hint, code, message = self.visit(ctx.httpMessageBodyContent())
-            parsedObject.update(result)
-
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-        errorCode = 0
-        errorMsg = None
-        if (ctx.exception is not None):
-            errorCode = -1
-            errorMsg = ctx.exception.message
-            
-        return  parsedObject, originScript, hint, errorCode, errorMsg
-
-    """
-        处理消息体的内容部分
-    """
-    def visitHttpMessageBodyContent(self, ctx:ClientParser.HttpMessageBodyContentContext):
-        
-        # 内容操作部分
-        operates = []
-        for operate in ctx.httpMessageBodyOperate(): 
-            result, script, hint, code, message = self.visit(operate)
-            operates.append(result)
-        
-        # 内容部分
-        # 可以直接取内容的文字
-        contents = []
-        for content in ctx.httpMessageBodyOther():
-            result, script, hint, code, message = self.visit(content)
-            contents.append(result)
-        
-        parsedObject = {'operate': operates, 'content': contents}
-        
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-        errorCode = 0
-        errorMsg = None
-        if (ctx.exception is not None):
-            errorCode = -1
-            errorMsg = ctx.exception.message
-
-        return  parsedObject, originScript, hint, errorCode, errorMsg
-
-
-    """
-        处理内容操作部分
-        操作符号包含在词中，需要把操作符号和内容分离开来
-        *** 操作符也可以在词法定义中定义
-    """
-    def visitHttpMessageBodyOperate(self, ctx:ClientParser.HttpMessageBodyOperateContext):
-        parsedObject = {}
-        
-        data = ctx.HttpMessageBodyOperate().getText()
-        
-        if(data.find('>>!') == 0) :
-            parsedObject.update({'operator': '>>!'})
-            parsedObject.update({'content': data.partition('>>!')[2]})
-        elif (data.find('>!') == 0) :
-            parsedObject.update({'operator': '>!'})
-            parsedObject.update({'content': data.partition('>!')[2]})
-        elif (data.find('>') == 0) :
-            parsedObject.update({'operator': '>'})
-            parsedObject.update({'content': data.partition('>')[2]})
-        elif (data.find('<') == 0) :
-            parsedObject.update({'operator': '<'})
-            parsedObject.update({'content': data.partition('<')[2]})
-        
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-        errorCode = 0
-        errorMsg = None
-        if (ctx.exception is not None):
-            errorCode = -1
-            errorMsg = ctx.exception.message
-
-        return  parsedObject, originScript, hint, errorCode, errorMsg
-
-    """
-        操作内容部分
-    """
-    def visitHttpMessageBodyOther(self, ctx:ClientParser.HttpMessageBodyOtherContext):
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-        errorCode = 0
-        errorMsg = None
-        if (ctx.exception is not None):
-            errorCode = -1
-            errorMsg = ctx.exception.message
-
-        return  originScript, originScript, hint, errorCode, errorMsg
-
-
     # Loop Until
-    def visitLoopUntil(self, ctx:ClientParser.LoopUntilContext):
+    def visitLoopUntil(self, ctx:SQLParser.LoopUntilContext):
 
         parsedObject = {'name': 'LOOP UNTIL' , 'rule': ctx.getRuleIndex() }
         
@@ -1564,7 +1100,7 @@ class ClientVisitor(ClientParserVisitor):
 
 
     # 
-    def visitLoop(self, ctx:ClientParser.LoopContext):
+    def visitLoop(self, ctx:SQLParser.LoopContext):
         parsedObject = {'name': 'LOOP' , 'rule': ctx.getRuleIndex() }
         
         pairs = []
@@ -1595,7 +1131,7 @@ class ClientVisitor(ClientParserVisitor):
 
         return  parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitLoopPair(self, ctx:ClientParser.LoopPairContext):
+    def visitLoopPair(self, ctx:SQLParser.LoopPairContext):
 
         parsedObject = {}
 
@@ -1619,7 +1155,7 @@ class ClientVisitor(ClientParserVisitor):
     
 
     # 
-    def visitAssert(self, ctx:ClientParser.AssertContext):
+    def visitAssert(self, ctx:SQLParser.AssertContext):
         parsedObject = {'name': 'ASSERT' , 'rule': ctx.getRuleIndex() }
 
         expression = []
@@ -1652,19 +1188,19 @@ class ClientVisitor(ClientParserVisitor):
 
 
     # 解析SQL语句
-    def visitSql(self, ctx:ClientParser.SqlContext):
+    def visitSql(self, ctx:SQLParser.SqlContext):
         # 如果名字空间是 API SQL语句就不解析
         if self.defaultNameSpace == 'API':
             return None
         return self.visitChildren(ctx)
 
-    def visitSqlCreate(self, ctx: ClientParser.SqlCreateContext):
+    def visitSqlCreate(self, ctx: SQLParser.SqlCreateContext):
         # 获取源文件
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
         originScript = self.getSource(tokens)
 
-        statement = ctx.SQL_CREATE().getText() + self.getText(tokens, ClientLexer.SQLSTATEMENT_CHANNEL)
+        statement = ctx.SQL_CREATE().getText() + self.getText(tokens, SQLLexer.SQLSTATEMENT_CHANNEL)
         parsedObject = {'name': 'CREATE', 'statement': statement}
 
         # 获取提示信息
@@ -1688,13 +1224,13 @@ class ClientVisitor(ClientParserVisitor):
         self.errorMsg = errorMsg
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitSqlDrop(self, ctx: ClientParser.SqlDropContext):
+    def visitSqlDrop(self, ctx: SQLParser.SqlDropContext):
         # 获取源文件
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
         originScript = self.getSource(tokens)
 
-        statement = ctx.SQL_DROP().getText() + self.getText(tokens, ClientLexer.SQLSTATEMENT_CHANNEL)
+        statement = ctx.SQL_DROP().getText() + self.getText(tokens, SQLLexer.SQLSTATEMENT_CHANNEL)
         parsedObject = {'name': 'DROP', 'statement': statement}
 
         # 获取提示信息
@@ -1718,11 +1254,11 @@ class ClientVisitor(ClientParserVisitor):
         self.errorMsg = errorMsg
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitSqlReplace(self, ctx:ClientParser.SqlReplaceContext):
+    def visitSqlReplace(self, ctx:SQLParser.SqlReplaceContext):
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
 
-        statement = ctx.SQL_REPLACE().getText() + self.getText(tokens, ClientLexer.SQLSTATEMENT_CHANNEL)
+        statement = ctx.SQL_REPLACE().getText() + self.getText(tokens, SQLLexer.SQLSTATEMENT_CHANNEL)
 
         parsedObject = {'name': 'REPLACE' , 'rule': ctx.getRuleIndex(), 'statement': statement }
         # 包含注释和提示
@@ -1748,13 +1284,13 @@ class ClientVisitor(ClientParserVisitor):
         return  parsedObject, originScript, hint, errorCode, errorMsg
 
     # 
-    def visitSqlInsert(self, ctx:ClientParser.SqlInsertContext):
+    def visitSqlInsert(self, ctx:SQLParser.SqlInsertContext):
         # 获取源文件
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
         originScript = self.getSource(tokens)
 
-        statement = ctx.SQL_INSERT().getText() + self.getText(tokens, ClientLexer.SQLSTATEMENT_CHANNEL)
+        statement = ctx.SQL_INSERT().getText() + self.getText(tokens, SQLLexer.SQLSTATEMENT_CHANNEL)
         parsedObject = {'name': 'INSERT', 'statement': statement}
 
         # 获取提示信息
@@ -1778,11 +1314,11 @@ class ClientVisitor(ClientParserVisitor):
         self.errorMsg = errorMsg
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitSqlUpdate(self, ctx:ClientParser.SqlUpdateContext):
+    def visitSqlUpdate(self, ctx:SQLParser.SqlUpdateContext):
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
         
-        statement = ctx.SQL_UPDATE().getText() + self.getText(tokens, ClientLexer.SQLSTATEMENT_CHANNEL)
+        statement = ctx.SQL_UPDATE().getText() + self.getText(tokens, SQLLexer.SQLSTATEMENT_CHANNEL)
         
         parsedObject = {'name': 'UPDATE' , 'rule': ctx.getRuleIndex(), 'statement': statement }
         # 包含注释和提示
@@ -1808,44 +1344,43 @@ class ClientVisitor(ClientParserVisitor):
 
         return  parsedObject, originScript, hint, errorCode, errorMsg
 
-
-    # 删除语句
-    def visitSqlDelete(self, ctx:ClientParser.SqlDeleteContext):
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 不包含注释
-        statement = self.getText(tokens)
-        
-        parsedObject = {'name': 'DELETE' , 'rule': ctx.getRuleIndex(), 'statement': statement }
-        # 包含注释和提示
-        originScript = self.getSource(tokens)
-        # 句子中的提示
-        hint = self.getHint(tokens)
-        errorCode = 0
-        errorMsg = None
-        if (ctx.exception is not None):
-            errorCode = -1
-            errorMsg = ctx.exception.message
-            self.isFinished = False
-        if (ctx.SQL_END() is None) or ((ctx.SQL_END().getText() != ';') and (ctx.SQL_END().getText() != '\n/')):
-            errorCode = -1
-            self.isFinished = False
-
-        self.parsedObject.append(parsedObject)
-        self.originScripts.append(originScript)
-        self.hints.append(hint)
-        self.errorCode.append(errorCode)
-        self.errorMsg.append(errorMsg)
-
-        return  parsedObject, originScript, hint, errorCode, errorMsg
-
-    def visitSqlSelect(self, ctx: ClientParser.SqlSelectContext):
+    def visitSqlDelete(self, ctx: SQLParser.SqlDeleteContext):
         # 获取源文件
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
         originScript = self.getSource(tokens)
 
-        statement = ctx.SQL_SELECT().getText() + self.getText(tokens, ClientLexer.SQLSTATEMENT_CHANNEL)
+        statement = ctx.SQL_DELETE().getText() + self.getText(tokens, SQLLexer.SQLSTATEMENT_CHANNEL)
+        parsedObject = {'name': 'DELETE', 'statement': statement}
+
+        # 获取提示信息
+        hint = self.getHint(tokens)
+
+        # 获取错误代码
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = -1
+            errorMsg = ctx.exception.message
+
+        # 如果SQL没有结尾，要返回没有结尾的标志
+        if (ctx.SQL_END() is None) or ((ctx.SQL_END().getText() != ';') and (ctx.SQL_END().getText() != '\n/')):
+            self.isFinished = False
+
+        self.originScripts = originScript
+        self.parsedObject = parsedObject
+        self.hints = hint
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
+        return parsedObject, originScript, hint, errorCode, errorMsg
+
+    def visitSqlSelect(self, ctx: SQLParser.SqlSelectContext):
+        # 获取源文件
+        start, end = self.getSourceInterval(ctx)
+        tokens = ctx.parser._input.tokens[start:end+1]
+        originScript = self.getSource(tokens)
+
+        statement = ctx.SQL_SELECT().getText() + self.getText(tokens, SQLLexer.SQLSTATEMENT_CHANNEL)
         parsedObject = {'name': 'SELECT', 'statement': statement}
 
         # 获取提示信息
@@ -1869,11 +1404,11 @@ class ClientVisitor(ClientParserVisitor):
         self.errorMsg = errorMsg
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitSqlDeclare(self, ctx:ClientParser.SqlDeclareContext):
+    def visitSqlDeclare(self, ctx:SQLParser.SqlDeclareContext):
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
         
-        statement = ctx.SQL_DECLARE().getText() + self.getText(tokens, ClientLexer.SQLSTATEMENT_CHANNEL)
+        statement = ctx.SQL_DECLARE().getText() + self.getText(tokens, SQLLexer.SQLSTATEMENT_CHANNEL)
         
         parsedObject = {'name': 'DECLARE' , 'rule': ctx.getRuleIndex(), 'statement': statement }
         # 包含注释和提示
@@ -1899,33 +1434,35 @@ class ClientVisitor(ClientParserVisitor):
 
         return  parsedObject, originScript, hint, errorCode, errorMsg
 
-
-    def visitSqlCreateProcedure(self, ctx:ClientParser.SqlCreateProcedureContext):
+    def visitSqlCreateProcedure(self, ctx: SQLParser.SqlCreateProcedureContext):
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
         
-        statement = ctx.SQL_CREATE_PROCEDURE().getText() + self.getText(tokens, ClientLexer.SQLSTATEMENT_CHANNEL)
-        
-        parsedObject = {'name': 'PROCEDURE' , 'rule': ctx.getRuleIndex(), 'statement': statement }
+        statement = ctx.SQL_CREATE_PROCEDURE().getText() + self.getText(tokens, SQLLexer.SQLSTATEMENT_CHANNEL)
+        parsedObject = {
+            'name': 'PROCEDURE',
+            'statement': statement}
+
         # 包含注释和提示
         originScript = self.getSource(tokens)
-        # 句子中的提示
+
+        # 获取提示信息
         hint = self.getHint(tokens)
+
+        # 获取错误代码
         errorCode = 0
         errorMsg = None
-        if (ctx.exception is not None):
+        if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
-            self.isFinished = False
 
+        # 如果SQL没有结尾，要返回没有结尾的标志
         if (ctx.SQL_SLASH() is None) or (ctx.SQL_SLASH().getText() != '\n/'):
-            errorCode = -1
             self.isFinished = False
 
-        self.parsedObject.append(parsedObject)
-        self.originScripts.append(originScript)
-        self.hints.append(hint)
-        self.errorCode.append(errorCode)
-        self.errorMsg.append(errorMsg)
-
+        self.originScripts = originScript
+        self.parsedObject = parsedObject
+        self.hints = hint
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
         return parsedObject, originScript, hint, errorCode, errorMsg

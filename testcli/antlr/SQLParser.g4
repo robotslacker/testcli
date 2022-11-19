@@ -1,7 +1,7 @@
-parser grammar ClientParser;
+parser grammar SQLParser;
 
 options { 
-    tokenVocab = ClientLexer; 
+    tokenVocab = SQLLexer;
     caseInsensitive = false;
 }
 
@@ -23,7 +23,6 @@ command:
       | set
       | internal
       | script
-      | http
       | loop
       | echo
       | loopUntil
@@ -149,6 +148,7 @@ singleExpression
 expression
         : (String
         | DOT
+        | COLON
         | SLASH
         | BRACKET_OPEN
         | BRACKET_CLOSE
@@ -207,96 +207,6 @@ script
         :   SCRIPT_OPEN
             ScriptBlock
             CRLF?
-        ;
-
-
-/**
- * 17: API语句
- * HTTP 请求
- * 
- * HTTP-message = start-line *( header-field CRLF ) CRLF [ message-body] 
- */
-http
-        : HTTP_OPEN
-          httpMessage
-          (HTTP_CLOSE | EOF)
-        ;
-
-httpMessage
-        : httpRequestLine
-          httpHeaderFields
-          httpMessageBody?
-          ;
-
-/*
- * HTTP请求头 
- * httpRequestTarget 包含 HttpVersion 
- */
-httpRequestLine
-        : httpMethod httpRequestTarget CRLF
-        ;
-
-httpMethod
-        : HttpMethod
-        ;
-
-httpRequestTarget
-        : HttpRequestTarget
-        ;
-
-/**
- * HTTP请求域
- */ 
-httpHeaderFields
-        : httpHeaderField*
-        ;
-
-httpHeaderField
-        : httpFieldName FIELD_COLON httpFieldValue 
-        ;
-
-httpFieldName
-        : HttpFieldName
-        ;
-
-httpFieldValue
-        : HttpFieldValue HttpFieldValueEnd 
-        ;
-
-/**
- * Http MessageBody
- * 内容或者Multipart boundary
- */
-httpMessageBody
-        : (httpMultipart | httpMessageBodyContent)+
-        ;
-
-httpMultipart
-        : httpMultipartBoundary+ HttpMultipartBoundaryEnd
-        ;
-
-// multipart boundary 处理
-httpMultipartBoundary
-        : httpBoundaryDelimiter  
-          httpHeaderFields
-          httpMessageBodyContent
-        ;
-
-httpBoundaryDelimiter
-        : HttpMultipartBoundary 
-        ;
-
-// 内容
-httpMessageBodyContent
-        : (httpMessageBodyOperate | httpMessageBodyOther)+
-        ;
-
-httpMessageBodyOperate
-        : HttpMessageBodyOperate
-        ;
-
-httpMessageBodyOther
-        : (String | CRLF)+
         ;
 
 

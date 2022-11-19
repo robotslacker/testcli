@@ -1,4 +1,4 @@
-# Generated from C:/Work/testcli/testcli/antlr\ClientLexer.g4 by ANTLR 4.10.1
+# Generated from C:/Work/testcli/testcli/antlr\APILexer.g4 by ANTLR 4.10.1
 from antlr4 import *
 from io import StringIO
 import sys
@@ -498,7 +498,7 @@ def serializedATN():
         2,9,0,6,0,0,2,10,0,7,62,0,7,87,0,2,0,0,0,4,0,7,103,0
     ]
 
-class ClientLexer(Lexer):
+class APILexer(Lexer):
 
     atn = ATNDeserializer().deserialize(serializedATN())
 
@@ -709,7 +709,7 @@ class ClientLexer(Lexer):
                   "SQL_END", "SQL_STRING", "SQL_SINGLE", "SQL_OTHER", "SQL_PROCEDURE_CRLF", 
                   "SQL_SLASH", "SQL_PROCEDURE_SLASH", "SQLProcedureStatement" ]
 
-    grammarFileName = "ClientLexer.g4"
+    grammarFileName = "APILexer.g4"
 
     def __init__(self, input=None, output:TextIO = sys.stdout):
         super().__init__(input, output)

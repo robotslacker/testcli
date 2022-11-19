@@ -1,5 +1,0 @@
-loaddriver
-loaddriver xx.sql,  yy.sql
-loaddriver xx.sql,  "yy.sql"
-
-loaddriver "xx.sql,  yy.sql","yy.sql"

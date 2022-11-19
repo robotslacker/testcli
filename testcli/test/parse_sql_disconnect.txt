@@ -1,7 +1,0 @@
-DISCONNECT
-
-disconnect   
-
---[Hint] fasdfasdfdsa=xxx
---[Hint] xx=yy
-disconnect 12345

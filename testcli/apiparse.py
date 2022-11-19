@@ -1,9 +1,24 @@
 # -*- coding: utf-8 -*-
-import re
-import copy
-import os
-import shlex
-from .testcliexception import TestCliException
+from antlr4 import InputStream
+from antlr4 import CommonTokenStream
+from antlr4.error.ErrorListener import ErrorListener
+from .antlrgen.APILexer import APILexer
+from .antlrgen.APIParser import APIParser
+from .apivisitor import APIVisitor
+
+
+class APIClientErrorListener(ErrorListener):
+    # 自定义错误输出记录
+    def __init__(self):
+        super().__init__()
+        self.errorCode = 0
+        self.isFinished = True
+        self.errorMsg = ""
+
+    def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
+        self.errorCode = 1
+        self.errorMsg = "line{}:{}  {} ".format(str(line), str(column), msg)
+        super().syntaxError(recognizer, offendingSymbol, line, column, msg, e)
 
 
 def APIFormatWithPrefix(p_szCommentSQLScript, p_szOutputPrefix=""):
@@ -32,142 +47,39 @@ def APIFormatWithPrefix(p_szCommentSQLScript, p_szOutputPrefix=""):
     return m_FormattedString
 
 
-def APIAnalyze(apiCommandPlainText):
+def APIAnalyze(sqlCommandPlainText, defaultNameSpace="API"):
     """ 分析API语句，返回如下内容：
-        APIFinished                     是否为完整API请求定义， True：完成， False：不完整，需要用户继续输入
+        MulitLineAPIHint                该API是否为完整API， True：完成， False：不完整，需要用户继续输入
         APISplitResults                 包含所有API信息的一个数组，每一个API作为一个元素
-        APISplitResultsWithComments     包含注释信息的API语句信息，数组长度和APISplitResults相同
-        APIHints                        API的其他各种标志信息，根据APISplitResultsWithComments中的注释内容解析获得
-
-        注意： APISplitResults, APISplitResultsWithComments, APIHints 均为数组。且其长度要保持一致。
+        APISplitResultsWithComments     包含注释信息的SQL语句信息，数组长度和APISplitResults相同
+        APIHints                        SQL的其他各种标志信息，根据APISplitResultsWithComments中的注释内容解析获得
     """
+    stream = InputStream(sqlCommandPlainText)
+    lexer = APILexer(stream)
+    lexer.removeErrorListeners()
+    lexer_listener = APIClientErrorListener()
+    lexer.addErrorListener(lexer_listener)
 
-    """
-        1. 备份原有的语句， 然后在执行语句中去掉注释信息
-            HTTP文件中支持注释。注释可以描述在请求之前，或者请求之后。注释描述可以在Header的描述中，也可以在请求体中被描述。
-            注释必须从一行的开始（容许包含缩进的内容）。
-            支持的注释为：
-                //开头的语句
-                #开头的语句           
-    """
-    # 处理逻辑
-    # 1. 将所有的信息根据换行符分拆到数组中
-    # 2. 将语句内容中的注释信息一律去掉
-    #
-    # 3. 依次将每行的内容进行API判断，按照完成SQL来进行分组。同时拼接其注释信息到其中
-    # 4. 进行其他的处理
-    # 5. 分析SQLHint信息
-    # 6. 所有信息返回
-    APICommands = apiCommandPlainText.split('\n')
+    token = CommonTokenStream(lexer)
+    parser = APIParser(token)
+    parser.removeErrorListeners()
+    parser_listener = APIClientErrorListener()
+    parser.addErrorListener(parser_listener)
+    tree = parser.prog()
 
-    # API分析的结果， 这两个（包含注释，不包含注释）的数组长度相等，若只有注释，则API结果中为空白（不是空）
-    APISplitResults = []
-    # 包含注释的API语句分析结果
-    APISplitResultsWithComments = []
-    # API的辅助信息
-    APIHints = []
+    visitor = APIVisitor(token, defaultNameSpace)
+    (isFinished, parsedObjects, originScripts, hints, errorCode, errorMsg) = visitor.visit(tree)
 
-    # 从APICommands中删除所有的注释信息，但不删除ECHO中的注释信息
-    bInEchoSection = False          # 是否在ECHO语句内部
-    echoMessages = None             # 回显信息
+    # 词法和语法解析，任何一个失败，都认为失败
+    if not lexer_listener.isFinished:
+        isFinished = False
+    if not parser_listener.isFinished:
+        isFinished = False
 
-    apiRequest = None               # API请求命令
-    apiRequestWithComment = None    # API请求命令(包含注释)
-    APIHint = {}                    # API的辅助信息
-
-    for pos in range(0, len(APICommands)):
-        APIHint["Name"] = "NO-NAME"
-        # 首先处理特殊的ECHO信息，ECHO中的信息不涉及注释
-        # 对于ECHO信息，则回送的内容包含3段
-        # ECHO <文件名>
-        # .... 文件正文。 多行这里将会被折叠
-        # ECHO OFF
-        if bInEchoSection:
-            # ECHO信息已经结束
-            if re.match(r'echo\s+off', APICommands[pos], re.IGNORECASE):
-                if echoMessages is not None:
-                    APISplitResults.append(echoMessages)
-                    APISplitResultsWithComments.append(echoMessages)
-                APISplitResults.append(APICommands[pos])
-                APISplitResultsWithComments.append(APICommands[pos])
-                APIHints.append([])
-                echoMessages = None
-                bInEchoSection = False
-                continue
-            echoMessages = echoMessages + "\n" + APICommands[pos]
-            continue
-
-        # 如果当前是ECHO文件开头，进入ECHO模式
-        if re.match(r'echo\s+.*', APICommands[pos], re.IGNORECASE):
-            APISplitResults.append(APICommands[pos])
-            APISplitResultsWithComments.append(APICommands[pos])
-            APIHints.append([])
-            bInEchoSection = True
-            continue
-
-        # 如果###开头，则表示为新的Request
-        trimdCommand = str(APICommands[pos]).lstrip()
-        if trimdCommand.startswith('###'):
-            # 新的测试开始
-            if apiRequest is not None:
-                APISplitResults.append(apiRequest)
-                APISplitResultsWithComments.append(apiRequestWithComment)
-                APIHints.append(APIHint)
-                apiRequest = None
-                apiRequestWithComment = None
-                APIHint = {}
-            APIHint["Name"] = trimdCommand.replace("^#+", "")
-
-        # 去掉注释内容
-        # 注释内容，在APISplitResults会包含一个空行，APISplitResultsWithComments包含完整行
-        # HTTP文件中支持注释。注释可以描述在请求之前，或者请求之后。注释描述可以在Header的描述中，也可以在请求体中被描述。
-        # 注释必须从一行的开始（容许包含缩进的内容）。
-        # 支持的注释为：
-        #     //开头的语句
-        #     #开头的语句
-        if trimdCommand.startswith('#') or trimdCommand.startswith('//'):
-            if apiRequestWithComment is not None:
-                apiRequestWithComment = apiRequestWithComment + APICommands[pos]
-            else:
-                apiRequestWithComment = APICommands[pos]
-            continue
-
-        # 如果语句为Exit，Quit，SET，SPOOL, Session, Use 则为特殊的语句,直接标记结束当前API
-        if trimdCommand.upper().startswith("EXIT") or \
-                trimdCommand.upper().startswith("QUIT") or \
-                trimdCommand.upper().startswith("SPOOL") or \
-                trimdCommand.upper().startswith("SECTION") or \
-                trimdCommand.upper().startswith("USE") or \
-                trimdCommand.upper().startswith("SET"):
-            # 之前的Case到此结束
-            if apiRequest is not None:
-                APISplitResults.append(apiRequest)
-                APISplitResultsWithComments.append(apiRequestWithComment)
-                APIHints.append(APIHint)
-                apiRequest = None
-                apiRequestWithComment = None
-                APIHint = {}
-            APISplitResults.append(APICommands[pos])
-            APISplitResultsWithComments.append(APICommands[pos])
-            APIHints.append(APIHint)
-            continue
-
-        # 正常的API语句
-        if apiRequest is not None:
-            apiRequest = apiRequest + APICommands[pos]
-        else:
-            apiRequest = APICommands[pos]
-        if apiRequestWithComment is not None:
-            apiRequestWithComment = apiRequestWithComment + APICommands[pos]
-        else:
-            apiRequestWithComment = APICommands[pos]
-
-        # end For
-
-    # 这里把最后一段API送回解析器
-    if apiRequest is not None:
-        APISplitResults.append(apiRequest)
-        APISplitResultsWithComments.append(apiRequestWithComment)
-        APIHints.append(APIHint)
-
-    return True, APISplitResults, APISplitResultsWithComments, APIHints
+    if lexer_listener.errorCode != 0:
+        errorCode = lexer_listener.errorCode
+        errorMsg = lexer_listener.errorMsg
+    if parser_listener.errorCode != 0:
+        errorCode = parser_listener.errorCode
+        errorMsg = parser_listener.errorMsg
+    return isFinished, parsedObjects, originScripts, hints, errorCode, errorMsg
