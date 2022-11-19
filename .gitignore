@@ -2,6 +2,7 @@
 .cache/
 .vscode/settings.json
 .coverage/
+gen/
 localtest/
 http/
 csv/
@@ -9,7 +10,7 @@ stresstest/
 build/
 dist/
 *egg-info/
-
+test/.pytest_cache
 *.pyc
 *.deb
 *.swp
