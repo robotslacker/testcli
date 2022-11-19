@@ -1,6 +1,6 @@
-# SQLCli 快速说明
+# TestCli 快速说明
 
-SQLCli 是一个主要用Python完成的，命令快速的测试工具。  
+TestCli 是一个主要用Python完成的，命令快速的测试工具。  
 设计目的：  
     1： 满足数据库方面的相关功能测试、压力测试需要。  
     2： 能够作为一个日常小工具，进行数据库的日常操作。    
@@ -12,13 +12,13 @@ SQLCli 是一个主要用Python完成的，命令快速的测试工具。
 程序可以通过JPype连接数据库的JDBC驱动。      
 也可以通过ODBC标准连接数据库的ODBC驱动，但是这部分并没有经过严谨的测试。    
 
-SQLCli 目前可以支持的数据库有：  
+TestCli 目前可以支持的数据库有：  
    * Oracle,MySQL,PostgreSQL,SQLServer,TeraData, Hive, H2等主流通用数据库  
    * 达梦，神通， 金仓， 南大通用，LinkoopDB, 快立方等众多国产数据库  
    * ClickHouse数据库      
    * 其他符合标准JDBC规范的数据库  
    
-SQLCli 目前支持的数据类型有：
+TestCli 目前支持的数据类型有：
 ```  
     CHAR                                  ====>     str
     VARCHAR                               ====>     str
@@ -45,8 +45,8 @@ SQLCli 目前支持的数据类型有：
     BIT                                   ====>     decimal.Decimal
     STRUCT                                ====>     tuple()
     ARRAY                                 ====>     list()
-    CLOB                                  ====>     SQLCliLargeObject.getData() ==> str
-    BLOB                                  ====>     SQLCliLargeObject.getData() ==> bytearray
+    CLOB                                  ====>     TestCliLargeObject.getData() ==> str
+    BLOB                                  ====>     TestCliLargeObject.getData() ==> bytearray
 ```
 ***
 
@@ -81,7 +81,7 @@ SQLCli 目前支持的数据类型有：
      brew install unixODBC
 
 依赖的第三方安装包：  
-   * 这些安装包会在robotslacker-sqlcli安装的时候自动随带安装
+   * 这些安装包会在robotslacker-TestCli安装的时候自动随带安装
    * setproctitle             : Python通过setproctitle来设置进程名称，从而在多进程并发时候给调试人员以帮助
    * click                    : Python的命令行参数处理
    * prompt_toolkit           : 用于提供包括提示符功能的控制台终端的显示样式
@@ -100,15 +100,15 @@ SQLCli 目前支持的数据类型有：
 
 利用PIP来安装：
 ```
-   pip install -U robotslacker-sqlcli
+   pip install -U robotslacker-TestCli
 ```
 
 安装后步骤-下载驱动程序：  
-   * 根据你的测试需要， 下载 https://github.com/robotslacker/sqlcli/blob/master/sqlcli/jlib/下对应的Jar包
-   * 放置jar包到 <PYTHON_HONE>/../site-packages/sqlcli/jlib下
+   * 根据你的测试需要， 下载 https://github.com/robotslacker/TestCli/blob/master/TestCli/jlib/下对应的Jar包
+   * 放置jar包到 <PYTHON_HONE>/../site-packages/TestCli/jlib下
    * github上提供的仅仅是一些测试用的Jar包，如果你有自己的需要，可以用自己的文件覆盖上述下载的文件
 
-安装后步骤-根据需要修改sqlcli/conf/sqlcli.ini文件：  
+安装后步骤-根据需要修改TestCli/conf/TestCli.ini文件：  
    * 默认情况下，这个文件不需要修改
    * 如果你需要定义自己内网的驱动程序下载服务器，你需要修改这个文件
    * 如果你需要定义自己的数据库驱动，你需要修改这个文件
@@ -116,17 +116,17 @@ SQLCli 目前支持的数据类型有：
 ***
 
 ### 第一次使用
-安装后直接在命令下执行sqlcli命令即可。  
+安装后直接在命令下执行TestCli命令即可。  
 如果你的<PYTHON_HOME>/Scripts没有被添加到当前环境的$PATH中，你可能需要输入全路径名  
 ```
-(base) >sqlcli
+(base) >TestCli
 SQL*Cli Release 0.0.32
 SQL> 
 ```
 如果你这里看到了版本信息，那祝贺你，你的程序安装成功了
 
 ```
-(base) >sqlcli
+(base) >TestCli
 SQL*Cli Release 0.0.32
 SQL> connect mem;
 SQL> Connected.
@@ -136,9 +136,9 @@ SQL> Connected.
 ***
 
 ### 驱动程序的下载和配置
-sqlcli是一个基于JDBC/ODBC的数据库工具，基于JDBC操作数据库的前提当前环境下有对应的数据库连接jar包，基于ODBC前提是安装了相关的ODBC驱动。  
+TestCli是一个基于JDBC/ODBC的数据库工具，基于JDBC操作数据库的前提当前环境下有对应的数据库连接jar包，基于ODBC前提是安装了相关的ODBC驱动。  
 #### 驱动程序的配置
-配置文件位于SQLCli的安装目录下的conf目录中，配置文件名为:sqlcli.conf  
+配置文件位于TestCli的安装目录下的conf目录中，配置文件名为:TestCli.conf  
 配置例子:
 ```
 [driver]
@@ -197,7 +197,7 @@ jdbcurl=jdbc:mysql://${host}:${port}/${service}
 基于上述参数文件的正确配置，可以使用--syncdriver的方式从服务器上来更新数据库连接需要的jar包  
 例子：    
 ```
-(base) C:\Work\linkoop\sqlcli>sqlcli --syncdriver
+(base) C:\Work\linkoop\TestCli>TestCli --syncdriver
 Checking driver [oracle] ...
 File=[ojdbc8.jar], MD5=[1aa96cecf04433bc929fca57e417fd06]
 Driver [oracle_driver] is up-to-date.
@@ -207,11 +207,11 @@ Driver [mysql_driver] is up-to-date.
 ```
 ### 程序的命令行参数
 ```
-(base) sqlcli --help
-Usage: sqlcli [OPTIONS]
+(base) TestCli --help
+Usage: TestCli [OPTIONS]
 
 Options:
-  --version       Output sqlcli's version.
+  --version       Output TestCli's version.
   --logon TEXT    logon user name and password. user/pass
   --logfile TEXT  Log every query and its results to a file.
   --execute TEXT  Execute SQL script.
@@ -224,12 +224,12 @@ Options:
 ```  
 --version 用来显示当前工具的版本号
 ```
-(base) sqlcli --version
+(base) TestCli --version
 Version: 0.0.32
 ```
 --logon  用来输入连接数据的的用户名和口令
 ```
-(base) sqlcli --logon user/pass
+(base) TestCli --logon user/pass
 Version: 0.0.32
 Driver loaded.
 Database connected.
@@ -240,7 +240,7 @@ user/pass : 数据库连接的用户名和口令
 
 成功执行这个命令的前提是你已经在环境变量中设置了数据库连接的必要信息。  
 这里的必要信息包括：
-环境变量：  SQLCLI_CONNECTION_URL  
+环境变量：  TestCli_CONNECTION_URL  
 参数格式：  jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名]  
 ```
 --logfile   用来记录本次命令行操作的所有过程信息  
@@ -248,7 +248,7 @@ user/pass : 数据库连接的用户名和口令
 如果你在随后的命令行里头设置了SET ECHO ON，那么记录里头还包括了你所有执行的SQL语句原信息  
 文件输出的字符集将根据参数resultcharset中的设置来确定    
 ```
-(base) sqlcli --logon user/pass --logfile test.log
+(base) TestCli --logon user/pass --logfile test.log
 Version: 0.0.32
 Driver loaded.
 Database connected.
@@ -278,15 +278,15 @@ SQL> select * from test_tab;
 SQL> exit
 Disconnected.
 ```
---execute 在SQLCli启动后执行特定的SQL脚本  
+--execute 在TestCli启动后执行特定的SQL脚本  
 为了能够批处理一些SQL语句，我们通常将这批SQL语句保存在一个特定的文件中，这个文件的习惯后缀是.sql  
-通过execute参数，可以让SQLCli来执行这个脚本，而不再需要我们一行一行的在控制台输入  
+通过execute参数，可以让TestCli来执行这个脚本，而不再需要我们一行一行的在控制台输入  
 脚本字符集将根据参数clientcharset中的设置来确定
 ```
 (base) type test.sql
 select * from test_tab;
 
-(base) sqlcli --logon user/pass --execute test.sql
+(base) TestCli --logon user/pass --execute test.sql
 Version: 0.0.32
 Driver loaded.
 Database connected.
@@ -300,16 +300,16 @@ select * from test_tab;
 +----+----------+
 SQL> exit
 Disconnected.
-注意： 即使你的SQL脚本中不包含Exit语句，在sqlcli执行完当前脚本后，他也会自动执行exit语句
+注意： 即使你的SQL脚本中不包含Exit语句，在TestCli执行完当前脚本后，他也会自动执行exit语句
 如果SQL脚本中不包含数据库驱动加载或者数据库连接语句，请在执行这个命令前设置好相应的环境变量信息
 ```
---nologo    这是一个选项，用来控制sqlcli是否会在连接的时候显示当前的程序版本
+--nologo    这是一个选项，用来控制TestCli是否会在连接的时候显示当前的程序版本
 ```
-(base) sqlcli 
+(base) TestCli 
 SQL*Cli Release 0.0.32
 SQL>   
 区别：
-(base) sqlcli --nologo
+(base) TestCli --nologo
 SQL>
 ```
 --sqlperf  输出SQL运行日志  
@@ -338,9 +338,9 @@ sub_1.sql 2020-05-25 17:46:25       1.37        drop user testuser if exists cas
 sub_1.sql 2020-05-25 17:46:26       0.54        CREATE USER testuser PASSWORD 123456        0             Scenario3
 ```
 ***
-### 在SQLCli里面查看当前支持的命令
+### 在TestCli里面查看当前支持的命令
 ```
-(base) sqlcli 
+(base) TestCli 
 SQL*Cli Release 0.0.32
 SQL> help
 +--------------+-----------------------------------------------------+
@@ -374,24 +374,24 @@ SQL> help
 
 ***
 ### 连接数据库
-在sqlcli命令行里头，可以通过connect命令来连接到具体的数据库
+在TestCli命令行里头，可以通过connect命令来连接到具体的数据库
 ```
-(base) sqlcli 
+(base) TestCli 
 SQL*Cli Release 0.0.32
 SQL> connect user/pass@jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名] 
 Database connected.
 SQL> 
 能够成功执行connect的前提是： 数据库驱动已经放置到jlib下，并且在conf中正确配置
 
-如果已经在环境变量中指定了SQLCLI_CONNECTION_URL，连接可以简化为
-(base) sqlcli 
+如果已经在环境变量中指定了TestCli_CONNECTION_URL，连接可以简化为
+(base) TestCli 
 SQL*Cli Release 0.0.32
 SQL> connect user/pass
 Database connected.
 SQL> 
 
 在数据库第一次连接后，第二次以及以后的连接可以不再输入连接字符串，程序会默认使用上一次已经使用过的连接字符串信息，比如：
-(base) sqlcli 
+(base) TestCli 
 SQL*Cli Release 0.0.32
 SQL> connect user/pass@jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名] 
 Database connected.
@@ -422,7 +422,7 @@ LinkoopDB:
 
 ### 断开数据库连接
 ```
-(base) sqlcli 
+(base) TestCli 
 SQL*Cli Release 0.0.32
 SQL> connect user/pass@jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名] 
 Database connected.
@@ -433,7 +433,7 @@ Database disconnected.
 
 ### 会话的切换和保存
 ```
-(base) sqlcli 
+(base) TestCli 
 SQL*Cli Release 0.0.32
 SQL> connect user/pass@jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名] 
 Database connected.
@@ -484,7 +484,7 @@ Session released.
 ```
 例如：
 ```
-(base) sqlcli 
+(base) TestCli 
 SQL*Cli Release 0.0.32
 SQL> start aa.api
 SQL> ....
@@ -492,7 +492,7 @@ SQL> disconnect
 这里将执行aa.sql
 如果有多个文件，可以依次填写，如SQL> start aa.api bb.sql ....
 
-(base) sqlcli 
+(base) TestCli 
 SQL*Cli Release 0.0.32
 SQL> start aa.api loop 10
 SQL> ....
@@ -503,7 +503,7 @@ SQL> disconnect
 ```
 ### 让程序休息一会
 ```
-(base) sqlcli 
+(base) TestCli 
 SQL*Cli Release 0.0.32
 SQL> sleep 10
 SQL> disconnect
@@ -513,7 +513,7 @@ Sleep的做法主要用在一些定期循环反复脚本的执行上
 ```
 ### 执行主机的操作命令
 ```
-(base) sqlcli 
+(base) TestCli 
 SQL*Cli Release 0.0.32
 SQL> host date
 2020年 10月 29日 星期四 11:24:34 CST
@@ -523,7 +523,7 @@ Database disconnected.
 ```
 ### 回显指定的文件
 ```
-(base) sqlcli 
+(base) TestCli 
 SQL*Cli Release 0.0.32
 SQL> echo subtest.sql
 -- 这里是subtest.sql
@@ -535,9 +535,9 @@ SQL> echo off
 ```
 
 ### 加载数据库驱动
-SQLCli会默认加载所有配置在conf/sqlcli.ini中的JDBC驱动
+TestCli会默认加载所有配置在conf/TestCli.ini中的JDBC驱动
 ```
-(base) sqlcli 
+(base) TestCli 
 SQL*Cli Release 0.0.32
 SQL> loaddriver;
 没有任何参数的loaddriver命令将显示出所有系统已经加载的驱动程序
@@ -546,9 +546,9 @@ SQL> loaddriver [database_name]  [jdbc_jarfile]
 ```
 
 ### 加载SQL重写配置文件
-在sqlcli命令行里头，可以通过loadsqlmap命令来加载SQL重写配置文件
+在TestCli命令行里头，可以通过loadsqlmap命令来加载SQL重写配置文件
 ```
-(base) sqlcli 
+(base) TestCli 
 SQL*Cli Release 0.0.31
 SQL> loadsqlmap map1
 Mapping file loaded.
@@ -560,8 +560,8 @@ Mapping file loaded.
    同时存在多个配置的情况下，配置会被叠加
 
 启用SQL重写的方法：
-   1.   在命令行里面，通过sqlcli --sqlmap map1的方式来执行重写文件的位置
-   2.   定义在系统环境变量SQLCLI_SQLMAPPING中指定。 如果定义了命令行参数，则系统环境变量不生效
+   1.   在命令行里面，通过TestCli --sqlmap map1的方式来执行重写文件的位置
+   2.   定义在系统环境变量TestCli_SQLMAPPING中指定。 如果定义了命令行参数，则系统环境变量不生效
    3.   通过在SQL输入窗口，输入loadsqlmap的方式来指定
 
 重写文件的写法要求：
@@ -621,7 +621,7 @@ Mapping file loaded.
        > /
     SQL> 
 ```
-&emsp; 对于SQL语句块，SQLCli将被等待语句结束符后把全部的SQL一起送给SQL引擎（不包括语句结束符）。
+&emsp; 对于SQL语句块，TestCli将被等待语句结束符后把全部的SQL一起送给SQL引擎（不包括语句结束符）。
 
 * 对于多行SQL语句的格式要求：  
    多行SQL语句是指不能在一行内写完，需要分成多行来写的SQL语句。  
@@ -641,7 +641,7 @@ Mapping file loaded.
     SQL> 
     对于多行SQL语句，同样也可以使用行首的【/】作为多行语句的结束符
 ```
-&emsp; 对于SQL多行语句，SQLCli将被等待语句结束符后把全部的SQL一起送给SQL引擎（包括可能的语句结束符分号）。
+&emsp; 对于SQL多行语句，TestCli将被等待语句结束符后把全部的SQL一起送给SQL引擎（包括可能的语句结束符分号）。
 
 #### 其他SQL语句
 * 其他SQL语句  
@@ -650,7 +650,7 @@ Mapping file loaded.
 
 #### SQL语句中的注释
 * 语句中的注释  
-  注释信息分为行注释和段落注释，这些注释信息不会被送入到SQL引擎中，而是会被SQLCli直接忽略。  
+  注释信息分为行注释和段落注释，这些注释信息不会被送入到SQL引擎中，而是会被TestCli直接忽略。  
   
   行注释的写法是： 【 ...SQL...   -- Comment 】  
   即单行中任何【--】标识符后的内容都被理解为行注释信息。  
@@ -673,7 +673,7 @@ Mapping file loaded.
 ```  
 ***
 ### 设置程序的运行选项
-通过SET命令，我们可以改变SQLCli的一些行为或者显示选项。
+通过SET命令，我们可以改变TestCli的一些行为或者显示选项。
 ```
     SQL> set
     Current set options: 
@@ -740,7 +740,7 @@ Mapping file loaded.
 &emsp; 目前支持的选项有：    
 ```
        CONTINUE |     遇到SQL语句错误继续执行 
-       EXIT     |     遇到SQL语句错误直接退出SQLCli程序
+       EXIT     |     遇到SQL语句错误直接退出TestCli程序
 ```
 #### 控制参数解释-PAGE
 &emsp; &emsp; 3. PAGE        是否分页显示，当执行的SQL语句结果超过了屏幕显示的内容，是否会暂停显示，等待用户输入任意键后继续显示下一页，默认是OFF，即不中断。
@@ -960,34 +960,34 @@ Mapping file loaded.
     SQL> -- [Hint] Order
     SQL> Select ID,Name From TestTab;
     ....
-    加入这个提示符后，SQLCli将会把随后的SQL语句进行排序输出，原程序的输出顺序被忽略
+    加入这个提示符后，TestCli将会把随后的SQL语句进行排序输出，原程序的输出顺序被忽略
 
     SQL> -- [Hint] LogFilter  .*Error.*
     SQL> Select ID,Name From TestTab;
     ....
-    加入这个提示符后，SQLCli将不再显示随后输出中任何包含Error字样的行
+    加入这个提示符后，TestCli将不再显示随后输出中任何包含Error字样的行
     .*Error.* 是一个正则表达式写法
 
     SQL> -- [Hint] LogFilter  ^((?!Error).)*$
     SQL> Select ID,Name From TestTab;
     ....
-    加入这个提示符后，SQLCli仅显示输出中包含Error字样的行
+    加入这个提示符后，TestCli仅显示输出中包含Error字样的行
 
     SQL> -- [Hint] LogMask  Password:.*=>Password:******
     SQL> Select ID,Name From TestTab;
     ....
-    加入这个提示符后，SQLCli将把日志输出中所有符合Password:.*的内容替换成Password:*****
+    加入这个提示符后，TestCli将把日志输出中所有符合Password:.*的内容替换成Password:*****
 
     SQL> -- [Hint] SQL_PREPARE
     SQL> Select ID,Name From TestTab;
     ....
-    加入这个提示符后，随后的SQLCli程序在执行的时候将首先解析SQL语句，随后再执行，
+    加入这个提示符后，随后的TestCli程序在执行的时候将首先解析SQL语句，随后再执行，
     这是默认的方式
 
     SQL> -- [Hint] SQL_DIRECT
     SQL> Select ID,Name From TestTab;
     ....
-    加入这个提示符后，随后的语句在SQLCli执行中将跃过解析(PrepareStatement)层面
+    加入这个提示符后，随后的语句在TestCli执行中将跃过解析(PrepareStatement)层面
     这不是默认方式，和之前的SQL_PREPARE相互斥的一个设置
     在某些情况下，有的特殊SQL语句不支持PREPARE，这是一个可以绕开问题的办法
     可以通过设置变量的方式来全局影响这个设置.
@@ -1098,7 +1098,7 @@ Mapping file loaded.
 
    
 ```
-### 在SQLCli中完成简单的循环语句
+### 在TestCli中完成简单的循环语句
 ```
     通过使用SQLHint，我们可以实现简单的语句循环。
     例子：
@@ -1112,31 +1112,31 @@ Mapping file loaded.
     一直执行到100次或者该语句返回结果集的第一行第一内内容大于10
     其中： ${LastSQLResult(.result.0.0)}是一个标准的JQ表达式，写法参考__internal__ test assert中写法说明
 ``` 
-### 定义SQLCli的初始化文件
+### 定义TestCli的初始化文件
 ```
-    SQLCli在执行的时候可以指定初始化文件，初始化文件会在真正的脚本执行之前被执行
-    可以通过以下三种方式来定义SQLCli的初始化文件：
-    1： 通过在SQLCli的命令行参数中执行，   
-    OS>  sqlcli --profile xxxx
-    2. 通过创建SQLCLI_HOME/profile/default文件，并在其中输入相关信息
-    3. 通过修改程序的安装目录中对应文件来指定，即<PYTHON_PACKAGE>/sqlcli/profile/default
+    TestCli在执行的时候可以指定初始化文件，初始化文件会在真正的脚本执行之前被执行
+    可以通过以下三种方式来定义TestCli的初始化文件：
+    1： 通过在TestCli的命令行参数中执行，   
+    OS>  TestCli --profile xxxx
+    2. 通过创建TestCli_HOME/profile/default文件，并在其中输入相关信息
+    3. 通过修改程序的安装目录中对应文件来指定，即<PYTHON_PACKAGE>/TestCli/profile/default
     同时存在上述3类文件的时候，3类文件都会被执行。叠加执行的顺序是：3，2，1
 
     除非打开调试模式，否则初始化脚本的执行不会有任何输出日志，不会影响到日志校验等
 
 ```
 
-### 用SQLCli来产生测试数据文件
+### 用TestCli来产生测试数据文件
 ```
    SQL> __internal__ DATA SET HDFSUSER [USERNAME]
    这里将指定随后操作HDFS操作时使用的用户名（程序使用InSecureClient来上传文件，所以无需口令)
      
    SQL> __internal__ DATA SET SEEDFILE DIR [DIRECTORY]
-   这里将指定随后程序加载种子Seed文件时所使用的目录，如果不指定，默认目录是SQLCLI_HOME\data
+   这里将指定随后程序加载种子Seed文件时所使用的目录，如果不指定，默认目录是TestCli_HOME\data
    
    SQL> __internal__ DATA CREATE [string|integer] SEEDDATAFILE [SeedName] LENGTH [row length] ROWS [row number]  
       > WITH NULL ROWS [null rows number];
-   如果指定了SEEDFILE的目录，则会在目录下创建seed文件。否则，会在$SQLCLI_HOME/data下创建seed文件，用来后续的随机函数
+   如果指定了SEEDFILE的目录，则会在目录下创建seed文件。否则，会在$TestCli_HOME/data下创建seed文件，用来后续的随机函数
 
     [string|integer]          是字符型随机数据文件还是数字型随机数据文件
     [SeedName]                数据种子的名称，根据需要编写，应简单好记
@@ -1160,7 +1160,7 @@ Mapping file loaded.
    FS:   表示文件将被创建在文件中，需要注意的是，这里的目录不是真实的OS目录，而是一个相对于工作目录的相对目录
    HDFS: 表示文件将被创建在HDFS上，这里需要远程的HDFS服务器开启WebFS的功能
          文件格式例子：  http://nodexx:port/dirx/diry/xx.dat
-         其中port是webfs的port，不是rpc的port， SQLCli并不支持rpc协议
+         其中port是webfs的port，不是rpc的port， TestCli并不支持rpc协议
    这里语句的开头：  __internal__ 是必须的内容，固定写法
    宏代码的格式包括：
      {identity(start_number)}                  表示一个自增字段，起始数字为start_number
@@ -1187,7 +1187,7 @@ Mapping file loaded.
      {value(:column_name)}                     根据列名，引用之前的一个定义
      {random_from_seed(seedname,length)}                  表示从seed文件中随机选取一个内容，并且最大长度限制在length, 此时seedname不要引号
      {random_from_seed(seedname,start_pos, length)}       表示从seed文件中随机选取一个内容，内容从start_pos开始(第一个位置为0)， 并且最大长度限制在length, 此时seedname不要引号
-     使用random_from_seed需要用到seed文件，必须提前准备到$SQLCLI_HOME/data下，用来后续的随机函数  
+     使用random_from_seed需要用到seed文件，必须提前准备到$TestCli_HOME/data下，用来后续的随机函数  
 
    SQL> __internal__ DATA CREATE [MEM|FS|HDFS] FILE [LocalFileName] FROM [MEM|FS|HDFS] FILE [RemoteFileName]
    如果是HDFS文件，则文件名格式为： http://HDFSHOST:HDFSRPCPORT/RemoteFileName
@@ -1213,9 +1213,9 @@ Mapping file loaded.
     11,'SSiAa','vtg'
 
 ```
-### 用SQLCli工具操作Kafka
+### 用TestCli工具操作Kafka
 ```
-   SQLCli工具可以操作Kafka，建立、删除Topic，查看Topic的状态，给Topic发送信息
+   TestCli工具可以操作Kafka，建立、删除Topic，查看Topic的状态，给Topic发送信息
 
    提前准备：
    SQL> __internal__ kafka connect server [bootstrap_server];
@@ -1281,7 +1281,7 @@ Mapping file loaded.
    删除指定的topic
 ```
 
-### 用SQLCli工具操作HDFS
+### 用TestCli工具操作HDFS
 ```
     SQL> __internal__ hdfs connect [hdfs webui url] with user [hdfs user name]
     用HDFSweb连接到指定的HDFS上
@@ -1338,9 +1338,9 @@ Mapping file loaded.
     下载远程的HDFS文件到本地文件目录中
 
 ```
-### 用SQLCli工具回归测试校验
+### 用TestCli工具回归测试校验
 ```
-   SQLCli可以在你执行测试脚本的时候将相关输出通过Spool命令输出到指定的日志中（具体方法参考Spool的命令）
+   TestCli可以在你执行测试脚本的时候将相关输出通过Spool命令输出到指定的日志中（具体方法参考Spool的命令）
    通过记录输出内容，比对之前的输出内容，可以完成回归测试的校验
 
    SQL> __internal__ test set IgnoreEmptyLine TRUE|FALSE
@@ -1472,7 +1472,7 @@ Disconnected.
 2： 脚本应用：  EXIT不会直接退出，而是会等待后台进程完成工作后再退出  
 ***
 ### 程序的并发和后台执行
-SQLCli被设计为支持并发执行脚本，支持后台执行脚本。    
+TestCli被设计为支持并发执行脚本，支持后台执行脚本。    
 为了支持后台操作，我们这里有一系列的语句，他们是：    
 1：  Create         创建后台任务      
 2：  set            设置JOB相关参数    
@@ -1484,7 +1484,7 @@ SQLCli被设计为支持并发执行脚本，支持后台执行脚本。
 8：  timer          相关Worker进程等待聚合点
 
 #### 创建后台任务脚本
-在很多时候，我们需要SQLCli来帮我们来运行数据库脚本，但是又不想等待脚本的运行结束。    
+在很多时候，我们需要TestCli来帮我们来运行数据库脚本，但是又不想等待脚本的运行结束。    
 create可以有多个参数：      
 参数1：     JOB的名称  
 参数2-..:   JOB的各种参数，要求成对出现 ParameterName  ParameterValue
@@ -1625,16 +1625,16 @@ SQL> __internal__ job timer slave_finished;
 1： 控制台应用：EXIT将不会退出，而是会提示你需要等待后台进程完成工作  
 2： 脚本应用：  EXIT不会直接退出，而是会等待后台进程完成工作后再退出  
 
-#### 将SQLCli启动为服务器C/S模式中的服务器
+#### 将TestCli启动为服务器C/S模式中的服务器
 ```
-   OS> sqlcli --server [Port]
-   此处的Port为一个合法有效的端口号，启动后，SQLCli会绑定这个端口号，并接受客户端请求 
+   OS> TestCli --server [Port]
+   此处的Port为一个合法有效的端口号，启动后，TestCli会绑定这个端口号，并接受客户端请求 
 ```
 
-#### 将SQLCli启动为服务器C/S模式中的客户端
+#### 将TestCli启动为服务器C/S模式中的客户端
 ```
-   OS> SET SQLCLI_REMOTESERVER XXX.XXXX.XXXX.XXXX:PORT
-   OS> sqlcli
+   OS> SET TestCli_REMOTESERVER XXX.XXXX.XXXX.XXXX:PORT
+   OS> TestCli
    这里的IP和Port为服务器的地址， 指定后，随后执行的语句和本地的Standalone模式完全相同
  
 ```
@@ -1642,7 +1642,7 @@ SQL> __internal__ job timer slave_finished;
 ### 程序员必读部分
 #### 程序代码结构
 ```
----------- sqlcli
+---------- TestCli
 --------------- __init__.py                   # 包标识文件，用来记录版本信息
 --------------- commandanalyze.py             # 对用户或者脚本输入的命令进行判断，判断是否需要后续解析，或者执行内部命令
 --------------- datawrapper.py                # 程序中对测试数据文件的相关支持
@@ -1650,22 +1650,22 @@ SQL> __internal__ job timer slave_finished;
 --------------- kafkawrapper.py               # 程序中对kafka操作的相关支持
 --------------- hdfswrapper.py                # 程序中对HDFS文件操作的相关支持
 --------------- main.py                       # 主程序，命令行控制界面，参数输入控制
---------------- sqlcli.py                     # 主程序
---------------- sqlcliexception.py            # 自定义程序异常类
---------------- sqlclijdbcapi.py              # 数据库操作封装，JDBC模式
---------------- sqlcliodbcapi.py              # 数据库操作封装，ODBC模式，这里只是一个封装，用来完成编译器检测，具体实现逻辑在odbc目录
---------------- sqlclitransactionmanager.py   # 后台作业中的业务统计管理
---------------- sqlclijobmanager.py           # 后台作业管理实现
+--------------- TestCli.py                     # 主程序
+--------------- TestCliexception.py            # 自定义程序异常类
+--------------- TestClijdbcapi.py              # 数据库操作封装，JDBC模式
+--------------- TestCliodbcapi.py              # 数据库操作封装，ODBC模式，这里只是一个封装，用来完成编译器检测，具体实现逻辑在odbc目录
+--------------- TestClitransactionmanager.py   # 后台作业中的业务统计管理
+--------------- TestClijobmanager.py           # 后台作业管理实现
 --------------- sqlexecute.py                 # 程序主要逻辑文件，具体执行SQL语句
 --------------- sqlinternal.py                # 执行internal命令
 --------------- sqloption.py                  # 程序运行参数显示及控制实现
 --------------- sqlparse.py                   # 用来解析SQL语句，判断注释部分，语句的分段、分行等
---------------- sqlremoteserver.py            # 用来支持SQLCli作为一个远程服务器启动时的相关支持
+--------------- sqlremoteserver.py            # 用来支持TestCli作为一个远程服务器启动时的相关支持
 ---------- setup.py                           # Python打包发布程序
 ---------- setup.cfg                          # Python打包发布程序配置
 ---------- README.md                          # 应用程序说明
 ---------- conf                               # 配置文件目录
---------------  sqlcli.conf                   # 程序配置文件
+--------------  TestCli.conf                   # 程序配置文件
 ---------- profile                            # 程序初始化脚本存放目录
 --------------  default                       # 默认的程序初始化脚本
 ---------- jlib                               # 应用程序连接数据库需要的各种jar包
@@ -1707,18 +1707,18 @@ SQL> __internal__ job timer slave_finished;
 
 #### 通过Python API方式调用本应用程序
 ```
-    from sqlcli.sqlcli import SQLCli
+    from TestCli.TestCli import TestCli
 
     # 初始化环境句柄，标记屏幕上不打印任何输出信息    
-    m_SQLCli = SQLCli(HeadlessMode=True)
+    m_TestCli = TestCli(HeadlessMode=True)
 
     # cmdExecuteHandler.run会用yield的方式分批返回SQL执行结果    
     for title, cur, headers, columnTypes, status in \
-            m_SQLCli.cmdExecuteHandler.run("Connect ....."):
+            m_TestCli.cmdExecuteHandler.run("Connect ....."):
         print(title, cur, headers, columnTypes, status)
 
     for title, cur, headers, columnTypes, status in \
-            m_SQLCli.cmdExecuteHandler.run("Select * FROM XXX"):
+            m_TestCli.cmdExecuteHandler.run("Select * FROM XXX"):
         print(title, cur, headers, columnTypes, status)
     
     # 返回结果包含5个方面的内容 (title, rows, headers, columnTypes, status).
@@ -1728,7 +1728,7 @@ SQL> __internal__ job timer slave_finished;
     #     columnTypes 列类型，字符串格式
     #     status       返回结果汇总消息
  
-    # 其中SQLCli初始化参数有：
+    # 其中TestCli初始化参数有：
     logon=None,                             # 默认登录信息，None表示不需要
     logfilename=None,                       # 程序输出文件名，None表示不需要
     sqlscript=None,                         # 脚本文件名，None表示不需要
@@ -1747,8 +1747,8 @@ SQL> __internal__ job timer slave_finished;
 ```
 #### 通过本地API方式远程调用本应用程序
 ```
-    from sqlcli.sqlcli import SQLCli
-    sqlcli = SQLCli(
+    from TestCli.TestCli import TestCli
+    TestCli = TestCli(
         logfilename=[log FileName],                          -- 日志文件名
         logon=[Login User/Login Password|None],              -- 登录用户名/密码， 可以为None，为None的时候后续的脚本中必须包含连接信息，默认为None
         sqlscript=[SQL Script FileName],                     -- SQL脚本名称，必须填写
@@ -1760,7 +1760,7 @@ SQL> __internal__ job timer slave_finished;
         profile=[init FileName|None]                         -- 初始化文件名称，默认为None
     )
     # 运行主程序
-    sqlcli.run_cli()
+    TestCli.run_cli()
 
 ```
 
@@ -1774,7 +1774,7 @@ SQL> __internal__ job timer slave_finished;
 ```
     request_data = json.dumps({})
     headers = {'Content-Type': 'application/json', 'accept': 'application/json'}
-    ret = requests.post("http://SQLCLI_REMOTESERVER:PORT/DoLogin",
+    ret = requests.post("http://TestCli_REMOTESERVER:PORT/DoLogin",
                         data=request_data,
                         headers=headers)
 
@@ -1824,7 +1824,7 @@ SQL> __internal__ job timer slave_finished;
             }
             '''
         async def test_ws_quote():
-            async with websockets.connect("ws://" + os.environ["SQLCLI_REMOTESERVER"] + "/DoCommand") \
+            async with websockets.connect("ws://" + os.environ["TestCli_REMOTESERVER"] + "/DoCommand") \
                     as websocket:
                 request_data = json.dumps(
                     {
@@ -1851,7 +1851,7 @@ SQL> __internal__ job timer slave_finished;
             "clientid": self.ClientID
         })
     headers = {'Content-Type': 'application/json', 'accept': 'application/json'}
-    ret = requests.post("http://SQLCLI_REMOTESERVER:PORT/DoLogout",
+    ret = requests.post("http://TestCli_REMOTESERVER:PORT/DoLogout",
                         data=request_data,
                         headers=headers)
     返回的结果为：
