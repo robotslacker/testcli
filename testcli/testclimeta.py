@@ -228,7 +228,7 @@ class TestCliMeta(object):
             m_MetaDriverURL = m_AppOptions.get("meta_driver", "jdbcurl")
             m_MetaDriverURL = m_MetaDriverURL.replace("mem", p_MetaServerURL + "/mem")
             self.dbConn = jdbcconnect(jclassname=m_MetaClass, url=m_MetaDriverURL,
-                                      driver_args={'user': 'sa', 'password': 'sa'},
+                                      driverArgs={'user': 'sa', 'password': 'sa'},
                                       jars=self.JarList)
             if self.dbConn is None:
                 if "TESTCLI_DEBUG" in os.environ:

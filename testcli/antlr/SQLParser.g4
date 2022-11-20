@@ -100,7 +100,7 @@ connectPort
         ;
 
 connectService
-        : CONNECT_STRING
+        : CONNECT_STRING (CONNECT_COLON CONNECT_STRING)?
         ;
 
 connectlocalService
@@ -129,7 +129,7 @@ disconnect
         ;
 
 session
-        : SESSION (SAVE|RELEASE|RESTORE|SAVECONFIG|SHOW) String? CRLF?
+        : SESSION (SESSION_SAVE|SESSION_RELEASE|SESSION_RESTORE|SESSION_SAVEURL|SESSION_SHOW) SESSION_NAME SESSION_END?
         ;
 
 singleExpression
@@ -175,7 +175,7 @@ wheneverError
         ;
 //
 spool
-        : SPOOL String CRLF?
+        : SPOOL String (SEMICOLON)? CRLF?
         ;
 
 // 12: 回显指定的文件 
@@ -212,16 +212,16 @@ script
 
 // 20：循环,条件判断
 loopUntil
-        : LOOP BEGIN UNTIL expression INTERVAL INT CRLF? 
+        : LOOP 'BEGIN' UNTIL expression INTERVAL INT CRLF?
           LOOP END CRLF?
         ;
-        
-loop    : LOOP BEGIN loopPair (COMMA loopPair)* CRLF? 
+
+loop    : LOOP 'BEGIN' loopPair (COMMA loopPair)* CRLF?
           LOOP END CRLF
         ;
 
 loopPair
-        : String COLON expression 
+        : String COLON expression
         ;
 
 // 21：ASSERT判断
@@ -239,6 +239,7 @@ sql
         | sqlSelect
         | sqlDeclare
         | sqlDrop
+        | sqlCommitRollback
         | sqlCreateProcedure
         | CRLF
         ;
@@ -271,8 +272,12 @@ sqlDrop
         : SQL_DROP SQL_END CRLF?
         ;
 
+sqlCommitRollback
+        : (SQL_COMMIT | SQL_ROLLBACK) SQL_END? CRLF?
+        ;
+
 sqlDeclare
-        : SQL_DECLARE  
+        : (SQL_DECLARE | SQL_BEGIN)
           SQL_SLASH CRLF?
         ;
 

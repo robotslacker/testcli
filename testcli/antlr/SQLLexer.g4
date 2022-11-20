@@ -24,25 +24,20 @@ ESCAPE            : '\\';
 SPACE             : [ \t]+ ->channel(HIDDEN);
 
 // 关键字
+CONNECT: 'CONNECT' -> pushMode(ConnectMode);
+SESSION: 'SESSION' -> pushMode(SessionMode);
+
 EXIT: 'EXIT';
 QUIT: 'QUIT';
 USE: 'USE';
 API: 'API';
 SQL: 'SQL';
-CONNECT: 'CONNECT' -> pushMode(ConnectMode);
 DISCONNECT: 'DISCONNECT';
-SESSION: 'SESSION';
-SAVE: 'SAVE';
-RELEASE: 'RELEASE';
-RESTORE: 'RESTORE';
-SAVECONFIG: 'SAVECONFIG';
-SHOW: 'SHOW';
 START: 'START';
 LOADMAP: 'LOADMAP';
 WHENEVER_ERROR: 'WHENEVER_ERROR';
 CONTINUE: 'CONTINUE';
 SPOOL: 'SPOOL';
-BEGIN: 'BEGIN';
 END: 'END';
 INTERNAL: '__INTERNAL__';
 SET: 'SET';
@@ -70,14 +65,17 @@ MINUS_MINUS_COMMENT   : '--' .*? (CRLF | EOF) ->channel(COMMENT_CHANNEL);
 HASH_COMMENT      : '#' ~'#' .*? CRLF ->channel(COMMENT_CHANNEL);
 
 // SQL创建语句
-SQL_CREATE: 'CREATE' -> mode(SQLStatementMode) ;
-SQL_INSERT: 'INSERT' -> mode(SQLStatementMode) ;
-SQL_UPDATE: 'UPDATE' -> mode(SQLStatementMode) ;
-SQL_SELECT: 'SELECT' -> mode(SQLStatementMode) ;
-SQL_DELETE: 'DELETE'  -> mode(SQLStatementMode) ;
-SQL_REPLACE: 'REPLACE' -> mode(SQLStatementMode);
-SQL_DECLARE: 'DECLARE' -> mode(SQLProcedureMode) ;
-SQL_DROP:   'DROP' -> mode(SQLStatementMode) ;
+SQL_CREATE:     'CREATE' -> mode(SQLStatementMode) ;
+SQL_INSERT:     'INSERT' -> mode(SQLStatementMode) ;
+SQL_UPDATE:     'UPDATE' -> mode(SQLStatementMode) ;
+SQL_SELECT:     'SELECT' -> mode(SQLStatementMode) ;
+SQL_DELETE:     'DELETE'  -> mode(SQLStatementMode) ;
+SQL_REPLACE:    'REPLACE' -> mode(SQLStatementMode);
+SQL_DECLARE:    'DECLARE' -> mode(SQLProcedureMode) ;
+SQL_BEGIN:      'BEGIN' -> mode(SQLProcedureMode) ;
+SQL_DROP:       'DROP' -> mode(SQLStatementMode) ;
+SQL_COMMIT:     'COMMIT' -> mode(SQLStatementMode) ;
+SQL_ROLLBACK:   'ROLLBACK' -> mode(SQLStatementMode) ;
 SQL_CREATE_PROCEDURE: ('CREATE' | 'REPLACE' | ' '+ | 'OR')+ ('PROCEDURE'|'FUNCTION') ->mode(SQLProcedureMode);
 
 INT : DIGIT+ ;
@@ -191,10 +189,10 @@ CONNECT_STRING
 mode ScriptMode;
 
 ScriptBlock
-      : .*? ('%}'| EOF) -> popMode
+      : .*? ('\n%}'| EOF) -> popMode
       ;
 
-/** 
+/**
  * 回显模式
  */
 mode EchoMode;
@@ -249,6 +247,27 @@ HINT_STRING
 HintMore
       : . -> type(HINT_STRING)
       ;
+
+mode SessionMode;
+SESSION_SPACE
+            : [ \t]+ -> channel(SQLSTATEMENT_CHANNEL)
+            ;
+SESSION_SAVE
+        : 'SAVE';
+SESSION_RELEASE
+        : 'RELEASE';
+SESSION_RESTORE
+        : 'RESTORE';
+SESSION_SAVEURL
+        : 'SAVEURL';
+SESSION_SHOW
+        : 'SHOW';
+SESSION_NAME
+            : String
+            ;
+SESSION_END
+        : ';'->mode(DEFAULT_MODE)
+        ;
 
 /**
  * SQL语句

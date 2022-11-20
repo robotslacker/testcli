@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
+import time
 import unittest
 import os
+import jpype
 import tempfile
 from testcli.sqlparse import SQLAnalyze
 from testcli.apiparse import APIAnalyze
 from testcli.testcli import TestCli
 from testcli.compare import POSIXCompare
+from testcli.sqlclijdbc import connect as jdbcconnect
 
 
 class TestSynatx(unittest.TestCase):
@@ -83,6 +86,22 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
+    def test_SQLAnalyze_ConnectH2Mem(self):
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("connect sa/sa@jdbc:h2tcp:tcp://127.0.0.1:19091/mem:test")
+        self.assertTrue(isFinished)
+        self.assertEqual({'driver': 'jdbc',
+                          'driverSchema': 'h2tcp',
+                          'driverType': 'tcp',
+                          'host': '127.0.0.1',
+                          'name': 'CONNECT',
+                          'password': 'sa',
+                          'port': 19091,
+                          'service': 'mem:test',
+                          'username': 'sa'}, ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
     def test_SQLAnalyze_ExitWithCode(self):
         (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("exit 3")
@@ -154,6 +173,29 @@ class TestSynatx(unittest.TestCase):
                           'optionValue': 'DD',
                           'optionValue2': 'FF'
                           }, ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+    def test_SQLAnalyze_Sleep(self):
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("sleep 3")
+        self.assertTrue(isFinished)
+        self.assertEqual({'name': 'SLEEP', 'sleepTime': 3}, ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+    def test_SQLAnalyze_CommitAndRollback(self):
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("commit")
+        self.assertTrue(isFinished)
+        self.assertEqual({'name': 'COMMIT', 'statement': 'commit'}, ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("rollback")
+        self.assertTrue(isFinished)
+        self.assertEqual({'name': 'ROLLBACK', 'statement': 'rollback'}, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
@@ -251,8 +293,115 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-    def testSQLExecute(self):
-        scriptFile = "srg0000.sql"
+    def test_SQLAnalyze_Declare(self):
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("Declare Begin xxx \n end;\n/")
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'name': 'DECLARE', 'statement': 'Declare Begin xxx \n end;'},
+            ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+    def test_SQLAnalyze_Begin(self):
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("Begin xxx \n end;\n/")
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'name': 'BEGIN', 'statement': 'Begin xxx \n end;'},
+            ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+    def test_SQLAnalyze_Spool(self):
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("Spool aa.txt")
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'file': 'aa.txt', 'name': 'SPOOL'},
+            ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("Spool off")
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'file': 'off', 'name': 'SPOOL'},
+            ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+    def test_SQLAnalyze_Script(self):
+        scriptHeader = "> {%\n"
+        script = "Hello World"
+        scriptEnd = "\n%}\n"
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze(scriptHeader + script + scriptEnd)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'block': script, 'name': 'SCRIPT'},
+            ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+    def test_SQLAnalyze_Session(self):
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("Session save xxx")
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'SAVE', 'name': 'SESSION', 'sessionName': 'xxx'},
+            ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("Session release xxx")
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'RELEASE', 'name': 'SESSION', 'sessionName': 'xxx'},
+            ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("Session restore xxx")
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'RESTORE', 'name': 'SESSION', 'sessionName': 'xxx'},
+            ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("Session saveurl xxx")
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'SAVEURL', 'name': 'SESSION', 'sessionName': 'xxx'},
+            ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("Session show xxx")
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'SHOW', 'name': 'SESSION', 'sessionName': 'xxx'},
+            ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("Session yyy xxx")
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': '', 'name': 'SESSION', 'sessionName': 'yyy'},
+            ret_CommandSplitResult)
+        self.assertEqual(1, ret_errorCode)
+        self.assertEqual("line1:12  extraneous input 'xxx' expecting <EOF> ", ret_errorMsg)
+
+    def test_SQLExecute(self):
+        scriptFile = "testsqlsanity.sql"
 
         scriptBaseFile = os.path.splitext(scriptFile)[0]
         fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
@@ -268,6 +417,88 @@ class TestSynatx(unittest.TestCase):
         )
         retValue = testcli.run_cli()
         self.assertEqual(0, retValue)
+
+        # 对文件进行比对，判断返回结果是否吻合
+        compareHandler = POSIXCompare()
+        compareResult, compareReport = compareHandler.compare_text_files(
+            file1=fullLogFile,
+            file2=fullRefFile,
+            compareAlgorithm="MYERS"
+        )
+        if not compareResult:
+            for line in compareReport:
+                if line.startswith("-") or line.startswith("+"):
+                    print(line)
+        self.assertTrue(compareResult)
+
+    def test_SQLExecuteWithSQLCLI_CONNECTION_URL(self):
+        h2JarFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "jlib", "h2-1.4.200.jar"))
+        jarList = [h2JarFile, ]
+        jdbcconnect(jclassname="org.h2.Driver",
+                    url="jdbc:h2:mem:test;TRACE_LEVEL_SYSTEM_OUT=0;TRACE_LEVEL_FILE=0",
+                    driverArgs={'user': 'sa', 'password': 'sa'},
+                    jars=jarList)
+        tcpServer = jpype.JClass("org.h2.tools.Server").\
+            createTcpServer("-tcp", "-tcpAllowOthers", "-tcpPort", str(19091))
+        tcpServer.start()
+        os.environ["SQLCLI_CONNECTION_URL"] = "jdbc:h2tcp:tcp://127.0.0.1:19091/mem:test"
+
+        scriptFile = "testsqlwithurl.sql"
+        scriptBaseFile = os.path.splitext(scriptFile)[0]
+        fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
+        fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
+        fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
+
+        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        testcli = TestCli(
+            logfilename=fullLogFile,
+            HeadlessMode=True,
+            nologo=True,
+            script=fullScriptFile
+        )
+        retValue = testcli.run_cli()
+        self.assertEqual(0, retValue)
+
+        tcpServer.stop()
+        tcpServer.shutdown()
+
+        # 对文件进行比对，判断返回结果是否吻合
+        compareHandler = POSIXCompare()
+        compareResult, compareReport = compareHandler.compare_text_files(
+            file1=fullLogFile,
+            file2=fullRefFile,
+            compareAlgorithm="MYERS"
+        )
+        if not compareResult:
+            for line in compareReport:
+                if line.startswith("-") or line.startswith("+"):
+                    print(line)
+        self.assertTrue(compareResult)
+
+    def test_SQLSleep(self):
+        # 记录开始时间
+        start = time.time()
+
+        scriptFile = "testsqlsleep.sql"
+
+        scriptBaseFile = os.path.splitext(scriptFile)[0]
+        fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
+        fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
+        fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
+
+        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        testcli = TestCli(
+            logfilename=fullLogFile,
+            HeadlessMode=True,
+            nologo=True,
+            script=fullScriptFile
+        )
+        retValue = testcli.run_cli()
+        self.assertEqual(0, retValue)
+
+        # 记录截止时间
+        end = time.time()
+        self.assertTrue((end - start) > 3)
 
         # 对文件进行比对，判断返回结果是否吻合
         compareHandler = POSIXCompare()

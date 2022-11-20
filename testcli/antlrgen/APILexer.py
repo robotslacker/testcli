@@ -1,4 +1,4 @@
-# Generated from C:/Work/testcli/testcli/antlr\APILexer.g4 by ANTLR 4.10.1
+# Generated from D:/Work/testcli/testcli/antlr\APILexer.g4 by ANTLR 4.10.1
 from antlr4 import *
 from io import StringIO
 import sys

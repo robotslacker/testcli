@@ -1,4 +1,4 @@
-# Generated from C:/Work/testcli/testcli/antlr\SQLParser.g4 by ANTLR 4.10.1
+# Generated from D:/Work/testcli/testcli/antlr\SQLParser.g4 by ANTLR 4.10.1
 from antlr4 import *
 if __name__ is not None and "." in __name__:
     from .SQLParser import SQLParser
@@ -246,6 +246,11 @@ class SQLParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by SQLParser#sqlDrop.
     def visitSqlDrop(self, ctx:SQLParser.SqlDropContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SQLParser#sqlCommitRollback.
+    def visitSqlCommitRollback(self, ctx:SQLParser.SqlCommitRollbackContext):
         return self.visitChildren(ctx)
 
 

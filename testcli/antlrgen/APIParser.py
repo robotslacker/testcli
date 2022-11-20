@@ -1,4 +1,4 @@
-# Generated from C:/Work/testcli/testcli/antlr\APIParser.g4 by ANTLR 4.10.1
+# Generated from D:/Work/testcli/testcli/antlr\APIParser.g4 by ANTLR 4.10.1
 # encoding: utf-8
 from antlr4 import *
 from io import StringIO

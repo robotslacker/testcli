@@ -1,0 +1,9 @@
+SQL> connect sa/sa
+Database connected.
+SQL> select 1 from dual;
++--------+---+
+|   ##   | 1 |
++--------+---+
+|      1 | 1 |
++--------+---+
+1 row selected.

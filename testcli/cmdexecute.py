@@ -951,6 +951,11 @@ class CmdExecute(object):
                         currentStatementWithComments = None
                         continue
                     if isFinished:
+                        if ret_CommandSplitResult["name"] == "CONNECT":
+                            # 对于数据库连接命令，如果没有给出连接详细信息，并且指定了环境变量，附属环境变量到连接命令后
+                            if "driver" not in ret_CommandSplitResult and "SQLCLI_CONNECTION_URL" in os.environ:
+                                (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+                                    = SQLAnalyze(currentStatement + "@" + os.environ["SQLCLI_CONNECTION_URL"])
                         # 语句已经结束, 记录语句解析的结果
                         # 解析后的语句
                         ret_CommandSplitResults.append(ret_CommandSplitResult)
@@ -1005,7 +1010,7 @@ class CmdExecute(object):
                 # 如果是控制台显示，不再回显原命令，没有任何实际意义
                 yield {
                     "type": "parse",
-                    "rawCommand": None,
+                    "rawCommand": ret_CommandSplitResults[pos],
                     "formattedCommand": formattedCommand,
                     "rewrotedCommand": [],
                     "script": commandScriptFile
@@ -1136,10 +1141,8 @@ class CmdExecute(object):
                         "script": commandScriptFile
                     }
                     continue
-            elif parseObject["name"] in [
-                "SELECT", "DELETE", "CREATE", "INSERT", "DROP",
-                "PROCEDURE"
-            ]:
+            elif parseObject["name"] in ["SELECT", "DELETE", "UPDATE", "CREATE", "INSERT", "DROP", "COMMIT",
+                                         "ROLLBACK", "PROCEDURE", "DECLARE", "BEGIN"]:
                 sqlCommand = parseObject["statement"]
                 # 根据语句中的变量或者其他定义信息来重写当前语句
                 sqlCommand, rewrotedCommandList = self.rewriteRunStatement(
@@ -1171,14 +1174,31 @@ class CmdExecute(object):
                         nameSpace=parseObject["nameSpace"]
                 ):
                     yield commandResult
-                continue
             elif parseObject["name"] in ["SLEEP"]:
                 for commandResult in self.cliHandler.sleep(
                         cls=self.cliHandler,
                         sleepTime=parseObject["sleepTime"]
                 ):
                     yield commandResult
-                continue
+            elif parseObject["name"] in ["SPOOL"]:
+                for commandResult in self.cliHandler.spool(
+                        cls=self.cliHandler,
+                        fileName=parseObject["file"]
+                ):
+                    yield commandResult
+            elif parseObject["name"] in ["SESSION"]:
+                for commandResult in self.cliHandler.session_manage(
+                        cls=self.cliHandler,
+                        action=parseObject["action"],
+                        sessionName=parseObject["sessionName"]
+                ):
+                    yield commandResult
+            elif parseObject["name"] in ["SCRIPT"]:
+                for commandResult in self.cliHandler.execute_embeddScript(
+                        cls=self.cliHandler,
+                        block=parseObject["block"]
+                ):
+                    yield commandResult
             elif parseObject["name"] in ["UNKNOWN"]:
                 yield {"type": "error",
                        "message": "TESTCLI_0000:  " + parseObject["reason"]}

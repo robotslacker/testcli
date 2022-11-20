@@ -672,7 +672,10 @@ class TestCli(object):
             if "host" not in connectProperties:
                 connectProperties["host"] = cls.db_host
             if "port" not in connectProperties:
-                connectProperties["port"] = int(cls.db_port)
+                if cls.db_port is not None:
+                    connectProperties["port"] = int(cls.db_port)
+                else:
+                    connectProperties["port"] = None
             if "service" not in connectProperties:
                 connectProperties["service"] = cls.db_service
             if "parameters" not in connectProperties:
@@ -720,9 +723,9 @@ class TestCli(object):
 
                 # 构造连接参数
                 jdbcConnProp = {}
-                if cls.db_username is not None:
+                if "username" in connectProperties:
                     jdbcConnProp['user'] = connectProperties["username"]
-                if cls.db_password is not None:
+                if "password" in connectProperties:
                     jdbcConnProp['password'] = connectProperties["password"]
                 # 处理连接参数中的属性信息，既包括配置文件中提供的参数，也包括连接命令行中输入的
                 if jdbcProp is not None:
@@ -732,8 +735,9 @@ class TestCli(object):
                             propName = str(props[0]).strip()
                             propValue = str(props[1]).strip()
                             jdbcConnProp[propName] = propValue
-                for propName, propValue in connectProperties["parameters"].items():
-                    jdbcConnProp[propName] = propValue
+                if connectProperties["parameters"] is not None:
+                    for propName, propValue in connectProperties["parameters"].items():
+                        jdbcConnProp[propName] = propValue
 
                 # 尝试数据库连接，保持一定的重试次数，一直到连接上
                 retryCount = 0
@@ -786,15 +790,15 @@ class TestCli(object):
                 print('traceback.print_exc():\n%s' % traceback.print_exc())
                 print('traceback.format_exc():\n%s' % traceback.format_exc())
                 print("db_sessionName = [" + str(cls.db_sessionName) + "]")
-                print("db_user = [" + str(cls.db_username) + "]")
-                print("db_pass = [" + str(cls.db_password) + "]")
-                print("db_driver = [" + str(cls.db_driver) + "]")
-                print("db_driverSchema = [" + str(cls.db_driverSchema) + "]")
-                print("db_driverType = [" + str(cls.db_driverType) + "]")
-                print("db_host = [" + str(cls.db_host) + "]")
-                print("db_port = [" + str(cls.db_port) + "]")
-                print("db_service = [" + str(cls.db_service) + "]")
-                print("db_parameters = [" + str(cls.db_parameters) + "]")
+                print("db_user = [" + connectProperties["username"] + "]")
+                print("db_pass = [" + connectProperties["password"] + "]")
+                print("db_driver = [" + connectProperties["driver"] + "]")
+                print("db_driverSchema = [" + connectProperties["driverSchema"] + "]")
+                print("db_driverType = [" + connectProperties["driverType"] + "]")
+                print("db_host = [" + connectProperties["host"] + "]")
+                print("db_port = [" + str(connectProperties["port"]) + "]")
+                print("db_service = [" + connectProperties["service"] + "]")
+                print("db_parameters = [" + str(connectProperties["parameters"]) + "]")
                 print("db_url = [" + str(cls.db_url) + "]")
                 print("jar_file = [" + str(cls.db_connectionConf) + "]")
             if str(e).find("SQLInvalidAuthorizationSpecException") != -1:
@@ -868,20 +872,35 @@ class TestCli(object):
                                    " does not match the terminal character set, " +
                                    "so the terminal information cannot be output correctly.")
 
+    # 执行Python脚本
+    @staticmethod
+    def execute_embeddScript(cls, block: str):
+        globalScope = {}
+        sessionContext = {
+            "dbConn": cls.db_conn.jconn
+        }
+
+        localScope = {"SessionContext": sessionContext}
+        exec(block, globalScope, localScope)
+        yield {
+            "type": "result",
+            "title": None,
+            "rows": None,
+            "headers": None,
+            "columnTypes": None,
+            "status": None
+        }
+
+
     # 数据库会话管理
     @staticmethod
-    def session_manage(cls, arg, **_):
-        if arg is None or len(str(arg)) == 0:
-            raise TestCliException(
-                "Missing required argument: " + "Session save/saveurl/restore/release/show [session name]")
-        m_Parameters = str(arg).split()
-
+    def session_manage(cls, action: str, sessionName: str = None):
         # Session_Context:
         #   0:   Connection
         #   1:   UserName
         #   2:   Password
         #   3:   URL
-        if len(m_Parameters) == 1 and m_Parameters[0].lower() == 'show':
+        if action.strip().lower() == 'show':
             m_Result = []
             for m_Session_Name, m_Connection in cls.db_saved_conn.items():
                 if m_Connection[0] is None:
@@ -893,6 +912,7 @@ class TestCli(object):
                 m_Result.append(['Current', str(cls.db_sessionName), str(cls.db_username), '******', str(cls.db_url)])
             if len(m_Result) == 0:
                 yield {
+                    "type": "result",
                     "title": None,
                     "rows": None,
                     "headers": None,
@@ -901,6 +921,7 @@ class TestCli(object):
                 }
             else:
                 yield {
+                    "type": "result",
                     "title": "Saved Sessions:",
                     "rows": m_Result,
                     "headers": ["Session", "Sesssion Name", "User Name", "Password", "URL"],
@@ -909,39 +930,30 @@ class TestCli(object):
                 }
             return
 
-        # 要求两个参数 save/restore [session_name]
-        if len(m_Parameters) != 2:
-            raise TestCliException(
-                "Wrong argument : " + "Session save/restore/release [session name]")
-
-        if m_Parameters[0].lower() == 'release':
+        if action.strip().lower() == 'release':
             if cls.db_conn is None:
                 raise TestCliException(
                     "You don't have a saved session.")
-            m_Session_Name = m_Parameters[1]
-            del cls.db_saved_conn[m_Session_Name]
+            del cls.db_saved_conn[sessionName]
             cls.db_sessionName = None
-        elif m_Parameters[0].lower() == 'save':
+        elif action.strip().lower() == 'save':
             if cls.db_conn is None:
                 raise TestCliException(
                     "Please connect session first before save.")
-            m_Session_Name = m_Parameters[1]
-            cls.db_saved_conn[m_Session_Name] = [cls.db_conn, cls.db_username, cls.db_password, cls.db_url]
-            cls.db_sessionName = m_Session_Name
-        elif m_Parameters[0].lower() == 'saveurl':
+            cls.db_saved_conn[sessionName] = [cls.db_conn, cls.db_username, cls.db_password, cls.db_url]
+            cls.db_sessionName = sessionName
+        elif action.strip().lower() == 'saveurl':
             if cls.db_conn is None:
                 raise TestCliException(
                     "Please connect session first before save.")
-            m_Session_Name = m_Parameters[1]
-            cls.db_saved_conn[m_Session_Name] = [None, cls.db_username, cls.db_password, cls.db_url]
-            cls.db_sessionName = m_Session_Name
-        elif m_Parameters[0].lower() == 'restore':
-            m_Session_Name = m_Parameters[1]
-            if m_Session_Name in cls.db_saved_conn:
-                cls.db_username = cls.db_saved_conn[m_Session_Name][1]
-                cls.db_password = cls.db_saved_conn[m_Session_Name][2]
-                cls.db_url = cls.db_saved_conn[m_Session_Name][3]
-                if cls.db_saved_conn[m_Session_Name][0] is None:
+            cls.db_saved_conn[sessionName] = [None, cls.db_username, cls.db_password, cls.db_url]
+            cls.db_sessionName = sessionName
+        elif action.strip().lower() == 'restore':
+            if sessionName in cls.db_saved_conn:
+                cls.db_username = cls.db_saved_conn[sessionName][1]
+                cls.db_password = cls.db_saved_conn[sessionName][2]
+                cls.db_url = cls.db_saved_conn[sessionName][3]
+                if cls.db_saved_conn[sessionName][0] is None:
                     result = cls.connect_db(cls.db_username + "/" + cls.db_password + "@" + cls.db_url)
                     for title, cur, headers, columnTypes, status in result:
                         yield {
@@ -952,34 +964,37 @@ class TestCli(object):
                             "status": status
                         }
                 else:
-                    cls.db_conn = cls.db_saved_conn[m_Session_Name][0]
+                    cls.db_conn = cls.db_saved_conn[sessionName][0]
                     cls.cmdExecuteHandler.sqlConn = cls.db_conn
-                    cls.db_sessionName = m_Session_Name
+                    cls.db_sessionName = sessionName
             else:
                 raise TestCliException(
-                    "Session [" + m_Session_Name + "] does not exist. Please save it first.")
+                    "Session [" + sessionName + "] does not exist. Please save it first.")
         else:
             raise TestCliException(
                 "Wrong argument : " + "Session save/restore [session name]")
-        if m_Parameters[0].lower() == 'save':
+        if action.strip().lower() == 'save':
             yield {
+                "type": "result",
                 "title": None,
                 "rows": None,
                 "headers": None,
                 "columnTypes": None,
                 "status": "Session saved Successful."
             }
-        if m_Parameters[0].lower() == 'release':
+        if action.strip().lower() == 'release':
             yield {
+                "type": "result",
                 "title": None,
                 "rows": None,
                 "headers": None,
                 "columnTypes": None,
                 "status": "Session release Successful."
             }
-        if m_Parameters[0].lower() == 'restore':
+        if action.strip().lower() == 'restore':
             cls.testOptions.set("CONNURL", cls.db_url)
             yield {
+                "type": "result",
                 "title": None,
                 "rows": None,
                 "headers": None,
@@ -1116,15 +1131,12 @@ class TestCli(object):
 
     # 将当前及随后的输出打印到指定的文件中
     @staticmethod
-    def spool(cls, arg, **_):
-        if not arg:
-            message = "Missing required argument, spool [filename]|spool off."
-            return [(None, None, None, None, message)]
-        parameters = str(arg).split()
-        if parameters[0].strip().upper() == 'OFF':
+    def spool(cls, fileName: str):
+        if fileName.strip().upper() == 'OFF':
             # close spool file
             if len(cls.SpoolFileHandler) == 0:
                 yield {
+                    "type": "result",
                     "title": None,
                     "rows": None,
                     "headers": None,
@@ -1136,6 +1148,7 @@ class TestCli(object):
                 cls.SpoolFileHandler[-1].close()
                 cls.SpoolFileHandler.pop()
                 yield {
+                    "type": "result",
                     "title": None,
                     "rows": None,
                     "headers": None,
@@ -1146,17 +1159,18 @@ class TestCli(object):
 
         if cls.logfilename is not None:
             # 如果当前主程序启用了日志，则spool日志的默认输出目录为logfile的目录
-            m_FileName = os.path.join(os.path.dirname(cls.logfilename), parameters[0].strip())
+            spoolFileName = os.path.join(os.path.dirname(cls.logfilename), fileName.strip())
         else:
             # 如果主程序没有启用日志，则输出为当前目录
-            m_FileName = parameters[0].strip()
+            spoolFileName = fileName.strip()
 
         # 如果当前有打开的Spool文件，关闭它
         try:
-            cls.SpoolFileHandler.append(open(m_FileName, "w", encoding=cls.testOptions.get("RESULT_ENCODING")))
+            cls.SpoolFileHandler.append(open(spoolFileName, "w", encoding=cls.testOptions.get("RESULT_ENCODING")))
         except IOError as e:
             raise TestCliException("SQLCLI-00000: IO Exception " + repr(e))
         yield {
+            "type": "result",
             "title": None,
             "rows": None,
             "headers": None,
@@ -1548,10 +1562,11 @@ class TestCli(object):
                         if self.testOptions.get("ECHO").upper() == 'ON':
                             # 首先打印原始SQL
                             m_EchoFlag = OFLAG_LOGFILE | OFLAG_LOGGER | OFLAG_CONSOLE | OFLAG_SPOOL
-                            # TODO SPOOL
-                            # if re.match(r'spool\s+.*', p_result["rawCommand"], re.IGNORECASE):
-                            #     # Spool off这个语句，不打印到Spool中
-                            #     m_EchoFlag = m_EchoFlag & ~OFLAG_SPOOL
+                            # Spool off这个语句，不打印到Spool中
+                            if p_result["rawCommand"] is not None:
+                                if p_result["rawCommand"]["name"] == "SPOOL":
+                                    if p_result["rawCommand"]["file"].strip().upper() == "OFF":
+                                        m_EchoFlag = m_EchoFlag & ~OFLAG_SPOOL
                             if p_result["script"] is None:
                                 # 控制台应用，不再打印SQL语句到控制台（因为用户已经输入了)
                                 m_EchoFlag = m_EchoFlag & ~OFLAG_CONSOLE
