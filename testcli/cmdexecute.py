@@ -896,7 +896,7 @@ class CmdExecute(object):
             ret_CommandSplitResults = []
             ret_CommandSplitResultsWithComments = []
             ret_CommandHints = []
-
+            defaultNameSpace = self.testOptions.get("NAMESPACE")
             # 将所有的语句分拆开，按照行，依次投喂给解析器，以获得被Antlr分拆后的运行结果
             currentStatement = None
             currentStatementWithComments = None
@@ -918,6 +918,22 @@ class CmdExecute(object):
                 if self.testOptions.get("NAMESPACE") == "SQL":
                     (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
                         = SQLAnalyze(currentStatement)
+                    if not isFinished:
+                        if nPos == (len(statementLines) - 1):
+                            # 都最后一行了，实在不能再等了，全部打包，管它呢
+                            ret_CommandSplitResults.append(
+                                {'name': 'UNKNOWN',
+                                 'statement': currentStatement,
+                                 'reason': "missing SQL_END at '<EOF>'"}
+                            )
+                            # 解析前的语句
+                            ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+                            # 所有的提示信息
+                            ret_CommandHints.append(currentHints)
+                            # 清空语句的变量
+                            currentStatement = None
+                            currentStatementWithComments = None
+                        continue
                     if ret_CommandSplitResult is None:
                         if ret_errorCode != 0:
                             # 语句已经出错，且不是一个空语句
@@ -950,7 +966,9 @@ class CmdExecute(object):
                         currentStatement = None
                         currentStatementWithComments = None
                         continue
-                    if isFinished:
+                    else:
+                        if ret_CommandSplitResult["name"] == "USE":
+                            self.testOptions.set("NAMESPACE", ret_CommandSplitResult["nameSpace"])
                         if ret_CommandSplitResult["name"] == "CONNECT":
                             # 对于数据库连接命令，如果没有给出连接详细信息，并且指定了环境变量，附属环境变量到连接命令后
                             if "driver" not in ret_CommandSplitResult and "SQLCLI_CONNECTION_URL" in os.environ:
@@ -966,13 +984,18 @@ class CmdExecute(object):
                         # 清空语句的变量
                         currentStatement = None
                         currentStatementWithComments = None
-                    else:
+                        continue
+                elif self.testOptions.get("NAMESPACE") == "API":
+                    (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+                        = APIAnalyze(currentStatement)
+                    if not isFinished:
+                        # 如果语句还没有结束，则不判断错误消息，直接等待下一行结果就是
                         if nPos == (len(statementLines) - 1):
                             # 都最后一行了，实在不能再等了，全部打包，管它呢
                             ret_CommandSplitResults.append(
-                                {'name': 'UNKNOWN',
+                                {'name': 'API_UNKNOWN',
                                  'statement': currentStatement,
-                                 'reason': "missing SQL_END at '<EOF>'"}
+                                 'reason': "missing HTTP_END at '<EOF>'"}
                             )
                             # 解析前的语句
                             ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
@@ -981,11 +1004,55 @@ class CmdExecute(object):
                             # 清空语句的变量
                             currentStatement = None
                             currentStatementWithComments = None
-                elif self.testOptions.get("NAMESPACE") == "API":
-                    (ret_bCommandCompleted, ret_CommandSplitResults,
-                     ret_CommandSplitResultsWithComments, ret_CommandHints,
-                     ret_errorCode, ret_errorMsg) \
-                        = APIAnalyze(statement)
+                        continue
+                    if ret_CommandSplitResult is None:
+                        # 没有发现任何解析的内容，且errorCode非0，表示语句已经发生错误，没有必要继续
+                        if ret_errorCode != 0:
+                            # 语句已经出错，且不是一个空语句
+                            ret_CommandSplitResults.append(
+                                {'name': 'API_UNKNOWN',
+                                 'statement': currentStatement,
+                                 'reason': ret_errorMsg}
+                            )
+                            # 解析前的语句
+                            ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+                            # 所有的提示信息
+                            ret_CommandHints.append(currentHints)
+                            # 清空语句的变量
+                            currentStatement = None
+                            currentStatementWithComments = None
+                            continue
+                        else:
+                            # 没有任何有效的语句，但是解析也没有报告错误，可能是空行或者完全的注释
+                            # 对于注释中的Hint信息需要保留下来
+                            pattern = r"^(\s+)?//(\s+)?\[(\s+)?Hint(\s+)?\](.*)"
+                            matchObj = re.match(pattern, statementLine, re.IGNORECASE)
+                            if matchObj:
+                                currentHints.append(matchObj.group(5).strip())
+                            # 解析后的语句
+                            ret_CommandSplitResults.append(None)
+                            # 解析前的语句
+                            ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+                            # 对于非有效语句，Hint不在当前语句中体现，而是要等到下次有意义的语句进行处理
+                            ret_CommandHints.append([])
+                            # 清空语句的变量
+                            currentStatement = None
+                            currentStatementWithComments = None
+                            continue
+                    else:   # 语句已经结束了
+                        if ret_CommandSplitResult["name"] == "USE":
+                            self.testOptions.set("NAMESPACE", ret_CommandSplitResult["nameSpace"])
+                        # 语句已经结束, 记录语句解析的结果
+                        # 解析后的语句
+                        ret_CommandSplitResults.append(ret_CommandSplitResult)
+                        # 解析前的语句
+                        ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+                        # 所有的提示信息
+                        ret_CommandHints.append(currentHints)
+                        # 清空语句的变量
+                        currentStatement = None
+                        currentStatementWithComments = None
+                        continue
                 else:
                     raise TestCliException("不支持的运行空间【" + str(nameSpace) + "】")
         except Exception:
@@ -993,6 +1060,9 @@ class CmdExecute(object):
                 print('traceback.print_exc():\n%s' % traceback.print_exc())
                 print('traceback.format_exc():\n%s' % traceback.format_exc())
             raise TestCliException("TestCli-000 Internal error. Parse failed.")
+
+        # 解析过程中设置的NAMESPACE，解析后要还原，好保证执行的正确
+        self.testOptions.set("NAMESPACE", defaultNameSpace)
 
         # 开始执行语句
         for pos in range(0, len(ret_CommandSplitResults)):
@@ -1004,6 +1074,7 @@ class CmdExecute(object):
                 formattedCommand = SQLFormatWithPrefix(ret_CommandSplitResultsWithComments[pos])
             if self.testOptions.get("NAMESPACE") == "API":
                 formattedCommand = APIFormatWithPrefix(ret_CommandSplitResultsWithComments[pos])
+                # print("formattedCommand=" + str(ret_CommandSplitResultsWithComments))
 
             # 返回SQL的解析信息
             if commandScriptFile != "Console":
@@ -1203,7 +1274,7 @@ class CmdExecute(object):
                 yield {"type": "error",
                        "message": "TESTCLI_0000:  " + parseObject["reason"]}
             else:
-                raise TestCliException("FDDFSFDFSDSFD " + str(parseObject["name"]))
+                raise TestCliException("FDDFSFDFSDSFD " + str(parseObject))
 
             # 如果需要，打印语句执行时间
             end = time.time()

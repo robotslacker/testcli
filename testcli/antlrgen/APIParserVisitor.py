@@ -39,101 +39,6 @@ class APIParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by APIParser#connect.
-    def visitConnect(self, ctx:APIParser.ConnectContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#connectlocal.
-    def visitConnectlocal(self, ctx:APIParser.ConnectlocalContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#connectjdbc.
-    def visitConnectjdbc(self, ctx:APIParser.ConnectjdbcContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#connectUserInfo.
-    def visitConnectUserInfo(self, ctx:APIParser.ConnectUserInfoContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#connectDriver.
-    def visitConnectDriver(self, ctx:APIParser.ConnectDriverContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#connectDriverSchema.
-    def visitConnectDriverSchema(self, ctx:APIParser.ConnectDriverSchemaContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#connectDriverType.
-    def visitConnectDriverType(self, ctx:APIParser.ConnectDriverTypeContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#connectHost.
-    def visitConnectHost(self, ctx:APIParser.ConnectHostContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#connectUser.
-    def visitConnectUser(self, ctx:APIParser.ConnectUserContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#connectPassword.
-    def visitConnectPassword(self, ctx:APIParser.ConnectPasswordContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#connectPort.
-    def visitConnectPort(self, ctx:APIParser.ConnectPortContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#connectService.
-    def visitConnectService(self, ctx:APIParser.ConnectServiceContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#connectlocalService.
-    def visitConnectlocalService(self, ctx:APIParser.ConnectlocalServiceContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#connectParameterName.
-    def visitConnectParameterName(self, ctx:APIParser.ConnectParameterNameContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#connectParameterValue.
-    def visitConnectParameterValue(self, ctx:APIParser.ConnectParameterValueContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#connectParameter.
-    def visitConnectParameter(self, ctx:APIParser.ConnectParameterContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#connectParameters.
-    def visitConnectParameters(self, ctx:APIParser.ConnectParametersContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#disconnect.
-    def visitDisconnect(self, ctx:APIParser.DisconnectContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#session.
-    def visitSession(self, ctx:APIParser.SessionContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by APIParser#singleExpression.
     def visitSingleExpression(self, ctx:APIParser.SingleExpressionContext):
         return self.visitChildren(ctx)
@@ -166,11 +71,6 @@ class APIParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by APIParser#echo.
     def visitEcho(self, ctx:APIParser.EchoContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#loadDriver.
-    def visitLoadDriver(self, ctx:APIParser.LoadDriverContext):
         return self.visitChildren(ctx)
 
 
@@ -266,76 +166,6 @@ class APIParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by APIParser#httpMessageBodyOther.
     def visitHttpMessageBodyOther(self, ctx:APIParser.HttpMessageBodyOtherContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#loopUntil.
-    def visitLoopUntil(self, ctx:APIParser.LoopUntilContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#loop.
-    def visitLoop(self, ctx:APIParser.LoopContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#loopPair.
-    def visitLoopPair(self, ctx:APIParser.LoopPairContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#assert.
-    def visitAssert(self, ctx:APIParser.AssertContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#sql.
-    def visitSql(self, ctx:APIParser.SqlContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#sqlCreate.
-    def visitSqlCreate(self, ctx:APIParser.SqlCreateContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#sqlReplace.
-    def visitSqlReplace(self, ctx:APIParser.SqlReplaceContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#sqlInsert.
-    def visitSqlInsert(self, ctx:APIParser.SqlInsertContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#sqlUpdate.
-    def visitSqlUpdate(self, ctx:APIParser.SqlUpdateContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#sqlDelete.
-    def visitSqlDelete(self, ctx:APIParser.SqlDeleteContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#sqlSelect.
-    def visitSqlSelect(self, ctx:APIParser.SqlSelectContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#sqlDrop.
-    def visitSqlDrop(self, ctx:APIParser.SqlDropContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#sqlDeclare.
-    def visitSqlDeclare(self, ctx:APIParser.SqlDeclareContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#sqlCreateProcedure.
-    def visitSqlCreateProcedure(self, ctx:APIParser.SqlCreateProcedureContext):
         return self.visitChildren(ctx)
 
 

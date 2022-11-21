@@ -576,6 +576,21 @@ class TestSynatx(unittest.TestCase):
                     print(line)
         self.assertTrue(compareResult)
 
+    def test_APIAnalyze(self):
+        scriptFile = "testapisynatx.api"
+
+        scriptBaseFile = os.path.splitext(scriptFile)[0]
+        fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
+
+        scriptFileHandler = open(fullScriptFile, "r")
+        script = "".join(scriptFileHandler.readlines())
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = APIAnalyze(script)
+        print("isFinished= " + str(isFinished))
+        print("ret_CommandSplitResult= " + str(ret_CommandSplitResult))
+        print("ret_errorCode= " + str(ret_errorCode))
+        print("ret_errorMsg= " + str(ret_errorMsg))
+
 
 if __name__ == '__main__':
     unittest.main()

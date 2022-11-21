@@ -16,15 +16,22 @@ class APIClientErrorListener(ErrorListener):
         self.errorMsg = ""
 
     def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
-        self.errorCode = 1
-        self.errorMsg = "line{}:{}  {} ".format(str(line), str(column), msg)
+        if str(msg).find("expecting") != -1:
+            self.isFinished = False
+            self.errorCode = 1
+            self.errorMsg = str(msg)
+        else:
+            self.errorCode = 1
+            self.errorMsg = "line{}:{}  {} ".format(str(line), str(column), msg)
         super().syntaxError(recognizer, offendingSymbol, line, column, msg, e)
 
 
 def APIFormatWithPrefix(p_szCommentSQLScript, p_szOutputPrefix=""):
-    # 如果是完全空行的内容，则跳过
+    bAPIPrefix = 'API> '
+
+    # 如果是完全空行的内容，则直接返回SQL前缀
     if len(p_szCommentSQLScript) == 0:
-        return None
+        return bAPIPrefix
 
     # 把所有的SQL换行, 第一行加入[API >]， 随后加入[   >]
     m_FormattedString = None
@@ -35,26 +42,29 @@ def APIFormatWithPrefix(p_szCommentSQLScript, p_szOutputPrefix=""):
             del m_CommentSQLLists[-1]
 
     # 拼接字符串
-    bSQLPrefix = 'API> '
     for pos in range(0, len(m_CommentSQLLists)):
         if pos == 0:
-            m_FormattedString = p_szOutputPrefix + bSQLPrefix + m_CommentSQLLists[pos]
+            m_FormattedString = p_szOutputPrefix + bAPIPrefix + m_CommentSQLLists[pos]
         else:
             m_FormattedString = \
-                m_FormattedString + '\n' + p_szOutputPrefix + bSQLPrefix + m_CommentSQLLists[pos]
+                m_FormattedString + '\n' + p_szOutputPrefix + bAPIPrefix + m_CommentSQLLists[pos]
         if len(m_CommentSQLLists[pos].strip()) != 0:
-            bSQLPrefix = '   > '
+            bAPIPrefix = '   > '
     return m_FormattedString
 
 
-def APIAnalyze(sqlCommandPlainText, defaultNameSpace="API"):
+def APIAnalyze(apiCommandPlainText: str, defaultNameSpace: str = "API"):
     """ 分析API语句，返回如下内容：
         MulitLineAPIHint                该API是否为完整API， True：完成， False：不完整，需要用户继续输入
         APISplitResults                 包含所有API信息的一个数组，每一个API作为一个元素
         APISplitResultsWithComments     包含注释信息的SQL语句信息，数组长度和APISplitResults相同
         APIHints                        SQL的其他各种标志信息，根据APISplitResultsWithComments中的注释内容解析获得
     """
-    stream = InputStream(sqlCommandPlainText)
+    # 去除语句的可能前导换行或者空格
+    apiCommandPlainText = apiCommandPlainText.strip()
+
+    # 调用Antlr进行语法解析，并自定义错误监听
+    stream = InputStream(apiCommandPlainText)
     lexer = APILexer(stream)
     lexer.removeErrorListeners()
     lexer_listener = APIClientErrorListener()
@@ -69,6 +79,10 @@ def APIAnalyze(sqlCommandPlainText, defaultNameSpace="API"):
 
     visitor = APIVisitor(token, defaultNameSpace)
     (isFinished, parsedObjects, originScripts, hints, errorCode, errorMsg) = visitor.visit(tree)
+
+    # API语句不可能只有一行，所有如果只有第一行，什么都无法判断，直接认定为not Finished (因为解析器可能因为找不到###头，报告其他错误）
+    if apiCommandPlainText.startswith("###") and len(apiCommandPlainText.split('\n')) <= 1:
+        isFinished = False
 
     # 词法和语法解析，任何一个失败，都认为失败
     if not lexer_listener.isFinished:

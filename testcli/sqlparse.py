@@ -34,7 +34,7 @@ class SQLClientErrorListener(ErrorListener):
 def SQLFormatWithPrefix(p_szCommentSQLScript, p_szOutputPrefix=""):
     bSQLPrefix = 'SQL> '
 
-    # 如果是完全空行的内容，则跳过
+    # 如果是完全空行的内容，则直接返回SQL前缀
     if len(p_szCommentSQLScript) == 0:
         return bSQLPrefix
 
@@ -75,6 +75,10 @@ def SQLAnalyze(sqlCommandPlainText, defaultNameSpace="SQL"):
         SQLSplitResultsWithComments     包含注释信息的SQL语句信息，数组长度和SQLSplitResults相同
         SQLHints                        SQL的其他各种标志信息，根据SQLSplitResultsWithComments中的注释内容解析获得
     """
+    # 去除语句的可能前导换行或者空格
+    sqlCommandPlainText = sqlCommandPlainText.strip()
+
+    # 调用Antlr进行语法解析，并自定义错误监听
     stream = InputStream(sqlCommandPlainText)
     lexer = SQLLexer(stream)
     lexer.removeErrorListeners()

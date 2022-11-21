@@ -1,30 +1,18 @@
 connect /mem
 session show;
 
-create table aaa (id int);
-insert into aaa values(10);
-select * from aaa;
 
-session save session1;
 
-connect /mem
-create table aaa (id int);
-insert into aaa values(20);
-select * from aaa;
+select 1 from dual;
 
-session save session2;
+use api
 
-session show;
 
-session restore session1;
-select * from aaa;
-session restore session2;
-select * from aaa;
 
-session release session1;
-session release session2;
 
-session show;
-select * from aaa;
+### aa
+POST https://{{host}}:{{port}}/ares/cloud/service/createCluster HTTP/1.1
 
+
+###
 

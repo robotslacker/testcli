@@ -1,0 +1,21 @@
+### aaa
+POST https://{{host}}:{{port}}/ares/cloud/service/createCluster HTTP/1.1
+
+{
+  "customerId": "shi.zhao",
+  "clusterName": "HelloWorld",
+  "instanceImageTemplateName": "Zettabase5.0-Cloud-RC10",
+  "clusterInstanceType": "T2_2_XLARGE",
+  "instanceCount": 3,
+  "localStorageVolumeSize": 60,
+  "localStorageVolumeType": "gp2",
+  "cacheStorage1VolumeCount": 1,
+  "cacheStorage1VolumeSize": 100,
+  "cacheStorage1VolumeType": "gp2",
+  "cacheStorage2VolumeCount": 1,
+  "cacheStorage2VolumeSize": 100,
+  "cacheStorage2VolumeType": "gp2"
+}
+
+> aa.txt
+###
