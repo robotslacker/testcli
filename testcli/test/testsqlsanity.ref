@@ -20,6 +20,7 @@ Table "XXX" not found; SQL statement:
 drop table xxx [42102-200]
 SQL> delete from aaa where id =6;
 1 row affected.
+SQL>
 SQL> select 1 from dual;
 +--------+---+
 |   ##   | 1 |
@@ -27,3 +28,6 @@ SQL> select 1 from dual;
 |      1 | 1 |
 +--------+---+
 1 row selected.
+SQL>
+SQL>
+SQL> exit 3

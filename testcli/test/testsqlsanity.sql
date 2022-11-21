@@ -10,3 +10,4 @@ delete from aaa where id =6;
 select 1 from dual;
 
 
+exit 3

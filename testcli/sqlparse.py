@@ -32,9 +32,11 @@ class SQLClientErrorListener(ErrorListener):
 
 
 def SQLFormatWithPrefix(p_szCommentSQLScript, p_szOutputPrefix=""):
+    bSQLPrefix = 'SQL> '
+
     # 如果是完全空行的内容，则跳过
     if len(p_szCommentSQLScript) == 0:
-        return None
+        return bSQLPrefix
 
     # 把所有的SQL换行, 第一行加入[SQL >]， 随后加入[   >]
     formattedString = None
@@ -55,7 +57,6 @@ def SQLFormatWithPrefix(p_szCommentSQLScript, p_szOutputPrefix=""):
             break
 
     # 拼接字符串
-    bSQLPrefix = 'SQL> '
     for pos in range(0, len(commentSQLLists)):
         if pos == 0:
             formattedString = p_szOutputPrefix + bSQLPrefix + commentSQLLists[pos]

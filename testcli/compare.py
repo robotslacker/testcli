@@ -234,7 +234,7 @@ class POSIXCompare:
                            CompareIgnoreTailOrHeadBlank=False,
                            CompareWorkEncoding='UTF-8',
                            CompareRefEncoding='UTF-8',
-                           compareAlgorithm='LCS'):
+                           compareAlgorithm='MYERS'):
         if not os.path.isfile(file1):
             raise DiffException('ERROR: %s is not a file' % file1)
         if not os.path.isfile(file2):

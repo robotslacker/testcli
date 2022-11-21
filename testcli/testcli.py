@@ -40,8 +40,6 @@ from .testclimeta import TestCliMeta
 from .sqlclijobmanager import JOBManager
 from .sqlclitransactionmanager import TransactionManager
 from .datawrapper import DataWrapper
-from .commandanalyze import register_special_command
-from .commandanalyze import CommandNotFound
 from .testoption import TestOptions
 
 from .__init__ import __version__
@@ -53,6 +51,10 @@ OFLAG_LOGGER = 2
 OFLAG_CONSOLE = 4
 OFLAG_SPOOL = 8
 OFLAG_ECHO = 16
+
+# 定义执行内嵌脚本时候的全局环境变量
+globalEmbeddScriptScope = {}
+localEmbeddScriptScope = {}
 
 
 class TestCli(object):
@@ -217,9 +219,6 @@ class TestCli(object):
         self.TestHandler.SQLOptions = self.testOptions
         self.DataHandler.SQLOptions = self.testOptions
 
-        # 加载一些特殊的命令
-        self.register_special_commands()
-
         # 设置WHENEVER_SQLERROR
         if breakwitherror:
             self.testOptions.set("WHENEVER_SQLERROR", "EXIT")
@@ -319,11 +318,11 @@ class TestCli(object):
         # 处理传递的映射文件, 首先加载参数的部分，如果环境变量里头有设置，则环境变量部分会叠加参数部分
         self.testOptions.set("TESTREWRITE", "OFF")
         if self.sqlmap is not None:  # 如果传递的参数，有Mapping，以参数为准，先加载参数中的Mapping文件
-            self.SQLMappingHandler.Load_SQL_Mappings(self.commandScript, self.sqlmap)
+            self.CMDMappingHandler.Load_Command_Mappings(self.commandScript, self.sqlmap)
             self.testOptions.set("TESTREWRITE", "ON")
         if "SQLCLI_SQLMAPPING" in os.environ:  # 如果没有参数，则以环境变量中的信息为准
             if len(os.environ["SQLCLI_SQLMAPPING"].strip()) > 0:
-                self.SQLMappingHandler.Load_SQL_Mappings(self.commandScript, os.environ["SQLCLI_SQLMAPPING"])
+                self.CMDMappingHandler.Load_Command_Mappings(self.commandScript, os.environ["SQLCLI_SQLMAPPING"])
                 self.testOptions.set("TESTREWRITE", "ON")
 
         # 给Page做准备，PAGE显示的默认换页方式.
@@ -357,118 +356,6 @@ class TestCli(object):
         if self.MetaHandler is not None:
             self.MetaHandler.ShutdownServer()
             self.MetaHandler = None
-
-    # 加载CLI的各种特殊命令集
-    def register_special_commands(self):
-        # 加载数据库驱动文件
-        register_special_command(
-            handler=self.load_driver,
-            command="loaddriver",
-            description="加载数据库驱动文件",
-            hidden=False
-        )
-
-        # 加载SQL映射文件
-        register_special_command(
-            handler=self.load_sqlmap,
-            command="loadsqlmap",
-            description="加载SQL映射文件",
-            hidden=False
-        )
-
-        # 连接数据库
-        register_special_command(
-            handler=self.connect_db,
-            command="connect",
-            description="连接到指定的数据库",
-            hidden=False
-        )
-
-        # 连接数据库
-        register_special_command(
-            handler=self.session_manage,
-            command="session",
-            description="数据库连接会话管理",
-            hidden=False
-        )
-
-        # 断开连接数据库
-        register_special_command(
-            handler=self.disconnect_db,
-            command="disconnect",
-            description="断开数据库连接",
-            hidden=False
-        )
-
-        # 从文件中执行脚本
-        register_special_command(
-            handler=self.execute_from_file,
-            command="start",
-            description="执行指定的测试脚本",
-            hidden=False
-        )
-
-        # sleep一段时间
-        register_special_command(
-            handler=self.sleep,
-            command="sleep",
-            description="程序休眠(单位是秒)",
-            hidden=False
-        )
-
-        # 设置各种参数选项
-        register_special_command(
-            handler=self.set_options,
-            command="set",
-            description="设置运行时选项",
-            hidden=False
-        )
-
-        # 将SQL信息Spool到指定的文件中
-        register_special_command(
-            handler=self.spool,
-            command="spool",
-            description="将输出打印到指定文件",
-            hidden=False
-        )
-
-        # ECHO 回显信息到指定的文件中
-        register_special_command(
-            handler=self.echo_input,
-            command="echo",
-            description="回显输入到指定的文件",
-            hidden=False
-        )
-
-        # HOST 执行主机的各种命令
-        register_special_command(
-            handler=self.host,
-            command="host",
-            description="执行操作系统命令",
-            hidden=False
-        )
-
-        # 执行特殊的命令
-        register_special_command(
-            handler=self.execute_internal_command,
-            command="__internal__",
-            description="执行内部操作命令：\n"
-                        "    __internal__ hdfs          HDFS文件操作\n"
-                        "    __internal__ kafka         kafka队列操作\n"
-                        "    __internal__ data          随机测试数据管理\n"
-                        "    __internal__ test          测试管理\n"
-                        "    __internal__ job           后台并发测试任务管理\n"
-                        "    __internal__ transaction   后台并发测试事务管理",
-            hidden=False
-        )
-
-        # 退出当前应用程序
-        register_special_command(
-            handler=self.exit,
-            command="exit",
-            description="正常退出当前应用程序",
-            hidden=False
-        )
 
     # 退出当前应用程序
     @staticmethod
@@ -875,14 +762,12 @@ class TestCli(object):
     # 执行Python脚本
     @staticmethod
     def execute_embeddScript(cls, block: str):
-        globalScope = {}
-        sessionContext = {
-            "dbConn": cls.db_conn.jconn
-        }
+        # 定义全局的环境信息，保证在多次执行嵌入式脚本的时候，环境信息能够被保留
+        global globalEmbeddScriptScope
+        global localEmbeddScriptScope
 
-        localScope = {"SessionContext": sessionContext}
-        exec(block, globalScope, localScope)
-        yield {
+        sessionContext = {
+            "dbConn": cls.db_conn.jconn,
             "type": "result",
             "title": None,
             "rows": None,
@@ -890,7 +775,17 @@ class TestCli(object):
             "columnTypes": None,
             "status": None
         }
+        localEmbeddScriptScope["SessionContext"] = sessionContext
+        exec(block, globalEmbeddScriptScope, localEmbeddScriptScope)
 
+        yield {
+            "type": sessionContext["type"],
+            "title": sessionContext["title"],
+            "rows": sessionContext["rows"],
+            "headers": sessionContext["headers"],
+            "columnTypes": sessionContext["columnTypes"],
+            "status": sessionContext["status"],
+        }
 
     # 数据库会话管理
     @staticmethod
@@ -1353,7 +1248,8 @@ class TestCli(object):
             }, ]
         else:
             # 不认识的配置选项按照SQL命令处理
-            raise CommandNotFound
+            raise TestCliException("SQLCLI-00000: "
+                                   "Unknown option [" + str(optionValue) + "] .")
 
     # 切换程序运行空间
     @staticmethod
