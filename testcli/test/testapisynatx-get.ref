@@ -1,0 +1,20 @@
+{
+    "contents": [
+        "\n"
+    ],
+    "headers": {
+        "Accept": " application/json",
+        "Content-Type": " application/json",
+        "X-Language": " zh_CN"
+    },
+    "httpFields": {
+        "dryRun": "False",
+        "requestId": "1"
+    },
+    "httpMethod": "GET",
+    "httpRequestTarget": "https://{{host}}:{{port}}/ares/cloud/service/getRequestStatus",
+    "httpVersion": "HTTP/1.1",
+    "name": "HTTP",
+    "operate": [],
+    "title": "aaa"
+}

@@ -1,0 +1,50 @@
+{
+    "headers": {
+        "Content-Type": " multipart/form-data; boundary=boundary"
+    },
+    "httpFields": {},
+    "httpMethod": "POST",
+    "httpRequestTarget": "http://example.com/api/upload",
+    "httpVersion": "HTTP/1.1",
+    "multipart": [
+        {
+            "contents": [
+                "\n"
+            ],
+            "headers": {
+                "Content-Disposition": " form-data; name=\"first\"; filename=\"input.txt\""
+            },
+            "operate": [
+                {
+                    "content": " ./input.txt\n",
+                    "operator": "<"
+                }
+            ]
+        },
+        {
+            "contents": [
+                "Text\n\n"
+            ],
+            "headers": {
+                "Content-Disposition": " form-data; name=\"second\"; filename=\"input-second.txt\""
+            },
+            "operate": []
+        },
+        {
+            "contents": [
+                "\n"
+            ],
+            "headers": {
+                "Content-Disposition": " form-data; name=\"third\";"
+            },
+            "operate": [
+                {
+                    "content": " ./input.txt\n",
+                    "operator": "<"
+                }
+            ]
+        }
+    ],
+    "name": "HTTP",
+    "title": "aa"
+}
