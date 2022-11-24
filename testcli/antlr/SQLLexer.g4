@@ -26,6 +26,7 @@ SPACE             : [ \t]+ ->channel(HIDDEN);
 // 关键字
 CONNECT: 'CONNECT' -> pushMode(ConnectMode);
 SESSION: 'SESSION' -> pushMode(SessionMode);
+ASSERT:  'ASSERT' -> pushMode(AssertMode);
 
 EXIT: 'EXIT';
 QUIT: 'QUIT';
@@ -44,7 +45,6 @@ SET: 'SET';
 LOOP: 'LOOP';
 UNTIL: 'UNTIL';
 INTERVAL: 'INTERVAL';
-ASSERT: 'ASSERT';
 SLEEP: 'SLEEP';
 LOADDRIVER: 'LOADDRIVER';
 
@@ -200,6 +200,15 @@ mode EchoMode;
 EchoBlock: 
       .*? 'ECHO' (' ' | '\t')+ 'OFF' -> popMode
       ;
+
+mode AssertMode;
+ASSERT_SPACE
+            : [ \t]+ -> channel (HIDDEN)
+            ;
+ASSERT_OPEN: '{%';
+ASSERT_CLOSE: '%}';
+ASSERT_EXPRESSION:
+        ASSERT_OPEN .*? ASSERT_CLOSE -> popMode;
 
 /**
  * 注释模式

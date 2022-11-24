@@ -31,7 +31,7 @@ from .sqlclijdbc import SQLCliJDBCTimeOutException
 from .sqlclijdbc import SQLCliJDBCException
 
 from .cmdexecute import CmdExecute
-from .cmdmapping import CMDMapping
+from .cmdmapping import CmdMapping
 from .testwrapper import TestWrapper
 from .hdfswrapper import HDFSWrapper
 from .sshwrapper import SshWrapper
@@ -98,15 +98,16 @@ class TestCli(object):
             namespace=None,                         # 程序的默认命名空间
     ):
         self.db_saved_conn = {}                         # 数据库Session备份
-        self.CMDMappingHandler = CMDMapping()           # 函数句柄，处理SQLMapping信息
+        self.cmdMappingHandler = CmdMapping()           # 函数句柄，处理SQLMapping信息
         self.cmdExecuteHandler = CmdExecute()           # 函数句柄，具体来执行语句
+        self.httpHandler = urllib3.PoolManager()        # Http请求线程池，用于处理API请求
         self.testOptions = TestOptions()                # 程序运行中各种参数
         self.TestHandler = TestWrapper()                # 测试管理
         self.HdfsHandler = HDFSWrapper()                # HDFS文件操作
         self.JobHandler = JOBManager()                  # 并发任务管理器
         self.TransactionHandler = TransactionManager()  # 事务管理器
         self.DataHandler = DataWrapper()                # 随机临时数处理
-        self.MetaHandler = TestCliMeta()                 # SQLCli元数据
+        self.MetaHandler = TestCliMeta()                # SQLCli元数据
         self.sshHandler = SshWrapper()                  # 处理SSH连接
         self.SpoolFileHandler = []                      # Spool文件句柄, 是一个数组，可能发生嵌套
         self.EchoFileHandler = None                     # 当前回显文件句柄
@@ -214,7 +215,7 @@ class TestCli(object):
         self.cmdExecuteHandler.script = script
         self.cmdExecuteHandler.testOptions = self.testOptions
         self.cmdExecuteHandler.workerName = self.WorkerName
-        self.cmdExecuteHandler.CMDMappingHandler = self.CMDMappingHandler
+        self.cmdExecuteHandler.cmdMappingHandler = self.cmdMappingHandler
 
         self.TestHandler.SQLOptions = self.testOptions
         self.DataHandler.SQLOptions = self.testOptions
@@ -318,11 +319,11 @@ class TestCli(object):
         # 处理传递的映射文件, 首先加载参数的部分，如果环境变量里头有设置，则环境变量部分会叠加参数部分
         self.testOptions.set("TESTREWRITE", "OFF")
         if self.sqlmap is not None:  # 如果传递的参数，有Mapping，以参数为准，先加载参数中的Mapping文件
-            self.CMDMappingHandler.Load_Command_Mappings(self.commandScript, self.sqlmap)
+            self.cmdMappingHandler.Load_Command_Mappings(self.commandScript, self.sqlmap)
             self.testOptions.set("TESTREWRITE", "ON")
         if "SQLCLI_SQLMAPPING" in os.environ:  # 如果没有参数，则以环境变量中的信息为准
             if len(os.environ["SQLCLI_SQLMAPPING"].strip()) > 0:
-                self.CMDMappingHandler.Load_Command_Mappings(self.commandScript, os.environ["SQLCLI_SQLMAPPING"])
+                self.cmdMappingHandler.Load_Command_Mappings(self.commandScript, os.environ["SQLCLI_SQLMAPPING"])
                 self.testOptions.set("TESTREWRITE", "ON")
 
         # 给Page做准备，PAGE显示的默认换页方式.
@@ -767,7 +768,7 @@ class TestCli(object):
         global localEmbeddScriptScope
 
         sessionContext = {
-            "dbConn": cls.db_conn.jconn,
+            "dbConn": cls.db_conn.jconn if cls.db_conn is not None else None,
             "type": "result",
             "title": None,
             "rows": None,
@@ -786,6 +787,33 @@ class TestCli(object):
             "columnTypes": sessionContext["columnTypes"],
             "status": sessionContext["status"],
         }
+
+    @staticmethod
+    def assert_expression(cls, expression: str):
+        # 定义全局的环境信息，保证在多次执行嵌入式脚本的时候，环境信息能够被保留
+        global globalEmbeddScriptScope
+        global localEmbeddScriptScope
+
+        sessionContext = {
+            "dbConn": cls.db_conn.jconn if cls.db_conn is not None else None,
+            "type": "result",
+            "title": None,
+            "rows": None,
+            "headers": None,
+            "columnTypes": None,
+            "status": None
+        }
+        localEmbeddScriptScope["SessionContext"] = sessionContext
+        ret = eval(expression, globalEmbeddScriptScope, localEmbeddScriptScope)
+        if type(ret) == bool:
+            yield {
+                "type": "result",
+                "title": "",
+                "rows": "",
+                "headers": "",
+                "columnTypes": "",
+                "status": "Assert " + ("successful." if ret else "fail.")
+            }
 
     # 数据库会话管理
     @staticmethod

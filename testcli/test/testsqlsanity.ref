@@ -29,5 +29,11 @@ SQL> select 1 from dual;
 +--------+---+
 1 row selected.
 SQL>
+SQL> -- 正确的Assert语句
+SQL> Assert {% 3==3 %};
+Assert successful.
+SQL> -- 错误的Assert语句
+SQL> Assert {% 1==2 %};
+Assert fail.
 SQL>
 SQL> exit 3

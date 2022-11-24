@@ -199,7 +199,7 @@ internal
 
 // 16：SET 语句
 set 
-        : SET (singleExpression+)? (SEMICOLON)? CRLF?
+        : SET ((AT)?singleExpression+)? (SEMICOLON)? CRLF?
         ;
 
 // 17：内嵌脚本
@@ -226,7 +226,7 @@ loopPair
 
 // 21：ASSERT判断
 assert
-        : ASSERT expression (COMMA expression)* CRLF?
+        : ASSERT ASSERT_EXPRESSION (SEMICOLON)? CRLF?
         ;
 
 // 

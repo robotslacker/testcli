@@ -7,6 +7,7 @@ options {
 
 prog: command EOF;
 
+// 以下命令中除http外都是公用命令，即非APIParser特色命令
 command:
       exit
       | quit
@@ -17,9 +18,10 @@ command:
       | spool
       | set
       | internal
+      | loadmap
       | script
-      | http
       | echo
+      | http
       | EOF
       ;
 
@@ -57,16 +59,7 @@ singleExpression
         ;
 
 expression
-        : (String
-        | DOT
-        | SLASH
-        | BRACKET_OPEN
-        | BRACKET_CLOSE
-        | ESCAPE
-        | SQUARE_OPEN
-        | SQUARE_CLOSE
-        | DOUBLE_QUOTE
-        | SINGLE_QUOTE )+
+        : (singleExpression )+
         ;
 
 // 执行脚本， START script1,script2,script3 [LOOP <INT>]
@@ -135,7 +128,7 @@ httpMessage
  * httpRequestTarget 包含 HttpVersion 
  */
 httpRequestLine
-        : httpMethod httpRequestTarget CRLF
+        : httpMethod httpRequestTarget
         ;
 
 httpMethod
@@ -148,21 +141,21 @@ httpRequestTarget
 
 /**
  * HTTP请求域
- */ 
+ */
 httpHeaderFields
         : httpHeaderField*
         ;
 
 httpHeaderField
-        : httpFieldName FIELD_COLON httpFieldValue 
+        : httpHeaderFieldName FIELD_COLON httpHeaderFieldValue
         ;
 
-httpFieldName
-        : HttpFieldName
+httpHeaderFieldName
+        : HttpHeaderFieldName
         ;
 
-httpFieldValue
-        : HttpFieldValue HttpFieldValueEnd 
+httpHeaderFieldValue
+        : HttpHeaderFieldValue HttpHeaderFieldValueEnd
         ;
 
 /**

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import datetime
 import time
+from json import JSONDecodeError
+
 import click
 import json
 import os
@@ -384,8 +386,56 @@ class CmdExecute(object):
             status = None
         return title, result, headers, columnTypes, status, fetchStatus, rowcount, cursor.warnings
 
-    def executeAPIStatement(self, api: str, apiHints, startTime):
-        yield {"type": "error", "message": "还没有实现呢"}
+    '''
+        执行指定的API请求
+
+        输入：
+            apiRequest             JSON对象，请求的内容
+            apiHints               提示信息            
+    '''
+    def executeAPIStatement(self, apiRequest, apiHints, startTime):
+        httpHandler = self.cliHandler.httpHandler
+
+        httpMethod = apiRequest["httpMethod"]
+        httpRequestTarget = apiRequest["httpRequestTarget"]
+
+        headers = {}
+        fields = {}
+        if "headers" in apiRequest:
+            headers = apiRequest["headers"]
+        if "httpFields" in apiRequest:
+            fields = apiRequest["httpFields"]
+
+        if "contents" in apiRequest:
+            body = "".join(apiRequest["contents"])
+        else:
+            body = ""
+        ret = httpHandler.request(
+            method=httpMethod,
+            url=httpRequestTarget,
+            headers=headers,
+            fields=fields,
+            body=body
+        )
+        data = ret.data.decode('utf-8')
+        try:
+            data = json.loads(data)
+            data = json.dumps(obj=data,
+                              sort_keys=True,
+                              indent=4,
+                              separators=(',', ': '),
+                              ensure_ascii=False)
+        except JSONDecodeError as je:
+            pass
+        # 返回的对象不是一个JSON
+        yield {
+            "type":         "result",
+            "title":        None,
+            "rows":         None,
+            "headers":      None,
+            "columnTypes":  None,
+            "status":       data
+        }
 
     def executeSQLStatement(self, sql: str, sqlHints, startTime):
         """
@@ -1270,6 +1320,19 @@ class CmdExecute(object):
                         block=parseObject["block"]
                 ):
                     yield commandResult
+            elif parseObject["name"] in ["ASSERT"]:
+                for commandResult in self.cliHandler.assert_expression(
+                        cls=self.cliHandler,
+                        expression=parseObject["expression"]
+                ):
+                    yield commandResult
+            elif parseObject["name"] in ["HTTP"]:
+                # 执行SQL语句
+                for result in self.executeAPIStatement(
+                        apiRequest=parseObject,
+                        apiHints=[],
+                        startTime=0):
+                    yield result
             elif parseObject["name"] in ["UNKNOWN"]:
                 yield {"type": "error",
                        "message": "TESTCLI_0000:  " + parseObject["reason"]}

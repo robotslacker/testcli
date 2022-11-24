@@ -7,6 +7,7 @@ options {
 channels { HINT_CHANNEL, COMMENT_CHANNEL }
 
 // 分割符号
+TAB               : '\t';
 CRLF              : '\n';
 COMMA             : ',';
 SEMICOLON         : ';';
@@ -166,17 +167,18 @@ HttpComment
  */
 mode HttpUriMode;
 URI_CRLF:
-    CRLF->type(CRLF),mode(HttpFieldMode);
+    CRLF->type(CRLF),mode(HttpHeaderFieldMode);
 HttpRequestTarget:
-    'HTTP/' DIGIT+ '.' DIGIT+;
+    .*? 'HTTP/' DIGIT+ '.' DIGIT+ '\n' ->mode(HttpHeaderFieldMode);
 TEXT :
     . -> more;
 
-mode HttpFieldMode;
+mode HttpHeaderFieldMode;
+
 // 域名
-HttpFieldName
-      : String
-      ;
+HttpHeaderFieldName
+     : (OBS_TEXT | UNRESERVED | SUBDELIMS | PCTENCODED | DoubleQuoteString | SingleQuoteString | '?')+
+     ;
 
 // 域分割，进入域值模式
 FIELD_COLON
@@ -194,12 +196,12 @@ FIELD_CRLF
  */
 mode FieldValueMode;
 
-HttpFieldValue
+HttpHeaderFieldValue
       :  ~[\r\n]+
       ;
 
-HttpFieldValueEnd
-      : '\n' -> mode(HttpFieldMode)
+HttpHeaderFieldValueEnd
+      : '\n' -> mode(HttpHeaderFieldMode)
       ;
 
 /** 
@@ -226,7 +228,7 @@ HttpMultipartBoundaryEnd
 
 // 进入 MultipartBoundary处理
 HttpMultipartBoundary
-      : ('--' String CRLF) ->mode(HttpFieldMode)
+      : ('--' String CRLF) ->mode(HttpHeaderFieldMode)
       ;
 
 // 提示信息

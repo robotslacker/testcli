@@ -1,4 +1,4 @@
-# Generated from D:/Work/testcli/testcli/antlr\APIParser.g4 by ANTLR 4.10.1
+# Generated from D:/Work/testcli/testcli/antlr\APIParser.g4 by ANTLR 4.11.1
 from antlr4 import *
 if __name__ is not None and "." in __name__:
     from .APIParser import APIParser
@@ -124,13 +124,13 @@ class APIParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by APIParser#httpFieldName.
-    def visitHttpFieldName(self, ctx:APIParser.HttpFieldNameContext):
+    # Visit a parse tree produced by APIParser#httpHeaderFieldName.
+    def visitHttpHeaderFieldName(self, ctx:APIParser.HttpHeaderFieldNameContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by APIParser#httpFieldValue.
-    def visitHttpFieldValue(self, ctx:APIParser.HttpFieldValueContext):
+    # Visit a parse tree produced by APIParser#httpHeaderFieldValue.
+    def visitHttpHeaderFieldValue(self, ctx:APIParser.HttpHeaderFieldValueContext):
         return self.visitChildren(ctx)
 
 

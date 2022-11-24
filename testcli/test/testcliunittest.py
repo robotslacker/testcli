@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import time
 import unittest
 import os
@@ -146,11 +147,30 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
+    def test_SQLAnalyze_Assert(self):
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("Assert {% assert expresssion %}")
+        self.assertTrue(isFinished)
+        self.assertEqual({'name': 'ASSERT', 'expression': ' assert expresssion '}, ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
     def test_SQLAnalyze_Set(self):
         (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("set")
         self.assertTrue(isFinished)
-        self.assertEqual({'name': 'SET'}, ret_CommandSplitResult)
+        self.assertEqual({'name': 'SET', 'scope': 'local'}, ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+    def test_SQLAnalyze_SetVariable(self):
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("set @aa bbb")
+        self.assertTrue(isFinished)
+        self.assertEqual({'name': 'SET',
+                          'scope': 'global',
+                          'optionName': 'aa',
+                          'optionValue': 'bbb'}, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
@@ -160,7 +180,8 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'SET',
                           'optionName': 'XX',
-                          'optionValue': 'YY'}, ret_CommandSplitResult)
+                          'optionValue': 'YY',
+                          'scope': 'local'}, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
@@ -170,8 +191,8 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'SET',
                           'optionName': 'ZZ',
-                          'optionValue': 'DD',
-                          'optionValue2': 'FF'
+                          'optionValue': 'DD FF',
+                          'scope': 'local'
                           }, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
@@ -499,7 +520,7 @@ class TestSynatx(unittest.TestCase):
 
         # 记录截止时间
         end = time.time()
-        self.assertTrue((end - start) > 3)
+        self.assertTrue((end - start) > 1)
 
         # 对文件进行比对，判断返回结果是否吻合
         compareHandler = POSIXCompare()
@@ -576,20 +597,85 @@ class TestSynatx(unittest.TestCase):
                     print(line)
         self.assertTrue(compareResult)
 
-    def test_APIAnalyze(self):
-        scriptFile = "testapisynatx.api"
+    def test_APIAnalyze_MultiPart(self):
+        scriptFile = "testapisynatx-multipart.api"
 
         scriptBaseFile = os.path.splitext(scriptFile)[0]
         fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
+        fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
+        fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
         scriptFileHandler = open(fullScriptFile, "r")
         script = "".join(scriptFileHandler.readlines())
+        scriptFileHandler.close()
+
         (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
             = APIAnalyze(script)
-        print("isFinished= " + str(isFinished))
-        print("ret_CommandSplitResult= " + str(ret_CommandSplitResult))
-        print("ret_errorCode= " + str(ret_errorCode))
-        print("ret_errorMsg= " + str(ret_errorMsg))
+        self.assertTrue(isFinished)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        data = json.dumps(obj=ret_CommandSplitResult,
+                          sort_keys=True,
+                          indent=4,
+                          separators=(',', ': '),
+                          ensure_ascii=False)
+        logFileHandler = open(fullLogFile, "w")
+        logFileHandler.write(data)
+        logFileHandler.close()
+
+        # 对文件进行比对，判断返回结果是否吻合
+        compareHandler = POSIXCompare()
+        compareResult, compareReport = compareHandler.compare_text_files(
+            file1=fullLogFile,
+            file2=fullRefFile,
+            CompareIgnoreTailOrHeadBlank=True
+        )
+        if not compareResult:
+            for line in compareReport:
+                if line.startswith("-") or line.startswith("+"):
+                    print(line)
+        self.assertTrue(compareResult)
+
+    def test_APIAnalyze_Get(self):
+        scriptFile = "testapisynatx-get.api"
+
+        scriptBaseFile = os.path.splitext(scriptFile)[0]
+        fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
+        fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
+        fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
+
+        scriptFileHandler = open(fullScriptFile, "r")
+        script = "".join(scriptFileHandler.readlines())
+        scriptFileHandler.close()
+
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = APIAnalyze(script)
+        self.assertTrue(isFinished)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        data = json.dumps(obj=ret_CommandSplitResult,
+                          sort_keys=True,
+                          indent=4,
+                          separators=(',', ': '),
+                          ensure_ascii=False)
+        logFileHandler = open(fullLogFile, "w")
+        logFileHandler.write(data)
+        logFileHandler.close()
+
+        # 对文件进行比对，判断返回结果是否吻合
+        compareHandler = POSIXCompare()
+        compareResult, compareReport = compareHandler.compare_text_files(
+            file1=fullLogFile,
+            file2=fullRefFile,
+            CompareIgnoreTailOrHeadBlank=True
+        )
+        if not compareResult:
+            for line in compareReport:
+                if line.startswith("-") or line.startswith("+"):
+                    print(line)
+        self.assertTrue(compareResult)
 
 
 if __name__ == '__main__':

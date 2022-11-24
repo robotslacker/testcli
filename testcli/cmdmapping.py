@@ -6,7 +6,7 @@ from .datawrapper import random_ascii_letters_and_digits
 from .testcliexception import TestCliException
 
 
-class CMDMapping(object):
+class CmdMapping(object):
     # MappingList = { Mapping_Name : Mapping_Contents}
     # Mapping_Contents = [ filename_pattern, match_roles[] ]
     # match_roles = [ Key, Value]

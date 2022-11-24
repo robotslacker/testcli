@@ -1,4 +1,4 @@
-# Generated from D:/Work/testcli/testcli/antlr\APIParser.g4 by ANTLR 4.10.1
+# Generated from D:/Work/testcli/testcli/antlr\APIParser.g4 by ANTLR 4.11.1
 # encoding: utf-8
 from antlr4 import *
 from io import StringIO
@@ -10,94 +10,95 @@ else:
 
 def serializedATN():
     return [
-        4,1,63,247,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
+        4,1,64,247,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
         6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,
         2,14,7,14,2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,2,20,
         7,20,2,21,7,21,2,22,7,22,2,23,7,23,2,24,7,24,2,25,7,25,2,26,7,26,
         2,27,7,27,2,28,7,28,2,29,7,29,2,30,7,30,2,31,7,31,1,0,1,0,1,0,1,
-        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,81,8,1,1,2,
-        1,2,3,2,85,8,2,1,2,3,2,88,8,2,1,3,1,3,3,3,92,8,3,1,3,3,3,95,8,3,
-        1,4,1,4,1,4,3,4,100,8,4,1,5,1,5,1,5,3,5,105,8,5,1,6,1,6,1,7,4,7,
-        110,8,7,11,7,12,7,111,1,8,1,8,1,8,4,8,117,8,8,11,8,12,8,118,1,8,
-        3,8,122,8,8,1,8,3,8,125,8,8,1,8,3,8,128,8,8,1,9,1,9,1,9,4,9,133,
-        8,9,11,9,12,9,134,1,9,3,9,138,8,9,1,10,1,10,1,10,3,10,143,8,10,1,
-        11,1,11,1,11,3,11,148,8,11,1,12,1,12,1,12,3,12,153,8,12,1,13,1,13,
-        4,13,157,8,13,11,13,12,13,158,1,13,3,13,162,8,13,1,14,1,14,4,14,
-        166,8,14,11,14,12,14,167,3,14,170,8,14,1,14,3,14,173,8,14,1,14,3,
-        14,176,8,14,1,15,1,15,1,15,3,15,181,8,15,1,16,1,16,1,16,1,16,1,17,
-        1,17,1,17,3,17,190,8,17,1,18,1,18,1,18,1,18,1,19,1,19,1,20,1,20,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,82,8,1,
+        1,2,1,2,3,2,86,8,2,1,2,3,2,89,8,2,1,3,1,3,3,3,93,8,3,1,3,3,3,96,
+        8,3,1,4,1,4,1,4,3,4,101,8,4,1,5,1,5,1,5,3,5,106,8,5,1,6,1,6,1,7,
+        4,7,111,8,7,11,7,12,7,112,1,8,1,8,1,8,4,8,118,8,8,11,8,12,8,119,
+        1,8,3,8,123,8,8,1,8,3,8,126,8,8,1,8,3,8,129,8,8,1,9,1,9,1,9,4,9,
+        134,8,9,11,9,12,9,135,1,9,3,9,139,8,9,1,10,1,10,1,10,3,10,144,8,
+        10,1,11,1,11,1,11,3,11,149,8,11,1,12,1,12,1,12,3,12,154,8,12,1,13,
+        1,13,4,13,158,8,13,11,13,12,13,159,1,13,3,13,163,8,13,1,14,1,14,
+        4,14,167,8,14,11,14,12,14,168,3,14,171,8,14,1,14,3,14,174,8,14,1,
+        14,3,14,177,8,14,1,15,1,15,1,15,3,15,182,8,15,1,16,1,16,1,16,1,16,
+        1,17,1,17,1,17,3,17,191,8,17,1,18,1,18,1,18,1,19,1,19,1,20,1,20,
         1,21,5,21,201,8,21,10,21,12,21,204,9,21,1,22,1,22,1,22,1,22,1,23,
         1,23,1,24,1,24,1,24,1,25,1,25,4,25,217,8,25,11,25,12,25,218,1,26,
         4,26,222,8,26,11,26,12,26,223,1,26,1,26,1,27,1,27,1,27,1,27,1,28,
         1,28,1,29,1,29,4,29,236,8,29,11,29,12,29,237,1,30,1,30,1,31,4,31,
         243,8,31,11,31,12,31,244,1,31,0,0,32,0,2,4,6,8,10,12,14,16,18,20,
         22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,0,
-        6,1,0,19,20,2,0,6,14,43,43,2,0,16,16,24,24,1,1,1,1,1,1,50,50,2,0,
-        1,1,43,43,259,0,64,1,0,0,0,2,80,1,0,0,0,4,82,1,0,0,0,6,89,1,0,0,
-        0,8,96,1,0,0,0,10,101,1,0,0,0,12,106,1,0,0,0,14,109,1,0,0,0,16,113,
-        1,0,0,0,18,129,1,0,0,0,20,139,1,0,0,0,22,144,1,0,0,0,24,149,1,0,
-        0,0,26,154,1,0,0,0,28,163,1,0,0,0,30,177,1,0,0,0,32,182,1,0,0,0,
-        34,186,1,0,0,0,36,191,1,0,0,0,38,195,1,0,0,0,40,197,1,0,0,0,42,202,
+        6,1,0,20,21,2,0,7,15,44,44,2,0,17,17,25,25,1,1,2,2,1,1,51,51,2,0,
+        2,2,44,44,260,0,64,1,0,0,0,2,81,1,0,0,0,4,83,1,0,0,0,6,90,1,0,0,
+        0,8,97,1,0,0,0,10,102,1,0,0,0,12,107,1,0,0,0,14,110,1,0,0,0,16,114,
+        1,0,0,0,18,130,1,0,0,0,20,140,1,0,0,0,22,145,1,0,0,0,24,150,1,0,
+        0,0,26,155,1,0,0,0,28,164,1,0,0,0,30,178,1,0,0,0,32,183,1,0,0,0,
+        34,187,1,0,0,0,36,192,1,0,0,0,38,195,1,0,0,0,40,197,1,0,0,0,42,202,
         1,0,0,0,44,205,1,0,0,0,46,209,1,0,0,0,48,211,1,0,0,0,50,216,1,0,
         0,0,52,221,1,0,0,0,54,227,1,0,0,0,56,231,1,0,0,0,58,235,1,0,0,0,
         60,239,1,0,0,0,62,242,1,0,0,0,64,65,3,2,1,0,65,66,5,0,0,1,66,1,1,
-        0,0,0,67,81,3,4,2,0,68,81,3,6,3,0,69,81,3,8,4,0,70,81,3,10,5,0,71,
-        81,3,16,8,0,72,81,3,20,10,0,73,81,3,22,11,0,74,81,3,28,14,0,75,81,
-        3,26,13,0,76,81,3,30,15,0,77,81,3,32,16,0,78,81,3,24,12,0,79,81,
-        5,0,0,1,80,67,1,0,0,0,80,68,1,0,0,0,80,69,1,0,0,0,80,70,1,0,0,0,
-        80,71,1,0,0,0,80,72,1,0,0,0,80,73,1,0,0,0,80,74,1,0,0,0,80,75,1,
-        0,0,0,80,76,1,0,0,0,80,77,1,0,0,0,80,78,1,0,0,0,80,79,1,0,0,0,81,
-        3,1,0,0,0,82,84,5,16,0,0,83,85,5,41,0,0,84,83,1,0,0,0,84,85,1,0,
-        0,0,85,87,1,0,0,0,86,88,5,1,0,0,87,86,1,0,0,0,87,88,1,0,0,0,88,5,
-        1,0,0,0,89,91,5,17,0,0,90,92,5,41,0,0,91,90,1,0,0,0,91,92,1,0,0,
-        0,92,94,1,0,0,0,93,95,5,1,0,0,94,93,1,0,0,0,94,95,1,0,0,0,95,7,1,
-        0,0,0,96,97,5,18,0,0,97,99,7,0,0,0,98,100,5,1,0,0,99,98,1,0,0,0,
-        99,100,1,0,0,0,100,9,1,0,0,0,101,102,5,32,0,0,102,104,5,41,0,0,103,
-        105,5,1,0,0,104,103,1,0,0,0,104,105,1,0,0,0,105,11,1,0,0,0,106,107,
-        7,1,0,0,107,13,1,0,0,0,108,110,7,1,0,0,109,108,1,0,0,0,110,111,1,
-        0,0,0,111,109,1,0,0,0,111,112,1,0,0,0,112,15,1,0,0,0,113,116,5,22,
-        0,0,114,117,3,14,7,0,115,117,5,2,0,0,116,114,1,0,0,0,116,115,1,0,
-        0,0,117,118,1,0,0,0,118,116,1,0,0,0,118,119,1,0,0,0,119,121,1,0,
-        0,0,120,122,5,30,0,0,121,120,1,0,0,0,121,122,1,0,0,0,122,124,1,0,
-        0,0,123,125,5,41,0,0,124,123,1,0,0,0,124,125,1,0,0,0,125,127,1,0,
-        0,0,126,128,5,1,0,0,127,126,1,0,0,0,127,128,1,0,0,0,128,17,1,0,0,
-        0,129,132,5,33,0,0,130,133,3,14,7,0,131,133,5,2,0,0,132,130,1,0,
-        0,0,132,131,1,0,0,0,133,134,1,0,0,0,134,132,1,0,0,0,134,135,1,0,
-        0,0,135,137,1,0,0,0,136,138,5,1,0,0,137,136,1,0,0,0,137,138,1,0,
-        0,0,138,19,1,0,0,0,139,140,5,23,0,0,140,142,7,2,0,0,141,143,5,1,
-        0,0,142,141,1,0,0,0,142,143,1,0,0,0,143,21,1,0,0,0,144,145,5,25,
-        0,0,145,147,5,43,0,0,146,148,5,1,0,0,147,146,1,0,0,0,147,148,1,0,
-        0,0,148,23,1,0,0,0,149,150,5,34,0,0,150,152,5,45,0,0,151,153,7,3,
-        0,0,152,151,1,0,0,0,152,153,1,0,0,0,153,25,1,0,0,0,154,156,5,28,
-        0,0,155,157,3,14,7,0,156,155,1,0,0,0,157,158,1,0,0,0,158,156,1,0,
-        0,0,158,159,1,0,0,0,159,161,1,0,0,0,160,162,5,1,0,0,161,160,1,0,
-        0,0,161,162,1,0,0,0,162,27,1,0,0,0,163,169,5,29,0,0,164,166,3,12,
-        6,0,165,164,1,0,0,0,166,167,1,0,0,0,167,165,1,0,0,0,167,168,1,0,
-        0,0,168,170,1,0,0,0,169,165,1,0,0,0,169,170,1,0,0,0,170,172,1,0,
-        0,0,171,173,5,3,0,0,172,171,1,0,0,0,172,173,1,0,0,0,173,175,1,0,
-        0,0,174,176,5,1,0,0,175,174,1,0,0,0,175,176,1,0,0,0,176,29,1,0,0,
-        0,177,178,5,36,0,0,178,180,5,44,0,0,179,181,5,1,0,0,180,179,1,0,
-        0,0,180,181,1,0,0,0,181,31,1,0,0,0,182,183,5,35,0,0,183,184,3,34,
-        17,0,184,185,7,4,0,0,185,33,1,0,0,0,186,187,3,36,18,0,187,189,3,
-        42,21,0,188,190,3,50,25,0,189,188,1,0,0,0,189,190,1,0,0,0,190,35,
-        1,0,0,0,191,192,3,38,19,0,192,193,3,40,20,0,193,194,5,1,0,0,194,
-        37,1,0,0,0,195,196,5,49,0,0,196,39,1,0,0,0,197,198,5,53,0,0,198,
-        41,1,0,0,0,199,201,3,44,22,0,200,199,1,0,0,0,201,204,1,0,0,0,202,
-        200,1,0,0,0,202,203,1,0,0,0,203,43,1,0,0,0,204,202,1,0,0,0,205,206,
-        3,46,23,0,206,207,5,55,0,0,207,208,3,48,24,0,208,45,1,0,0,0,209,
-        210,5,54,0,0,210,47,1,0,0,0,211,212,5,57,0,0,212,213,5,58,0,0,213,
-        49,1,0,0,0,214,217,3,52,26,0,215,217,3,58,29,0,216,214,1,0,0,0,216,
-        215,1,0,0,0,217,218,1,0,0,0,218,216,1,0,0,0,218,219,1,0,0,0,219,
-        51,1,0,0,0,220,222,3,54,27,0,221,220,1,0,0,0,222,223,1,0,0,0,223,
-        221,1,0,0,0,223,224,1,0,0,0,224,225,1,0,0,0,225,226,5,59,0,0,226,
-        53,1,0,0,0,227,228,3,56,28,0,228,229,3,42,21,0,229,230,3,58,29,0,
-        230,55,1,0,0,0,231,232,5,60,0,0,232,57,1,0,0,0,233,236,3,60,30,0,
-        234,236,3,62,31,0,235,233,1,0,0,0,235,234,1,0,0,0,236,237,1,0,0,
-        0,237,235,1,0,0,0,237,238,1,0,0,0,238,59,1,0,0,0,239,240,5,63,0,
-        0,240,61,1,0,0,0,241,243,7,5,0,0,242,241,1,0,0,0,243,244,1,0,0,0,
-        244,242,1,0,0,0,244,245,1,0,0,0,245,63,1,0,0,0,34,80,84,87,91,94,
-        99,104,111,116,118,121,124,127,132,134,137,142,147,152,158,161,167,
-        169,172,175,180,189,202,216,218,223,235,237,244
+        0,0,0,67,82,3,4,2,0,68,82,3,6,3,0,69,82,3,8,4,0,70,82,3,10,5,0,71,
+        82,3,16,8,0,72,82,3,20,10,0,73,82,3,22,11,0,74,82,3,28,14,0,75,82,
+        3,26,13,0,76,82,3,18,9,0,77,82,3,30,15,0,78,82,3,24,12,0,79,82,3,
+        32,16,0,80,82,5,0,0,1,81,67,1,0,0,0,81,68,1,0,0,0,81,69,1,0,0,0,
+        81,70,1,0,0,0,81,71,1,0,0,0,81,72,1,0,0,0,81,73,1,0,0,0,81,74,1,
+        0,0,0,81,75,1,0,0,0,81,76,1,0,0,0,81,77,1,0,0,0,81,78,1,0,0,0,81,
+        79,1,0,0,0,81,80,1,0,0,0,82,3,1,0,0,0,83,85,5,17,0,0,84,86,5,42,
+        0,0,85,84,1,0,0,0,85,86,1,0,0,0,86,88,1,0,0,0,87,89,5,2,0,0,88,87,
+        1,0,0,0,88,89,1,0,0,0,89,5,1,0,0,0,90,92,5,18,0,0,91,93,5,42,0,0,
+        92,91,1,0,0,0,92,93,1,0,0,0,93,95,1,0,0,0,94,96,5,2,0,0,95,94,1,
+        0,0,0,95,96,1,0,0,0,96,7,1,0,0,0,97,98,5,19,0,0,98,100,7,0,0,0,99,
+        101,5,2,0,0,100,99,1,0,0,0,100,101,1,0,0,0,101,9,1,0,0,0,102,103,
+        5,33,0,0,103,105,5,42,0,0,104,106,5,2,0,0,105,104,1,0,0,0,105,106,
+        1,0,0,0,106,11,1,0,0,0,107,108,7,1,0,0,108,13,1,0,0,0,109,111,3,
+        12,6,0,110,109,1,0,0,0,111,112,1,0,0,0,112,110,1,0,0,0,112,113,1,
+        0,0,0,113,15,1,0,0,0,114,117,5,23,0,0,115,118,3,14,7,0,116,118,5,
+        3,0,0,117,115,1,0,0,0,117,116,1,0,0,0,118,119,1,0,0,0,119,117,1,
+        0,0,0,119,120,1,0,0,0,120,122,1,0,0,0,121,123,5,31,0,0,122,121,1,
+        0,0,0,122,123,1,0,0,0,123,125,1,0,0,0,124,126,5,42,0,0,125,124,1,
+        0,0,0,125,126,1,0,0,0,126,128,1,0,0,0,127,129,5,2,0,0,128,127,1,
+        0,0,0,128,129,1,0,0,0,129,17,1,0,0,0,130,133,5,34,0,0,131,134,3,
+        14,7,0,132,134,5,3,0,0,133,131,1,0,0,0,133,132,1,0,0,0,134,135,1,
+        0,0,0,135,133,1,0,0,0,135,136,1,0,0,0,136,138,1,0,0,0,137,139,5,
+        2,0,0,138,137,1,0,0,0,138,139,1,0,0,0,139,19,1,0,0,0,140,141,5,24,
+        0,0,141,143,7,2,0,0,142,144,5,2,0,0,143,142,1,0,0,0,143,144,1,0,
+        0,0,144,21,1,0,0,0,145,146,5,26,0,0,146,148,5,44,0,0,147,149,5,2,
+        0,0,148,147,1,0,0,0,148,149,1,0,0,0,149,23,1,0,0,0,150,151,5,35,
+        0,0,151,153,5,46,0,0,152,154,7,3,0,0,153,152,1,0,0,0,153,154,1,0,
+        0,0,154,25,1,0,0,0,155,157,5,29,0,0,156,158,3,14,7,0,157,156,1,0,
+        0,0,158,159,1,0,0,0,159,157,1,0,0,0,159,160,1,0,0,0,160,162,1,0,
+        0,0,161,163,5,2,0,0,162,161,1,0,0,0,162,163,1,0,0,0,163,27,1,0,0,
+        0,164,170,5,30,0,0,165,167,3,12,6,0,166,165,1,0,0,0,167,168,1,0,
+        0,0,168,166,1,0,0,0,168,169,1,0,0,0,169,171,1,0,0,0,170,166,1,0,
+        0,0,170,171,1,0,0,0,171,173,1,0,0,0,172,174,5,4,0,0,173,172,1,0,
+        0,0,173,174,1,0,0,0,174,176,1,0,0,0,175,177,5,2,0,0,176,175,1,0,
+        0,0,176,177,1,0,0,0,177,29,1,0,0,0,178,179,5,37,0,0,179,181,5,45,
+        0,0,180,182,5,2,0,0,181,180,1,0,0,0,181,182,1,0,0,0,182,31,1,0,0,
+        0,183,184,5,36,0,0,184,185,3,34,17,0,185,186,7,4,0,0,186,33,1,0,
+        0,0,187,188,3,36,18,0,188,190,3,42,21,0,189,191,3,50,25,0,190,189,
+        1,0,0,0,190,191,1,0,0,0,191,35,1,0,0,0,192,193,3,38,19,0,193,194,
+        3,40,20,0,194,37,1,0,0,0,195,196,5,50,0,0,196,39,1,0,0,0,197,198,
+        5,54,0,0,198,41,1,0,0,0,199,201,3,44,22,0,200,199,1,0,0,0,201,204,
+        1,0,0,0,202,200,1,0,0,0,202,203,1,0,0,0,203,43,1,0,0,0,204,202,1,
+        0,0,0,205,206,3,46,23,0,206,207,5,56,0,0,207,208,3,48,24,0,208,45,
+        1,0,0,0,209,210,5,55,0,0,210,47,1,0,0,0,211,212,5,58,0,0,212,213,
+        5,59,0,0,213,49,1,0,0,0,214,217,3,52,26,0,215,217,3,58,29,0,216,
+        214,1,0,0,0,216,215,1,0,0,0,217,218,1,0,0,0,218,216,1,0,0,0,218,
+        219,1,0,0,0,219,51,1,0,0,0,220,222,3,54,27,0,221,220,1,0,0,0,222,
+        223,1,0,0,0,223,221,1,0,0,0,223,224,1,0,0,0,224,225,1,0,0,0,225,
+        226,5,60,0,0,226,53,1,0,0,0,227,228,3,56,28,0,228,229,3,42,21,0,
+        229,230,3,58,29,0,230,55,1,0,0,0,231,232,5,61,0,0,232,57,1,0,0,0,
+        233,236,3,60,30,0,234,236,3,62,31,0,235,233,1,0,0,0,235,234,1,0,
+        0,0,236,237,1,0,0,0,237,235,1,0,0,0,237,238,1,0,0,0,238,59,1,0,0,
+        0,239,240,5,64,0,0,240,61,1,0,0,0,241,243,7,5,0,0,242,241,1,0,0,
+        0,243,244,1,0,0,0,244,242,1,0,0,0,244,245,1,0,0,0,245,63,1,0,0,0,
+        34,81,85,88,92,95,100,105,112,117,119,122,125,128,133,135,138,143,
+        148,153,159,162,168,170,173,176,181,190,202,216,218,223,235,237,
+        244
     ]
 
 class APIParser ( Parser ):
@@ -110,7 +111,7 @@ class APIParser ( Parser ):
 
     sharedContextCache = PredictionContextCache()
 
-    literalNames = [ "<INVALID>", "<INVALID>", "','", "';'", "<INVALID>", 
+    literalNames = [ "<INVALID>", "'\\t'", "<INVALID>", "','", "';'", "<INVALID>", 
                      "'@'", "'.'", "<INVALID>", "'('", "')'", "'['", "']'", 
                      "'\"'", "'''", "'\\'", "<INVALID>", "'EXIT'", "'QUIT'", 
                      "'USE'", "'API'", "'SQL'", "'SHOW'", "'START'", "'WHENEVER_ERROR'", 
@@ -121,8 +122,8 @@ class APIParser ( Parser ):
                      "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                      "<INVALID>", "<INVALID>", "<INVALID>", "'###'" ]
 
-    symbolicNames = [ "<INVALID>", "CRLF", "COMMA", "SEMICOLON", "COLON", 
-                      "AT", "DOT", "SLASH", "BRACKET_OPEN", "BRACKET_CLOSE", 
+    symbolicNames = [ "<INVALID>", "TAB", "CRLF", "COMMA", "SEMICOLON", 
+                      "COLON", "AT", "DOT", "SLASH", "BRACKET_OPEN", "BRACKET_CLOSE", 
                       "SQUARE_OPEN", "SQUARE_CLOSE", "DOUBLE_QUOTE", "SINGLE_QUOTE", 
                       "ESCAPE", "SPACE", "EXIT", "QUIT", "USE", "API", "SQL", 
                       "SHOW", "START", "WHENEVER_ERROR", "CONTINUE", "SPOOL", 
@@ -132,8 +133,9 @@ class APIParser ( Parser ):
                       "HASH_COMMENT", "INT", "DECIMAL", "String", "ScriptBlock", 
                       "EchoBlock", "CommentString", "DIVIDE", "SP", "HttpMethod", 
                       "HTTP_CLOSE", "HttpHint", "HttpComment", "HttpRequestTarget", 
-                      "HttpFieldName", "FIELD_COLON", "FIELD_CRLF", "HttpFieldValue", 
-                      "HttpFieldValueEnd", "HttpMultipartBoundaryEnd", "HttpMultipartBoundary", 
+                      "HttpHeaderFieldName", "FIELD_COLON", "FIELD_CRLF", 
+                      "HttpHeaderFieldValue", "HttpHeaderFieldValueEnd", 
+                      "HttpMultipartBoundaryEnd", "HttpMultipartBoundary", 
                       "HttpMessageBodyHint", "HttpMessageBodyComment", "HttpMessageBodyOperate" ]
 
     RULE_prog = 0
@@ -159,8 +161,8 @@ class APIParser ( Parser ):
     RULE_httpRequestTarget = 20
     RULE_httpHeaderFields = 21
     RULE_httpHeaderField = 22
-    RULE_httpFieldName = 23
-    RULE_httpFieldValue = 24
+    RULE_httpHeaderFieldName = 23
+    RULE_httpHeaderFieldValue = 24
     RULE_httpMessageBody = 25
     RULE_httpMultipart = 26
     RULE_httpMultipartBoundary = 27
@@ -173,79 +175,80 @@ class APIParser ( Parser ):
                    "expression", "start", "loadmap", "wheneverError", "spool", 
                    "echo", "internal", "set", "script", "http", "httpMessage", 
                    "httpRequestLine", "httpMethod", "httpRequestTarget", 
-                   "httpHeaderFields", "httpHeaderField", "httpFieldName", 
-                   "httpFieldValue", "httpMessageBody", "httpMultipart", 
+                   "httpHeaderFields", "httpHeaderField", "httpHeaderFieldName", 
+                   "httpHeaderFieldValue", "httpMessageBody", "httpMultipart", 
                    "httpMultipartBoundary", "httpBoundaryDelimiter", "httpMessageBodyContent", 
                    "httpMessageBodyOperate", "httpMessageBodyOther" ]
 
     EOF = Token.EOF
-    CRLF=1
-    COMMA=2
-    SEMICOLON=3
-    COLON=4
-    AT=5
-    DOT=6
-    SLASH=7
-    BRACKET_OPEN=8
-    BRACKET_CLOSE=9
-    SQUARE_OPEN=10
-    SQUARE_CLOSE=11
-    DOUBLE_QUOTE=12
-    SINGLE_QUOTE=13
-    ESCAPE=14
-    SPACE=15
-    EXIT=16
-    QUIT=17
-    USE=18
-    API=19
-    SQL=20
-    SHOW=21
-    START=22
-    WHENEVER_ERROR=23
-    CONTINUE=24
-    SPOOL=25
-    BEGIN=26
-    END=27
-    INTERNAL=28
-    SET=29
-    LOOP=30
-    ASSERT=31
-    SLEEP=32
-    LOADMAP=33
-    ECHO_OPEN=34
-    HTTP_OPEN=35
-    SCRIPT_OPEN=36
-    COMMENT_OPEN=37
-    MINUS_MINUS_HINT=38
-    MINUS_MINUS_COMMENT=39
-    HASH_COMMENT=40
-    INT=41
-    DECIMAL=42
-    String=43
-    ScriptBlock=44
-    EchoBlock=45
-    CommentString=46
-    DIVIDE=47
-    SP=48
-    HttpMethod=49
-    HTTP_CLOSE=50
-    HttpHint=51
-    HttpComment=52
-    HttpRequestTarget=53
-    HttpFieldName=54
-    FIELD_COLON=55
-    FIELD_CRLF=56
-    HttpFieldValue=57
-    HttpFieldValueEnd=58
-    HttpMultipartBoundaryEnd=59
-    HttpMultipartBoundary=60
-    HttpMessageBodyHint=61
-    HttpMessageBodyComment=62
-    HttpMessageBodyOperate=63
+    TAB=1
+    CRLF=2
+    COMMA=3
+    SEMICOLON=4
+    COLON=5
+    AT=6
+    DOT=7
+    SLASH=8
+    BRACKET_OPEN=9
+    BRACKET_CLOSE=10
+    SQUARE_OPEN=11
+    SQUARE_CLOSE=12
+    DOUBLE_QUOTE=13
+    SINGLE_QUOTE=14
+    ESCAPE=15
+    SPACE=16
+    EXIT=17
+    QUIT=18
+    USE=19
+    API=20
+    SQL=21
+    SHOW=22
+    START=23
+    WHENEVER_ERROR=24
+    CONTINUE=25
+    SPOOL=26
+    BEGIN=27
+    END=28
+    INTERNAL=29
+    SET=30
+    LOOP=31
+    ASSERT=32
+    SLEEP=33
+    LOADMAP=34
+    ECHO_OPEN=35
+    HTTP_OPEN=36
+    SCRIPT_OPEN=37
+    COMMENT_OPEN=38
+    MINUS_MINUS_HINT=39
+    MINUS_MINUS_COMMENT=40
+    HASH_COMMENT=41
+    INT=42
+    DECIMAL=43
+    String=44
+    ScriptBlock=45
+    EchoBlock=46
+    CommentString=47
+    DIVIDE=48
+    SP=49
+    HttpMethod=50
+    HTTP_CLOSE=51
+    HttpHint=52
+    HttpComment=53
+    HttpRequestTarget=54
+    HttpHeaderFieldName=55
+    FIELD_COLON=56
+    FIELD_CRLF=57
+    HttpHeaderFieldValue=58
+    HttpHeaderFieldValueEnd=59
+    HttpMultipartBoundaryEnd=60
+    HttpMultipartBoundary=61
+    HttpMessageBodyHint=62
+    HttpMessageBodyComment=63
+    HttpMessageBodyOperate=64
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
-        self.checkVersion("4.10.1")
+        self.checkVersion("4.11.1")
         self._interp = ParserATNSimulator(self, self.atn, self.decisionsToDFA, self.sharedContextCache)
         self._predicates = None
 
@@ -340,16 +343,20 @@ class APIParser ( Parser ):
             return self.getTypedRuleContext(APIParser.InternalContext,0)
 
 
+        def loadmap(self):
+            return self.getTypedRuleContext(APIParser.LoadmapContext,0)
+
+
         def script(self):
             return self.getTypedRuleContext(APIParser.ScriptContext,0)
 
 
-        def http(self):
-            return self.getTypedRuleContext(APIParser.HttpContext,0)
-
-
         def echo(self):
             return self.getTypedRuleContext(APIParser.EchoContext,0)
+
+
+        def http(self):
+            return self.getTypedRuleContext(APIParser.HttpContext,0)
 
 
         def EOF(self):
@@ -372,72 +379,77 @@ class APIParser ( Parser ):
         localctx = APIParser.CommandContext(self, self._ctx, self.state)
         self.enterRule(localctx, 2, self.RULE_command)
         try:
-            self.state = 80
+            self.state = 81
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [APIParser.EXIT]:
+            if token in [17]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 67
                 self.exit()
                 pass
-            elif token in [APIParser.QUIT]:
+            elif token in [18]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 68
                 self.quit()
                 pass
-            elif token in [APIParser.USE]:
+            elif token in [19]:
                 self.enterOuterAlt(localctx, 3)
                 self.state = 69
                 self.use()
                 pass
-            elif token in [APIParser.SLEEP]:
+            elif token in [33]:
                 self.enterOuterAlt(localctx, 4)
                 self.state = 70
                 self.sleep()
                 pass
-            elif token in [APIParser.START]:
+            elif token in [23]:
                 self.enterOuterAlt(localctx, 5)
                 self.state = 71
                 self.start()
                 pass
-            elif token in [APIParser.WHENEVER_ERROR]:
+            elif token in [24]:
                 self.enterOuterAlt(localctx, 6)
                 self.state = 72
                 self.wheneverError()
                 pass
-            elif token in [APIParser.SPOOL]:
+            elif token in [26]:
                 self.enterOuterAlt(localctx, 7)
                 self.state = 73
                 self.spool()
                 pass
-            elif token in [APIParser.SET]:
+            elif token in [30]:
                 self.enterOuterAlt(localctx, 8)
                 self.state = 74
                 self.set_()
                 pass
-            elif token in [APIParser.INTERNAL]:
+            elif token in [29]:
                 self.enterOuterAlt(localctx, 9)
                 self.state = 75
                 self.internal()
                 pass
-            elif token in [APIParser.SCRIPT_OPEN]:
+            elif token in [34]:
                 self.enterOuterAlt(localctx, 10)
                 self.state = 76
-                self.script()
+                self.loadmap()
                 pass
-            elif token in [APIParser.HTTP_OPEN]:
+            elif token in [37]:
                 self.enterOuterAlt(localctx, 11)
                 self.state = 77
-                self.http()
+                self.script()
                 pass
-            elif token in [APIParser.ECHO_OPEN]:
+            elif token in [35]:
                 self.enterOuterAlt(localctx, 12)
                 self.state = 78
                 self.echo()
                 pass
-            elif token in [APIParser.EOF]:
+            elif token in [36]:
                 self.enterOuterAlt(localctx, 13)
                 self.state = 79
+                self.http()
+                pass
+            elif token in [-1]:
+                self.enterOuterAlt(localctx, 14)
+                self.state = 80
                 self.match(APIParser.EOF)
                 pass
             else:
@@ -487,21 +499,21 @@ class APIParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 82
+            self.state = 83
             self.match(APIParser.EXIT)
-            self.state = 84
+            self.state = 85
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==APIParser.INT:
-                self.state = 83
+            if _la==42:
+                self.state = 84
                 self.match(APIParser.INT)
 
 
-            self.state = 87
+            self.state = 88
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==APIParser.CRLF:
-                self.state = 86
+            if _la==2:
+                self.state = 87
                 self.match(APIParser.CRLF)
 
 
@@ -549,21 +561,21 @@ class APIParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 89
+            self.state = 90
             self.match(APIParser.QUIT)
-            self.state = 91
+            self.state = 92
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==APIParser.INT:
-                self.state = 90
+            if _la==42:
+                self.state = 91
                 self.match(APIParser.INT)
 
 
-            self.state = 94
+            self.state = 95
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==APIParser.CRLF:
-                self.state = 93
+            if _la==2:
+                self.state = 94
                 self.match(APIParser.CRLF)
 
 
@@ -614,20 +626,20 @@ class APIParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 96
-            self.match(APIParser.USE)
             self.state = 97
+            self.match(APIParser.USE)
+            self.state = 98
             _la = self._input.LA(1)
-            if not(_la==APIParser.API or _la==APIParser.SQL):
+            if not(_la==20 or _la==21):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
                 self.consume()
-            self.state = 99
+            self.state = 100
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==APIParser.CRLF:
-                self.state = 98
+            if _la==2:
+                self.state = 99
                 self.match(APIParser.CRLF)
 
 
@@ -675,15 +687,15 @@ class APIParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 101
-            self.match(APIParser.SLEEP)
             self.state = 102
+            self.match(APIParser.SLEEP)
+            self.state = 103
             self.match(APIParser.INT)
-            self.state = 104
+            self.state = 105
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==APIParser.CRLF:
-                self.state = 103
+            if _la==2:
+                self.state = 104
                 self.match(APIParser.CRLF)
 
 
@@ -752,9 +764,9 @@ class APIParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 106
+            self.state = 107
             _la = self._input.LA(1)
-            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << APIParser.DOT) | (1 << APIParser.SLASH) | (1 << APIParser.BRACKET_OPEN) | (1 << APIParser.BRACKET_CLOSE) | (1 << APIParser.SQUARE_OPEN) | (1 << APIParser.SQUARE_CLOSE) | (1 << APIParser.DOUBLE_QUOTE) | (1 << APIParser.SINGLE_QUOTE) | (1 << APIParser.ESCAPE) | (1 << APIParser.String))) != 0)):
+            if not(((_la) & ~0x3f) == 0 and ((1 << _la) & 17592186109824) != 0):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -775,65 +787,12 @@ class APIParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-        def String(self, i:int=None):
+        def singleExpression(self, i:int=None):
             if i is None:
-                return self.getTokens(APIParser.String)
+                return self.getTypedRuleContexts(APIParser.SingleExpressionContext)
             else:
-                return self.getToken(APIParser.String, i)
+                return self.getTypedRuleContext(APIParser.SingleExpressionContext,i)
 
-        def DOT(self, i:int=None):
-            if i is None:
-                return self.getTokens(APIParser.DOT)
-            else:
-                return self.getToken(APIParser.DOT, i)
-
-        def SLASH(self, i:int=None):
-            if i is None:
-                return self.getTokens(APIParser.SLASH)
-            else:
-                return self.getToken(APIParser.SLASH, i)
-
-        def BRACKET_OPEN(self, i:int=None):
-            if i is None:
-                return self.getTokens(APIParser.BRACKET_OPEN)
-            else:
-                return self.getToken(APIParser.BRACKET_OPEN, i)
-
-        def BRACKET_CLOSE(self, i:int=None):
-            if i is None:
-                return self.getTokens(APIParser.BRACKET_CLOSE)
-            else:
-                return self.getToken(APIParser.BRACKET_CLOSE, i)
-
-        def ESCAPE(self, i:int=None):
-            if i is None:
-                return self.getTokens(APIParser.ESCAPE)
-            else:
-                return self.getToken(APIParser.ESCAPE, i)
-
-        def SQUARE_OPEN(self, i:int=None):
-            if i is None:
-                return self.getTokens(APIParser.SQUARE_OPEN)
-            else:
-                return self.getToken(APIParser.SQUARE_OPEN, i)
-
-        def SQUARE_CLOSE(self, i:int=None):
-            if i is None:
-                return self.getTokens(APIParser.SQUARE_CLOSE)
-            else:
-                return self.getToken(APIParser.SQUARE_CLOSE, i)
-
-        def DOUBLE_QUOTE(self, i:int=None):
-            if i is None:
-                return self.getTokens(APIParser.DOUBLE_QUOTE)
-            else:
-                return self.getToken(APIParser.DOUBLE_QUOTE, i)
-
-        def SINGLE_QUOTE(self, i:int=None):
-            if i is None:
-                return self.getTokens(APIParser.SINGLE_QUOTE)
-            else:
-                return self.getToken(APIParser.SINGLE_QUOTE, i)
 
         def getRuleIndex(self):
             return APIParser.RULE_expression
@@ -851,25 +810,19 @@ class APIParser ( Parser ):
 
         localctx = APIParser.ExpressionContext(self, self._ctx, self.state)
         self.enterRule(localctx, 14, self.RULE_expression)
-        self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 109 
+            self.state = 110 
             self._errHandler.sync(self)
             _alt = 1
             while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
                 if _alt == 1:
-                    self.state = 108
-                    _la = self._input.LA(1)
-                    if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << APIParser.DOT) | (1 << APIParser.SLASH) | (1 << APIParser.BRACKET_OPEN) | (1 << APIParser.BRACKET_CLOSE) | (1 << APIParser.SQUARE_OPEN) | (1 << APIParser.SQUARE_CLOSE) | (1 << APIParser.DOUBLE_QUOTE) | (1 << APIParser.SINGLE_QUOTE) | (1 << APIParser.ESCAPE) | (1 << APIParser.String))) != 0)):
-                        self._errHandler.recoverInline(self)
-                    else:
-                        self._errHandler.reportMatch(self)
-                        self.consume()
+                    self.state = 109
+                    self.singleExpression()
 
                 else:
                     raise NoViableAltException(self)
-                self.state = 111 
+                self.state = 112 
                 self._errHandler.sync(self)
                 _alt = self._interp.adaptivePredict(self._input,7,self._ctx)
 
@@ -933,53 +886,53 @@ class APIParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 113
+            self.state = 114
             self.match(APIParser.START)
-            self.state = 116 
+            self.state = 117 
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
-                self.state = 116
+                self.state = 117
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
-                if token in [APIParser.DOT, APIParser.SLASH, APIParser.BRACKET_OPEN, APIParser.BRACKET_CLOSE, APIParser.SQUARE_OPEN, APIParser.SQUARE_CLOSE, APIParser.DOUBLE_QUOTE, APIParser.SINGLE_QUOTE, APIParser.ESCAPE, APIParser.String]:
-                    self.state = 114
+                if token in [7, 8, 9, 10, 11, 12, 13, 14, 15, 44]:
+                    self.state = 115
                     self.expression()
                     pass
-                elif token in [APIParser.COMMA]:
-                    self.state = 115
+                elif token in [3]:
+                    self.state = 116
                     self.match(APIParser.COMMA)
                     pass
                 else:
                     raise NoViableAltException(self)
 
-                self.state = 118 
+                self.state = 119 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << APIParser.COMMA) | (1 << APIParser.DOT) | (1 << APIParser.SLASH) | (1 << APIParser.BRACKET_OPEN) | (1 << APIParser.BRACKET_CLOSE) | (1 << APIParser.SQUARE_OPEN) | (1 << APIParser.SQUARE_CLOSE) | (1 << APIParser.DOUBLE_QUOTE) | (1 << APIParser.SINGLE_QUOTE) | (1 << APIParser.ESCAPE) | (1 << APIParser.String))) != 0)):
+                if not (((_la) & ~0x3f) == 0 and ((1 << _la) & 17592186109832) != 0):
                     break
 
-            self.state = 121
+            self.state = 122
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==APIParser.LOOP:
-                self.state = 120
+            if _la==31:
+                self.state = 121
                 self.match(APIParser.LOOP)
 
 
-            self.state = 124
+            self.state = 125
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==APIParser.INT:
-                self.state = 123
+            if _la==42:
+                self.state = 124
                 self.match(APIParser.INT)
 
 
-            self.state = 127
+            self.state = 128
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==APIParser.CRLF:
-                self.state = 126
+            if _la==2:
+                self.state = 127
                 self.match(APIParser.CRLF)
 
 
@@ -1037,37 +990,37 @@ class APIParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 129
+            self.state = 130
             self.match(APIParser.LOADMAP)
-            self.state = 132 
+            self.state = 133 
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
-                self.state = 132
+                self.state = 133
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
-                if token in [APIParser.DOT, APIParser.SLASH, APIParser.BRACKET_OPEN, APIParser.BRACKET_CLOSE, APIParser.SQUARE_OPEN, APIParser.SQUARE_CLOSE, APIParser.DOUBLE_QUOTE, APIParser.SINGLE_QUOTE, APIParser.ESCAPE, APIParser.String]:
-                    self.state = 130
+                if token in [7, 8, 9, 10, 11, 12, 13, 14, 15, 44]:
+                    self.state = 131
                     self.expression()
                     pass
-                elif token in [APIParser.COMMA]:
-                    self.state = 131
+                elif token in [3]:
+                    self.state = 132
                     self.match(APIParser.COMMA)
                     pass
                 else:
                     raise NoViableAltException(self)
 
-                self.state = 134 
+                self.state = 135 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << APIParser.COMMA) | (1 << APIParser.DOT) | (1 << APIParser.SLASH) | (1 << APIParser.BRACKET_OPEN) | (1 << APIParser.BRACKET_CLOSE) | (1 << APIParser.SQUARE_OPEN) | (1 << APIParser.SQUARE_CLOSE) | (1 << APIParser.DOUBLE_QUOTE) | (1 << APIParser.SINGLE_QUOTE) | (1 << APIParser.ESCAPE) | (1 << APIParser.String))) != 0)):
+                if not (((_la) & ~0x3f) == 0 and ((1 << _la) & 17592186109832) != 0):
                     break
 
-            self.state = 137
+            self.state = 138
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==APIParser.CRLF:
-                self.state = 136
+            if _la==2:
+                self.state = 137
                 self.match(APIParser.CRLF)
 
 
@@ -1118,20 +1071,20 @@ class APIParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 139
-            self.match(APIParser.WHENEVER_ERROR)
             self.state = 140
+            self.match(APIParser.WHENEVER_ERROR)
+            self.state = 141
             _la = self._input.LA(1)
-            if not(_la==APIParser.EXIT or _la==APIParser.CONTINUE):
+            if not(_la==17 or _la==25):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
                 self.consume()
-            self.state = 142
+            self.state = 143
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==APIParser.CRLF:
-                self.state = 141
+            if _la==2:
+                self.state = 142
                 self.match(APIParser.CRLF)
 
 
@@ -1179,15 +1132,15 @@ class APIParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 144
-            self.match(APIParser.SPOOL)
             self.state = 145
+            self.match(APIParser.SPOOL)
+            self.state = 146
             self.match(APIParser.String)
-            self.state = 147
+            self.state = 148
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==APIParser.CRLF:
-                self.state = 146
+            if _la==2:
+                self.state = 147
                 self.match(APIParser.CRLF)
 
 
@@ -1238,17 +1191,17 @@ class APIParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 149
-            self.match(APIParser.ECHO_OPEN)
             self.state = 150
+            self.match(APIParser.ECHO_OPEN)
+            self.state = 151
             self.match(APIParser.EchoBlock)
-            self.state = 152
+            self.state = 153
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,18,self._ctx)
             if la_ == 1:
-                self.state = 151
+                self.state = 152
                 _la = self._input.LA(1)
-                if not(_la==APIParser.EOF or _la==APIParser.CRLF):
+                if not(_la==-1 or _la==2):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -1303,25 +1256,25 @@ class APIParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 154
+            self.state = 155
             self.match(APIParser.INTERNAL)
-            self.state = 156 
+            self.state = 157 
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
-                self.state = 155
+                self.state = 156
                 self.expression()
-                self.state = 158 
+                self.state = 159 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << APIParser.DOT) | (1 << APIParser.SLASH) | (1 << APIParser.BRACKET_OPEN) | (1 << APIParser.BRACKET_CLOSE) | (1 << APIParser.SQUARE_OPEN) | (1 << APIParser.SQUARE_CLOSE) | (1 << APIParser.DOUBLE_QUOTE) | (1 << APIParser.SINGLE_QUOTE) | (1 << APIParser.ESCAPE) | (1 << APIParser.String))) != 0)):
+                if not (((_la) & ~0x3f) == 0 and ((1 << _la) & 17592186109824) != 0):
                     break
 
-            self.state = 161
+            self.state = 162
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==APIParser.CRLF:
-                self.state = 160
+            if _la==2:
+                self.state = 161
                 self.match(APIParser.CRLF)
 
 
@@ -1376,39 +1329,39 @@ class APIParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 163
+            self.state = 164
             self.match(APIParser.SET)
-            self.state = 169
+            self.state = 170
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << APIParser.DOT) | (1 << APIParser.SLASH) | (1 << APIParser.BRACKET_OPEN) | (1 << APIParser.BRACKET_CLOSE) | (1 << APIParser.SQUARE_OPEN) | (1 << APIParser.SQUARE_CLOSE) | (1 << APIParser.DOUBLE_QUOTE) | (1 << APIParser.SINGLE_QUOTE) | (1 << APIParser.ESCAPE) | (1 << APIParser.String))) != 0):
-                self.state = 165 
+            if ((_la) & ~0x3f) == 0 and ((1 << _la) & 17592186109824) != 0:
+                self.state = 166 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 while True:
-                    self.state = 164
+                    self.state = 165
                     self.singleExpression()
-                    self.state = 167 
+                    self.state = 168 
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << APIParser.DOT) | (1 << APIParser.SLASH) | (1 << APIParser.BRACKET_OPEN) | (1 << APIParser.BRACKET_CLOSE) | (1 << APIParser.SQUARE_OPEN) | (1 << APIParser.SQUARE_CLOSE) | (1 << APIParser.DOUBLE_QUOTE) | (1 << APIParser.SINGLE_QUOTE) | (1 << APIParser.ESCAPE) | (1 << APIParser.String))) != 0)):
+                    if not (((_la) & ~0x3f) == 0 and ((1 << _la) & 17592186109824) != 0):
                         break
 
 
 
-            self.state = 172
+            self.state = 173
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==APIParser.SEMICOLON:
-                self.state = 171
+            if _la==4:
+                self.state = 172
                 self.match(APIParser.SEMICOLON)
 
 
-            self.state = 175
+            self.state = 176
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==APIParser.CRLF:
-                self.state = 174
+            if _la==2:
+                self.state = 175
                 self.match(APIParser.CRLF)
 
 
@@ -1456,15 +1409,15 @@ class APIParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 177
-            self.match(APIParser.SCRIPT_OPEN)
             self.state = 178
+            self.match(APIParser.SCRIPT_OPEN)
+            self.state = 179
             self.match(APIParser.ScriptBlock)
-            self.state = 180
+            self.state = 181
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==APIParser.CRLF:
-                self.state = 179
+            if _la==2:
+                self.state = 180
                 self.match(APIParser.CRLF)
 
 
@@ -1516,13 +1469,13 @@ class APIParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 182
-            self.match(APIParser.HTTP_OPEN)
             self.state = 183
-            self.httpMessage()
+            self.match(APIParser.HTTP_OPEN)
             self.state = 184
+            self.httpMessage()
+            self.state = 185
             _la = self._input.LA(1)
-            if not(_la==APIParser.EOF or _la==APIParser.HTTP_CLOSE):
+            if not(_la==-1 or _la==51):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -1574,15 +1527,15 @@ class APIParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 186
-            self.httpRequestLine()
             self.state = 187
+            self.httpRequestLine()
+            self.state = 188
             self.httpHeaderFields()
-            self.state = 189
+            self.state = 190
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << APIParser.CRLF) | (1 << APIParser.String) | (1 << APIParser.HttpMultipartBoundary) | (1 << APIParser.HttpMessageBodyOperate))) != 0):
-                self.state = 188
+            if (((_la - 2)) & ~0x3f) == 0 and ((1 << (_la - 2)) & 5188151168777322497) != 0:
+                self.state = 189
                 self.httpMessageBody()
 
 
@@ -1610,9 +1563,6 @@ class APIParser ( Parser ):
             return self.getTypedRuleContext(APIParser.HttpRequestTargetContext,0)
 
 
-        def CRLF(self):
-            return self.getToken(APIParser.CRLF, 0)
-
         def getRuleIndex(self):
             return APIParser.RULE_httpRequestLine
 
@@ -1631,12 +1581,10 @@ class APIParser ( Parser ):
         self.enterRule(localctx, 36, self.RULE_httpRequestLine)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 191
-            self.httpMethod()
             self.state = 192
-            self.httpRequestTarget()
+            self.httpMethod()
             self.state = 193
-            self.match(APIParser.CRLF)
+            self.httpRequestTarget()
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -1760,7 +1708,7 @@ class APIParser ( Parser ):
             self.state = 202
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==APIParser.HttpFieldName:
+            while _la==55:
                 self.state = 199
                 self.httpHeaderField()
                 self.state = 204
@@ -1783,15 +1731,15 @@ class APIParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-        def httpFieldName(self):
-            return self.getTypedRuleContext(APIParser.HttpFieldNameContext,0)
+        def httpHeaderFieldName(self):
+            return self.getTypedRuleContext(APIParser.HttpHeaderFieldNameContext,0)
 
 
         def FIELD_COLON(self):
             return self.getToken(APIParser.FIELD_COLON, 0)
 
-        def httpFieldValue(self):
-            return self.getTypedRuleContext(APIParser.HttpFieldValueContext,0)
+        def httpHeaderFieldValue(self):
+            return self.getTypedRuleContext(APIParser.HttpHeaderFieldValueContext,0)
 
 
         def getRuleIndex(self):
@@ -1813,11 +1761,11 @@ class APIParser ( Parser ):
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 205
-            self.httpFieldName()
+            self.httpHeaderFieldName()
             self.state = 206
             self.match(APIParser.FIELD_COLON)
             self.state = 207
-            self.httpFieldValue()
+            self.httpHeaderFieldValue()
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -1827,36 +1775,36 @@ class APIParser ( Parser ):
         return localctx
 
 
-    class HttpFieldNameContext(ParserRuleContext):
+    class HttpHeaderFieldNameContext(ParserRuleContext):
         __slots__ = 'parser'
 
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-        def HttpFieldName(self):
-            return self.getToken(APIParser.HttpFieldName, 0)
+        def HttpHeaderFieldName(self):
+            return self.getToken(APIParser.HttpHeaderFieldName, 0)
 
         def getRuleIndex(self):
-            return APIParser.RULE_httpFieldName
+            return APIParser.RULE_httpHeaderFieldName
 
         def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitHttpFieldName" ):
-                return visitor.visitHttpFieldName(self)
+            if hasattr( visitor, "visitHttpHeaderFieldName" ):
+                return visitor.visitHttpHeaderFieldName(self)
             else:
                 return visitor.visitChildren(self)
 
 
 
 
-    def httpFieldName(self):
+    def httpHeaderFieldName(self):
 
-        localctx = APIParser.HttpFieldNameContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 46, self.RULE_httpFieldName)
+        localctx = APIParser.HttpHeaderFieldNameContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 46, self.RULE_httpHeaderFieldName)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 209
-            self.match(APIParser.HttpFieldName)
+            self.match(APIParser.HttpHeaderFieldName)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -1866,41 +1814,41 @@ class APIParser ( Parser ):
         return localctx
 
 
-    class HttpFieldValueContext(ParserRuleContext):
+    class HttpHeaderFieldValueContext(ParserRuleContext):
         __slots__ = 'parser'
 
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-        def HttpFieldValue(self):
-            return self.getToken(APIParser.HttpFieldValue, 0)
+        def HttpHeaderFieldValue(self):
+            return self.getToken(APIParser.HttpHeaderFieldValue, 0)
 
-        def HttpFieldValueEnd(self):
-            return self.getToken(APIParser.HttpFieldValueEnd, 0)
+        def HttpHeaderFieldValueEnd(self):
+            return self.getToken(APIParser.HttpHeaderFieldValueEnd, 0)
 
         def getRuleIndex(self):
-            return APIParser.RULE_httpFieldValue
+            return APIParser.RULE_httpHeaderFieldValue
 
         def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitHttpFieldValue" ):
-                return visitor.visitHttpFieldValue(self)
+            if hasattr( visitor, "visitHttpHeaderFieldValue" ):
+                return visitor.visitHttpHeaderFieldValue(self)
             else:
                 return visitor.visitChildren(self)
 
 
 
 
-    def httpFieldValue(self):
+    def httpHeaderFieldValue(self):
 
-        localctx = APIParser.HttpFieldValueContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 48, self.RULE_httpFieldValue)
+        localctx = APIParser.HttpHeaderFieldValueContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 48, self.RULE_httpHeaderFieldValue)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 211
-            self.match(APIParser.HttpFieldValue)
+            self.match(APIParser.HttpHeaderFieldValue)
             self.state = 212
-            self.match(APIParser.HttpFieldValueEnd)
+            self.match(APIParser.HttpHeaderFieldValueEnd)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -1957,11 +1905,11 @@ class APIParser ( Parser ):
                 self.state = 216
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
-                if token in [APIParser.HttpMultipartBoundary]:
+                if token in [61]:
                     self.state = 214
                     self.httpMultipart()
                     pass
-                elif token in [APIParser.CRLF, APIParser.String, APIParser.HttpMessageBodyOperate]:
+                elif token in [2, 44, 64]:
                     self.state = 215
                     self.httpMessageBodyContent()
                     pass
@@ -1971,7 +1919,7 @@ class APIParser ( Parser ):
                 self.state = 218 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << APIParser.CRLF) | (1 << APIParser.String) | (1 << APIParser.HttpMultipartBoundary) | (1 << APIParser.HttpMessageBodyOperate))) != 0)):
+                if not ((((_la - 2)) & ~0x3f) == 0 and ((1 << (_la - 2)) & 5188151168777322497) != 0):
                     break
 
         except RecognitionException as re:
@@ -2028,7 +1976,7 @@ class APIParser ( Parser ):
                 self.state = 223 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==APIParser.HttpMultipartBoundary):
+                if not (_la==61):
                     break
 
             self.state = 225
@@ -2180,11 +2128,11 @@ class APIParser ( Parser ):
                     self.state = 235
                     self._errHandler.sync(self)
                     token = self._input.LA(1)
-                    if token in [APIParser.HttpMessageBodyOperate]:
+                    if token in [64]:
                         self.state = 233
                         self.httpMessageBodyOperate()
                         pass
-                    elif token in [APIParser.CRLF, APIParser.String]:
+                    elif token in [2, 44]:
                         self.state = 234
                         self.httpMessageBodyOther()
                         pass
@@ -2291,7 +2239,7 @@ class APIParser ( Parser ):
                 if _alt == 1:
                     self.state = 241
                     _la = self._input.LA(1)
-                    if not(_la==APIParser.CRLF or _la==APIParser.String):
+                    if not(_la==2 or _la==44):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)

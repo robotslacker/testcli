@@ -811,13 +811,15 @@ class SQLVisitor(SQLParserVisitor):
             result, script, hint, code, message = self.visit(expression)
             expression_list.append(result)
 
+        if ctx.AT() is not None:
+            parsedObject.update({'scope': "global"})
+        else:
+            parsedObject.update({'scope': "local"})
         if len(expression_list) >= 1:
             parsedObject.update({'optionName': expression_list[0]})
         if len(expression_list) >= 2:
-            parsedObject.update({'optionValue': expression_list[1]})
-        if len(expression_list) >= 3:
-            for i in range(2, len(expression_list)):
-                parsedObject.update({("optionValue" + str(i)): expression_list[i]})
+            optionValue = " ".join(expression_list[1:])
+            parsedObject.update({"optionValue": optionValue})
 
         # 获取源文件
         start, end = self.getSourceInterval(ctx)
@@ -884,7 +886,7 @@ class SQLVisitor(SQLParserVisitor):
 
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitLoadmap(self, ctx:SQLParser.LoadmapContext):
+    def visitLoadmap(self, ctx: SQLParser.LoadmapContext):
         
         parsedObject = {'name': 'LOADMAP' , 'rule': ctx.getRuleIndex() }
     
@@ -1167,45 +1169,42 @@ class SQLVisitor(SQLParserVisitor):
 
         return  parsedObject, originScript, hint, errorCode, errorMsg
     
+    def visitAssert(self, ctx: SQLParser.AssertContext):
+        parsedObject = {'name': 'ASSERT'}
 
-    # 
-    def visitAssert(self, ctx:SQLParser.AssertContext):
-        parsedObject = {'name': 'ASSERT' , 'rule': ctx.getRuleIndex() }
+        if ctx.ASSERT_EXPRESSION() is not None:
+            expression = str(ctx.ASSERT_EXPRESSION().getText()).strip()
+            if expression.startswith('{%'):
+                expression = expression[2:]
+            if expression.endswith('%}'):
+                expression = expression[:-2]
+            parsedObject.update({'expression': expression})
+        else:
+            parsedObject.update({'expression': ""})
 
-        expression = []
-        for express in ctx.expression():
-            result, script, hint, code, message =  self.visit(express)
-            expression.append(result)
-        
-        parsedObject.update({'expression' : expression })
-
+        # 获取源文件
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
         originScript = self.getSource(tokens)
-        # 提示信息
+
+        # 获取提示信息
         hint = self.getHint(tokens)
+
+        # 获取错误代码
         errorCode = 0
         errorMsg = None
-        if (ctx.exception is not None):
+        if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
-            self.isFinished = False
 
-        self.parsedObject.append(parsedObject)
-        self.originScripts.append(originScript)
-        self.hints.append(hint)
-        self.errorCode.append(errorCode)
-        self.errorMsg.append(errorMsg)
+        self.originScripts = originScript
+        self.parsedObject = parsedObject
+        self.hints = hint
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
+        return parsedObject, originScript, hint, errorCode, errorMsg
 
-        return  parsedObject, originScript, hint, errorCode, errorMsg
-
-
-    # 解析SQL语句
-    def visitSql(self, ctx:SQLParser.SqlContext):
-        # 如果名字空间是 API SQL语句就不解析
-        if self.defaultNameSpace == 'API':
-            return None
+    def visitSql(self, ctx: SQLParser.SqlContext):
         return self.visitChildren(ctx)
 
     def visitSqlCreate(self, ctx: SQLParser.SqlCreateContext):

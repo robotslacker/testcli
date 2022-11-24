@@ -1,18 +1,5 @@
-connect /mem
-session show;
+> {%
+lastresult=3
+%}
 
-
-
-select 1 from dual;
-
-use api
-
-
-
-
-### aa
-POST https://{{host}}:{{port}}/ares/cloud/service/createCluster HTTP/1.1
-
-
-###
-
+Assert {% lastresult==3 %};

@@ -9,5 +9,9 @@ delete from aaa where id =6;
 
 select 1 from dual;
 
+-- 正确的Assert语句
+Assert {% 3==3 %};
+-- 错误的Assert语句
+Assert {% 1==2 %};
 
 exit 3
