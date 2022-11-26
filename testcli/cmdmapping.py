@@ -12,7 +12,7 @@ class CmdMapping(object):
     # match_roles = [ Key, Value]
     commandMappingList = {}
 
-    def Load_Command_Mappings(self, commandScriptFileName, commandMappings):
+    def loadCommandMappings(self, commandScriptFileName, commandMappings):
         # 如果不带任何参数，或者参数为空，则清空CommandMapping信息
         if commandMappings is None:
             self.commandMappingList = {}

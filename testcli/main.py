@@ -16,7 +16,7 @@ appExitValue = 0
 @click.option("--logon", type=str, help="logon user name and password. user/pass",)
 @click.option("--logfile", type=str, help="Log every query and its results to a file.",)
 @click.option("--execute", type=str, help="Execute SQL script.")
-@click.option("--sqlmap", type=str, help="SQL Mapping file.")
+@click.option("--commandmap", type=str, help="Command Mapping file.")
 @click.option("--nologo", is_flag=True, help="Execute with no-logo mode.")
 @click.option("--sqlperf", type=str, help="SQL performance Log.")
 @click.option("--syncdriver", is_flag=True, help="Download jdbc jar from file server.")
@@ -30,7 +30,7 @@ def cli(
         logon,
         logfile,
         execute,
-        sqlmap,
+        commandmap,
         nologo,
         sqlperf,
         syncdriver,
@@ -49,9 +49,7 @@ def cli(
         sqlcli = TestCli(
             logfilename=logfile,
             logon=logon,
-            sqlmap=sqlmap,
-            nologo=nologo,
-            sqlperf=sqlperf
+            nologo=nologo
         )
         sqlcli.syncdriver()
         return
@@ -64,7 +62,7 @@ def cli(
         logfilename=logfile,
         logon=logon,
         script=execute,
-        sqlmap=sqlmap,
+        commandMap=commandmap,
         nologo=nologo,
         sqlperf=sqlperf,
         clientCharset=clientcharset,

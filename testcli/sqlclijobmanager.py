@@ -633,7 +633,7 @@ class JOBManager(object):
             sqlscript=p_args["sqlscript"],
             logon=p_args["logon"],
             logfilename=p_args["logfilename"],
-            sqlmap=p_args["sqlmap"],
+            commandMap=p_args["commandMap"],
             nologo=p_args["nologo"],
             HeadlessMode=True,
             WorkerName=p_args["workername"],
@@ -790,7 +790,7 @@ class JOBManager(object):
                         m_args = {"logon": self.getProcessContextInfo("logon"),
                                   "nologo": self.getProcessContextInfo("nologo"),
                                   "sqlperf": self.getProcessContextInfo("sqlperf"),
-                                  "sqlmap": self.getProcessContextInfo("sqlmap"),
+                                  "commandMap": self.getProcessContextInfo("commandMap"),
                                   "sqlscript": m_Job.getScriptFullName(),
                                   "workername":
                                       m_Job.getJobName() + "#" + str(m_WorkerStarter) + "-" +

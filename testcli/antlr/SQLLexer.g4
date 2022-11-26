@@ -1,4 +1,5 @@
 lexer grammar SQLLexer;
+import BaseLexer;
 
 options { 
     caseInsensitive = true;
@@ -6,53 +7,13 @@ options {
 
 channels { HINT_CHANNEL, COMMENT_CHANNEL, SQLSTATEMENT_CHANNEL }
 
-// 分割符号
-CRLF              : '\n';
-COMMA             : ',';
-SEMICOLON         : ';';
-COLON             : ':';
-AT                : '@';
-DOT               : '.';
-SLASH             : '/';
-BRACKET_OPEN      : '(';
-BRACKET_CLOSE     : ')';
-SQUARE_OPEN       : '[';
-SQUARE_CLOSE      : ']';
-DOUBLE_QUOTE      : '"';
-SINGLE_QUOTE      : '\'';
-ESCAPE            : '\\';
-SPACE             : [ \t]+ ->channel(HIDDEN);
-
 // 关键字
 CONNECT: 'CONNECT' -> pushMode(ConnectMode);
 SESSION: 'SESSION' -> pushMode(SessionMode);
-ASSERT:  'ASSERT' -> pushMode(AssertMode);
 
-EXIT: 'EXIT';
-QUIT: 'QUIT';
-USE: 'USE';
-API: 'API';
-SQL: 'SQL';
 DISCONNECT: 'DISCONNECT';
-START: 'START';
-LOADMAP: 'LOADMAP';
-WHENEVER_ERROR: 'WHENEVER_ERROR';
-CONTINUE: 'CONTINUE';
 SPOOL: 'SPOOL';
 END: 'END';
-INTERNAL: '__INTERNAL__';
-SET: 'SET';
-LOOP: 'LOOP';
-UNTIL: 'UNTIL';
-INTERVAL: 'INTERVAL';
-SLEEP: 'SLEEP';
-LOADDRIVER: 'LOADDRIVER';
-
-// 回显示模式
-ECHO_OPEN   : 'ECHO' .*? (CRLF | EOF) ->pushMode(EchoMode);
-
-// 脚本模式
-SCRIPT_OPEN : '> {%' ->pushMode(ScriptMode);
 
 // 注释模式
 COMMENT_OPEN: '//' .*? CRLF ->channel(HIDDEN);
@@ -77,38 +38,6 @@ SQL_DROP:       'DROP' -> mode(SQLStatementMode) ;
 SQL_COMMIT:     'COMMIT' -> mode(SQLStatementMode) ;
 SQL_ROLLBACK:   'ROLLBACK' -> mode(SQLStatementMode) ;
 SQL_CREATE_PROCEDURE: ('CREATE' | 'REPLACE' | ' '+ | 'OR')+ ('PROCEDURE'|'FUNCTION') ->mode(SQLProcedureMode);
-
-INT : DIGIT+ ;
-DECIMAL: DIGIT+ '.' DIGIT+ ;
-
-// Fragments
-fragment DIGIT: [0-9];
-fragment ALPHA: [A-Z];
-fragment HEX: [0-9A-F];
-
-// 双引号字符串
-fragment DoubleQuoteString: '"' (~'"' | '\\' ('\n' | .))* '"';
-// 单引号字符串
-fragment SingleQuoteString: '\'' (~'\'' | '\\' ('\r'? '\n' | .))* '\'';
-
-// 通用字符串
-String      
-            : (OBS_TEXT | UNRESERVED | SUBDELIMS | PCTENCODED | DoubleQuoteString | SingleQuoteString)+
-            ;
-
-fragment OBS_TEXT: '\u00ff' ..'\uffff';
-
-fragment UNRESERVED
-            : ALPHA | DIGIT | '-' | '.' | '_' | '~'
-            ;
-
-fragment SUBDELIMS   
-            : '!' | '$' | '&' | '(' | ')' | '*' | '+' | '='
-            ;
-
-fragment PCTENCODED
-            : '%' HEX HEX
-            ;
 
 /**
  * 链接模式
@@ -181,34 +110,6 @@ CONNECT_STRING
             : (OBS_TEXT | UNRESERVED | PCTENCODED | CONNECT_DOUBLEQUOTE | CONNECT_SINGLEQUOTE)+
             ;
 
-
-
-/**
- * 脚本模式
- */   
-mode ScriptMode;
-
-ScriptBlock
-      : .*? ('\n%}'| EOF) -> popMode
-      ;
-
-/**
- * 回显模式
- */
-mode EchoMode;
-
-EchoBlock: 
-      .*? 'ECHO' (' ' | '\t')+ 'OFF' -> popMode
-      ;
-
-mode AssertMode;
-ASSERT_SPACE
-            : [ \t]+ -> channel (HIDDEN)
-            ;
-ASSERT_OPEN: '{%';
-ASSERT_CLOSE: '%}';
-ASSERT_EXPRESSION:
-        ASSERT_OPEN .*? ASSERT_CLOSE -> popMode;
 
 /**
  * 注释模式

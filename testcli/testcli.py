@@ -65,7 +65,7 @@ class TestCli(object):
     logon = None
     logfilename = None
     script = None
-    sqlmap = None
+    commandMap = None
     nologo = None
 
     # 屏幕输出
@@ -81,7 +81,7 @@ class TestCli(object):
             logon=None,                             # 默认登录信息，None表示不需要
             logfilename=None,                       # 程序输出文件名，None表示不需要
             script=None,                            # 脚本文件名，None表示命令行模式
-            sqlmap=None,                            # SQL映射文件名，None表示不存在
+            commandMap=None,                        # SQL映射文件名，None表示不存在
             nologo=False,                           # 是否不打印登陆时的Logo信息，True的时候不打印
             breakwitherror=False,                   # 遇到SQL错误，是否中断脚本后续执行，立刻退出
             sqlperf=None,                           # SQL审计文件输出名，None表示不需要
@@ -150,7 +150,7 @@ class TestCli(object):
 
         # 传递各种参数
         self.commandScript = script
-        self.sqlmap = sqlmap
+        self.commandMap = commandMap
         self.nologo = nologo
         self.logon = logon
         self.logfilename = logfilename
@@ -204,7 +204,7 @@ class TestCli(object):
         # 设置self.JobHandler， 默认情况下，子进程启动的进程进程信息来自于父进程
         self.JobHandler.setProcessContextInfo("logon", self.logon)
         self.JobHandler.setProcessContextInfo("nologo", self.nologo)
-        self.JobHandler.setProcessContextInfo("sqlmap", self.sqlmap)
+        self.JobHandler.setProcessContextInfo("commandMap", self.commandMap)
         self.JobHandler.setProcessContextInfo("sqlperf", sqlperf)
         self.JobHandler.setProcessContextInfo("logfilename", self.logfilename)
         self.JobHandler.setProcessContextInfo("script", self.commandScript)
@@ -318,12 +318,12 @@ class TestCli(object):
 
         # 处理传递的映射文件, 首先加载参数的部分，如果环境变量里头有设置，则环境变量部分会叠加参数部分
         self.testOptions.set("TESTREWRITE", "OFF")
-        if self.sqlmap is not None:  # 如果传递的参数，有Mapping，以参数为准，先加载参数中的Mapping文件
-            self.cmdMappingHandler.Load_Command_Mappings(self.commandScript, self.sqlmap)
+        if self.commandMap is not None:  # 如果传递的参数，有Mapping，以参数为准，先加载参数中的Mapping文件
+            self.cmdMappingHandler.Load_Command_Mappings(self.commandScript, self.commandMap)
             self.testOptions.set("TESTREWRITE", "ON")
-        if "SQLCLI_SQLMAPPING" in os.environ:  # 如果没有参数，则以环境变量中的信息为准
-            if len(os.environ["SQLCLI_SQLMAPPING"].strip()) > 0:
-                self.cmdMappingHandler.Load_Command_Mappings(self.commandScript, os.environ["SQLCLI_SQLMAPPING"])
+        if "SQLCLI_COMMANDMAPPING" in os.environ:  # 如果没有参数，则以环境变量中的信息为准
+            if len(os.environ["SQLCLI_COMMANDMAPPING"].strip()) > 0:
+                self.cmdMappingHandler.Load_Command_Mappings(self.commandScript, os.environ["SQLCLI_COMMANDMAPPING"])
                 self.testOptions.set("TESTREWRITE", "ON")
 
         # 给Page做准备，PAGE显示的默认换页方式.
@@ -357,138 +357,6 @@ class TestCli(object):
         if self.MetaHandler is not None:
             self.MetaHandler.ShutdownServer()
             self.MetaHandler = None
-
-    # 退出当前应用程序
-    @staticmethod
-    def exit(cls, exitValue):
-        if cls.script is not None:
-            # 运行在脚本模式下，会一直等待所有子进程退出后，再退出本程序
-            while True:
-                if not cls.JobHandler.isAllJobClosed():
-                    # 如果还有没有退出的进程，则不会直接退出程序，会继续等待进程退出
-                    time.sleep(3)
-                else:
-                    break
-
-            # 等待那些已经Running的进程完成， 但是只有Submitted的不考虑在内
-            if cls.testOptions.get("JOBMANAGER") == "TRUE":
-                cls.JobHandler.waitjob("all")
-
-            # 断开数据库连接
-            if cls.db_conn:
-                cls.db_conn.close()
-            cls.db_conn = None
-            cls.cmdExecuteHandler.sqlConn = None
-
-            # 断开之前保存的其他数据库连接
-            for m_conn in cls.db_saved_conn.values():
-                m_conn[0].close()
-
-            # 退出应用程序
-            cls.exitValue = exitValue
-            raise EOFError
-        else:
-            if cls.testOptions.get("JOBMANAGER") == "ON":
-                # 运行在控制台模式下
-                if not cls.JobHandler.isAllJobClosed():
-                    yield {
-                        "title": None,
-                        "rows": None,
-                        "headers": None,
-                        "columnTypes": None,
-                        "status": "Please wait all background process complete."
-                    }
-                else:
-                    # 退出应用程序
-                    cls.exitValue = exitValue
-                    raise EOFError
-            else:
-                # 退出应用程序
-                cls.exitValue = exitValue
-                raise EOFError
-
-    # 加载数据库驱动
-    # 标准的默认驱动程序并不需要使用这个函数，这个函数是用来覆盖标准默认驱动程序的加载信息
-    @staticmethod
-    def load_driver(cls, arg, **_):
-        if arg == "":  # 显示当前的Driver配置
-            m_Result = []
-            for row in cls.db_connectionConf:
-                m_Result.append([row["Database"], row["ClassName"], row["FullName"],
-                                 row["JDBCURL"], row["ODBCURL"], row["JDBCProp"]])
-            yield {
-                "title": "Current Drivers: ",
-                "rows": m_Result,
-                "headers": ["Database", "ClassName", "FileName", "JDBCURL", "ODBCURL", "JDBCProp"],
-                "columnTypes": None,
-                "status": "Driver loaded."
-            }
-            return
-
-        # 解析命令参数
-        options_parameters = str(arg).split()
-
-        # 只有一个参数，打印当前Database的Driver情况
-        if len(options_parameters) == 1:
-            m_DriverName = str(options_parameters[0])
-            m_Result = []
-            for row in cls.db_connectionConf:
-                if row["Database"] == m_DriverName:
-                    m_Result.append([row["Database"], row["ClassName"], row["FullName"],
-                                     row["JDBCURL"], row["ODBCURL"], row["JDBCProp"]])
-                    break
-            yield {
-                "title": "Current Drivers: ",
-                "rows": m_Result,
-                "headers": ["Database", "ClassName", "FileName", "JDBCURL", "ODBCURL", "JDBCProp"],
-                "columnTypes": None,
-                "status": "Driver loaded."
-            }
-            return
-
-        # 两个参数，替换当前Database的Driver
-        if len(options_parameters) == 2:
-            m_DriverName = str(options_parameters[0])
-            m_DriverFullName = str(options_parameters[1])
-            if cls.script is None:
-                m_DriverFullName = os.path.join(sys.path[0], m_DriverFullName)
-            else:
-                m_DriverFullName = os.path.abspath(os.path.join(os.path.dirname(cls.script), m_DriverFullName))
-            if not os.path.isfile(m_DriverFullName):
-                raise TestCliException("Driver not loaded. file [" + m_DriverFullName + "] does not exist!")
-            found = False
-            for nPos in range(0, len(cls.db_connectionConf)):
-                if cls.db_connectionConf[nPos]["Database"].upper() == m_DriverName.strip().upper():
-                    m_Config = cls.db_connectionConf[nPos]
-                    m_Config["FullName"] = [m_DriverFullName, ]
-                    found = True
-                    cls.db_connectionConf[nPos] = m_Config
-            if not found:
-                raise TestCliException("Driver not loaded. Please config it in configfile first.")
-            yield {
-                "title": None,
-                "rows": None,
-                "headers": None,
-                "columnTypes": None,
-                "status": "Driver [" + m_DriverName.strip() + "] loaded."
-            }
-            return
-
-        raise TestCliException("Bad command.  loaddriver [database] [new jar name]")
-
-    # 加载数据库SQL映射
-    @staticmethod
-    def load_sqlmap(cls, arg, **_):
-        cls.testOptions.set("TESTREWRITE", "ON")
-        cls.SQLMappingHandler.Load_SQL_Mappings(cls.script, arg)
-        cls.sqlmap = arg
-        yield {
-            "title": None,
-            "rows": None,
-            "headers": None,
-            "columnTypes": None,
-            "status": 'Mapping file loaded.'
-        }
 
     # 连接数据库
     @staticmethod
@@ -804,15 +672,25 @@ class TestCli(object):
             "status": None
         }
         localEmbeddScriptScope["SessionContext"] = sessionContext
-        ret = eval(expression, globalEmbeddScriptScope, localEmbeddScriptScope)
-        if type(ret) == bool:
+        try:
+            ret = eval(expression, globalEmbeddScriptScope, localEmbeddScriptScope)
+            if type(ret) == bool:
+                yield {
+                    "type": "result",
+                    "title": "",
+                    "rows": "",
+                    "headers": "",
+                    "columnTypes": "",
+                    "status": "Assert " + ("successful." if ret else "fail.")
+                }
+        except (SyntaxError, NameError):
             yield {
                 "type": "result",
                 "title": "",
                 "rows": "",
                 "headers": "",
                 "columnTypes": "",
-                "status": "Assert " + ("successful." if ret else "fail.")
+                "status": "Assert fail. SyntaxError."
             }
 
     # 数据库会话管理

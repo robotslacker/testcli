@@ -12,7 +12,6 @@ import binascii
 import decimal
 import random
 import traceback
-from .testcliexception import TestCliException
 from .sqlclijdbc import SQLCliJDBCException
 from .sqlclijdbc import SQLCliJDBCLargeObject
 from .sqlclijdbc import SQLCliJDBCTimeOutException
@@ -20,6 +19,15 @@ from .sqlparse import SQLAnalyze
 from .apiparse import APIAnalyze
 from .sqlparse import SQLFormatWithPrefix
 from .apiparse import APIFormatWithPrefix
+
+from .commands.load import loadPlugin
+from .commands.load import _Class
+from .commands.load import _Func
+from .commands.load import loadDriver
+from .commands.load import loadMap
+from .commands.exit import exitApplication
+
+from .testcliexception import TestCliException
 
 
 class CmdExecute(object):
@@ -66,6 +74,9 @@ class CmdExecute(object):
         self.sqlConn = None
         self.sqlCursor = None
         self.apiConn = None
+
+        if _Class or _Func:
+            pass
 
     def setStartTime(self, startTime):
         self.startTime = startTime
@@ -1217,7 +1228,7 @@ class CmdExecute(object):
                     exitValue = parseObject["exitValue"]
                 else:
                     exitValue = 0
-                for commandResult in self.cliHandler.exit(
+                for commandResult in exitApplication(
                         cls=self.cliHandler,
                         exitValue=exitValue
                 ):
@@ -1326,6 +1337,26 @@ class CmdExecute(object):
                         expression=parseObject["expression"]
                 ):
                     yield commandResult
+            elif parseObject["name"] in ["LOAD"]:
+                if parseObject["option"] == "PLUGIN":
+                    for commandResult in loadPlugin(
+                            pluginFile=parseObject["pluginFile"]
+                    ):
+                        yield commandResult
+                elif parseObject["option"] == "DRIVER":
+                    for commandResult in loadDriver(
+                            cls=self.cliHandler,
+                            driverName=parseObject["driverName"],
+                            driverFile=parseObject["driverFile"]
+                    ):
+                        yield commandResult
+                elif parseObject["option"] == "MAP":
+                    for commandResult in loadMap(
+                            cls=self.cliHandler,
+                            mapFile=parseObject["mapFile"]
+                    ):
+                        yield commandResult
+
             elif parseObject["name"] in ["HTTP"]:
                 # 执行SQL语句
                 for result in self.executeAPIStatement(

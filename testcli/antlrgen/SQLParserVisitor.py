@@ -149,11 +149,6 @@ class SQLParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by SQLParser#loadmap.
-    def visitLoadmap(self, ctx:SQLParser.LoadmapContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by SQLParser#wheneverError.
     def visitWheneverError(self, ctx:SQLParser.WheneverErrorContext):
         return self.visitChildren(ctx)
@@ -169,16 +164,6 @@ class SQLParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by SQLParser#loadDriver.
-    def visitLoadDriver(self, ctx:SQLParser.LoadDriverContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by SQLParser#internal.
-    def visitInternal(self, ctx:SQLParser.InternalContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by SQLParser#set.
     def visitSet(self, ctx:SQLParser.SetContext):
         return self.visitChildren(ctx)
@@ -186,26 +171,6 @@ class SQLParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by SQLParser#script.
     def visitScript(self, ctx:SQLParser.ScriptContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by SQLParser#loopUntil.
-    def visitLoopUntil(self, ctx:SQLParser.LoopUntilContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by SQLParser#loop.
-    def visitLoop(self, ctx:SQLParser.LoopContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by SQLParser#loopPair.
-    def visitLoopPair(self, ctx:SQLParser.LoopPairContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by SQLParser#assert.
-    def visitAssert(self, ctx:SQLParser.AssertContext):
         return self.visitChildren(ctx)
 
 
@@ -261,6 +226,21 @@ class SQLParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by SQLParser#sqlCreateProcedure.
     def visitSqlCreateProcedure(self, ctx:SQLParser.SqlCreateProcedureContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SQLParser#baseCommand.
+    def visitBaseCommand(self, ctx:SQLParser.BaseCommandContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SQLParser#load.
+    def visitLoad(self, ctx:SQLParser.LoadContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SQLParser#assert.
+    def visitAssert(self, ctx:SQLParser.AssertContext):
         return self.visitChildren(ctx)
 
 

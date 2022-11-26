@@ -1,5 +1,5 @@
-> {%
-lastresult=3
-%}
+_LOAD PLUGIN 'D:\\Temp\\aa.py';
 
-Assert {% lastresult==3 %};
+_LOAD DRIVER oracle 'D:\\Temp\\aa.py';
+
+_LOAD MAP 'fdasfasdfdas';

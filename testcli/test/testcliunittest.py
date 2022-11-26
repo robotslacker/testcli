@@ -103,6 +103,35 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
+    def test_SQLAnalyze_Load(self):
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_load plugin aaa")
+        self.assertTrue(isFinished)
+        self.assertEqual({'name': 'LOAD', 'option': 'PLUGIN', 'pluginFile': 'aaa'}, ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_load driver oracle 'd:\\temp\\aa.txt' ")
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {
+                'driverName': 'oracle',
+                'driverFile': "'d:\\temp\\aa.txt'",
+                'name': 'LOAD',
+                'option': 'DRIVER'
+             },
+            ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_load map '/abcd/efg/aa.txt' ")
+        self.assertTrue(isFinished)
+        self.assertEqual({'name': 'LOAD', 'option': 'MAP', 'mapFile': '/abcd/efg/aa.txt'}, ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
     def test_SQLAnalyze_ExitWithCode(self):
         (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("exit 3")
@@ -152,8 +181,8 @@ class TestSynatx(unittest.TestCase):
             = SQLAnalyze("Assert {% assert expresssion %}")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'ASSERT', 'expression': ' assert expresssion '}, ret_CommandSplitResult)
-        self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
 
     def test_SQLAnalyze_Set(self):
         (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \

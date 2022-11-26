@@ -25,7 +25,7 @@ class SQLVisitor(SQLParserVisitor):
         self.errorCode = 0
         # 如果成功，返回空；如果失败，返回解析的错误提示信息
         self.errorMsg = ""
-    
+
     """
         功能：返回分析上下文分词索引
              提示计入
@@ -886,38 +886,73 @@ class SQLVisitor(SQLParserVisitor):
 
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitLoadmap(self, ctx: SQLParser.LoadmapContext):
-        
-        parsedObject = {'name': 'LOADMAP' , 'rule': ctx.getRuleIndex() }
-    
-        expression_list = []
-        for expression in ctx.expression():
-            result, script, hint, code, message =  self.visit(expression)
-            expression_list.append(result)
-        
-        parsedObject.update({'expression' : expression_list})
-        
+    def visitLoad(self, ctx: SQLParser.LoadContext):
+        parsedObject = {'name': 'LOAD'}
+
+        # 获取源文件
         start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
+        tokens = ctx.parser._input.tokens[start:end + 1]
         originScript = self.getSource(tokens)
-        # 提示信息
+
+        # 加载的选项
+        option = str(ctx.LOAD_OPTION().getText()).strip().upper()
+        parsedObject.update({"option": option})
+
+        # 加载的内容
+        if ctx.LOAD_EXPRESSION() is not None:
+            if option.upper() == "DRIVER":
+                driverName = None
+                driverFile = None
+                if len(ctx.LOAD_EXPRESSION()) >= 1:
+                    driverName = str((ctx.LOAD_EXPRESSION()[0].getText())).strip()
+                    if driverName.startswith('"') and driverName.endswith('"'):
+                        driverName = driverName[1:-1]
+                    if driverName.startswith("'") and driverName.endswith("'"):
+                        driverName = driverName[1:-1]
+                if len(ctx.LOAD_EXPRESSION()) >= 2:
+                    driverFile = str((ctx.LOAD_EXPRESSION()[1].getText())).strip()
+                    if driverFile.startswith('"') and driverFile.endswith('"'):
+                        driverFile = driverFile[1:-1]
+                    if driverFile.startswith("'") and driverFile.endswith("'"):
+                        driverFile = driverFile[1:-1]
+                parsedObject.update(
+                    {
+                        "driverName": driverName,
+                        "driverFile": driverFile,
+                     }
+                )
+            if option.upper() == "PLUGIN":
+                pluginFile = str((ctx.LOAD_EXPRESSION()[0].getText())).strip()
+                if pluginFile.startswith('"') and pluginFile.endswith('"'):
+                    pluginFile = pluginFile[1:-1]
+                if pluginFile.startswith("'") and pluginFile.endswith("'"):
+                    pluginFile = pluginFile[1:-1]
+                parsedObject.update({"pluginFile": pluginFile})
+            if option.upper() == "MAP":
+                mapFile = str((ctx.LOAD_EXPRESSION()[0].getText())).strip()
+                if mapFile.startswith('"') and mapFile.endswith('"'):
+                    mapFile = mapFile[1:-1]
+                if mapFile.startswith("'") and mapFile.endswith("'"):
+                    mapFile = mapFile[1:-1]
+                parsedObject.update({"mapFile": mapFile})
+
+        # 获取提示信息
         hint = self.getHint(tokens)
+
+        # 获取错误代码
         errorCode = 0
         errorMsg = None
-        if (ctx.exception is not None):
+        if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
-            self.isFinished = False
 
+        self.parsedObject = parsedObject
+        self.originScripts = originScript
+        self.hints = hint
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
 
-        self.parsedObject.append(parsedObject)
-        self.originScripts.append(originScript)
-        self.hints.append(hint)
-        self.errorCode.append(errorCode)
-        self.errorMsg.append(errorMsg)
-
-        return  parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitWheneverError(self, ctx:SQLParser.WheneverErrorContext):
         param = None
@@ -977,72 +1012,6 @@ class SQLVisitor(SQLParserVisitor):
 
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitLoadDriver(self, ctx:SQLParser.LoadmapContext):
-        
-        parsedObject = {'name': 'LOADDRIVER' , 'rule': ctx.getRuleIndex() }
-    
-        expression_list = []
-        for expression in ctx.expression():
-            result, script, hint, code, message =  self.visit(expression)
-            expression_list.append(result)
-        if(len(expression_list)>0):
-            parsedObject.update({'expression' : expression_list})
-        
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-        errorCode = 0
-        errorMsg = None
-        if (ctx.exception is not None):
-            errorCode = -1
-            errorMsg = ctx.exception.message
-            self.isFinished = False
-
-
-        self.parsedObject.append(parsedObject)
-        self.originScripts.append(originScript)
-        self.hints.append(hint)
-        self.errorCode.append(errorCode)
-        self.errorMsg.append(errorMsg)
-
-        return  parsedObject, originScript, hint, errorCode, errorMsg
-
-    # Visit a parse tree produced by SQLParser#internal.
-    def visitInternal(self, ctx:SQLParser.InternalContext):
-        
-        parsedObject = {'name': 'INTERNAL' , 'rule': ctx.getRuleIndex() }
-
-        expression_list = []
-        for expression in ctx.expression():
-            result, script, hint, code, message =  self.visit(expression)
-            expression_list.append(result)
-        
-        parsedObject.update({'expression' : expression_list})
-
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-        errorCode = 0
-        errorMsg = None
-        if (ctx.exception is not None):
-            errorCode = -1
-            errorMsg = ctx.exception.message
-            self.isFinished = False
-
-        self.parsedObject.append(parsedObject)
-        self.originScripts.append(originScript)
-        self.hints.append(hint)
-        self.errorCode.append(errorCode)
-        self.errorMsg.append(errorMsg)
-
-        return  parsedObject, originScript, hint, errorCode, errorMsg
-
     def visitScript(self, ctx: SQLParser.ScriptContext):
         parsedObject = {'name': 'SCRIPT'}
 
@@ -1081,94 +1050,11 @@ class SQLVisitor(SQLParserVisitor):
         self.errorMsg = errorMsg
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    # Loop Until
-    def visitLoopUntil(self, ctx:SQLParser.LoopUntilContext):
+    # def visitBaseCommand(self, ctx: SQLParser.BaseCommandContext):
+    #     print("=== + " + str(ctx.getText()))
+    #     # basectx = BaseParser.BaseCommandContext()
+    #     return self.baseVisitor.visitBaseCommand(BaseParser.BaseCommandContext(basectx))
 
-        parsedObject = {'name': 'LOOP UNTIL' , 'rule': ctx.getRuleIndex() }
-        
-        if (ctx.INT() is not None):
-            parsedObject.update({'param': ctx.INT().getText()})
-
-        if (ctx.expression() is not None):
-            result, script, hint, code, message =  self.visit(ctx.expression())
-            parsedObject.update({'expression': result})
-
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-        errorCode = 0
-        errorMsg = None
-        if (ctx.exception is not None):
-            errorCode = -1
-            errorMsg = ctx.exception.message
-            self.isFinished = False
-
-        self.parsedObject.append(parsedObject)
-        self.originScripts.append(originScript)
-        self.hints.append(hint)
-        self.errorCode.append(errorCode)
-        self.errorMsg.append(errorMsg)
-
-        return  parsedObject, originScript, hint, errorCode, errorMsg
-
-
-    # 
-    def visitLoop(self, ctx:SQLParser.LoopContext):
-        parsedObject = {'name': 'LOOP' , 'rule': ctx.getRuleIndex() }
-        
-        pairs = []
-        for pair in ctx.loopPair():
-            result, script, hint, code, message =  self.visit(pair)
-            pairs.append(result)
-        
-        parsedObject.update({'pair': pairs })
-
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-        errorCode = 0
-        errorMsg = None
-        if (ctx.exception is not None):
-            errorCode = -1
-            errorMsg = ctx.exception.message
-            self.isFinished = False
-
-        self.parsedObject.append(parsedObject)
-        self.originScripts.append(originScript)
-        self.hints.append(hint)
-        self.errorCode.append(errorCode)
-        self.errorMsg.append(errorMsg)
-
-        return  parsedObject, originScript, hint, errorCode, errorMsg
-
-    def visitLoopPair(self, ctx:SQLParser.LoopPairContext):
-
-        parsedObject = {}
-
-        if (ctx.String() is not None) and (ctx.expression() is not None):
-            result, script, hint, code, message =  self.visit(ctx.expression())
-            parsedObject.update({ctx.String().getText() : result})
-
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-        errorCode = 0
-        errorMsg = None
-        if (ctx.exception is not None):
-            errorCode = -1
-            errorMsg = ctx.exception.message
-
-        return  parsedObject, originScript, hint, errorCode, errorMsg
-    
     def visitAssert(self, ctx: SQLParser.AssertContext):
         parsedObject = {'name': 'ASSERT'}
 
@@ -1267,20 +1153,20 @@ class SQLVisitor(SQLParserVisitor):
         self.errorMsg = errorMsg
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitSqlReplace(self, ctx:SQLParser.SqlReplaceContext):
+    def visitSqlReplace(self, ctx: SQLParser.SqlReplaceContext):
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
 
         statement = ctx.SQL_REPLACE().getText() + self.getText(tokens, SQLLexer.SQLSTATEMENT_CHANNEL)
 
-        parsedObject = {'name': 'REPLACE' , 'rule': ctx.getRuleIndex(), 'statement': statement }
+        parsedObject = {'name': 'REPLACE', 'rule': ctx.getRuleIndex(), 'statement': statement}
         # 包含注释和提示
         originScript = self.getSource(tokens)
         # 句子中的提示
         hint = self.getHint(tokens)
         errorCode = 0
         errorMsg = None
-        if (ctx.exception is not None):
+        if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
             self.isFinished = False
@@ -1294,7 +1180,7 @@ class SQLVisitor(SQLParserVisitor):
         self.errorCode.append(errorCode)
         self.errorMsg.append(errorMsg)
 
-        return  parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitSqlInsert(self, ctx: SQLParser.SqlInsertContext):
         # 获取源文件
@@ -1446,7 +1332,7 @@ class SQLVisitor(SQLParserVisitor):
         self.errorMsg = errorMsg
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitSqlDeclare(self, ctx:SQLParser.SqlDeclareContext):
+    def visitSqlDeclare(self, ctx: SQLParser.SqlDeclareContext):
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end + 1]
 

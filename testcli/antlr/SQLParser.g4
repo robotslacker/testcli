@@ -1,4 +1,5 @@
 parser grammar SQLParser;
+import BaseParser;
 
 options { 
     tokenVocab = SQLLexer;
@@ -16,17 +17,12 @@ command:
       | disconnect
       | session
       | start
-      | loadmap
       | wheneverError
       | spool
-      | loadDriver
       | set
-      | internal
       | script
-      | loop
       | echo
-      | loopUntil
-      | assert
+      | baseCommand
       | sql
       | EOF
       ;
@@ -164,11 +160,6 @@ start
         : START (expression | ',')+ LOOP? INT? CRLF?
         ;
 
-// 
-loadmap
-        : LOADMAP (expression | ',')+  CRLF?
-        ;
-        
 //
 wheneverError
         :   WHENEVER_ERROR (CONTINUE|EXIT) CRLF?
@@ -185,17 +176,7 @@ echo
             (CRLF | EOF)?
         ;
 
-// 13： 加载驱动程序
-loadDriver
-        : LOADDRIVER (expression | ',')*  CRLF?
-        ;
-
 // 14：执行SQL语句
-
-// 15：执行内部语句
-internal 
-        : INTERNAL expression+ CRLF?
-        ;
 
 // 16：SET 语句
 set 
@@ -209,27 +190,7 @@ script
             CRLF?
         ;
 
-
-// 20：循环,条件判断
-loopUntil
-        : LOOP 'BEGIN' UNTIL expression INTERVAL INT CRLF?
-          LOOP END CRLF?
-        ;
-
-loop    : LOOP 'BEGIN' loopPair (COMMA loopPair)* CRLF?
-          LOOP END CRLF
-        ;
-
-loopPair
-        : String COLON expression
-        ;
-
-// 21：ASSERT判断
-assert
-        : ASSERT ASSERT_EXPRESSION (SEMICOLON)? CRLF?
-        ;
-
-// 
+//
 sql 
         : sqlCreate
         | sqlReplace
