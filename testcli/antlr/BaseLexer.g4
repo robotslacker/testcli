@@ -48,6 +48,7 @@ ASSERT              :  'ASSERT' -> pushMode(AssertMode);
 
 // 加载驱动或者映射关系
 LOAD                : '_LOAD' -> pushMode(LoadMode);
+HOST                : '_HOST' -> pushMode(HostMode);
 
 INT                 : DIGIT+ ;
 DECIMAL             : DIGIT+ '.' DIGIT+ ;
@@ -87,3 +88,8 @@ LOAD_SPACE          : [ \t]+ -> channel (HIDDEN);
 LOAD_OPTION         : 'PLUGIN' | 'MAP' | 'DRIVER';
 LOAD_EXPRESSION     : String;
 LOAD_CRLF           : CRLF -> popMode;
+
+mode HostMode;
+HOST_SPACE         : [ \t]+ -> channel (HIDDEN);
+HOST_TAG           : '"""';
+HOST_BLOCK         :HOST_TAG '\n' .*? '\n' HOST_TAG -> popMode;

@@ -239,6 +239,11 @@ class SQLParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by SQLParser#host.
+    def visitHost(self, ctx:SQLParser.HostContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by SQLParser#assert.
     def visitAssert(self, ctx:SQLParser.AssertContext):
         return self.visitChildren(ctx)

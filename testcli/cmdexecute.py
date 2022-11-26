@@ -26,8 +26,14 @@ from .commands.load import _Func
 from .commands.load import loadDriver
 from .commands.load import loadMap
 from .commands.exit import exitApplication
+from .commands.session import sessionManage
+from .commands.assertExpression import assertExpression
+from .commands.embeddScript import executeEmbeddScript
+from .commands.host import executeLocalCommand
+from .commands.cliSleep import cliSleep
 
 from .testcliexception import TestCliException
+from .global_var import lastCommandResult
 
 
 class CmdExecute(object):
@@ -1295,10 +1301,19 @@ class CmdExecute(object):
                 commandHintList = self.parseHints(list(ret_CommandHints[pos]))
 
                 # 执行SQL语句
+                startTime = time.time()
                 for result in self.executeSQLStatement(
                         sql=sqlCommand,
                         sqlHints=commandHintList,
                         startTime=0):
+                    endTime = time.time()
+                    lastCommandResult["elapsed"] = endTime - startTime
+                    if result["type"] == "result":
+                        lastCommandResult["rows"] = result["rows"]
+                        lastCommandResult["headers"] = result["headers"]
+                    else:
+                        lastCommandResult["rows"] = []
+                        lastCommandResult["headers"] = []
                     yield result
             elif parseObject["name"] in ["USE"]:
                 for commandResult in self.cliHandler.set_nameSpace(
@@ -1307,7 +1322,7 @@ class CmdExecute(object):
                 ):
                     yield commandResult
             elif parseObject["name"] in ["SLEEP"]:
-                for commandResult in self.cliHandler.sleep(
+                for commandResult in cliSleep(
                         cls=self.cliHandler,
                         sleepTime=parseObject["sleepTime"]
                 ):
@@ -1319,20 +1334,20 @@ class CmdExecute(object):
                 ):
                     yield commandResult
             elif parseObject["name"] in ["SESSION"]:
-                for commandResult in self.cliHandler.session_manage(
+                for commandResult in sessionManage(
                         cls=self.cliHandler,
                         action=parseObject["action"],
                         sessionName=parseObject["sessionName"]
                 ):
                     yield commandResult
             elif parseObject["name"] in ["SCRIPT"]:
-                for commandResult in self.cliHandler.execute_embeddScript(
+                for commandResult in executeEmbeddScript(
                         cls=self.cliHandler,
                         block=parseObject["block"]
                 ):
                     yield commandResult
             elif parseObject["name"] in ["ASSERT"]:
-                for commandResult in self.cliHandler.assert_expression(
+                for commandResult in assertExpression(
                         cls=self.cliHandler,
                         expression=parseObject["expression"]
                 ):
@@ -1358,11 +1373,18 @@ class CmdExecute(object):
                         yield commandResult
 
             elif parseObject["name"] in ["HTTP"]:
-                # 执行SQL语句
+                # 执行HTTP请求
                 for result in self.executeAPIStatement(
                         apiRequest=parseObject,
                         apiHints=[],
                         startTime=0):
+                    yield result
+            elif parseObject["name"] in ["HOST"]:
+                # 执行主机操作系统命令
+                for result in executeLocalCommand(
+                        cls=self.cliHandler,
+                        command=parseObject["script"]
+                ):
                     yield result
             elif parseObject["name"] in ["UNKNOWN"]:
                 yield {"type": "error",

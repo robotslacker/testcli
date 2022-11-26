@@ -886,6 +886,44 @@ class SQLVisitor(SQLParserVisitor):
 
         return parsedObject, originScript, hint, errorCode, errorMsg
 
+    def visitHost(self, ctx: SQLParser.HostContext):
+        parsedObject = {'name': 'HOST'}
+
+        # 删除BLOCK 末尾的 ECHO OFF
+        if ctx.HOST_BLOCK() is not None:
+            script = str(ctx.HOST_BLOCK().getText())
+            if script.endswith('"""'):
+                script = script[3:-3].strip()
+                script = " & ".join(script.split('\n'))
+                parsedObject.update({'script': script})
+            else:
+                self.isFinished = False
+        else:
+            self.isFinished = False
+            parsedObject.update({'script': ""})
+
+        # 获取源文件
+        start, end = self.getSourceInterval(ctx)
+        tokens = ctx.parser._input.tokens[start:end+1]
+        originScript = self.getSource(tokens)
+
+        # 获取提示信息
+        hint = self.getHint(tokens)
+
+        # 获取错误代码
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = -1
+            errorMsg = ctx.exception.message
+
+        self.originScripts = originScript
+        self.parsedObject = parsedObject
+        self.hints = hint
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
+        return parsedObject, originScript, hint, errorCode, errorMsg
+
     def visitLoad(self, ctx: SQLParser.LoadContext):
         parsedObject = {'name': 'LOAD'}
 
@@ -954,14 +992,14 @@ class SQLVisitor(SQLParserVisitor):
 
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitWheneverError(self, ctx:SQLParser.WheneverErrorContext):
+    def visitWheneverError(self, ctx: SQLParser.WheneverErrorContext):
         param = None
         if ctx.CONTINUE() is not None:
             param = ctx.CONTINUE().getText()
         elif ctx.EXIT() is not None:
             param = ctx.EXIT().getText()
         
-        parsedObject = {'name': 'WHENEVER_ERROR' , 'rule': ctx.getRuleIndex(), 'param': param }
+        parsedObject = {'name': 'WHENEVER_ERROR', 'param': param}
     
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
@@ -971,7 +1009,7 @@ class SQLVisitor(SQLParserVisitor):
         hint = self.getHint(tokens)
         errorCode = 0
         errorMsg = None
-        if (ctx.exception is not None):
+        if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
             self.isFinished = False
@@ -982,7 +1020,7 @@ class SQLVisitor(SQLParserVisitor):
         self.errorCode.append(errorCode)
         self.errorMsg.append(errorMsg)
 
-        return  parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitSpool(self, ctx: SQLParser.SpoolContext):
         content = ctx.String().getText()
@@ -1159,7 +1197,7 @@ class SQLVisitor(SQLParserVisitor):
 
         statement = ctx.SQL_REPLACE().getText() + self.getText(tokens, SQLLexer.SQLSTATEMENT_CHANNEL)
 
-        parsedObject = {'name': 'REPLACE', 'rule': ctx.getRuleIndex(), 'statement': statement}
+        parsedObject = {'name': 'REPLACE', 'statement': statement}
         # 包含注释和提示
         originScript = self.getSource(tokens)
         # 句子中的提示
@@ -1174,12 +1212,11 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             self.isFinished = False
 
-        self.parsedObject.append(parsedObject)
-        self.originScripts.append(originScript)
-        self.hints.append(hint)
-        self.errorCode.append(errorCode)
-        self.errorMsg.append(errorMsg)
-
+        self.originScripts = originScript
+        self.parsedObject = parsedObject
+        self.hints = hint
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
         return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitSqlInsert(self, ctx: SQLParser.SqlInsertContext):

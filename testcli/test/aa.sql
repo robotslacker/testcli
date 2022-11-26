@@ -1,5 +1,6 @@
-_LOAD PLUGIN 'D:\\Temp\\aa.py';
+connect /mem
+_host """
+help
+dir
+"""
 
-_LOAD DRIVER oracle 'D:\\Temp\\aa.py';
-
-_LOAD MAP 'fdasfasdfdas';

@@ -10,6 +10,7 @@ prog: baseCommand EOF;
 baseCommand:
       assert
       | load
+      | host
       ;
 
 //baseCommand:
@@ -71,6 +72,11 @@ start
         ;
 
 load    : LOAD LOAD_OPTION (LOAD_EXPRESSION)+ (SEMICOLON)? CRLF?;
+
+host    :
+            HOST
+            HOST_BLOCK
+        ;
 
 //
 wheneverError

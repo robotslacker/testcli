@@ -11,7 +11,6 @@ import click
 import configparser
 import hashlib
 import codecs
-import subprocess
 import unicodedata
 import itertools
 import urllib3
@@ -41,20 +40,18 @@ from .sqlclijobmanager import JOBManager
 from .sqlclitransactionmanager import TransactionManager
 from .datawrapper import DataWrapper
 from .testoption import TestOptions
-
 from .__init__ import __version__
 from .sqlparse import SQLAnalyze
 from .apiparse import APIAnalyze
+from .global_var import globalEmbeddScriptScope
+from .global_var import localEmbeddScriptScope
+from .global_var import lastCommandResult
 
 OFLAG_LOGFILE = 1
 OFLAG_LOGGER = 2
 OFLAG_CONSOLE = 4
 OFLAG_SPOOL = 8
 OFLAG_ECHO = 16
-
-# 定义执行内嵌脚本时候的全局环境变量
-globalEmbeddScriptScope = {}
-localEmbeddScriptScope = {}
 
 
 class TestCli(object):
@@ -319,11 +316,11 @@ class TestCli(object):
         # 处理传递的映射文件, 首先加载参数的部分，如果环境变量里头有设置，则环境变量部分会叠加参数部分
         self.testOptions.set("TESTREWRITE", "OFF")
         if self.commandMap is not None:  # 如果传递的参数，有Mapping，以参数为准，先加载参数中的Mapping文件
-            self.cmdMappingHandler.Load_Command_Mappings(self.commandScript, self.commandMap)
+            self.cmdMappingHandler.loadCommandMappings(self.commandScript, self.commandMap)
             self.testOptions.set("TESTREWRITE", "ON")
         if "SQLCLI_COMMANDMAPPING" in os.environ:  # 如果没有参数，则以环境变量中的信息为准
             if len(os.environ["SQLCLI_COMMANDMAPPING"].strip()) > 0:
-                self.cmdMappingHandler.Load_Command_Mappings(self.commandScript, os.environ["SQLCLI_COMMANDMAPPING"])
+                self.cmdMappingHandler.loadCommandMappings(self.commandScript, os.environ["SQLCLI_COMMANDMAPPING"])
                 self.testOptions.set("TESTREWRITE", "ON")
 
         # 给Page做准备，PAGE显示的默认换页方式.
@@ -585,272 +582,6 @@ class TestCli(object):
             "columnTypes": None,
             "status": 'Database disconnected.'
         }
-
-    # 执行主机的操作命令
-    @staticmethod
-    def host(cls, arg, **_):
-        if arg is None or len(str(arg)) == 0:
-            raise TestCliException(
-                "Missing OS command\n." + "host xxx")
-        Commands = str(arg)
-
-        if 'win32' in str(sys.platform).lower():
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags = subprocess.CREATE_NEW_CONSOLE | subprocess.STARTF_USESHOWWINDOW
-            startupinfo.wShowWindow = subprocess.SW_HIDE
-            p = subprocess.Popen(Commands,
-                                 shell=True,
-                                 startupinfo=startupinfo,
-                                 stdin=subprocess.PIPE,
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
-        else:
-            p = subprocess.Popen(Commands,
-                                 shell=True,
-                                 stdin=subprocess.PIPE,
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
-        try:
-            (stdoutdata, stderrdata) = p.communicate()
-            summaryStatus = str(stdoutdata.decode(encoding=cls.testOptions.get("RESULT_ENCODING")))
-            if len(str(stderrdata.decode(encoding=cls.testOptions.get("RESULT_ENCODING")))) != 0:
-                summaryStatus = summaryStatus + "\n" + \
-                                str(stderrdata.decode(encoding=cls.testOptions.get("RESULT_ENCODING")))
-            yield {
-                "title": None,
-                "rows": None,
-                "headers": None,
-                "columnTypes": None,
-                "status": summaryStatus
-            }
-        except UnicodeDecodeError:
-            raise TestCliException("The character set [" + cls.testOptions.get("RESULT_ENCODING") + "]" +
-                                   " does not match the terminal character set, " +
-                                   "so the terminal information cannot be output correctly.")
-
-    # 执行Python脚本
-    @staticmethod
-    def execute_embeddScript(cls, block: str):
-        # 定义全局的环境信息，保证在多次执行嵌入式脚本的时候，环境信息能够被保留
-        global globalEmbeddScriptScope
-        global localEmbeddScriptScope
-
-        sessionContext = {
-            "dbConn": cls.db_conn.jconn if cls.db_conn is not None else None,
-            "type": "result",
-            "title": None,
-            "rows": None,
-            "headers": None,
-            "columnTypes": None,
-            "status": None
-        }
-        localEmbeddScriptScope["SessionContext"] = sessionContext
-        exec(block, globalEmbeddScriptScope, localEmbeddScriptScope)
-
-        yield {
-            "type": sessionContext["type"],
-            "title": sessionContext["title"],
-            "rows": sessionContext["rows"],
-            "headers": sessionContext["headers"],
-            "columnTypes": sessionContext["columnTypes"],
-            "status": sessionContext["status"],
-        }
-
-    @staticmethod
-    def assert_expression(cls, expression: str):
-        # 定义全局的环境信息，保证在多次执行嵌入式脚本的时候，环境信息能够被保留
-        global globalEmbeddScriptScope
-        global localEmbeddScriptScope
-
-        sessionContext = {
-            "dbConn": cls.db_conn.jconn if cls.db_conn is not None else None,
-            "type": "result",
-            "title": None,
-            "rows": None,
-            "headers": None,
-            "columnTypes": None,
-            "status": None
-        }
-        localEmbeddScriptScope["SessionContext"] = sessionContext
-        try:
-            ret = eval(expression, globalEmbeddScriptScope, localEmbeddScriptScope)
-            if type(ret) == bool:
-                yield {
-                    "type": "result",
-                    "title": "",
-                    "rows": "",
-                    "headers": "",
-                    "columnTypes": "",
-                    "status": "Assert " + ("successful." if ret else "fail.")
-                }
-        except (SyntaxError, NameError):
-            yield {
-                "type": "result",
-                "title": "",
-                "rows": "",
-                "headers": "",
-                "columnTypes": "",
-                "status": "Assert fail. SyntaxError."
-            }
-
-    # 数据库会话管理
-    @staticmethod
-    def session_manage(cls, action: str, sessionName: str = None):
-        # Session_Context:
-        #   0:   Connection
-        #   1:   UserName
-        #   2:   Password
-        #   3:   URL
-        if action.strip().lower() == 'show':
-            m_Result = []
-            for m_Session_Name, m_Connection in cls.db_saved_conn.items():
-                if m_Connection[0] is None:
-                    m_Result.append(['None', str(m_Session_Name), str(m_Connection[1]), '******', str(m_Connection[3])])
-                else:
-                    m_Result.append(['Connection', str(m_Session_Name), str(m_Connection[1]),
-                                     '******', str(m_Connection[3])])
-            if cls.db_conn is not None:
-                m_Result.append(['Current', str(cls.db_sessionName), str(cls.db_username), '******', str(cls.db_url)])
-            if len(m_Result) == 0:
-                yield {
-                    "type": "result",
-                    "title": None,
-                    "rows": None,
-                    "headers": None,
-                    "columnTypes": None,
-                    "status": "No saved sesssions."
-                }
-            else:
-                yield {
-                    "type": "result",
-                    "title": "Saved Sessions:",
-                    "rows": m_Result,
-                    "headers": ["Session", "Sesssion Name", "User Name", "Password", "URL"],
-                    "columnTypes": None,
-                    "status": "Total " + str(len(m_Result)) + " saved sesssions."
-                }
-            return
-
-        if action.strip().lower() == 'release':
-            if cls.db_conn is None:
-                raise TestCliException(
-                    "You don't have a saved session.")
-            del cls.db_saved_conn[sessionName]
-            cls.db_sessionName = None
-        elif action.strip().lower() == 'save':
-            if cls.db_conn is None:
-                raise TestCliException(
-                    "Please connect session first before save.")
-            cls.db_saved_conn[sessionName] = [cls.db_conn, cls.db_username, cls.db_password, cls.db_url]
-            cls.db_sessionName = sessionName
-        elif action.strip().lower() == 'saveurl':
-            if cls.db_conn is None:
-                raise TestCliException(
-                    "Please connect session first before save.")
-            cls.db_saved_conn[sessionName] = [None, cls.db_username, cls.db_password, cls.db_url]
-            cls.db_sessionName = sessionName
-        elif action.strip().lower() == 'restore':
-            if sessionName in cls.db_saved_conn:
-                cls.db_username = cls.db_saved_conn[sessionName][1]
-                cls.db_password = cls.db_saved_conn[sessionName][2]
-                cls.db_url = cls.db_saved_conn[sessionName][3]
-                if cls.db_saved_conn[sessionName][0] is None:
-                    result = cls.connect_db(cls.db_username + "/" + cls.db_password + "@" + cls.db_url)
-                    for title, cur, headers, columnTypes, status in result:
-                        yield {
-                            "title": title,
-                            "rows": cur,
-                            "headers": headers,
-                            "columnTypes": columnTypes,
-                            "status": status
-                        }
-                else:
-                    cls.db_conn = cls.db_saved_conn[sessionName][0]
-                    cls.cmdExecuteHandler.sqlConn = cls.db_conn
-                    cls.db_sessionName = sessionName
-            else:
-                raise TestCliException(
-                    "Session [" + sessionName + "] does not exist. Please save it first.")
-        else:
-            raise TestCliException(
-                "Wrong argument : " + "Session save/restore [session name]")
-        if action.strip().lower() == 'save':
-            yield {
-                "type": "result",
-                "title": None,
-                "rows": None,
-                "headers": None,
-                "columnTypes": None,
-                "status": "Session saved Successful."
-            }
-        if action.strip().lower() == 'release':
-            yield {
-                "type": "result",
-                "title": None,
-                "rows": None,
-                "headers": None,
-                "columnTypes": None,
-                "status": "Session release Successful."
-            }
-        if action.strip().lower() == 'restore':
-            cls.testOptions.set("CONNURL", cls.db_url)
-            yield {
-                "type": "result",
-                "title": None,
-                "rows": None,
-                "headers": None,
-                "columnTypes": None,
-                "status": "Session restored Successful."
-            }
-
-    # 休息一段时间
-    @staticmethod
-    def sleep(cls, sleepTime: int):
-        sleepTimeOut = -1
-
-        nameSpace = cls.testOptions.get("NAMESPACE")
-        scriptTimeOut = int(cls.testOptions.get("SCRIPT_TIMEOUT"))
-        if nameSpace == "SQL":
-            sqlTimeOut = int(cls.testOptions.get("SQL_TIMEOUT"))
-            if scriptTimeOut != -1:
-                if scriptTimeOut < sqlTimeOut:
-                    sleepTimeOut = scriptTimeOut
-            else:
-                if sqlTimeOut != -1:
-                    sleepTimeOut = sqlTimeOut
-        if nameSpace == "API":
-            apiTimeOut = int(cls.testOptions.get("API_TIMEOUT"))
-            if scriptTimeOut != -1:
-                if scriptTimeOut < apiTimeOut:
-                    sleepTimeOut = scriptTimeOut
-            else:
-                if apiTimeOut != -1:
-                    sleepTimeOut = apiTimeOut
-
-        if sleepTime <= 0:
-            message = "Parameter must be a valid number, sleep [seconds]."
-            return [{
-                "type": "result",
-                "title": None,
-                "rows": None,
-                "headers": None,
-                "columnTypes": None,
-                "status": message
-            }]
-        if sleepTimeOut != -1 and sleepTimeOut < sleepTime:
-            # 有超时限制，最多休息到超时的时间
-            time.sleep(sleepTimeOut)
-            raise SQLCliJDBCTimeOutException("TimeOut")
-        else:
-            time.sleep(sleepTime)
-        return [{
-            "type": "result",
-            "title": None,
-            "rows": None,
-            "headers": None,
-            "columnTypes": None,
-            "status": None
-        }]
 
     # 从文件中执行SQL
     @staticmethod

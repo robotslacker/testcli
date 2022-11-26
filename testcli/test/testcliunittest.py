@@ -117,7 +117,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(
             {
                 'driverName': 'oracle',
-                'driverFile': "'d:\\temp\\aa.txt'",
+                'driverFile': "d:\\temp\\aa.txt",
                 'name': 'LOAD',
                 'option': 'DRIVER'
              },
@@ -449,6 +449,23 @@ class TestSynatx(unittest.TestCase):
             ret_CommandSplitResult)
         self.assertEqual(1, ret_errorCode)
         self.assertEqual("line1:12  extraneous input 'xxx' expecting <EOF> ", ret_errorMsg)
+
+    def test_SQLAnalyze_Host(self):
+        script = '"""' + "\n" + \
+                 'help' + "\n" + \
+                 'dir' + "\n" + \
+                 '"""'
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_HOST " + script)
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {
+                'name': 'HOST',
+                'script': "help & dir"
+            },
+            ret_CommandSplitResult)
 
     def test_SQLExecute(self):
         scriptFile = "testsqlsanity.sql"

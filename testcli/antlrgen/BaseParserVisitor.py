@@ -59,6 +59,11 @@ class BaseParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by BaseParser#host.
+    def visitHost(self, ctx:BaseParser.HostContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by BaseParser#wheneverError.
     def visitWheneverError(self, ctx:BaseParser.WheneverErrorContext):
         return self.visitChildren(ctx)
