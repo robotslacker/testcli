@@ -3,6 +3,8 @@ import os
 import sys
 import traceback
 import click
+import pytest
+
 from .__init__ import __version__
 from .testcli import TestCli
 from .testcliexception import TestCliException
@@ -25,6 +27,7 @@ appExitValue = 0
 @click.option("--profile", type=str, help="Init profile.")
 @click.option("--scripttimeout", type=int, help="Script Timeout(Seconds).")
 @click.option("--namespace", type=str, help="Command name space.")
+@click.option("--selftest", is_flag=True, help="Run self test.")
 def cli(
         version,
         logon,
@@ -38,7 +41,8 @@ def cli(
         resultcharset,
         profile,
         scripttimeout,
-        namespace
+        namespace,
+        selftest
 ):
     if version:
         print("Version:", __version__)
@@ -52,6 +56,12 @@ def cli(
             nologo=nologo
         )
         sqlcli.syncdriver()
+        return
+
+    # 程序自检
+    if selftest:
+        testpath = os.path.abspath(os.path.join(os.path.dirname(__file__), "test", "testcliunittest.py"))
+        pytest.main([testpath, ])
         return
 
     # 程序脚本超时时间设置

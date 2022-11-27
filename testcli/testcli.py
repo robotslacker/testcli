@@ -841,11 +841,11 @@ class TestCli(object):
     # 如果执行成功，返回true
     # 如果执行失败，返回false
     def DoCommand(self, text=None):
-        # 判断传入的测试语句， 如果没有传递，则表示控制台程序，需要用户逐行输入语句
         if text is None:
+            # 判断传入的测试语句， 如果没有传递，则表示控制台程序，需要用户逐行输入语句
             full_text = None
+            # 用户一行一行的输入测试语句，一直到输入发生了截止符, 最后的文件截止符号内容就是full_text
             while True:
-                # 用户一行一行的输入测试语句，一直到输入发生了截止符
                 try:
                     bottomToolbar = HTML('<b><style bg="ansired">' + saxutils.escape(
                                             'Version: ' + self.Version + ' | ' +
@@ -863,7 +863,7 @@ class TestCli(object):
                     # KeyboardInterrupt 表示用户输入了CONTROL+C
                     return True
                 except PermissionError:
-                    self.echo("SQLCli Can't work without valid terminal. "
+                    self.echo("TestCli Can't work without valid terminal. "
                               "Use \"--execute\" in case you need run script", err=True, fg="red")
                     return False
 
@@ -877,54 +877,32 @@ class TestCli(object):
                     (ret_bCommandCompleted, ret_CommandSplitResults,
                      ret_CommandSplitResultsWithComments, ret_CommandHints,
                      ret_errorCode, ret_errorMsg) = SQLAnalyze(full_text)
-                    # print("SQL_fulltext:" + full_text)
-                    # print("SQL_bCommandCompleted:" + str(ret_bCommandCompleted))
-                    # print("SQL_CommandSplitResults:" + str(ret_CommandSplitResults))
-                    # print("SQL_CommandSplitResultsWithComments:" + str(ret_CommandSplitResultsWithComments))
-                    # print("SQL_CommandHints:" + str(ret_CommandHints))
-                    # print("SQL_errorCode:" + str(ret_errorCode))
-                    # print("SQL_errorMsg:" + str(ret_errorMsg))
-                    if ret_bCommandCompleted:
+                    if ret_errorCode != 0:
+                        # 即使出错（可能是解析规则未覆盖导致，并不一定是真的SQL语句错误），那么除非看到截止符号，就认为语句没有结束
+                        if full_text.strip().endswith(';') or full_text.strip().endswith('\n/'):
+                            # 语句已经发生错误，没有必要继续运行下去
+                            text = full_text
+                            break
+                    if ret_bCommandCompleted and ret_CommandSplitResults is not None:
                         # 语句已经结束
+                        text = full_text
                         break
                 elif self.testOptions.get('NAMESPACE') == "API":
                     # 判断API语句是否已经结束
                     (ret_bCommandCompleted, ret_CommandSplitResults,
-                     ret_CommandSplitResultsWithComments, ret_CommandHints) = \
-                        APIAnalyze(full_text)
-                    # print("ret_bCommandCompleted:" + str(ret_bCommandCompleted))
-                    # print("ret_CommandSplitResults:" + str(ret_CommandSplitResults))
-                    # print("ret_CommandSplitResultsWithComments:" + str(ret_CommandSplitResultsWithComments))
-                    # print("ret_CommandHints:" + str(ret_CommandHints))
-                    if ret_bCommandCompleted:
+                     ret_CommandSplitResultsWithComments, ret_CommandHints,
+                     ret_errorCode, ret_errorMsg) = APIAnalyze(full_text)
+                    if ret_errorCode != 0:
+                        if full_text.strip().endswith(';') or full_text.strip().endswith('\n/'):
+                            # 语句已经发生错误，没有必要继续运行下去
+                            text = full_text
+                            break
+                    if ret_bCommandCompleted and ret_CommandSplitResults is not None:
                         # 语句已经结束
+                        text = full_text
                         break
-                else:
-                    raise TestCliException("不支持的NAMESPACE。目前仅支持SQL|API")
 
-            # 这是一个内部异常情况，在调试完成后会删除该语句
-            if len(ret_CommandSplitResults) > 1:
-                raise TestCliException("命令行模式下，每行只会返回一个校验结果。 INTERNAL-ERROR")
-            
-            # 并不存在实际的解析结果，应该把全部注释内容记录，并依次往下传递，直到有真正意义的语句
-            if len(ret_CommandSplitResults) == 0:
-                if self.lastComment is not None:
-                    self.lastComment = self.lastComment + "\n" + "\n".join(text)
-                else:
-                    self.lastComment = "\n".join(text)
-                return True
-            else:
-                # 如果文本是空行，直接跳过
-                if not text.strip():
-                    return True
-
-                # 记录需要执行的SQL，包含之前保留的注释部分，传递给执行程序
-                if self.lastComment is None:
-                    text = full_text
-                else:
-                    text = self.lastComment + '\n' + full_text
-                    self.lastComment = None
-
+        # 执行需要处理的语句
         try:
             def show_result(p_result):
                 # 输出显示结果

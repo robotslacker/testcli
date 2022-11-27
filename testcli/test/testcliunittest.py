@@ -7,7 +7,6 @@ import jpype
 import tempfile
 from testcli.sqlparse import SQLAnalyze
 from testcli.apiparse import APIAnalyze
-from testcli.testcli import TestCli
 from testcli.compare import POSIXCompare
 from testcli.sqlclijdbc import connect as jdbcconnect
 
@@ -592,6 +591,7 @@ class TestSynatx(unittest.TestCase):
         fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
         # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        from testcli.testcli import TestCli
         testcli = TestCli(
             logfilename=fullLogFile,
             HeadlessMode=True,
@@ -634,6 +634,7 @@ class TestSynatx(unittest.TestCase):
         fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
         # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        from testcli.testcli import TestCli
         testcli = TestCli(
             logfilename=fullLogFile,
             HeadlessMode=True,
@@ -671,6 +672,7 @@ class TestSynatx(unittest.TestCase):
         fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
         # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        from testcli.testcli import TestCli
         testcli = TestCli(
             logfilename=fullLogFile,
             HeadlessMode=True,
@@ -706,6 +708,7 @@ class TestSynatx(unittest.TestCase):
         fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
         # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        from testcli.testcli import TestCli
         testcli = TestCli(
             logfilename=fullLogFile,
             HeadlessMode=True,
@@ -737,6 +740,7 @@ class TestSynatx(unittest.TestCase):
         fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
         # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        from testcli.testcli import TestCli
         testcli = TestCli(
             logfilename=fullLogFile,
             HeadlessMode=True,
@@ -768,6 +772,7 @@ class TestSynatx(unittest.TestCase):
         fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
         # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        from testcli.testcli import TestCli
         testcli = TestCli(
             logfilename=fullLogFile,
             HeadlessMode=True,

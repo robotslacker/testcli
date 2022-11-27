@@ -107,4 +107,6 @@ def SQLAnalyze(sqlCommandPlainText, defaultNameSpace="SQL"):
     if parser_listener.errorCode != 0:
         errorCode = parser_listener.errorCode
         errorMsg = parser_listener.errorMsg
+
+
     return isFinished, parsedObjects, originScripts, hints, errorCode, errorMsg

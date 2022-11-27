@@ -996,8 +996,9 @@ class CmdExecute(object):
                     (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
                         = SQLAnalyze(currentStatement)
                     if not isFinished:
+                        # 如果语句还没有结束，则需要等待下一行输入
+                        # 如果到了文件末尾，就没有必要继续等待，直接返回
                         if nPos == (len(statementLines) - 1):
-                            # 都最后一行了，实在不能再等了，全部打包，管它呢
                             ret_CommandSplitResults.append(
                                 {'name': 'UNKNOWN',
                                  'statement': currentStatement,
@@ -1012,21 +1013,28 @@ class CmdExecute(object):
                             currentStatementWithComments = None
                         continue
                     if ret_CommandSplitResult is None:
+                        # 解析的结果为空，可能的原因有：
+                        #    这是一个空行，或者仅仅包含注释，那继续等待下一个有意义的行
+                        #    这行已经发生了解析错误，但是由于我们的解析规则并不覆盖所有的数据库语句，所以就假设其为数据库语句
                         if ret_errorCode != 0:
-                            # 语句已经出错，且不是一个空语句
-                            ret_CommandSplitResults.append(
-                                {'name': 'UNKNOWN',
-                                 'statement': currentStatement,
-                                 'reason': ret_errorMsg}
-                            )
-                            # 解析前的语句
-                            ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
-                            # 所有的提示信息
-                            ret_CommandHints.append(currentHints)
-                            # 清空语句的变量
-                            currentStatement = None
-                            currentStatementWithComments = None
+                            # 语句已经出错
+                            #    如果语句的最后一个字符是SQL终止符号，则认为语句结束，假定其为不识别的数据库语句
+                            #    如果语句的最后一个字符不是SQL终止符号，继续等待
+                            if currentStatement.strip().endswith(';') or currentStatement.strip().endswith('\n/'):
+                                ret_CommandSplitResults.append(
+                                    {'name': 'UNKNOWN',
+                                     'statement': currentStatement,
+                                     'reason': ret_errorMsg}
+                                )
+                                # 解析前的语句
+                                ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+                                # 所有的提示信息
+                                ret_CommandHints.append(currentHints)
+                                # 清空语句的变量
+                                currentStatement = None
+                                currentStatementWithComments = None
                             continue
+
                         # 没有任何有效的语句，可能是空行或者完全的注释
                         # 对于注释中的Hint信息需要保留下来
                         pattern = r"^(\s+)?--(\s+)?\[(\s+)?Hint(\s+)?\](.*)"
@@ -1156,8 +1164,6 @@ class CmdExecute(object):
             if self.testOptions.get("NAMESPACE") == "API":
                 formattedCommand = APIFormatWithPrefix(ret_CommandSplitResultsWithComments[pos])
 
-            # 处理解析后的命令
-
             # 如果是空语句，不需要执行，但可能是完全注释行
             # 也可能是一个解析错误的语句
             if ret_CommandSplitResults[pos] is None:
@@ -1238,7 +1244,9 @@ class CmdExecute(object):
 
             # 处理各种命令
             sqlKeyWords = ["SELECT", "DELETE", "UPDATE", "CREATE", "INSERT",
-                           "DROP", "COMMIT", "ROLLBACK", "PROCEDURE", "DECLARE", "BEGIN"]
+                           "DROP", "COMMIT", "ROLLBACK",
+                           "PROCEDURE", "DECLARE", "BEGIN",
+                           "UNKNOWN"]
             if parseObject["name"] == "ECHO":
                 # 将后续内容回显到指定的文件中
                 for commandResult in self.cliHandler.echo_input(
