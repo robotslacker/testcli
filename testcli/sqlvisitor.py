@@ -24,7 +24,7 @@ class SQLVisitor(SQLParserVisitor):
         # 如果成功，返回0； 如果失败，返回-1； 
         self.errorCode = 0
         # 如果成功，返回空；如果失败，返回解析的错误提示信息
-        self.errorMsg = ""
+        self.errorMsg = None
 
     """
         功能：返回分析上下文分词索引
@@ -728,26 +728,73 @@ class SQLVisitor(SQLParserVisitor):
         self.errorMsg = errorMsg
         return parsedObject, originScript, hint, errorCode, errorMsg
 
+    def visitLoop(self, ctx: SQLParser.LoopContext):
+        parsedObject = {'name': 'LOOP'}
+        if ctx.LOOP_END() is not None:
+            parsedObject.update({"rule": "END"})
+        elif ctx.LOOP_BREAK():
+            parsedObject.update({"rule": "BREAK"})
+        elif ctx.LOOP_CONTINUE():
+            parsedObject.update({"rule": "CONTINUE"})
+        elif ctx.LOOP_BEGIN():
+            parsedObject.update({"rule": "BEGIN"})
+        else:
+            parsedObject.update({"rule": "UNTIL"})
+        if ctx.LOOP_EXPRESSION() is not None:
+            expression = str(ctx.LOOP_EXPRESSION().getText())
+            if expression.startswith("{%"):
+                expression = expression[2:]
+            if expression.endswith("%}"):
+                expression = expression[:-2]
+            expression = expression.strip()
+            parsedObject.update({"UNTIL": expression})
+
+        # 源文件
+        start, end = self.getSourceInterval(ctx)
+        tokens = ctx.parser._input.tokens[start:end + 1]
+        originScript = self.getSource(tokens)
+
+        # 提示信息
+        hint = self.getHint(tokens)
+
+        # 处理错误信息
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = 1
+            errorMsg = ctx.exception.message
+            self.isFinished = False
+
+        self.parsedObject = parsedObject
+        self.originScripts = originScript
+        self.hints = hint
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
+
+        return parsedObject, originScript, hint, errorCode, errorMsg
+
     def visitStart(self, ctx: SQLParser.StartContext):
         parsedObject = {'name': 'START'}
-        if ctx.INT() is not None:
-            parsedObject.update({'loopTimes': int(ctx.INT().getText())})
+        if ctx.START_INT() is not None:
+            parsedObject.update({'loopTimes': int(ctx.START_INT().getText())})
         else:
             parsedObject.update({'loopTimes': 1})
 
         expression_list = []
-        for expression in ctx.expression():
-            result, script, hint, code, message = self.visit(expression)
-            expression_list.append(result)
-
+        if ctx.START_EXPRESSION() is not None:
+            for expression in ctx.START_EXPRESSION():
+                expression_list.append(str(expression.getText()))
         parsedObject.update({'scriptList': expression_list})
 
+        # 源文件
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end + 1]
-        # 源文件
         originScript = self.getSource(tokens)
+
         # 提示信息
         hint = self.getHint(tokens)
+
+        # 处理错误信息
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
@@ -807,11 +854,10 @@ class SQLVisitor(SQLParserVisitor):
         parsedObject = {'name': 'SET'}
 
         expression_list = []
-        for expression in ctx.singleExpression():
-            result, script, hint, code, message = self.visit(expression)
-            expression_list.append(result)
+        for expression in ctx.SET_EXPRESSION():
+            expression_list.append(str(expression.getText()))
 
-        if ctx.AT() is not None:
+        if ctx.SET_AT():
             parsedObject.update({'scope': "global"})
         else:
             parsedObject.update({'scope': "local"})
@@ -992,33 +1038,99 @@ class SQLVisitor(SQLParserVisitor):
 
         return parsedObject, originScript, hint, errorCode, errorMsg
 
-    def visitWheneverError(self, ctx: SQLParser.WheneverErrorContext):
-        param = None
-        if ctx.CONTINUE() is not None:
-            param = ctx.CONTINUE().getText()
-        elif ctx.EXIT() is not None:
-            param = ctx.EXIT().getText()
-        
-        parsedObject = {'name': 'WHENEVER_ERROR', 'param': param}
-    
+    def visitWhenever(self, ctx: SQLParser.WheneverContext):
+        parsedObject = {'name': 'WHENEVER'}
+
+        if ctx.WHENEVER_CONTINUE():
+            parsedObject.update({"action": 'continue'})
+        if ctx.WHENEVER_EXIT():
+            parsedObject.update({"action": 'exit'})
+        if ctx.WHENEVER_ERROR():
+            parsedObject.update({"condition": 'error'})
+
+        # 获取源文件
         start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
+        tokens = ctx.parser._input.tokens[start:end + 1]
         originScript = self.getSource(tokens)
-        # 提示信息
+
+        # 获取提示信息
         hint = self.getHint(tokens)
+
+        # 获取错误代码
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
-            self.isFinished = False
 
-        self.parsedObject.append(parsedObject)
-        self.originScripts.append(originScript)
-        self.hints.append(hint)
-        self.errorCode.append(errorCode)
-        self.errorMsg.append(errorMsg)
+        self.parsedObject = parsedObject
+        self.originScripts = originScript
+        self.hints = hint
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
+
+        return parsedObject, originScript, hint, errorCode, errorMsg
+
+    def visitIf(self, ctx: SQLParser.IfContext):
+        parsedObject = {'name': 'IF'}
+
+        if ctx.IF_EXPRESSION() is not None:
+            expression = str(ctx.IF_EXPRESSION().getText()).strip()
+            if expression.startswith('{%'):
+                expression = expression[2:]
+            if expression.endswith('%}'):
+                expression = expression[:-2]
+            expression = expression.strip()
+            parsedObject.update({'expression': expression})
+        else:
+            parsedObject.update({'expression': ""})
+
+        # 获取源文件
+        start, end = self.getSourceInterval(ctx)
+        tokens = ctx.parser._input.tokens[start:end + 1]
+        originScript = self.getSource(tokens)
+
+        # 获取提示信息
+        hint = self.getHint(tokens)
+
+        # 获取错误代码
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = -1
+            errorMsg = ctx.exception.message
+
+        self.parsedObject = parsedObject
+        self.originScripts = originScript
+        self.hints = hint
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
+
+        return parsedObject, originScript, hint, errorCode, errorMsg
+
+    def visitEndif(self, ctx: SQLParser.EndifContext):
+        parsedObject = {'name': 'ENDIF'}
+
+        # 获取源文件
+        start, end = self.getSourceInterval(ctx)
+        tokens = ctx.parser._input.tokens[start:end + 1]
+        originScript = self.getSource(tokens)
+
+        # 获取提示信息
+        hint = self.getHint(tokens)
+
+        # 获取错误代码
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = -1
+            errorMsg = ctx.exception.message
+
+        self.parsedObject = parsedObject
+        self.originScripts = originScript
+        self.hints = hint
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
 
         return parsedObject, originScript, hint, errorCode, errorMsg
 
@@ -1056,10 +1168,11 @@ class SQLVisitor(SQLParserVisitor):
         # 删除BLOCK 末尾的 %}
         if ctx.ScriptBlock() is not None:
             block = ctx.ScriptBlock().getText()
-            if str(block).endswith('\n%}'):
-                block = str(block[:-3])
-                if block.startswith("\n"):
-                    block = block[1:]
+            if str(block).endswith('%}'):
+                block = str(block[:-2])
+                if str(block).endswith('{%'):
+                    block = str(block[2:])
+                block = block.strip()
                 parsedObject.update({'block': block})
             else:
                 self.isFinished = False

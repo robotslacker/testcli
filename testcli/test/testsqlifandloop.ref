@@ -1,0 +1,61 @@
+SQL> connect /mem
+Database connected.
+SQL> _if {% 3==2 %}
+SQL> select 1+2 from dual;
+SQL> _endif
+SQL> select 1+2 from dual;
++--------+---+
+|   ##   | 3 |
++--------+---+
+|      1 | 3 |
++--------+---+
+1 row selected.
+SQL> _if {% 4==4 %}
+SQL> select 1+2 from dual;
++--------+---+
+|   ##   | 3 |
++--------+---+
+|      1 | 3 |
++--------+---+
+1 row selected.
+SQL> _endif
+SQL> select 3+4 from dual;
++--------+---+
+|   ##   | 7 |
++--------+---+
+|      1 | 7 |
++--------+---+
+1 row selected.
+SQL>
+SQL> connect /mem
+Database connected.
+SQL> create table aaa (id int);
+0 row affected.
+SQL> insert into aaa values(10);
+1 row affected.
+SQL> > {% i=0 %}
+SQL> _loop Begin UNTIL {% i==3 %}
+SQL> > {% i=i+1 %}
+SQL> update aaa set id = id + 1;
+1 row affected.
+SQL> _loop end;
+SQL> _loop Begin UNTIL {% i==3 %}
+SQL> > {% i=i+1 %}
+SQL> update aaa set id = id + 1;
+1 row affected.
+SQL> _loop end;
+SQL> _loop Begin UNTIL {% i==3 %}
+SQL> > {% i=i+1 %}
+SQL> update aaa set id = id + 1;
+1 row affected.
+SQL> _loop end;
+SQL> _loop Begin UNTIL {% i==3 %}
+SQL> _loop end;
+SQL>
+SQL> select * from aaa;
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 | 13 |
++--------+----+
+1 row selected.

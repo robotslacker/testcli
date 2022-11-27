@@ -144,16 +144,6 @@ class SQLParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by SQLParser#start.
-    def visitStart(self, ctx:SQLParser.StartContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by SQLParser#wheneverError.
-    def visitWheneverError(self, ctx:SQLParser.WheneverErrorContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by SQLParser#spool.
     def visitSpool(self, ctx:SQLParser.SpoolContext):
         return self.visitChildren(ctx)
@@ -161,11 +151,6 @@ class SQLParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by SQLParser#echo.
     def visitEcho(self, ctx:SQLParser.EchoContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by SQLParser#set.
-    def visitSet(self, ctx:SQLParser.SetContext):
         return self.visitChildren(ctx)
 
 
@@ -234,8 +219,18 @@ class SQLParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by SQLParser#start.
+    def visitStart(self, ctx:SQLParser.StartContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by SQLParser#load.
     def visitLoad(self, ctx:SQLParser.LoadContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SQLParser#assert.
+    def visitAssert(self, ctx:SQLParser.AssertContext):
         return self.visitChildren(ctx)
 
 
@@ -244,8 +239,28 @@ class SQLParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by SQLParser#assert.
-    def visitAssert(self, ctx:SQLParser.AssertContext):
+    # Visit a parse tree produced by SQLParser#loop.
+    def visitLoop(self, ctx:SQLParser.LoopContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SQLParser#if.
+    def visitIf(self, ctx:SQLParser.IfContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SQLParser#endif.
+    def visitEndif(self, ctx:SQLParser.EndifContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SQLParser#whenever.
+    def visitWhenever(self, ctx:SQLParser.WheneverContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SQLParser#set.
+    def visitSet(self, ctx:SQLParser.SetContext):
         return self.visitChildren(ctx)
 
 

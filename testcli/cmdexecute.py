@@ -28,8 +28,10 @@ from .commands.load import loadMap
 from .commands.exit import exitApplication
 from .commands.session import sessionManage
 from .commands.assertExpression import assertExpression
+from .commands.assertExpression import evalExpression
 from .commands.embeddScript import executeEmbeddScript
 from .commands.host import executeLocalCommand
+from .commands.setOptions import setOptions
 from .commands.cliSleep import cliSleep
 
 from .testcliexception import TestCliException
@@ -80,6 +82,14 @@ class CmdExecute(object):
         self.sqlConn = None
         self.sqlCursor = None
         self.apiConn = None
+
+        # 记录语句是否当前处于条件表达式判定中
+        self.ifMode = False
+        self.ifCondition = False
+        # 记录语句是否在循环过程中
+        self.loopMode = False
+        self.loopCondition = False
+        self.loopStartPos = 0
 
         if _Class or _Func:
             pass
@@ -1132,7 +1142,11 @@ class CmdExecute(object):
         self.testOptions.set("NAMESPACE", defaultNameSpace)
 
         # 开始执行语句
-        for pos in range(0, len(ret_CommandSplitResults)):
+        pos = 0
+        while True:
+            if pos == len(ret_CommandSplitResults):
+                break
+
             # 记录命令开始时间
             start = time.time()
 
@@ -1141,7 +1155,29 @@ class CmdExecute(object):
                 formattedCommand = SQLFormatWithPrefix(ret_CommandSplitResultsWithComments[pos])
             if self.testOptions.get("NAMESPACE") == "API":
                 formattedCommand = APIFormatWithPrefix(ret_CommandSplitResultsWithComments[pos])
-                # print("formattedCommand=" + str(ret_CommandSplitResultsWithComments))
+
+            # 处理解析后的命令
+
+            # 如果是空语句，不需要执行，但可能是完全注释行
+            # 也可能是一个解析错误的语句
+            if ret_CommandSplitResults[pos] is None:
+                yield {
+                    "type": "parse",
+                    "rawCommand": ret_CommandSplitResults[pos],
+                    "formattedCommand": formattedCommand,
+                    "rewrotedCommand": [],
+                    "script": commandScriptFile
+                }
+                pos = pos + 1
+                continue
+            else:
+                parseObject = dict(ret_CommandSplitResults[pos])
+
+            # 如果在循环模式下，且循环条件已经不满足，则直接跳出
+            if parseObject["name"] != "LOOP":
+                if self.loopMode and not self.loopCondition:
+                    pos = pos + 1
+                    continue
 
             # 返回SQL的解析信息
             if commandScriptFile != "Console":
@@ -1153,12 +1189,6 @@ class CmdExecute(object):
                     "rewrotedCommand": [],
                     "script": commandScriptFile
                 }
-
-            # 如果是空语句，不需要执行，但可能是完全注释行
-            # 也可能是一个解析错误的语句
-            if ret_CommandSplitResults[pos] is None:
-                # 返回命令的解析信息
-                continue
 
             # 处理超时时间问题
             if self.scriptTimeOut > 0:
@@ -1206,10 +1236,9 @@ class CmdExecute(object):
                 self.timeOutMode = None
                 self.timeout = -1
 
-            # 处理解析后的命令
-            parseObject = dict(ret_CommandSplitResults[pos])
-
             # 处理各种命令
+            sqlKeyWords = ["SELECT", "DELETE", "UPDATE", "CREATE", "INSERT",
+                           "DROP", "COMMIT", "ROLLBACK", "PROCEDURE", "DECLARE", "BEGIN"]
             if parseObject["name"] == "ECHO":
                 # 将后续内容回显到指定的文件中
                 for commandResult in self.cliHandler.echo_input(
@@ -1218,7 +1247,6 @@ class CmdExecute(object):
                         block=parseObject["block"],
                 ):
                     yield commandResult
-                continue
             elif parseObject["name"] == "START":
                 # 执行脚本文件
                 for commandResult in self.cliHandler.execute_from_file(
@@ -1227,7 +1255,6 @@ class CmdExecute(object):
                         loopTimes=parseObject["loopTimes"],
                 ):
                     yield commandResult
-                continue
             elif parseObject["name"] in ["EXIT", "QUIT"]:
                 # 执行脚本文件
                 if "exitValue" in parseObject.keys():
@@ -1239,7 +1266,6 @@ class CmdExecute(object):
                         exitValue=exitValue
                 ):
                     yield commandResult
-                continue
             elif parseObject["name"] == "CONNECT":
                 # 执行CONNECT命令
                 if self.testOptions.get("NAMESPACE") == "SQL":
@@ -1248,22 +1274,19 @@ class CmdExecute(object):
                             connectProperties=parseObject
                     ):
                         yield commandResult
-                    continue
                 else:
                     yield {
                         "type": "error",
                         "message": "affadsfsad",
                         "script": commandScriptFile
                     }
-                    continue
             elif parseObject["name"] == "SET":
                 # 执行SET命令
-                for commandResult in self.cliHandler.set_options(
+                for commandResult in setOptions(
                         cls=self.cliHandler,
                         options=parseObject
                 ):
                     yield commandResult
-                continue
             elif parseObject["name"] == "DISCONNECT":
                 # 执行DISCONNECT命令
                 if self.testOptions.get("NAMESPACE") == "SQL":
@@ -1271,16 +1294,16 @@ class CmdExecute(object):
                             cls=self.cliHandler
                     ):
                         yield commandResult
-                    continue
                 else:
                     yield {
                         "type": "error",
                         "message": "affadsfsad",
                         "script": commandScriptFile
                     }
+            elif parseObject["name"] in sqlKeyWords:
+                if self.ifMode and not self.ifCondition:
+                    pos = pos + 1
                     continue
-            elif parseObject["name"] in ["SELECT", "DELETE", "UPDATE", "CREATE", "INSERT", "DROP", "COMMIT",
-                                         "ROLLBACK", "PROCEDURE", "DECLARE", "BEGIN"]:
                 sqlCommand = parseObject["statement"]
                 # 根据语句中的变量或者其他定义信息来重写当前语句
                 sqlCommand, rewrotedCommandList = self.rewriteRunStatement(
@@ -1371,7 +1394,6 @@ class CmdExecute(object):
                             mapFile=parseObject["mapFile"]
                     ):
                         yield commandResult
-
             elif parseObject["name"] in ["HTTP"]:
                 # 执行HTTP请求
                 for result in self.executeAPIStatement(
@@ -1386,6 +1408,45 @@ class CmdExecute(object):
                         command=parseObject["script"]
                 ):
                     yield result
+            elif parseObject["name"] in ["ENDIF"]:
+                self.ifMode = False
+                self.ifCondition = False
+            elif parseObject["name"] in ["IF"]:
+                expression = parseObject["expression"]
+                try:
+                    ret = evalExpression(self.cliHandler, expression)
+                    if type(ret) == bool:
+                        self.ifMode = True
+                        if ret:
+                            self.ifCondition = True
+                        else:
+                            self.ifCondition = False
+                    else:
+                        yield {
+                            "type": "error",
+                            "message": "Set condition fail. SyntaxError =>[not a bool expression]"
+                        }
+                except (SyntaxError, NameError) as ae:
+                    yield {
+                        "type": "error",
+                        "message": "Set condition fail. SyntaxError =>[" + str(ae) + "]"
+                    }
+            elif parseObject["name"] in ["LOOP"]:
+                if parseObject["rule"] == "END":
+                    if not self.loopCondition:
+                        self.loopMode = False
+                    else:
+                        pos = self.loopStartPos
+                        continue
+                elif parseObject["rule"] == "BREAK":
+                    self.loopCondition = False
+                elif parseObject["rule"] == "CONTINUE":
+                    pos = self.loopStartPos
+                    continue
+                elif parseObject["rule"] == "BEGIN":
+                    self.loopMode = True
+                    self.loopStartPos = pos
+                    self.loopCondition = not evalExpression(self.cliHandler, parseObject["UNTIL"])
             elif parseObject["name"] in ["UNKNOWN"]:
                 yield {"type": "error",
                        "message": "TESTCLI_0000:  " + parseObject["reason"]}
@@ -1402,3 +1463,6 @@ class CmdExecute(object):
                     "type": "statistics",
                     "elapsed": self.lastElapsedTime,
                 }
+
+            # 开始执行下一个语句
+            pos = pos + 1

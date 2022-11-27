@@ -11,6 +11,12 @@ baseCommand:
       assert
       | load
       | host
+      | start
+      | loop
+      | if
+      | endif
+      | whenever
+      | set
       ;
 
 //baseCommand:
@@ -67,21 +73,29 @@ use     : USE (API|SQL) CRLF?;
 // sleep
 sleep   : SLEEP INT CRLF?;
 
-start
-        : START (expression | ',')+ LOOP? INT? CRLF?
+start   : START START_EXPRESSION (START_COMMA START_EXPRESSION)* START_LOOP? START_INT? SEMICOLON? CRLF?;
+
+// 加载数据库驱动，映射文件，插件等
+load    : LOAD LOAD_OPTION (LOAD_EXPRESSION)+ SEMICOLON? CRLF?;
+
+// ASSERT判断
+assert  : ASSERT ASSERT_EXPRESSION (SEMICOLON)? CRLF?;
+
+// 执行主机操作系统命令
+host    : HOST HOST_BLOCK;
+
+// 循环处理操作
+loop    : LOOP
+          (LOOP_BREAK | LOOP_END | LOOP_CONTINUE | LOOP_BEGIN LOOP_UNTIL LOOP_EXPRESSION)) (LOOP_SEMICOLON)? CRLF?
         ;
 
-load    : LOAD LOAD_OPTION (LOAD_EXPRESSION)+ (SEMICOLON)? CRLF?;
+// IF条件表达式
+if      : IF IF_EXPRESSION SEMICOLON? CRLF?;
+endif   : ENDIF SEMICOLON? CRLF?;
 
-host    :
-            HOST
-            HOST_BLOCK
-        ;
+// 错误处理操作
+whenever:   WHENEVER WHENEVER_ERROR (WHENEVER_CONTINUE|WHENEVER_EXIT) WHENEVER_SEMICOLON? CRLF?;
 
-//
-wheneverError
-        :   WHENEVER_ERROR (CONTINUE|EXIT) CRLF?
-        ;
 //
 spool   : SPOOL String (SEMICOLON)? CRLF?;
 
@@ -100,9 +114,5 @@ script
         ;
 
 // 16：SET 语句
-set
-        : SET ((AT)?singleExpression+)? (SEMICOLON)? CRLF?
-        ;
+set     : SET (SET_AT)?(SET_EXPRESSION)* (SET_SEMICOLON)? CRLF?;
 
-// 21：ASSERT判断
-assert  : ASSERT ASSERT_EXPRESSION (SEMICOLON)? CRLF?;

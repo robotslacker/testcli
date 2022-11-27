@@ -59,13 +59,33 @@ class BaseParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by BaseParser#assert.
+    def visitAssert(self, ctx:BaseParser.AssertContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by BaseParser#host.
     def visitHost(self, ctx:BaseParser.HostContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by BaseParser#wheneverError.
-    def visitWheneverError(self, ctx:BaseParser.WheneverErrorContext):
+    # Visit a parse tree produced by BaseParser#loop.
+    def visitLoop(self, ctx:BaseParser.LoopContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BaseParser#if.
+    def visitIf(self, ctx:BaseParser.IfContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BaseParser#endif.
+    def visitEndif(self, ctx:BaseParser.EndifContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BaseParser#whenever.
+    def visitWhenever(self, ctx:BaseParser.WheneverContext):
         return self.visitChildren(ctx)
 
 
@@ -86,11 +106,6 @@ class BaseParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by BaseParser#set.
     def visitSet(self, ctx:BaseParser.SetContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by BaseParser#assert.
-    def visitAssert(self, ctx:BaseParser.AssertContext):
         return self.visitChildren(ctx)
 
 

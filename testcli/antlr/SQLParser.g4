@@ -8,6 +8,7 @@ options {
 
 prog: command EOF;
 
+
 command:
       exit
       | quit
@@ -16,10 +17,7 @@ command:
       | connect
       | disconnect
       | session
-      | start
-      | wheneverError
       | spool
-      | set
       | script
       | echo
       | baseCommand
@@ -125,7 +123,7 @@ disconnect
         ;
 
 session
-        : SESSION (SESSION_SAVE|SESSION_RELEASE|SESSION_RESTORE|SESSION_SAVEURL|SESSION_SHOW) SESSION_NAME SESSION_END?
+        : SESSION (SESSION_SAVE|SESSION_RELEASE|SESSION_RESTORE|SESSION_SAVEURL|SESSION_SHOW) SESSION_NAME? SESSION_END?
         ;
 
 singleExpression
@@ -155,15 +153,6 @@ expression
         | SINGLE_QUOTE )+
         ;
 
-// 执行脚本， START script1,script2,script3 [LOOP <INT>]
-start
-        : START (expression | ',')+ LOOP? INT? CRLF?
-        ;
-
-//
-wheneverError
-        :   WHENEVER_ERROR (CONTINUE|EXIT) CRLF?
-        ;
 //
 spool
         : SPOOL String (SEMICOLON)? CRLF?
@@ -177,11 +166,6 @@ echo
         ;
 
 // 14：执行SQL语句
-
-// 16：SET 语句
-set 
-        : SET ((AT)?singleExpression+)? (SEMICOLON)? CRLF?
-        ;
 
 // 17：内嵌脚本
 script

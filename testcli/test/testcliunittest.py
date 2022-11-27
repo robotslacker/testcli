@@ -13,6 +13,14 @@ from testcli.sqlclijdbc import connect as jdbcconnect
 
 
 class TestSynatx(unittest.TestCase):
+    def test_SQLAnalyze_NullString(self):
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("")
+        self.assertTrue(isFinished)
+        self.assertIsNone(ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
     def test_SQLAnalyze_ConnectLocalMem(self):
         (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("connect /mem")
@@ -186,7 +194,7 @@ class TestSynatx(unittest.TestCase):
 
     def test_SQLAnalyze_Set(self):
         (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("set")
+            = SQLAnalyze("_set")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'SET', 'scope': 'local'}, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
@@ -194,7 +202,7 @@ class TestSynatx(unittest.TestCase):
 
     def test_SQLAnalyze_SetVariable(self):
         (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("set @aa bbb")
+            = SQLAnalyze("_set @aa bbb")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'SET',
                           'scope': 'global',
@@ -205,7 +213,7 @@ class TestSynatx(unittest.TestCase):
 
     def test_SQLAnalyze_Set2Parameter(self):
         (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("set XX YY")
+            = SQLAnalyze("_set XX YY")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'SET',
                           'optionName': 'XX',
@@ -216,7 +224,7 @@ class TestSynatx(unittest.TestCase):
 
     def test_SQLAnalyze_Set3Parameter(self):
         (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("set ZZ DD FF")
+            = SQLAnalyze("_set ZZ DD FF")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'SET',
                           'optionName': 'ZZ',
@@ -335,10 +343,45 @@ class TestSynatx(unittest.TestCase):
 
     def test_SQLAnalyze_Start(self):
         (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("start c:\\abcd\\defg.sql")
+            = SQLAnalyze("_start c:\\abcd\\defg.sql")
         self.assertTrue(isFinished)
         self.assertEqual(
             {'loopTimes': 1, 'name': 'START', 'scriptList': ['c:\\abcd\\defg.sql']},
+            ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+    def test_SQLAnalyze_StartMultiFiles(self):
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_start c:\\abcd\\defg.sql,c:\\abcd\\xxxx.sql")
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {
+                'loopTimes': 1,
+                'name': 'START',
+                'scriptList':
+                    [
+                        'c:\\abcd\\defg.sql',
+                        'c:\\abcd\\xxxx.sql'
+                    ],
+            },
+            ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+    def test_SQLAnalyze_StartWithLoop(self):
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_start c:\\abcd\\defg.sql LOOP 5")
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {
+                'loopTimes': 5,
+                'name': 'START',
+                'scriptList':
+                    [
+                        'c:\\abcd\\defg.sql'
+                    ],
+            },
             ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
@@ -386,6 +429,18 @@ class TestSynatx(unittest.TestCase):
         scriptHeader = "> {%\n"
         script = "Hello World"
         scriptEnd = "\n%}\n"
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze(scriptHeader + script + scriptEnd)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'block': script, 'name': 'SCRIPT'},
+            ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        scriptHeader = "> {% "
+        script = "i=i+1"
+        scriptEnd = " %}\n"
         (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze(scriptHeader + script + scriptEnd)
         self.assertTrue(isFinished)
@@ -466,6 +521,67 @@ class TestSynatx(unittest.TestCase):
                 'script': "help & dir"
             },
             ret_CommandSplitResult)
+
+    def test_SQLAnalyze_Loop(self):
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_LOOP END")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual({'name': 'LOOP', 'rule': 'END'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_LOOP BREAK")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual({'name': 'LOOP', 'rule': 'BREAK'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_LOOP CONTINUE")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual({'name': 'LOOP', 'rule': 'CONTINUE'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_LOOP BEGIN UNTIL {% i>=3 %}")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'UNTIL': 'i>=3', 'name': 'LOOP', 'rule': 'BEGIN'},
+            ret_CommandSplitResult)
+
+    def test_SQLAnalyze_Whenever(self):
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_WHENEVER ERROR CONTINUE")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual({'action': 'continue', 'condition': 'error', 'name': 'WHENEVER'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_WHENEVER ERROR EXIT")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual({'action': 'exit', 'condition': 'error', 'name': 'WHENEVER'}, ret_CommandSplitResult)
+
+    def test_SQLAnalyze_If(self):
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_ENDIF")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual({'name': 'ENDIF'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_IF {% aa=bb %}")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual({'expression': 'aa=bb', 'name': 'IF'}, ret_CommandSplitResult)
 
     def test_SQLExecute(self):
         scriptFile = "testsqlsanity.sql"
@@ -614,6 +730,37 @@ class TestSynatx(unittest.TestCase):
 
     def test_SQLSessionManage(self):
         scriptFile = "testsessionmanage.sql"
+
+        scriptBaseFile = os.path.splitext(scriptFile)[0]
+        fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
+        fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
+        fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
+
+        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        testcli = TestCli(
+            logfilename=fullLogFile,
+            HeadlessMode=True,
+            nologo=True,
+            script=fullScriptFile
+        )
+        retValue = testcli.run_cli()
+        self.assertEqual(0, retValue)
+
+        # 对文件进行比对，判断返回结果是否吻合
+        compareHandler = POSIXCompare()
+        compareResult, compareReport = compareHandler.compare_text_files(
+            file1=fullLogFile,
+            file2=fullRefFile,
+            CompareIgnoreTailOrHeadBlank=True
+        )
+        if not compareResult:
+            for line in compareReport:
+                if line.startswith("-") or line.startswith("+"):
+                    print(line)
+        self.assertTrue(compareResult)
+
+    def test_SQLIfAndLoopCondition(self):
+        scriptFile = "testsqlifandloop.sql"
 
         scriptBaseFile = os.path.splitext(scriptFile)[0]
         fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
