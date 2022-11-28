@@ -93,7 +93,7 @@ def SQLAnalyze(sqlCommandPlainText, defaultNameSpace="SQL"):
     tree = parser.prog()
 
     visitor = SQLVisitor(token, defaultNameSpace)
-    (isFinished, parsedObjects, originScripts, hints, errorCode, errorMsg) = visitor.visit(tree)
+    (isFinished, parsedObjects, errorCode, errorMsg) = visitor.visit(tree)
 
     # 词法和语法解析，任何一个失败，都认为失败
     if not lexer_listener.isFinished:
@@ -108,5 +108,4 @@ def SQLAnalyze(sqlCommandPlainText, defaultNameSpace="SQL"):
         errorCode = parser_listener.errorCode
         errorMsg = parser_listener.errorMsg
 
-
-    return isFinished, parsedObjects, originScripts, hints, errorCode, errorMsg
+    return isFinished, parsedObjects, errorCode, errorMsg

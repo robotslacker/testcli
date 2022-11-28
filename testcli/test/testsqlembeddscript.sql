@@ -1,4 +1,4 @@
-connect /mem
+_connect /mem
 create table aaa (id int);
 insert into aaa values(10);
 > {%

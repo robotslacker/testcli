@@ -1,4 +1,4 @@
-# Generated from D:/Work/testcli/testcli/antlr\SQLParser.g4 by ANTLR 4.11.1
+# Generated from SQLParser.g4 by ANTLR 4.11.1
 from antlr4 import *
 if __name__ is not None and "." in __name__:
     from .SQLParser import SQLParser
@@ -16,26 +16,6 @@ class SQLParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by SQLParser#command.
     def visitCommand(self, ctx:SQLParser.CommandContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by SQLParser#exit.
-    def visitExit(self, ctx:SQLParser.ExitContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by SQLParser#quit.
-    def visitQuit(self, ctx:SQLParser.QuitContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by SQLParser#use.
-    def visitUse(self, ctx:SQLParser.UseContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by SQLParser#sleep.
-    def visitSleep(self, ctx:SQLParser.SleepContext):
         return self.visitChildren(ctx)
 
 
@@ -134,28 +114,8 @@ class SQLParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by SQLParser#singleExpression.
-    def visitSingleExpression(self, ctx:SQLParser.SingleExpressionContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by SQLParser#expression.
     def visitExpression(self, ctx:SQLParser.ExpressionContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by SQLParser#spool.
-    def visitSpool(self, ctx:SQLParser.SpoolContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by SQLParser#echo.
-    def visitEcho(self, ctx:SQLParser.EchoContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by SQLParser#script.
-    def visitScript(self, ctx:SQLParser.ScriptContext):
         return self.visitChildren(ctx)
 
 
@@ -219,6 +179,26 @@ class SQLParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by SQLParser#exit.
+    def visitExit(self, ctx:SQLParser.ExitContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SQLParser#quit.
+    def visitQuit(self, ctx:SQLParser.QuitContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SQLParser#use.
+    def visitUse(self, ctx:SQLParser.UseContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SQLParser#sleep.
+    def visitSleep(self, ctx:SQLParser.SleepContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by SQLParser#start.
     def visitStart(self, ctx:SQLParser.StartContext):
         return self.visitChildren(ctx)
@@ -256,6 +236,21 @@ class SQLParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by SQLParser#whenever.
     def visitWhenever(self, ctx:SQLParser.WheneverContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SQLParser#spool.
+    def visitSpool(self, ctx:SQLParser.SpoolContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SQLParser#echo.
+    def visitEcho(self, ctx:SQLParser.EchoContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SQLParser#script.
+    def visitScript(self, ctx:SQLParser.ScriptContext):
         return self.visitChildren(ctx)
 
 

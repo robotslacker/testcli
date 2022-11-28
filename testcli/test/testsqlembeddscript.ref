@@ -1,4 +1,4 @@
-SQL> connect /mem
+SQL> _connect /mem
 Database connected.
 SQL> create table aaa (id int);
 0 row affected.

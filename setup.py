@@ -33,26 +33,30 @@ def open_file(filename):
 readme = open_file("README.md")
 
 setup(
-    name='testcli',
+    name='robotslacker-testcli',
     version=version,
-    description='SQL Command test tool, use JDBC',
+    description='Test Command tool',
     long_description=readme,
-    keywords='sql command test tool',
+    keywords='test command sql api',
     long_description_content_type='text/markdown',
     platforms='any',
-    install_requires=['JPype1', 'setproctitle', 'pathlib', 'urllib3',
-                      'pyparsing', 'click', 'prompt_toolkit',
-                      'fs', 'hdfs', 'wget', 'httptools', 'pika', 'paramiko',
-                      'numpy'
+    install_requires=['JPype1', 'setproctitle', 'urllib3',
+                      'click', 'prompt_toolkit',  'paramiko', 'antlr4-python3-runtime',
+                      "pytest"
                       ],
 
-    author='LinkoopDB Test Team',
-    author_email='test@datapps.com',
-    url='http://192.168.1.102/datapps/testcli.git',
+    author='RobotSlacker',
+    author_email='184902652@qq.com',
+    url='https://github.com/robotslacker/testcli.git',
 
     zip_safe=False,
     packages=['testcli'],
-    package_data={'testcli': ['jlib/README', 'conf/*ini', 'profile/*']},
+    package_data={'testcli': [
+        'jlib/README', 'jlib/h2-1.4.200.jar',
+        'conf/*ini', 'profile/*',
+        'antlrgen/*', 'commands/*',
+        'test/*',
+    ]},
     python_requires='>=3.6',
     entry_points={
         "console_scripts": ["testcli = testcli.main:cli"],

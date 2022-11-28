@@ -17,11 +17,7 @@ class SQLVisitor(SQLParserVisitor):
         self.isFinished = True
         # 返回去掉了注释信息的解析结果
         self.parsedObject = None
-        # 包含了所有注释信息的原语句（格式保持不变，包括空行，换行符号等)
-        self.originScripts = None
-        # 有意义的注释信息(即用-- [Hint] 开头的SQL语句, 或者用# [Hint]|// [Hint] 开头的API语句), 一个语句有多个注释信息的，用数组返回
-        self.hints = []
-        # 如果成功，返回0； 如果失败，返回-1； 
+        # 如果成功，返回0； 如果失败，返回-1；
         self.errorCode = 0
         # 如果成功，返回空；如果失败，返回解析的错误提示信息
         self.errorMsg = None
@@ -72,40 +68,6 @@ class SQLVisitor(SQLParserVisitor):
         return ''.join(token.text for token in tokens)
 
     """
-        功能：返回提示文本
-        参数：
-            tokens 分词数组
-        返回：
-            指定分词数组中提示分词文本
-    """
-    @staticmethod
-    def getHint(tokens):
-        hints = []
-        for token in tokens:
-            if token.channel == SQLLexer.HINT_CHANNEL:
-                # 使用提示[Hint]分割字符串 
-                pattern = r"\[ *Hint *\]"
-                hint_arr = re.split(pattern, token.text, flags=re.IGNORECASE)
-                if len(hint_arr) > 1:
-                    hint = hint_arr[1]
-                else:
-                    hint = None
-                if hint is not None:
-                    # 删除后面的换行符号
-                    tmp = hint.splitlines()
-                    if len(tmp) > 0:
-                        hint = tmp[0].strip()
-                    else:
-                        hint = ''
-                if (hint is not None) and (hint != ''):
-                    hints.append(hint)
-        if len(hints) == 0:
-            return None
-        if len(hints) == 1:
-            return hints[0]
-        return hints
-
-    """
         功能：访问语法树的程序节点
         参数：
             ctx: 上下文
@@ -119,7 +81,7 @@ class SQLVisitor(SQLParserVisitor):
     """
     def visitProg(self, ctx: SQLParser.ProgContext):
         self.visitChildren(ctx)
-        return self.isFinished, self.parsedObject, self.originScripts, self.hints, self.errorCode, self.errorMsg
+        return self.isFinished, self.parsedObject, self.errorCode, self.errorMsg
     
     def visitCommand(self, ctx: SQLParser.CommandContext):
         return self.visitChildren(ctx)
@@ -132,14 +94,6 @@ class SQLVisitor(SQLParserVisitor):
         else:
             parsedObject.update({'exitValue': 0})
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -147,12 +101,9 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitQuit(self, ctx: SQLParser.QuitContext):
         parsedObject = {'name': 'QUIT'}
@@ -162,14 +113,6 @@ class SQLVisitor(SQLParserVisitor):
         else:
             parsedObject.update({'exitValue': 0})
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -177,29 +120,18 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitUse(self, ctx: SQLParser.UseContext):
         parsedObject = {'name': 'USE'}
         nameSpace = None
-        if ctx.API() is not None:
+        if ctx.USE_API() is not None:
             nameSpace = 'API'
-        elif ctx.SQL() is not None:
+        elif ctx.USE_SQL() is not None:
             nameSpace = 'SQL'
         parsedObject.update({'nameSpace': nameSpace})
-
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
 
         # 获取错误代码
         errorCode = 0
@@ -208,12 +140,9 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitSleep(self, ctx: SQLParser.SleepContext):
         parsedObject = {
@@ -221,14 +150,6 @@ class SQLVisitor(SQLParserVisitor):
             "sleepTime": int(ctx.INT().getText())
         }
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -236,31 +157,20 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitConnect(self, ctx: SQLParser.ConnectContext):
         parsedObject = {'name': 'CONNECT'}
 
         # 用户信息
         if ctx.connectlocal() is not None:
-            result, script, hint, code, message = self.visit(ctx.connectlocal())
+            result, code, message = self.visit(ctx.connectlocal())
             parsedObject.update(result)
         if ctx.connectjdbc() is not None:
-            result, script, hint, code, message = self.visit(ctx.connectjdbc())
+            result, code, message = self.visit(ctx.connectjdbc())
             parsedObject.update(result)
-
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
 
         # 获取错误代码
         errorCode = 0
@@ -269,47 +179,36 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitConnectjdbc(self, ctx: SQLParser.ConnectjdbcContext):
         parsedObject = {}
         if ctx.connectUserInfo() is not None:
-            result, script, hint, code, message = self.visit(ctx.connectUserInfo())
+            result, code, message = self.visit(ctx.connectUserInfo())
             parsedObject.update(result)
         if ctx.connectDriver() is not None:
-            result, script, hint, code, message = self.visit(ctx.connectDriver())
+            result, code, message = self.visit(ctx.connectDriver())
             parsedObject.update(result)
         if ctx.connectDriverSchema() is not None:
-            result, script, hint, code, message = self.visit(ctx.connectDriverSchema())
+            result, code, message = self.visit(ctx.connectDriverSchema())
             parsedObject.update(result)
         if ctx.connectDriverType() is not None:
-            result, script, hint, code, message = self.visit(ctx.connectDriverType())
+            result, code, message = self.visit(ctx.connectDriverType())
             parsedObject.update(result)
         if ctx.connectHost() is not None:
-            result, script, hint, code, message = self.visit(ctx.connectHost())
+            result, code, message = self.visit(ctx.connectHost())
             parsedObject.update(result)
         if ctx.connectPort() is not None:
-            result, script, hint, code, message = self.visit(ctx.connectPort())
+            result, code, message = self.visit(ctx.connectPort())
             parsedObject.update(result)
         if ctx.connectService() is not None:
-            result, script, hint, code, message = self.visit(ctx.connectService())
+            result, code, message = self.visit(ctx.connectService())
             parsedObject.update(result)
         if ctx.connectParameters() is not None:
-            result, script, hint, code, message = self.visit(ctx.connectParameters())
+            result, code, message = self.visit(ctx.connectParameters())
             parsedObject.update(result)
-
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
 
         # 获取错误代码
         errorCode = 0
@@ -318,21 +217,13 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     def visitConnectlocal(self, ctx: SQLParser.ConnectlocalContext):
         parsedObject = {}
         if ctx.connectlocalService() is not None:
-            result, script, hint, code, message = self.visit(ctx.connectlocalService())
+            result, code, message = self.visit(ctx.connectlocalService())
             parsedObject.update(result)
-
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
 
         # 获取错误代码
         errorCode = 0
@@ -341,21 +232,13 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     def visitConnectlocalService(self, ctx: SQLParser.ConnectlocalServiceContext):
         parsedObject = {}
         if ctx.CONNECT_STRING() is not None:
             parsedObject.update({'localService': ctx.CONNECT_STRING().getText()})
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -363,7 +246,7 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     def visitConnectService(self, ctx: SQLParser.ConnectServiceContext):
         parsedObject = {}
@@ -377,14 +260,6 @@ class SQLVisitor(SQLParserVisitor):
                     {'service': ctx.CONNECT_STRING()[0].getText()}
                 )
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -392,7 +267,7 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     # connect中的用户信息
     def visitConnectUserInfo(self, ctx: SQLParser.ConnectUserInfoContext):
@@ -400,21 +275,13 @@ class SQLVisitor(SQLParserVisitor):
 
         # 用户名
         if ctx.connectUser() is not None:
-            result, script, hint, code, message = self.visit(ctx.connectUser())
+            result, code, message = self.visit(ctx.connectUser())
             parsedObject.update(result)
 
         # password
         if ctx.connectPassword() is not None:
-            result, script, hint, code, message = self.visit(ctx.connectPassword())
+            result, code, message = self.visit(ctx.connectPassword())
             parsedObject.update(result)
-
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
 
         # 获取错误代码
         errorCode = 0
@@ -423,21 +290,13 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     def visitConnectUser(self, ctx: SQLParser.ConnectUserContext):
         parsedObject = {}
         if ctx.CONNECT_STRING() is not None:
             parsedObject.update({'username': ctx.CONNECT_STRING().getText()})
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -445,21 +304,13 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     def visitConnectPassword(self, ctx: SQLParser.ConnectPasswordContext):
         parsedObject = {}
         if ctx.CONNECT_STRING() is not None:
             parsedObject.update({'password': ctx.CONNECT_STRING().getText()})
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -467,21 +318,13 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     def visitConnectDriver(self, ctx: SQLParser.ConnectDriverContext):
         parsedObject = {}
         if ctx.JDBC() is not None:
             parsedObject.update({'driver': "jdbc"})
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -489,21 +332,13 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     def visitConnectDriverSchema(self, ctx: SQLParser.ConnectDriverSchemaContext):
         parsedObject = {}
         if ctx.CONNECT_STRING() is not None:
             parsedObject.update({'driverSchema': ctx.CONNECT_STRING().getText()})
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -511,21 +346,13 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     def visitConnectDriverType(self, ctx: SQLParser.ConnectDriverSchemaContext):
         parsedObject = {}
         if ctx.CONNECT_STRING() is not None:
             parsedObject.update({'driverType': ctx.CONNECT_STRING().getText()})
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -533,45 +360,29 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     def visitConnectHost(self, ctx: SQLParser.ConnectHostContext):
         parsedObject = {'host': ctx.getText()}
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     def visitConnectPort(self, ctx: SQLParser.ConnectPortContext):
         parsedObject = {'port': int(ctx.getText().replace(":", ""))}
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     def visitConnectParameters(self, ctx: SQLParser.ConnectParametersContext):
         parsedObject = {}
@@ -581,14 +392,6 @@ class SQLVisitor(SQLParserVisitor):
             result, script, hint, code, message = self.visit(ctx.connectParameter())
             parsedObject.update(result)
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -596,7 +399,7 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     def visitConnectParameter(self, ctx: SQLParser.ConnectParameterContext):
         parsedObject = {}
@@ -609,71 +412,39 @@ class SQLVisitor(SQLParserVisitor):
             result, script, hint, code, message = self.visit(ctx.connectParameterValue())
             parsedObject.update(result)
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     def visitConnectParameterName(self, ctx: SQLParser.ConnectParameterNameContext):
         parsedObject = {'parameterName': ctx.getText()}
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     def visitConnectParameterValue(self, ctx: SQLParser.ConnectParameterValueContext):
         parsedObject = {'parameterValue': ctx.getText()}
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     def visitDisconnect(self, ctx: SQLParser.DisconnectContext):
         parsedObject = {'name': 'DISCONNECT'}
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -681,12 +452,9 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitEcho(self, ctx: SQLParser.EchoContext):
         parsedObject = {'name': 'ECHO'}
@@ -706,14 +474,6 @@ class SQLVisitor(SQLParserVisitor):
             param = param.splitlines()[0]
             parsedObject.update({'param': str(param).strip()})
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -721,12 +481,9 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitLoop(self, ctx: SQLParser.LoopContext):
         parsedObject = {'name': 'LOOP'}
@@ -749,14 +506,6 @@ class SQLVisitor(SQLParserVisitor):
             expression = expression.strip()
             parsedObject.update({"UNTIL": expression})
 
-        # 源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end + 1]
-        originScript = self.getSource(tokens)
-
-        # 提示信息
-        hint = self.getHint(tokens)
-
         # 处理错误信息
         errorCode = 0
         errorMsg = None
@@ -766,12 +515,8 @@ class SQLVisitor(SQLParserVisitor):
             self.isFinished = False
 
         self.parsedObject = parsedObject
-        self.originScripts = originScript
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitStart(self, ctx: SQLParser.StartContext):
         parsedObject = {'name': 'START'}
@@ -786,14 +531,6 @@ class SQLVisitor(SQLParserVisitor):
                 expression_list.append(str(expression.getText()))
         parsedObject.update({'scriptList': expression_list})
 
-        # 源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end + 1]
-        originScript = self.getSource(tokens)
-
-        # 提示信息
-        hint = self.getHint(tokens)
-
         # 处理错误信息
         errorCode = 0
         errorMsg = None
@@ -803,44 +540,12 @@ class SQLVisitor(SQLParserVisitor):
             self.isFinished = False
 
         self.parsedObject = parsedObject
-        self.originScripts = originScript
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-
-        return parsedObject, originScript, hint, errorCode, errorMsg
-
-    def visitSingleExpression(self, ctx: SQLParser.SingleExpressionContext):
-        expression = ctx.getText()
-
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
-        # 获取错误代码
-        errorCode = 0
-        errorMsg = None
-        if ctx.exception is not None:
-            errorCode = -1
-            errorMsg = ctx.exception.message
-
-        return expression, originScript, hint, errorCode, errorMsg
 
     def visitExpression(self, ctx: SQLParser.ExpressionContext):
         expression = ctx.getText()
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -848,7 +553,7 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        return expression, originScript, hint, errorCode, errorMsg
+        return expression, errorCode, errorMsg
 
     def visitSet(self, ctx: SQLParser.SetContext):
         parsedObject = {'name': 'SET'}
@@ -867,14 +572,6 @@ class SQLVisitor(SQLParserVisitor):
             optionValue = " ".join(expression_list[1:])
             parsedObject.update({"optionValue": optionValue})
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end + 1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -883,12 +580,8 @@ class SQLVisitor(SQLParserVisitor):
             errorMsg = ctx.exception.message
 
         self.parsedObject = parsedObject
-        self.originScripts = originScript
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitSession(self, ctx: SQLParser.SessionContext):
         action = ""
@@ -909,14 +602,6 @@ class SQLVisitor(SQLParserVisitor):
         else:
             parsedObject.update({'sessionName': None})
             
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end + 1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -925,12 +610,8 @@ class SQLVisitor(SQLParserVisitor):
             errorMsg = ctx.exception.message
 
         self.parsedObject = parsedObject
-        self.originScripts = originScript
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitHost(self, ctx: SQLParser.HostContext):
         parsedObject = {'name': 'HOST'}
@@ -948,14 +629,6 @@ class SQLVisitor(SQLParserVisitor):
             self.isFinished = False
             parsedObject.update({'script': ""})
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -963,20 +636,12 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitLoad(self, ctx: SQLParser.LoadContext):
         parsedObject = {'name': 'LOAD'}
-
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end + 1]
-        originScript = self.getSource(tokens)
 
         # 加载的选项
         option = str(ctx.LOAD_OPTION().getText()).strip().upper()
@@ -1020,9 +685,6 @@ class SQLVisitor(SQLParserVisitor):
                     mapFile = mapFile[1:-1]
                 parsedObject.update({"mapFile": mapFile})
 
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -1031,12 +693,8 @@ class SQLVisitor(SQLParserVisitor):
             errorMsg = ctx.exception.message
 
         self.parsedObject = parsedObject
-        self.originScripts = originScript
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitWhenever(self, ctx: SQLParser.WheneverContext):
         parsedObject = {'name': 'WHENEVER'}
@@ -1048,14 +706,6 @@ class SQLVisitor(SQLParserVisitor):
         if ctx.WHENEVER_ERROR():
             parsedObject.update({"condition": 'error'})
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end + 1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -1064,12 +714,8 @@ class SQLVisitor(SQLParserVisitor):
             errorMsg = ctx.exception.message
 
         self.parsedObject = parsedObject
-        self.originScripts = originScript
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitIf(self, ctx: SQLParser.IfContext):
         parsedObject = {'name': 'IF'}
@@ -1085,14 +731,6 @@ class SQLVisitor(SQLParserVisitor):
         else:
             parsedObject.update({'expression': ""})
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end + 1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -1101,24 +739,12 @@ class SQLVisitor(SQLParserVisitor):
             errorMsg = ctx.exception.message
 
         self.parsedObject = parsedObject
-        self.originScripts = originScript
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitEndif(self, ctx: SQLParser.EndifContext):
         parsedObject = {'name': 'ENDIF'}
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end + 1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -1127,26 +753,14 @@ class SQLVisitor(SQLParserVisitor):
             errorMsg = ctx.exception.message
 
         self.parsedObject = parsedObject
-        self.originScripts = originScript
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitSpool(self, ctx: SQLParser.SpoolContext):
         content = ctx.String().getText()
         
         parsedObject = {'name': 'SPOOL', 'file': content}
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end + 1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -1155,12 +769,8 @@ class SQLVisitor(SQLParserVisitor):
             errorMsg = ctx.exception.message
 
         self.parsedObject = parsedObject
-        self.originScripts = originScript
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitScript(self, ctx: SQLParser.ScriptContext):
         parsedObject = {'name': 'SCRIPT'}
@@ -1179,14 +789,6 @@ class SQLVisitor(SQLParserVisitor):
         else:
             self.isFinished = False
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -1194,17 +796,9 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
-
-    # def visitBaseCommand(self, ctx: SQLParser.BaseCommandContext):
-    #     print("=== + " + str(ctx.getText()))
-    #     # basectx = BaseParser.BaseCommandContext()
-    #     return self.baseVisitor.visitBaseCommand(BaseParser.BaseCommandContext(basectx))
 
     def visitAssert(self, ctx: SQLParser.AssertContext):
         parsedObject = {'name': 'ASSERT'}
@@ -1219,14 +813,6 @@ class SQLVisitor(SQLParserVisitor):
         else:
             parsedObject.update({'expression': ""})
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -1234,12 +820,9 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitSql(self, ctx: SQLParser.SqlContext):
         return self.visitChildren(ctx)
@@ -1248,13 +831,9 @@ class SQLVisitor(SQLParserVisitor):
         # 获取源文件
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
 
         statement = ctx.SQL_CREATE().getText() + self.getText(tokens, SQLLexer.SQLSTATEMENT_CHANNEL)
         parsedObject = {'name': 'CREATE', 'statement': statement}
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
 
         # 获取错误代码
         errorCode = 0
@@ -1267,24 +846,17 @@ class SQLVisitor(SQLParserVisitor):
         if (ctx.SQL_END() is None) or ((ctx.SQL_END().getText() != ';') and (ctx.SQL_END().getText() != '\n/')):
             self.isFinished = False
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitSqlDrop(self, ctx: SQLParser.SqlDropContext):
         # 获取源文件
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
 
         statement = ctx.SQL_DROP().getText() + self.getText(tokens, SQLLexer.SQLSTATEMENT_CHANNEL)
         parsedObject = {'name': 'DROP', 'statement': statement}
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
 
         # 获取错误代码
         errorCode = 0
@@ -1297,24 +869,17 @@ class SQLVisitor(SQLParserVisitor):
         if (ctx.SQL_END() is None) or ((ctx.SQL_END().getText() != ';') and (ctx.SQL_END().getText() != '\n/')):
             self.isFinished = False
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitSqlReplace(self, ctx: SQLParser.SqlReplaceContext):
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
-
         statement = ctx.SQL_REPLACE().getText() + self.getText(tokens, SQLLexer.SQLSTATEMENT_CHANNEL)
-
         parsedObject = {'name': 'REPLACE', 'statement': statement}
-        # 包含注释和提示
-        originScript = self.getSource(tokens)
-        # 句子中的提示
-        hint = self.getHint(tokens)
+
+        # 处理错误信息
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
@@ -1325,24 +890,16 @@ class SQLVisitor(SQLParserVisitor):
             errorCode = -1
             self.isFinished = False
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitSqlInsert(self, ctx: SQLParser.SqlInsertContext):
         # 获取源文件
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
         statement = ctx.SQL_INSERT().getText() + self.getText(tokens, SQLLexer.SQLSTATEMENT_CHANNEL)
         parsedObject = {'name': 'INSERT', 'statement': statement}
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
 
         # 获取错误代码
         errorCode = 0
@@ -1355,24 +912,16 @@ class SQLVisitor(SQLParserVisitor):
         if (ctx.SQL_END() is None) or ((ctx.SQL_END().getText() != ';') and (ctx.SQL_END().getText() != '\n/')):
             self.isFinished = False
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitSqlUpdate(self, ctx: SQLParser.SqlUpdateContext):
         # 获取源文件
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
         statement = ctx.SQL_UPDATE().getText() + self.getText(tokens, SQLLexer.SQLSTATEMENT_CHANNEL)
         parsedObject = {'name': 'UPDATE', 'statement': statement}
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
 
         # 获取错误代码
         errorCode = 0
@@ -1385,24 +934,16 @@ class SQLVisitor(SQLParserVisitor):
         if (ctx.SQL_END() is None) or ((ctx.SQL_END().getText() != ';') and (ctx.SQL_END().getText() != '\n/')):
             self.isFinished = False
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitSqlDelete(self, ctx: SQLParser.SqlDeleteContext):
         # 获取源文件
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
         statement = ctx.SQL_DELETE().getText() + self.getText(tokens, SQLLexer.SQLSTATEMENT_CHANNEL)
         parsedObject = {'name': 'DELETE', 'statement': statement}
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
 
         # 获取错误代码
         errorCode = 0
@@ -1415,24 +956,16 @@ class SQLVisitor(SQLParserVisitor):
         if (ctx.SQL_END() is None) or ((ctx.SQL_END().getText() != ';') and (ctx.SQL_END().getText() != '\n/')):
             self.isFinished = False
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitSqlSelect(self, ctx: SQLParser.SqlSelectContext):
         # 获取源文件
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
         statement = ctx.SQL_SELECT().getText() + self.getText(tokens, SQLLexer.SQLSTATEMENT_CHANNEL)
         parsedObject = {'name': 'SELECT', 'statement': statement}
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
 
         # 获取错误代码
         errorCode = 0
@@ -1445,28 +978,17 @@ class SQLVisitor(SQLParserVisitor):
         if (ctx.SQL_END() is None) or ((ctx.SQL_END().getText() != ';') and (ctx.SQL_END().getText() != '\n/')):
             self.isFinished = False
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitSqlCommitRollback(self, ctx: SQLParser.SqlCommitRollbackContext):
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
         parsedObject = {}
         if ctx.SQL_COMMIT() is not None:
             parsedObject = {'name': 'COMMIT', 'statement': ctx.SQL_COMMIT().getText()}
         if ctx.SQL_ROLLBACK() is not None:
             parsedObject = {'name': 'ROLLBACK', 'statement': ctx.SQL_ROLLBACK().getText()}
 
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -1475,12 +997,9 @@ class SQLVisitor(SQLParserVisitor):
             errorMsg = ctx.exception.message
 
         # 如果SQL没有结尾，要返回没有结尾的标志
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitSqlDeclare(self, ctx: SQLParser.SqlDeclareContext):
         start, end = self.getSourceInterval(ctx)
@@ -1498,12 +1017,6 @@ class SQLVisitor(SQLParserVisitor):
                 'name': 'BEGIN',
                 'statement': statement}
 
-        # 包含注释和提示
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -1515,28 +1028,18 @@ class SQLVisitor(SQLParserVisitor):
         if (ctx.SQL_SLASH() is None) or (ctx.SQL_SLASH().getText() != '\n/'):
             self.isFinished = False
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitSqlCreateProcedure(self, ctx: SQLParser.SqlCreateProcedureContext):
         start, end = self.getSourceInterval(ctx)
         tokens = ctx.parser._input.tokens[start:end+1]
-        
         statement = ctx.SQL_CREATE_PROCEDURE().getText() + self.getText(tokens, SQLLexer.SQLSTATEMENT_CHANNEL)
         parsedObject = {
             'name': 'PROCEDURE',
             'statement': statement}
 
-        # 包含注释和提示
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -1548,9 +1051,6 @@ class SQLVisitor(SQLParserVisitor):
         if (ctx.SQL_SLASH() is None) or (ctx.SQL_SLASH().getText() != '\n/'):
             self.isFinished = False
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg

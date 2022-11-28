@@ -21,8 +21,6 @@ from .sqlparse import SQLFormatWithPrefix
 from .apiparse import APIFormatWithPrefix
 
 from .commands.load import loadPlugin
-from .commands.load import _Class
-from .commands.load import _Func
 from .commands.load import loadDriver
 from .commands.load import loadMap
 from .commands.exit import exitApplication
@@ -90,9 +88,6 @@ class CmdExecute(object):
         self.loopMode = False
         self.loopCondition = False
         self.loopStartPos = 0
-
-        if _Class or _Func:
-            pass
 
     def setStartTime(self, startTime):
         self.startTime = startTime
@@ -452,7 +447,7 @@ class CmdExecute(object):
                               indent=4,
                               separators=(',', ': '),
                               ensure_ascii=False)
-        except JSONDecodeError as je:
+        except JSONDecodeError:
             pass
         # 返回的对象不是一个JSON
         yield {
@@ -488,23 +483,16 @@ class CmdExecute(object):
         # 执行正常的SQL语句
         if self.sqlCursor is not None:
             try:
-                try:
-                    # 执行数据库的SQL语句
-                    if "SQL_DIRECT" in sqlHints.keys():
+                # 执行数据库的SQL语句
+                if "SQL_DIRECT" in sqlHints.keys():
+                    self.sqlCursor.execute_direct(sql, TimeOutLimit=self.timeout)
+                elif "SQL_PREPARE" in sqlHints.keys():
+                    self.sqlCursor.execute(sql, TimeOutLimit=self.timeout)
+                else:
+                    if self.testOptions.get("SQL_EXECUTE").upper() == "DIRECT":
                         self.sqlCursor.execute_direct(sql, TimeOutLimit=self.timeout)
-                    elif "SQL_PREPARE" in sqlHints.keys():
+                    else:
                         self.sqlCursor.execute(sql, TimeOutLimit=self.timeout)
-                    else:
-                        if self.testOptions.get("SQL_EXECUTE").upper() == "DIRECT":
-                            self.sqlCursor.execute_direct(sql, TimeOutLimit=self.timeout)
-                        else:
-                            self.sqlCursor.execute(sql, TimeOutLimit=self.timeout)
-                except Exception as e:
-                    if "SQL_LOOP" in sqlHints.keys():
-                        # 如果在循环中, 错误不会处理， 一直到循环结束
-                        pass
-                    else:
-                        raise e
 
                 rowcount = 0
                 sqlStatus = 0
@@ -522,73 +510,6 @@ class CmdExecute(object):
                                           str(cellPos) + "]=[" + str(result[rowPos][cellPos]) + "]")
 
                     sqlErrorMessage = ""
-                    # 如果存在SQL_LOOP信息，则需要反复执行上一个SQL
-                    if "SQL_LOOP" in sqlHints.keys():
-                        if "TESTCLI_DEBUG" in os.environ:
-                            print("[DEBUG] LOOP=" + str(sqlHints["SQL_LOOP"]))
-                        # 循环执行SQL列表，构造参数列表
-                        loopTimes = int(sqlHints["SQL_LOOP"]["LoopTimes"])
-                        loopInterval = int(sqlHints["SQL_LOOP"]["LoopInterval"])
-                        loopUntil = sqlHints["SQL_LOOP"]["LoopUntil"]
-                        if loopInterval < 0:
-                            loopTimes = 0
-                            if "TESTCLI_DEBUG" in os.environ:
-                                raise TestCliException(
-                                    "SQLLoop Hint Error, Unexpected LoopInterval: " + str(loopInterval))
-                        if loopTimes < 0:
-                            if "TESTCLI_DEBUG" in os.environ:
-                                raise TestCliException(
-                                    "SQLLoop Hint Error, Unexpected LoopTime: " + str(loopTimes))
-
-                        # 保存Silent设置
-                        oldSilentMode = self.testOptions.get("SILENT")
-                        oldTimingMode = self.testOptions.get("TIMING")
-                        oldTimeMode = self.testOptions.get("TIME")
-                        self.testOptions.set("SILENT", "ON")
-                        self.testOptions.set("TIMING", "OFF")
-                        self.testOptions.set("TIME", "OFF")
-                        # 对于循环语句，由于循环语句的判断表达式会根据之前LastSQLResult作为判断。所以这里不再保留
-                        self.lastJsonCommandResult = None
-
-                        for nLoopPos in range(1, loopTimes):
-                            # 检查Until条件，如果达到Until条件，退出
-                            bAssertSuccessful = False
-                            for loopResult in \
-                                    self.runStatement("__internal__ test assert " + loopUntil):
-                                if loopResult["type"] == "result":
-                                    if loopResult["status"].startswith("Assert Successful"):
-                                        bAssertSuccessful = True
-                                    break
-
-                            if bAssertSuccessful:
-                                break
-                            else:
-                                # 测试失败, 等待一段时间后，开始下一次检查
-                                time.sleep(loopInterval)
-                                if "TESTCLI_DEBUG" in os.environ:
-                                    print("[DEBUG] SQL(LOOP " + str(nLoopPos) + ")=[" + str(sql) + "]")
-
-                                for loopResult in self.runStatement(sql):
-                                    # 最后一次执行的结果将被传递到外层，作为SQL返回结果
-                                    if loopResult["type"] == "result":
-                                        sqlStatus = 0
-                                        title = loopResult["title"]
-                                        result = loopResult["rows"]
-                                        if "Order" in sqlHints.keys() and result is not None:
-                                            if "TESTCLI_DEBUG" in os.environ:
-                                                print("[DEBUG] Apply Sort for this result 3.")
-                                            self.sortresult(result)
-                                        headers = loopResult["headers"]
-                                        columnTypes = loopResult["columnTypes"]
-                                        status = loopResult["status"]
-                                    if loopResult["type"] == "error":
-                                        sqlStatus = 1
-                                        sqlErrorMessage = loopResult["message"]
-
-                        self.testOptions.set("TIME", oldTimeMode)
-                        self.testOptions.set("TIMING", oldTimingMode)
-                        self.testOptions.set("SILENT", oldSilentMode)
-
                     # 如果Hints中有order字样，对结果进行排序后再输出
                     if "Order" in sqlHints.keys() and result is not None:
                         if "TESTCLI_DEBUG" in os.environ:
@@ -695,7 +616,7 @@ class CmdExecute(object):
                         break
             except SQLCliJDBCTimeOutException:
                 # 处理超时时间问题
-                if sql.upper() not in ["EXIT", "QUIT"]:
+                if sql.upper() not in ["_EXIT", "_QUIT"]:
                     if self.timeOutMode == "SCRIPT":
                         sqlErrorMessage = "TestCli-000: Script Timeout " \
                                              "(" + str(self.scriptTimeOut) + \
@@ -801,69 +722,33 @@ class CmdExecute(object):
                     # 一直循环到没有任何东西可以被替换
                     break
 
-        # ${random(1,100)}
-        # 处理脚本中的随机数问题
+        # 保留原脚本
         rawStatement = statement
-        match_obj = re.search(
-            r"\${random_int\((\s+)?(\d+)(\s+)?,(\s+)?(\d+)(\s+)?\)}",
-            statement,
-            re.IGNORECASE | re.DOTALL)
-        if match_obj:
-            searchResult = match_obj.group(0)
-            randomStart = int(match_obj.group(2))
-            randomEnd = int(match_obj.group(5))
-            statement = statement.replace(searchResult, str(random.randint(randomStart, randomEnd)))
-            if rawStatement != statement:
-                rewrotedCommandHistory.append(statement)
 
-        # 检查SQL中是否包含特殊内容，如果有，改写SQL
-        # 特殊内容都有：
-        # 1. ${LastcommandResult(.*)}       # .* JQ Parse Pattern
-        # 2. ${var}
-        #    用户定义的变量
-        match_obj = re.search(r"\${LastcommandResult\((.*?)\)}", statement, re.IGNORECASE | re.DOTALL)
-        if match_obj:
-            searchResult = match_obj.group(0)
-            m_JQPattern = match_obj.group(1)
-            statement = statement.replace(searchResult, self.jqparse(obj=self.lastJsonCommandResult, path=m_JQPattern))
-            if self.testOptions.get("SILENT").upper() == 'ON':
-                # SILENT模式下不打印任何日志
-                pass
-            else:
-                # 记录被JQ表达式改写的SQL
-                if self.testOptions.get("NAMESPACE") == "SQL":
-                    rewrotedCommandHistory.append(
-                        SQLFormatWithPrefix("Your SQL has been changed to:\n" + statement, 'REWROTED '))
-                if self.testOptions.get("NAMESPACE") == "API":
-                    rewrotedCommandHistory.append(
-                        APIFormatWithPrefix("Your API has been changed to:\n" + statement, 'REWROTED '))
-
-        # ${var}
-        bMatched = False
         while True:
-            match_obj = re.search(r"\${(.*?)}", statement, re.IGNORECASE | re.DOTALL)
+            # 替换脚本中的变量信息
+            # 替换： 一： 系统的环境变量,即{{env}}
+            # 替换： 二:  系统内嵌脚本中的变量{{eval}}
+            match_obj = re.search(r"{{(.*?)}}", statement, re.IGNORECASE | re.DOTALL)
             if match_obj:
-                bMatched = True
-                searchResult = match_obj.group(0)
+                searchResult = str(match_obj.group(0))
                 varName = str(match_obj.group(1)).strip()
-                # 首先判断是否为一个Env函数
-                varValue = '#UNDEFINE_VAR#'
-                if varName.upper().startswith("ENV(") and varName.upper().endswith(")"):
-                    envName = varName[4:-1].strip()
-                    if envName in os.environ:
-                        varValue = os.environ[envName]
-                else:
-                    varValue = self.testOptions.get(varName)
-                    if varValue is None:
-                        varValue = self.testOptions.get('@' + varName)
-                        if varValue is None:
-                            varValue = '#UNDEFINE_VAR#'
-                # 替换相应的变量信息
-                statement = statement.replace(searchResult, varValue)
-                continue
+                # 尝试本地变量
+                try:
+                    evalResult = evalExpression(self.cliHandler, varName)
+                    statement = statement.replace(searchResult, str(evalResult))
+                except NameError:
+                    # 非环境变量
+                    pass
+                # 尝试环境变量
+                if varName in os.environ:
+                    statement = statement.replace(searchResult, os.environ[varName])
             else:
+                # 没有任何可以替换的了
                 break
-        if bMatched:
+
+        # 语句发生了变化
+        if rawStatement != statement:
             # 记录被变量信息改写的命令
             if self.testOptions.get("NAMESPACE") == "SQL":
                 rewrotedCommandHistory.append(
@@ -935,20 +820,6 @@ class CmdExecute(object):
             if match_obj:
                 commandHintList["SQL_PREPARE"] = True
                 continue
-
-            # [Hint]  Loop   -- 循环执行特定的SQL
-            # --[Hint] LOOP [LoopTimes] UNTIL [EXPRESSION] INTERVAL [INTERVAL]
-            match_obj = re.search(
-                r"^LOOP\s+(\d+)\s+UNTIL\s+(.*)\s+INTERVAL\s+(\d+)(\s+)?",
-                commandHint, re.IGNORECASE | re.DOTALL)
-            if match_obj:
-                commandHintList["SQL_LOOP"] = {
-                    "LoopTimes": match_obj.group(4),
-                    "LoopUntil": match_obj.group(5),
-                    "LoopInterval": match_obj.group(6)
-                }
-                continue
-
         return commandHintList
 
     def runStatement(self, statement: str, commandScriptFile: str, nameSpace: str):
@@ -992,37 +863,56 @@ class CmdExecute(object):
                 else:
                     currentStatementWithComments = currentStatementWithComments + '\n' + statementLine
 
+                # 调用解析器解析语句
                 if self.testOptions.get("NAMESPACE") == "SQL":
-                    (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+                    (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
                         = SQLAnalyze(currentStatement)
-                    if not isFinished:
-                        # 如果语句还没有结束，则需要等待下一行输入
-                        # 如果到了文件末尾，就没有必要继续等待，直接返回
-                        if nPos == (len(statementLines) - 1):
+                elif self.testOptions.get("NAMESPACE") == "API":
+                    (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+                        = APIAnalyze(currentStatement)
+                else:
+                    raise TestCliException("不支持的运行空间【" + str(nameSpace) + "】")
+
+                # 语句没有结束
+                if not isFinished:
+                    # 如果语句还没有结束，则需要等待下一行输入
+                    # 如果到了文件末尾，就没有必要继续等待，直接返回
+                    if nPos == (len(statementLines) - 1):
+                        if self.testOptions.get("NAMESPACE") == "SQL":
                             ret_CommandSplitResults.append(
-                                {'name': 'UNKNOWN',
+                                {'name': 'SQL_UNKNOWN',
                                  'statement': currentStatement,
                                  'reason': "missing SQL_END at '<EOF>'"}
                             )
-                            # 解析前的语句
-                            ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
-                            # 所有的提示信息
-                            ret_CommandHints.append(currentHints)
-                            # 清空语句的变量
-                            currentStatement = None
-                            currentStatementWithComments = None
-                        continue
-                    if ret_CommandSplitResult is None:
-                        # 解析的结果为空，可能的原因有：
-                        #    这是一个空行，或者仅仅包含注释，那继续等待下一个有意义的行
-                        #    这行已经发生了解析错误，但是由于我们的解析规则并不覆盖所有的数据库语句，所以就假设其为数据库语句
-                        if ret_errorCode != 0:
-                            # 语句已经出错
-                            #    如果语句的最后一个字符是SQL终止符号，则认为语句结束，假定其为不识别的数据库语句
-                            #    如果语句的最后一个字符不是SQL终止符号，继续等待
+                        elif self.testOptions.get("NAMESPACE") == "API":
+                            ret_CommandSplitResults.append(
+                                {'name': 'API_UNKNOWN',
+                                 'statement': currentStatement,
+                                 'reason': "missing HTTP_END at '<EOF>'"}
+                            )
+                        # 解析前的语句
+                        ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+                        # 所有的提示信息
+                        ret_CommandHints.append(currentHints)
+                        # 清空语句的变量
+                        currentStatement = None
+                        currentStatementWithComments = None
+                    continue
+
+                # 语句已经结束
+                if ret_CommandSplitResult is None:
+                    # 解析的结果为空，可能的原因有：
+                    #    这是一个空行，或者仅仅包含注释，那继续等待下一个有意义的行
+                    #    这行已经发生了解析错误，但是由于我们的解析规则并不覆盖所有的数据库语句，所以就假设其为数据库语句
+                    if ret_errorCode != 0:
+                        # 语句已经出错
+                        if self.testOptions.get("NAMESPACE") == "SQL":
+                            # 对于SQL语句，不认识的语句要当作一个SQL使用
+                            #   如果语句的最后一个字符是SQL终止符号，则认为语句结束
+                            #   如果语句的最后一个字符不是SQL终止符号，继续等待
                             if currentStatement.strip().endswith(';') or currentStatement.strip().endswith('\n/'):
                                 ret_CommandSplitResults.append(
-                                    {'name': 'UNKNOWN',
+                                    {'name': 'SQL_UNKNOWN',
                                      'statement': currentStatement,
                                      'reason': ret_errorMsg}
                                 )
@@ -1034,66 +924,8 @@ class CmdExecute(object):
                                 currentStatement = None
                                 currentStatementWithComments = None
                             continue
-
-                        # 没有任何有效的语句，可能是空行或者完全的注释
-                        # 对于注释中的Hint信息需要保留下来
-                        pattern = r"^(\s+)?--(\s+)?\[(\s+)?Hint(\s+)?\](.*)"
-                        matchObj = re.match(pattern, statementLine, re.IGNORECASE)
-                        if matchObj:
-                            currentHints.append(matchObj.group(5).strip())
-                        # 解析后的语句
-                        ret_CommandSplitResults.append(None)
-                        # 解析前的语句
-                        ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
-                        # 对于非有效语句，Hint不在当前语句中体现，而是要等到下次有意义的语句进行处理
-                        ret_CommandHints.append([])
-                        # 清空语句的变量
-                        currentStatement = None
-                        currentStatementWithComments = None
-                        continue
-                    else:
-                        if ret_CommandSplitResult["name"] == "USE":
-                            self.testOptions.set("NAMESPACE", ret_CommandSplitResult["nameSpace"])
-                        if ret_CommandSplitResult["name"] == "CONNECT":
-                            # 对于数据库连接命令，如果没有给出连接详细信息，并且指定了环境变量，附属环境变量到连接命令后
-                            if "driver" not in ret_CommandSplitResult and "SQLCLI_CONNECTION_URL" in os.environ:
-                                (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-                                    = SQLAnalyze(currentStatement + "@" + os.environ["SQLCLI_CONNECTION_URL"])
-                        # 语句已经结束, 记录语句解析的结果
-                        # 解析后的语句
-                        ret_CommandSplitResults.append(ret_CommandSplitResult)
-                        # 解析前的语句
-                        ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
-                        # 所有的提示信息
-                        ret_CommandHints.append(currentHints)
-                        # 清空语句的变量
-                        currentStatement = None
-                        currentStatementWithComments = None
-                        continue
-                elif self.testOptions.get("NAMESPACE") == "API":
-                    (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-                        = APIAnalyze(currentStatement)
-                    if not isFinished:
-                        # 如果语句还没有结束，则不判断错误消息，直接等待下一行结果就是
-                        if nPos == (len(statementLines) - 1):
-                            # 都最后一行了，实在不能再等了，全部打包，管它呢
-                            ret_CommandSplitResults.append(
-                                {'name': 'API_UNKNOWN',
-                                 'statement': currentStatement,
-                                 'reason': "missing HTTP_END at '<EOF>'"}
-                            )
-                            # 解析前的语句
-                            ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
-                            # 所有的提示信息
-                            ret_CommandHints.append(currentHints)
-                            # 清空语句的变量
-                            currentStatement = None
-                            currentStatementWithComments = None
-                        continue
-                    if ret_CommandSplitResult is None:
-                        # 没有发现任何解析的内容，且errorCode非0，表示语句已经发生错误，没有必要继续
-                        if ret_errorCode != 0:
-                            # 语句已经出错，且不是一个空语句
+                        elif self.testOptions.get("NAMESPACE") == "API":
+                            # 对于API语句，不认识的语句肯定是出问题了
                             ret_CommandSplitResults.append(
                                 {'name': 'API_UNKNOWN',
                                  'statement': currentStatement,
@@ -1106,40 +938,49 @@ class CmdExecute(object):
                             # 清空语句的变量
                             currentStatement = None
                             currentStatementWithComments = None
-                            continue
-                        else:
-                            # 没有任何有效的语句，但是解析也没有报告错误，可能是空行或者完全的注释
-                            # 对于注释中的Hint信息需要保留下来
-                            pattern = r"^(\s+)?//(\s+)?\[(\s+)?Hint(\s+)?\](.*)"
-                            matchObj = re.match(pattern, statementLine, re.IGNORECASE)
-                            if matchObj:
-                                currentHints.append(matchObj.group(5).strip())
-                            # 解析后的语句
-                            ret_CommandSplitResults.append(None)
-                            # 解析前的语句
-                            ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
-                            # 对于非有效语句，Hint不在当前语句中体现，而是要等到下次有意义的语句进行处理
-                            ret_CommandHints.append([])
-                            # 清空语句的变量
-                            currentStatement = None
-                            currentStatementWithComments = None
-                            continue
-                    else:   # 语句已经结束了
-                        if ret_CommandSplitResult["name"] == "USE":
-                            self.testOptions.set("NAMESPACE", ret_CommandSplitResult["nameSpace"])
-                        # 语句已经结束, 记录语句解析的结果
-                        # 解析后的语句
-                        ret_CommandSplitResults.append(ret_CommandSplitResult)
-                        # 解析前的语句
-                        ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
-                        # 所有的提示信息
-                        ret_CommandHints.append(currentHints)
-                        # 清空语句的变量
-                        currentStatement = None
-                        currentStatementWithComments = None
-                        continue
+
+                    # 没有任何有效的语句，可能是空行或者完全的注释
+                    # 对于注释中的Hint信息需要保留下来
+                    pattern = ""
+                    if self.testOptions.get("NAMESPACE") == "SQL":
+                        pattern = r"^(\s+)?--(\s+)?\[(\s+)?Hint(\s+)?\](.*)"
+                    elif self.testOptions.get("NAMESPACE") == "API":
+                        pattern = r"^(\s+)?//(\s+)?\[(\s+)?Hint(\s+)?\](.*)"
+                    matchObj = re.match(pattern, statementLine, re.IGNORECASE)
+                    if matchObj:
+                        currentHints.append(matchObj.group(5).strip())
+                    # 解析后的语句
+                    ret_CommandSplitResults.append(None)
+                    # 解析前的语句
+                    ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+                    # 对于非有效语句，Hint不在当前语句中体现，而是要等到下次有意义的语句进行处理
+                    ret_CommandHints.append([])
+                    # 清空语句的变量
+                    currentStatement = None
+                    currentStatementWithComments = None
+                    continue
                 else:
-                    raise TestCliException("不支持的运行空间【" + str(nameSpace) + "】")
+                    # 解析出来了真实有效的内容
+                    if ret_CommandSplitResult["name"] == "USE":
+                        self.testOptions.set("NAMESPACE", ret_CommandSplitResult["nameSpace"])
+                    if self.testOptions.get("NAMESPACE") == "SQL":
+                        # 对于SQL的CONNECT命令做特殊处理
+                        if ret_CommandSplitResult["name"] == "CONNECT":
+                            # 对于数据库连接命令，如果没有给出连接详细信息，并且指定了环境变量，附属环境变量到连接命令后
+                            if "driver" not in ret_CommandSplitResult and "SQLCLI_CONNECTION_URL" in os.environ:
+                                (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+                                    = SQLAnalyze(currentStatement + "@" + os.environ["SQLCLI_CONNECTION_URL"])
+                    # 语句已经结束, 记录语句解析的结果
+                    # 解析后的语句
+                    ret_CommandSplitResults.append(ret_CommandSplitResult)
+                    # 解析前的语句
+                    ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+                    # 所有的提示信息
+                    ret_CommandHints.append(currentHints)
+                    # 清空语句的变量
+                    currentStatement = None
+                    currentStatementWithComments = None
+                    continue
         except Exception:
             if "TESTCLI_DEBUG" in os.environ:
                 print('traceback.print_exc():\n%s' % traceback.print_exc())
@@ -1246,7 +1087,7 @@ class CmdExecute(object):
             sqlKeyWords = ["SELECT", "DELETE", "UPDATE", "CREATE", "INSERT",
                            "DROP", "COMMIT", "ROLLBACK",
                            "PROCEDURE", "DECLARE", "BEGIN",
-                           "UNKNOWN"]
+                           "SQL_UNKNOWN"]
             if parseObject["name"] == "ECHO":
                 # 将后续内容回显到指定的文件中
                 for commandResult in self.cliHandler.echo_input(
@@ -1403,10 +1244,33 @@ class CmdExecute(object):
                     ):
                         yield commandResult
             elif parseObject["name"] in ["HTTP"]:
+                if self.ifMode and not self.ifCondition:
+                    pos = pos + 1
+                    continue
+                httpRequestTarget = parseObject["httpRequestTarget"]
+                # 根据语句中的变量或者其他定义信息来重写当前语句
+                httpRequestTarget, rewrotedCommandList = self.rewriteRunStatement(
+                    statement=httpRequestTarget,
+                    commandScriptFile=commandScriptFile
+                )
+                if len(rewrotedCommandList) != 0:
+                    # 如果命令被发生了改写，要打印改写记录
+                    yield {
+                        "type": "parse",
+                        "rawCommand": None,
+                        "formattedCommand": None,
+                        "rewrotedCommand": rewrotedCommandList,
+                        "script": commandScriptFile
+                    }
+                    parseObject["httpRequestTarget"] = httpRequestTarget
+
+                # 处理Hints信息
+                commandHintList = self.parseHints(list(ret_CommandHints[pos]))
+
                 # 执行HTTP请求
                 for result in self.executeAPIStatement(
                         apiRequest=parseObject,
-                        apiHints=[],
+                        apiHints=commandHintList,
                         startTime=0):
                     yield result
             elif parseObject["name"] in ["HOST"]:

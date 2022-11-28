@@ -1,0 +1,33 @@
+SQL> _load plugin testplugin.py;
+Plugin module [cc] loaded successful.
+Plugin function [fun] loaded successful.
+Plugin file loaded successful.
+SQL> _connect /mem
+Database connected.
+SQL> create table aaa (id int);
+0 row affected.
+SQL> insert into aaa values(10);
+1 row affected.
+SQL> select * from aaa;
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 | 10 |
++--------+----+
+1 row selected.
+SQL>
+SQL> > {% x=lastCommandResult %}
+SQL>
+SQL> _assert {% x["rows"][0][0]==10 %};
+Assert successful.
+SQL>
+SQL> > {%
+   > sessionContext["status"] = fun(x["rows"][0][0])
+   > %}
+b10
+SQL>
+SQL> > {%
+   > xx = cc()
+   > sessionContext["status"] = xx.welcome("Boy.")
+   > %}
+thx Boy.

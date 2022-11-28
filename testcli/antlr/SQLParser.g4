@@ -10,42 +10,15 @@ prog: command EOF;
 
 
 command:
-      exit
-      | quit
-      | use
-      | sleep
-      | connect
+      baseCommand
       | disconnect
       | session
-      | spool
-      | script
-      | echo
-      | baseCommand
+      | connect
       | sql
       | EOF
       ;
 
-// Exit 
-exit: 
-    EXIT INT? CRLF?
-    ;
-    
-// quit
-quit: 
-    QUIT INT? CRLF?
-    ;
-
-// use 
-use:  
-    USE (API|SQL) CRLF?
-    ;
-
-// sleep
-sleep
-        : SLEEP INT CRLF?
-        ;
-
-// connect 
+// connect
 connect
      : (connectjdbc | connectlocal)
      ;
@@ -126,18 +99,6 @@ session
         : SESSION (SESSION_SAVE|SESSION_RELEASE|SESSION_RESTORE|SESSION_SAVEURL|SESSION_SHOW) SESSION_NAME? SESSION_END?
         ;
 
-singleExpression
-        : (String 
-        | DOT 
-        | SLASH 
-        | BRACKET_OPEN 
-        | BRACKET_CLOSE
-        | ESCAPE
-        | SQUARE_OPEN 
-        | SQUARE_CLOSE 
-        | DOUBLE_QUOTE 
-        | SINGLE_QUOTE )
-        ;
 
 expression
         : (String
@@ -151,27 +112,6 @@ expression
         | SQUARE_CLOSE
         | DOUBLE_QUOTE
         | SINGLE_QUOTE )+
-        ;
-
-//
-spool
-        : SPOOL String (SEMICOLON)? CRLF?
-        ;
-
-// 12: 回显指定的文件 
-echo
-        :   ECHO_OPEN
-            EchoBlock
-            (CRLF | EOF)?
-        ;
-
-// 14：执行SQL语句
-
-// 17：内嵌脚本
-script
-        :   SCRIPT_OPEN
-            ScriptBlock
-            CRLF?
         ;
 
 //

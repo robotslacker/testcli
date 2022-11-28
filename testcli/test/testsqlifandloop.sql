@@ -1,4 +1,4 @@
-connect /mem
+_connect /mem
 _if {% 3==2 %}
 select 1+2 from dual;
 _endif
@@ -8,7 +8,7 @@ select 1+2 from dual;
 _endif
 select 3+4 from dual;
 
-connect /mem
+_connect /mem
 create table aaa (id int);
 insert into aaa values(10);
 > {% i=0 %}

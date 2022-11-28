@@ -1,6 +1,6 @@
-SQL> connect /mem
+SQL> _connect /mem
 Database connected.
-SQL> session show;
+SQL> _session show;
 Saved Sessions:
 +--------+---------+---------------+-----------+----------+--------------+
 |   ##   | Session | Sesssion Name | User Name | Password |     URL      |
@@ -21,10 +21,10 @@ SQL> select * from aaa;
 +--------+----+
 1 row selected.
 SQL>
-SQL> session save session1;
+SQL> _session save session1;
 Session saved Successful.
 SQL>
-SQL> connect /mem
+SQL> _connect /mem
 Database connected.
 SQL> create table aaa (id int);
 0 row affected.
@@ -38,10 +38,10 @@ SQL> select * from aaa;
 +--------+----+
 1 row selected.
 SQL>
-SQL> session save session2;
+SQL> _session save session2;
 Session saved Successful.
 SQL>
-SQL> session show;
+SQL> _session show;
 Saved Sessions:
 +--------+------------+---------------+-----------+----------+--------------+
 |   ##   |  Session   | Sesssion Name | User Name | Password |     URL      |
@@ -52,7 +52,7 @@ Saved Sessions:
 +--------+------------+---------------+-----------+----------+--------------+
 Total 3 saved sesssions.
 SQL>
-SQL> session restore session1;
+SQL> _session restore session1;
 Session restored Successful.
 SQL> select * from aaa;
 +--------+----+
@@ -61,7 +61,7 @@ SQL> select * from aaa;
 |      1 | 10 |
 +--------+----+
 1 row selected.
-SQL> session restore session2;
+SQL> _session restore session2;
 Session restored Successful.
 SQL> select * from aaa;
 +--------+----+
@@ -71,12 +71,12 @@ SQL> select * from aaa;
 +--------+----+
 1 row selected.
 SQL>
-SQL> session release session1;
+SQL> _session release session1;
 Session release Successful.
-SQL> session release session2;
+SQL> _session release session2;
 Session release Successful.
 SQL>
-SQL> session show;
+SQL> _session show;
 Saved Sessions:
 +--------+---------+---------------+-----------+----------+--------------+
 |   ##   | Session | Sesssion Name | User Name | Password |     URL      |

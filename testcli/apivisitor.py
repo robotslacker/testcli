@@ -17,11 +17,7 @@ class APIVisitor(APIParserVisitor):
         self.isFinished = True
         # 返回去掉了注释信息的解析结果
         self.parsedObject = None
-        # 包含了所有注释信息的原语句（格式保持不变，包括空行，换行符号等)
-        self.originScripts = None
-        # 有意义的注释信息(即用-- [Hint] 开头的SQL语句, 或者用# [Hint]|// [Hint] 开头的API语句), 一个语句有多个注释信息的，用数组返回
-        self.hints = []
-        # 如果成功，返回0； 如果失败，返回-1； 
+        # 如果成功，返回0； 如果失败，返回-1；
         self.errorCode = 0
         # 如果成功，返回空；如果失败，返回解析的错误提示信息
         self.errorMsg = ""
@@ -72,40 +68,6 @@ class APIVisitor(APIParserVisitor):
         return ''.join(token.text for token in tokens)
 
     """
-        功能：返回提示文本
-        参数：
-            tokens 分词数组
-        返回：
-            指定分词数组中提示分词文本
-    """
-    @staticmethod
-    def getHint(tokens):
-        hints = []
-        for token in tokens:
-            if token.channel == APILexer.HINT_CHANNEL:
-                # 使用提示[Hint]分割字符串 
-                pattern = r"\[ *Hint *\]"
-                hint_arr = re.split(pattern, token.text, flags=re.IGNORECASE)
-                if len(hint_arr) > 1:
-                    hint = hint_arr[1]
-                else:
-                    hint = None
-                if hint is not None:
-                    # 删除后面的换行符号
-                    tmp = hint.splitlines()
-                    if len(tmp) > 0:
-                        hint = tmp[0].strip()
-                    else:
-                        hint = ''
-                if (hint is not None) and (hint != ''):
-                    hints.append(hint)
-        if len(hints) == 0:
-            return None
-        if len(hints) == 1:
-            return hints[0]
-        return hints
-
-    """
         功能：访问语法树的程序节点
         参数：
             ctx: 上下文
@@ -119,26 +81,18 @@ class APIVisitor(APIParserVisitor):
     """
     def visitProg(self, ctx: APIParser.ProgContext):
         self.visitChildren(ctx)
-        return self.isFinished, self.parsedObject, self.originScripts, self.hints, self.errorCode, self.errorMsg
+        return self.isFinished, self.parsedObject, self.errorCode, self.errorMsg
     
     def visitCommand(self, ctx: APIParser.CommandContext):
         return self.visitChildren(ctx)
-        
+
     def visitExit(self, ctx: APIParser.ExitContext):
         parsedObject = {'name': 'EXIT'}
-        
+
         if ctx.INT() is not None:
             parsedObject.update({'exitValue': int(ctx.INT().getText())})
         else:
             parsedObject.update({'exitValue': 0})
-
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
 
         # 获取错误代码
         errorCode = 0
@@ -147,28 +101,17 @@ class APIVisitor(APIParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitQuit(self, ctx: APIParser.QuitContext):
         parsedObject = {'name': 'QUIT'}
-        
+
         if ctx.INT() is not None:
             parsedObject.update({'exitValue': int(ctx.INT().getText())})
         else:
             parsedObject.update({'exitValue': 0})
-
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
 
         # 获取错误代码
         errorCode = 0
@@ -177,29 +120,18 @@ class APIVisitor(APIParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitUse(self, ctx: APIParser.UseContext):
         parsedObject = {'name': 'USE'}
         nameSpace = None
-        if ctx.API() is not None:
+        if ctx.USE_API() is not None:
             nameSpace = 'API'
-        elif ctx.SQL() is not None:
+        elif ctx.USE_SQL() is not None:
             nameSpace = 'SQL'
         parsedObject.update({'nameSpace': nameSpace})
-
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
 
         # 获取错误代码
         errorCode = 0
@@ -208,12 +140,9 @@ class APIVisitor(APIParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitSleep(self, ctx: APIParser.SleepContext):
         parsedObject = {
@@ -221,14 +150,6 @@ class APIVisitor(APIParserVisitor):
             "sleepTime": int(ctx.INT().getText())
         }
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -236,12 +157,9 @@ class APIVisitor(APIParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitEcho(self, ctx: APIParser.EchoContext):
         parsedObject = {'name': 'ECHO'}
@@ -261,14 +179,6 @@ class APIVisitor(APIParserVisitor):
             param = param.splitlines()[0]
             parsedObject.update({'param': str(param).strip()})
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -276,33 +186,24 @@ class APIVisitor(APIParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        self.originScripts = originScript
         self.parsedObject = parsedObject
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitStart(self, ctx: APIParser.StartContext):
         parsedObject = {'name': 'START'}
-        if ctx.INT() is not None:
-            parsedObject.update({'loopTimes': int(ctx.INT().getText())})
+        if ctx.START_INT() is not None:
+            parsedObject.update({'loopTimes': int(ctx.START_INT().getText())})
         else:
             parsedObject.update({'loopTimes': 1})
 
         expression_list = []
-        for expression in ctx.expression():
-            result, script, hint, code, message = self.visit(expression)
-            expression_list.append(result)
-
+        if ctx.START_EXPRESSION() is not None:
+            for expression in ctx.START_EXPRESSION():
+                expression_list.append(str(expression.getText()))
         parsedObject.update({'scriptList': expression_list})
 
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end + 1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
+        # 处理错误信息
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
@@ -311,24 +212,12 @@ class APIVisitor(APIParserVisitor):
             self.isFinished = False
 
         self.parsedObject = parsedObject
-        self.originScripts = originScript
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
-
-        return parsedObject, originScript, hint, errorCode, errorMsg
 
     def visitSingleExpression(self, ctx: APIParser.SingleExpressionContext):
         expression = ctx.getText()
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -336,19 +225,11 @@ class APIVisitor(APIParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        return expression, originScript, hint, errorCode, errorMsg
+        return expression, errorCode, errorMsg
 
     def visitExpression(self, ctx: APIParser.ExpressionContext):
         expression = ctx.getText()
 
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -356,31 +237,24 @@ class APIVisitor(APIParserVisitor):
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        return expression, originScript, hint, errorCode, errorMsg
+        return expression, errorCode, errorMsg
 
     def visitSet(self, ctx: APIParser.SetContext):
         parsedObject = {'name': 'SET'}
 
         expression_list = []
-        for expression in ctx.singleExpression():
-            result, script, hint, code, message = self.visit(expression)
-            expression_list.append(result)
+        for expression in ctx.SET_EXPRESSION():
+            expression_list.append(str(expression.getText()))
 
+        if ctx.SET_AT():
+            parsedObject.update({'scope': "global"})
+        else:
+            parsedObject.update({'scope': "local"})
         if len(expression_list) >= 1:
             parsedObject.update({'optionName': expression_list[0]})
         if len(expression_list) >= 2:
-            parsedObject.update({'optionValue': expression_list[1]})
-        if len(expression_list) >= 3:
-            for i in range(2, len(expression_list)):
-                parsedObject.update({("optionValue" + str(i)): expression_list[i]})
-
-        # 获取源文件
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end + 1]
-        originScript = self.getSource(tokens)
-
-        # 获取提示信息
-        hint = self.getHint(tokens)
+            optionValue = " ".join(expression_list[1:])
+            parsedObject.update({"optionValue": optionValue})
 
         # 获取错误代码
         errorCode = 0
@@ -390,169 +264,136 @@ class APIVisitor(APIParserVisitor):
             errorMsg = ctx.exception.message
 
         self.parsedObject = parsedObject
-        self.originScripts = originScript
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
 
-        return parsedObject, originScript, hint, errorCode, errorMsg
+    def visitWhenever(self, ctx: APIParser.WheneverContext):
+        parsedObject = {'name': 'WHENEVER'}
 
-    def visitLoadmap(self, ctx: APIParser.LoadmapContext):
-        
-        parsedObject = {'name': 'LOADMAP'}
-    
-        expression_list = []
-        for expression in ctx.expression():
-            result, script, hint, code, message = self.visit(expression)
-            expression_list.append(result)
-        
-        parsedObject.update({'expression': expression_list})
-        
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
+        if ctx.WHENEVER_CONTINUE():
+            parsedObject.update({"action": 'continue'})
+        if ctx.WHENEVER_EXIT():
+            parsedObject.update({"action": 'exit'})
+        if ctx.WHENEVER_ERROR():
+            parsedObject.update({"condition": 'error'})
+
+        # 获取错误代码
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
-            self.isFinished = False
 
-        self.parsedObject.append(parsedObject)
-        self.originScripts.append(originScript)
-        self.hints.append(hint)
-        self.errorCode.append(errorCode)
-        self.errorMsg.append(errorMsg)
+        self.parsedObject = parsedObject
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
 
-        return parsedObject, originScript, hint, errorCode, errorMsg
+    def visitIf(self, ctx: APIParser.IfContext):
+        parsedObject = {'name': 'IF'}
 
-    def visitWheneverError(self, ctx: APIParser.WheneverErrorContext):
-        param = None
-        if ctx.CONTINUE() is not None:
-            param = ctx.CONTINUE().getText()
-        elif ctx.EXIT() is not None:
-            param = ctx.EXIT().getText()
-        
-        parsedObject = {'name': 'WHENEVER_ERROR', 'param': param}
-    
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
+        if ctx.IF_EXPRESSION() is not None:
+            expression = str(ctx.IF_EXPRESSION().getText()).strip()
+            if expression.startswith('{%'):
+                expression = expression[2:]
+            if expression.endswith('%}'):
+                expression = expression[:-2]
+            expression = expression.strip()
+            parsedObject.update({'expression': expression})
+        else:
+            parsedObject.update({'expression': ""})
+
+        # 获取错误代码
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
-            self.isFinished = False
 
-        self.parsedObject.append(parsedObject)
-        self.originScripts.append(originScript)
-        self.hints.append(hint)
-        self.errorCode.append(errorCode)
-        self.errorMsg.append(errorMsg)
+        self.parsedObject = parsedObject
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
 
-        return parsedObject, originScript, hint, errorCode, errorMsg
+    def visitEndif(self, ctx: APIParser.EndifContext):
+        parsedObject = {'name': 'ENDIF'}
+
+        # 获取错误代码
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = -1
+            errorMsg = ctx.exception.message
+
+        self.parsedObject = parsedObject
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
 
     def visitSpool(self, ctx: APIParser.SpoolContext):
         content = ctx.String().getText()
-        
-        parsedObject = {'name': 'SPOOL', 'param': content}
-    
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
+
+        parsedObject = {'name': 'SPOOL', 'file': content}
+
+        # 获取错误代码
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
-            self.isFinished = False
 
-        self.parsedObject.append(parsedObject)
-        self.originScripts.append(originScript)
-        self.hints.append(hint)
-        self.errorCode.append(errorCode)
-        self.errorMsg.append(errorMsg)
-
-        return parsedObject, originScript, hint, errorCode, errorMsg
-
-    # Visit a parse tree produced by APIParser#internal.
-    def visitInternal(self, ctx: APIParser.InternalContext):
-        
-        parsedObject = {'name': 'INTERNAL'}
-
-        expression_list = []
-        for expression in ctx.expression():
-            result, script, hint, code, message = self.visit(expression)
-            expression_list.append(result)
-        
-        parsedObject.update({'expression': expression_list})
-
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-        errorCode = 0
-        errorMsg = None
-        if ctx.exception is not None:
-            errorCode = -1
-            errorMsg = ctx.exception.message
-            self.isFinished = False
-
-        self.parsedObject.append(parsedObject)
-        self.originScripts.append(originScript)
-        self.hints.append(hint)
-        self.errorCode.append(errorCode)
-        self.errorMsg.append(errorMsg)
-
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        self.parsedObject = parsedObject
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
 
     def visitScript(self, ctx: APIParser.ScriptContext):
+        parsedObject = {'name': 'SCRIPT'}
+
+        # 删除BLOCK 末尾的 %}
+        if ctx.ScriptBlock() is not None:
+            block = ctx.ScriptBlock().getText()
+            if str(block).endswith('%}'):
+                block = str(block[:-2])
+                if str(block).endswith('{%'):
+                    block = str(block[2:])
+                block = block.strip()
+                parsedObject.update({'block': block})
+            else:
+                self.isFinished = False
+        else:
+            self.isFinished = False
+
+        # 获取错误代码
         errorCode = 0
         errorMsg = None
-        
-        # 脚本结束可能是%}，也可能是文件结束符
-        origin = ctx.ScriptBlock().getText().rpartition('%}')
-        if origin[1] == '%}':
-            # 正常结束
-            block = origin[0]
-        else:
-            # 无%}
-            block = origin[2]
-            errorCode = -1
-            self.isFinished = False
-        
-        parsedObject = {'name': ctx.SCRIPT_OPEN().getText(), 'rule': ctx.getRuleIndex(), 'block': block}
-    
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
-            self.isFinished = False
 
-        self.parsedObject.append(parsedObject)
-        self.originScripts.append(originScript)
-        self.hints.append(hint)
-        self.errorCode.append(errorCode)
-        self.errorMsg.append(errorMsg)
+        self.parsedObject = parsedObject
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
 
-        return parsedObject, originScript, hint, errorCode, errorMsg
+    def visitAssert(self, ctx: APIParser.AssertContext):
+        parsedObject = {'name': 'ASSERT'}
+
+        if ctx.ASSERT_EXPRESSION() is not None:
+            expression = str(ctx.ASSERT_EXPRESSION().getText()).strip()
+            if expression.startswith('{%'):
+                expression = expression[2:]
+            if expression.endswith('%}'):
+                expression = expression[:-2]
+            parsedObject.update({'expression': expression})
+        else:
+            parsedObject.update({'expression': ""})
+
+        # 获取错误代码
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = -1
+            errorMsg = ctx.exception.message
+
+        self.parsedObject = parsedObject
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
 
     """
         Http消息节点
@@ -571,19 +412,12 @@ class APIVisitor(APIParserVisitor):
             parsedObject.update({'title': title})
         
         #  HTTP消息的处理
-        result, script, hint, code, message = self.visit(ctx.httpMessage())
+        result, code, message = self.visit(ctx.httpMessage())
         parsedObject.update(result)
 
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
+        # 处理错误信息
         errorCode = 0
         errorMsg = None
-
-        # 异常结束
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
@@ -595,12 +429,10 @@ class APIVisitor(APIParserVisitor):
             self.isFinished = False
 
         self.parsedObject = parsedObject
-        self.originScripts = originScript
-        self.hints = hint
         self.errorCode = errorCode
         self.errorMsg = errorMsg
 
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     """
         处理HTTP消息规范部分
@@ -609,32 +441,27 @@ class APIVisitor(APIParserVisitor):
         parsedObject = {}
         
         # 处理请求行
-        result, script, hint, code, message = self.visit(ctx.httpRequestLine())
+        result, code, message = self.visit(ctx.httpRequestLine())
         parsedObject.update(result)
         
         # 处理请求域
         if ctx.httpHeaderFields() is not None:
-            result, script, hint, code, message = self.visit(ctx.httpHeaderFields())
+            result, code, message = self.visit(ctx.httpHeaderFields())
             parsedObject.update(result)
         
         # 请求消息体
         if ctx.httpMessageBody() is not None:
-            result, script, hint, code, message = self.visit(ctx.httpMessageBody())
+            result, code, message = self.visit(ctx.httpMessageBody())
             parsedObject.update(result)
-        
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
+
+        # 处理错误信息
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
         
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     """
         处理请求行
@@ -643,11 +470,11 @@ class APIVisitor(APIParserVisitor):
         parsedObject = {}
         
         # 请求方法
-        result, script, hint, code, message = self.visit(ctx.httpMethod())
+        result, code, message = self.visit(ctx.httpMethod())
         parsedObject.update(result)
         
         # 请求目标
-        result, script, hint, code, message = self.visit(ctx.httpRequestTarget())
+        result, code, message = self.visit(ctx.httpRequestTarget())
         parsedObject.update(result)
 
         fields = {}
@@ -680,68 +507,50 @@ class APIVisitor(APIParserVisitor):
                     'httpVersion': httpVersion
                 })
         
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
-
+        # 错误信息处理
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
         
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     """
         处理请求方法
     """
     def visitHttpMethod(self, ctx: APIParser.HttpMethodContext):
-        
         parsedObject = {}
 
         # 直接复制请求方法
         if ctx.HttpMethod() is not None:
             parsedObject.update({'httpMethod': ctx.HttpMethod().getText()})
-        
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
+
+        # 处理错误信息
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     """
         处理请求目标
     """
     def visitHttpRequestTarget(self, ctx: APIParser.HttpRequestTargetContext):
-
         parsedObject = {'httpRequestTarget': None}
         if ctx.HttpRequestTarget() is not None:
             parsedObject.update({'httpRequestTarget': ctx.HttpRequestTarget().getText()})
         
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
+        # 处理错误信息
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     """
         处理请求域
@@ -752,36 +561,27 @@ class APIVisitor(APIParserVisitor):
         headers = {}
         # 多个请求域定义
         for field in ctx.httpHeaderField():
-            result, script, hint, code, message = self.visit(field)
+            result, code, message = self.visit(field)
             for headerName, headerValue in result.items():
                 headers[headerName] = headerValue
         parsedObject.update({"headers": headers})
 
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
+        # 错误处理
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
     
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     """
         处理请求域定义
     """
     def visitHttpHeaderField(self, ctx: APIParser.HttpHeaderFieldContext):
         parsedObject = {}
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
+
+        # 处理错误信息
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
@@ -789,116 +589,95 @@ class APIVisitor(APIParserVisitor):
             errorMsg = ctx.exception.message
         
         # 请求域定义名称
-        result, script, hint, code, message = self.visit(ctx.httpHeaderFieldName())
+        result, code, message = self.visit(ctx.httpHeaderFieldName())
         key = result['value']
         # 请求域定义值
-        result, script, hint, code, message = self.visit(ctx.httpHeaderFieldValue())
+        result, code, message = self.visit(ctx.httpHeaderFieldValue())
         value = result['value']
         
         # 合并生成新的KV值
         parsedObject.update({key: value})
 
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     """
         处理请求域定义名称部分
     """
     def visitHttpHeaderFieldName(self, ctx: APIParser.HttpHeaderFieldNameContext):
         parsedObject = {'value': ctx.HttpHeaderFieldName().getText()}
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
+
+        # 处理错误信息
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
         
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     """
         处理请求域定义值部分
     """
     def visitHttpHeaderFieldValue(self, ctx: APIParser.HttpHeaderFieldValueContext):
-        
         parsedObject = {'value': ctx.HttpHeaderFieldValue().getText()}
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
+
+        # 处理错误信息
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
         
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     """
         处理消息体
     """
     def visitHttpMessageBody(self, ctx: APIParser.HttpMessageBodyContext):
-        
         parsedObject = {}
         # 普通消息体内容可能有多个部分，只保留了最后一个部分
         # 合规的消息体不会产生这种情况
         for content in ctx.httpMessageBodyContent():
-            result, script, hint, code, message = self.visit(content)
+            result, code, message = self.visit(content)
             parsedObject.update(result)
         
         # 处理multipart boundary
         for boundary in ctx.httpMultipart(): 
-            result, script, hint, code, message = self.visit(boundary)
+            result, code, message = self.visit(boundary)
             parsedObject.update(result)
         
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
+        # 处理错误信息
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
         
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     """
         处理multipart
     """
     def visitHttpMultipart(self, ctx: APIParser.HttpMultipartContext):
-
         parsedObject = {}
         
         # 多个boundary 
         multipart = []
         for boundary in ctx.httpMultipartBoundary():
-            result, script, hint, code, message = self.visit(boundary)
+            result, code, message = self.visit(boundary)
             multipart.append(result)
         
         if len(multipart) > 0:
             parsedObject.update({'multipart': multipart})
-        
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
+
+        # 处理错误信息
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
         
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     """
         处理multipart boundary部分
@@ -908,61 +687,50 @@ class APIVisitor(APIParserVisitor):
         
         # 处理boundary的请求域部分
         if ctx.httpHeaderFields() is not None:
-            result, script, hint, code, message = self.visit(ctx.httpHeaderFields())
+            result, code, message = self.visit(ctx.httpHeaderFields())
             parsedObject.update(result)
 
         # 处理boundary的内容部分
         if ctx.httpMessageBodyContent() is not None:
-            result, script, hint, code, message = self.visit(ctx.httpMessageBodyContent())
+            result, code, message = self.visit(ctx.httpMessageBodyContent())
             parsedObject.update(result)
 
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
+        # 处理错误信息
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
             
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     """
         处理消息体的内容部分
     """
     def visitHttpMessageBodyContent(self, ctx: APIParser.HttpMessageBodyContentContext):
-        
         # 内容操作部分
         operates = []
         for operate in ctx.httpMessageBodyOperate(): 
-            result, script, hint, code, message = self.visit(operate)
+            result, code, message = self.visit(operate)
             operates.append(result)
         
         # 内容部分
         # 可以直接取内容的文字
         contents = []
         for content in ctx.httpMessageBodyOther():
-            result, script, hint, code, message = self.visit(content)
+            result, code, message = self.visit(content)
             contents.append(result)
         
         parsedObject = {'operate': operates, 'contents': contents}
-        
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
+
+        # 处理错误信息
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     """
         处理内容操作部分
@@ -987,19 +755,14 @@ class APIVisitor(APIParserVisitor):
             parsedObject.update({'operator': '<'})
             parsedObject.update({'content': data.partition('<')[2]})
         
-        start, end = self.getSourceInterval(ctx)
-        tokens = ctx.parser._input.tokens[start:end+1]
-        # 源文件
-        originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
+        # 处理错误信息
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        return parsedObject, originScript, hint, errorCode, errorMsg
+        return parsedObject, errorCode, errorMsg
 
     """
         操作内容部分
@@ -1009,12 +772,12 @@ class APIVisitor(APIParserVisitor):
         tokens = ctx.parser._input.tokens[start:end+1]
         # 源文件
         originScript = self.getSource(tokens)
-        # 提示信息
-        hint = self.getHint(tokens)
+
+        # 处理错误信息
         errorCode = 0
         errorMsg = None
         if ctx.exception is not None:
             errorCode = -1
             errorMsg = ctx.exception.message
 
-        return originScript, originScript, hint, errorCode, errorMsg
+        return originScript, errorCode, errorMsg

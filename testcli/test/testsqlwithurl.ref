@@ -1,4 +1,4 @@
-SQL> connect sa/sa
+SQL> _connect sa/sa
 Database connected.
 SQL> select 1 from dual;
 +--------+---+

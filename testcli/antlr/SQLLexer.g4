@@ -8,12 +8,10 @@ options {
 channels { HINT_CHANNEL, COMMENT_CHANNEL, SQLSTATEMENT_CHANNEL }
 
 // 关键字
-CONNECT: 'CONNECT' -> pushMode(ConnectMode);
-SESSION: 'SESSION' -> pushMode(SessionMode);
+CONNECT: '_CONNECT' -> pushMode(ConnectMode);
+SESSION: '_SESSION' -> pushMode(SessionMode);
 
-DISCONNECT: 'DISCONNECT';
-SPOOL: 'SPOOL';
-END: 'END';
+DISCONNECT: '_DISCONNECT';
 
 // 注释模式
 COMMENT_OPEN: '//' .*? CRLF ->channel(HIDDEN);

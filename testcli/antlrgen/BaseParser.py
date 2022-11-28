@@ -1,4 +1,4 @@
-# Generated from D:/Work/testcli/testcli/antlr\BaseParser.g4 by ANTLR 4.11.1
+# Generated from BaseParser.g4 by ANTLR 4.11.1
 # encoding: utf-8
 from antlr4 import *
 from io import StringIO
@@ -10,82 +10,86 @@ else:
 
 def serializedATN():
     return [
-        4,1,83,206,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
+        4,1,84,212,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
         6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,
-        2,14,7,14,2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,1,0,
-        1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,53,8,1,1,2,1,2,1,
-        3,4,3,58,8,3,11,3,12,3,59,1,4,1,4,3,4,64,8,4,1,4,3,4,67,8,4,1,5,
-        1,5,3,5,71,8,5,1,5,3,5,74,8,5,1,6,1,6,1,6,3,6,79,8,6,1,7,1,7,1,7,
-        3,7,84,8,7,1,8,1,8,1,8,1,8,5,8,90,8,8,10,8,12,8,93,9,8,1,8,3,8,96,
-        8,8,1,8,3,8,99,8,8,1,8,3,8,102,8,8,1,8,3,8,105,8,8,1,9,1,9,1,9,4,
-        9,110,8,9,11,9,12,9,111,1,9,3,9,115,8,9,1,9,3,9,118,8,9,1,10,1,10,
-        1,10,3,10,123,8,10,1,10,3,10,126,8,10,1,11,1,11,1,11,1,12,1,12,1,
-        12,1,12,1,12,3,12,136,8,12,1,12,1,12,3,12,140,8,12,1,12,3,12,143,
-        8,12,1,12,3,12,146,8,12,1,13,1,13,1,13,3,13,151,8,13,1,13,3,13,154,
-        8,13,1,14,1,14,3,14,158,8,14,1,14,3,14,161,8,14,1,15,1,15,1,15,1,
-        15,3,15,167,8,15,1,15,3,15,170,8,15,1,16,1,16,1,16,3,16,175,8,16,
-        1,16,3,16,178,8,16,1,17,1,17,1,17,3,17,183,8,17,1,18,1,18,1,18,3,
-        18,188,8,18,1,19,1,19,3,19,192,8,19,1,19,5,19,195,8,19,10,19,12,
-        19,198,9,19,1,19,3,19,201,8,19,1,19,3,19,204,8,19,1,19,0,0,20,0,
-        2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,0,5,2,0,6,14,
-        38,38,3,0,4,4,6,14,38,38,1,0,19,20,1,0,76,77,1,1,1,1,230,0,40,1,
-        0,0,0,2,52,1,0,0,0,4,54,1,0,0,0,6,57,1,0,0,0,8,61,1,0,0,0,10,68,
-        1,0,0,0,12,75,1,0,0,0,14,80,1,0,0,0,16,85,1,0,0,0,18,106,1,0,0,0,
-        20,119,1,0,0,0,22,127,1,0,0,0,24,130,1,0,0,0,26,147,1,0,0,0,28,155,
-        1,0,0,0,30,162,1,0,0,0,32,171,1,0,0,0,34,179,1,0,0,0,36,184,1,0,
-        0,0,38,189,1,0,0,0,40,41,3,2,1,0,41,42,5,0,0,1,42,1,1,0,0,0,43,53,
-        3,20,10,0,44,53,3,18,9,0,45,53,3,22,11,0,46,53,3,16,8,0,47,53,3,
-        24,12,0,48,53,3,26,13,0,49,53,3,28,14,0,50,53,3,30,15,0,51,53,3,
-        38,19,0,52,43,1,0,0,0,52,44,1,0,0,0,52,45,1,0,0,0,52,46,1,0,0,0,
-        52,47,1,0,0,0,52,48,1,0,0,0,52,49,1,0,0,0,52,50,1,0,0,0,52,51,1,
-        0,0,0,53,3,1,0,0,0,54,55,7,0,0,0,55,5,1,0,0,0,56,58,7,1,0,0,57,56,
-        1,0,0,0,58,59,1,0,0,0,59,57,1,0,0,0,59,60,1,0,0,0,60,7,1,0,0,0,61,
-        63,5,16,0,0,62,64,5,36,0,0,63,62,1,0,0,0,63,64,1,0,0,0,64,66,1,0,
-        0,0,65,67,5,1,0,0,66,65,1,0,0,0,66,67,1,0,0,0,67,9,1,0,0,0,68,70,
-        5,17,0,0,69,71,5,36,0,0,70,69,1,0,0,0,70,71,1,0,0,0,71,73,1,0,0,
-        0,72,74,5,1,0,0,73,72,1,0,0,0,73,74,1,0,0,0,74,11,1,0,0,0,75,76,
-        5,18,0,0,76,78,7,2,0,0,77,79,5,1,0,0,78,77,1,0,0,0,78,79,1,0,0,0,
-        79,13,1,0,0,0,80,81,5,24,0,0,81,83,5,36,0,0,82,84,5,1,0,0,83,82,
-        1,0,0,0,83,84,1,0,0,0,84,15,1,0,0,0,85,86,5,28,0,0,86,91,5,53,0,
-        0,87,88,5,52,0,0,88,90,5,53,0,0,89,87,1,0,0,0,90,93,1,0,0,0,91,89,
-        1,0,0,0,91,92,1,0,0,0,92,95,1,0,0,0,93,91,1,0,0,0,94,96,5,50,0,0,
-        95,94,1,0,0,0,95,96,1,0,0,0,96,98,1,0,0,0,97,99,5,51,0,0,98,97,1,
-        0,0,0,98,99,1,0,0,0,99,101,1,0,0,0,100,102,5,3,0,0,101,100,1,0,0,
-        0,101,102,1,0,0,0,102,104,1,0,0,0,103,105,5,1,0,0,104,103,1,0,0,
-        0,104,105,1,0,0,0,105,17,1,0,0,0,106,107,5,29,0,0,107,109,5,46,0,
-        0,108,110,5,47,0,0,109,108,1,0,0,0,110,111,1,0,0,0,111,109,1,0,0,
-        0,111,112,1,0,0,0,112,114,1,0,0,0,113,115,5,3,0,0,114,113,1,0,0,
-        0,114,115,1,0,0,0,115,117,1,0,0,0,116,118,5,1,0,0,117,116,1,0,0,
-        0,117,118,1,0,0,0,118,19,1,0,0,0,119,120,5,27,0,0,120,122,5,44,0,
-        0,121,123,5,3,0,0,122,121,1,0,0,0,122,123,1,0,0,0,123,125,1,0,0,
-        0,124,126,5,1,0,0,125,124,1,0,0,0,125,126,1,0,0,0,126,21,1,0,0,0,
-        127,128,5,30,0,0,128,129,5,57,0,0,129,23,1,0,0,0,130,139,5,34,0,
-        0,131,140,5,68,0,0,132,140,5,69,0,0,133,140,5,70,0,0,134,136,5,64,
-        0,0,135,134,1,0,0,0,135,136,1,0,0,0,136,137,1,0,0,0,137,138,5,65,
-        0,0,138,140,5,71,0,0,139,131,1,0,0,0,139,132,1,0,0,0,139,133,1,0,
-        0,0,139,135,1,0,0,0,140,142,1,0,0,0,141,143,5,62,0,0,142,141,1,0,
-        0,0,142,143,1,0,0,0,143,145,1,0,0,0,144,146,5,1,0,0,145,144,1,0,
-        0,0,145,146,1,0,0,0,146,25,1,0,0,0,147,148,5,31,0,0,148,150,5,61,
-        0,0,149,151,5,3,0,0,150,149,1,0,0,0,150,151,1,0,0,0,151,153,1,0,
-        0,0,152,154,5,1,0,0,153,152,1,0,0,0,153,154,1,0,0,0,154,27,1,0,0,
-        0,155,157,5,32,0,0,156,158,5,3,0,0,157,156,1,0,0,0,157,158,1,0,0,
-        0,158,160,1,0,0,0,159,161,5,1,0,0,160,159,1,0,0,0,160,161,1,0,0,
-        0,161,29,1,0,0,0,162,163,5,35,0,0,163,164,5,74,0,0,164,166,7,3,0,
-        0,165,167,5,75,0,0,166,165,1,0,0,0,166,167,1,0,0,0,167,169,1,0,0,
-        0,168,170,5,1,0,0,169,168,1,0,0,0,169,170,1,0,0,0,170,31,1,0,0,0,
-        171,172,5,22,0,0,172,174,5,38,0,0,173,175,5,3,0,0,174,173,1,0,0,
-        0,174,175,1,0,0,0,175,177,1,0,0,0,176,178,5,1,0,0,177,176,1,0,0,
-        0,177,178,1,0,0,0,178,33,1,0,0,0,179,180,5,25,0,0,180,182,5,40,0,
-        0,181,183,7,4,0,0,182,181,1,0,0,0,182,183,1,0,0,0,183,35,1,0,0,0,
-        184,185,5,26,0,0,185,187,5,39,0,0,186,188,5,1,0,0,187,186,1,0,0,
-        0,187,188,1,0,0,0,188,37,1,0,0,0,189,191,5,33,0,0,190,192,5,82,0,
-        0,191,190,1,0,0,0,191,192,1,0,0,0,192,196,1,0,0,0,193,195,5,80,0,
-        0,194,193,1,0,0,0,195,198,1,0,0,0,196,194,1,0,0,0,196,197,1,0,0,
-        0,197,200,1,0,0,0,198,196,1,0,0,0,199,201,5,81,0,0,200,199,1,0,0,
-        0,200,201,1,0,0,0,201,203,1,0,0,0,202,204,5,1,0,0,203,202,1,0,0,
-        0,203,204,1,0,0,0,204,39,1,0,0,0,36,52,59,63,66,70,73,78,83,91,95,
-        98,101,104,111,114,117,122,125,135,139,142,145,150,153,157,160,166,
-        169,174,177,182,187,191,196,200,203
+        2,14,7,14,2,15,7,15,2,16,7,16,2,17,7,17,1,0,1,0,1,0,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,56,8,1,1,
+        2,1,2,3,2,60,8,2,1,2,3,2,63,8,2,1,2,3,2,66,8,2,1,3,1,3,3,3,70,8,
+        3,1,3,3,3,73,8,3,1,3,3,3,76,8,3,1,4,1,4,1,4,3,4,81,8,4,1,4,3,4,84,
+        8,4,1,5,1,5,1,5,3,5,89,8,5,1,5,3,5,92,8,5,1,6,1,6,1,6,1,6,5,6,98,
+        8,6,10,6,12,6,101,9,6,1,6,3,6,104,8,6,1,6,3,6,107,8,6,1,6,3,6,110,
+        8,6,1,6,3,6,113,8,6,1,7,1,7,1,7,4,7,118,8,7,11,7,12,7,119,1,7,3,
+        7,123,8,7,1,7,3,7,126,8,7,1,8,1,8,1,8,3,8,131,8,8,1,8,3,8,134,8,
+        8,1,9,1,9,1,9,1,10,1,10,1,10,1,10,1,10,1,10,1,10,3,10,146,8,10,1,
+        10,3,10,149,8,10,1,10,3,10,152,8,10,1,11,1,11,1,11,3,11,157,8,11,
+        1,11,3,11,160,8,11,1,12,1,12,3,12,164,8,12,1,12,3,12,167,8,12,1,
+        13,1,13,1,13,1,13,3,13,173,8,13,1,13,3,13,176,8,13,1,14,1,14,1,14,
+        3,14,181,8,14,1,14,3,14,184,8,14,1,15,1,15,1,15,3,15,189,8,15,1,
+        16,1,16,1,16,3,16,194,8,16,1,17,1,17,3,17,198,8,17,1,17,5,17,201,
+        8,17,10,17,12,17,204,9,17,1,17,3,17,207,8,17,1,17,3,17,210,8,17,
+        1,17,0,0,18,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,0,3,
+        1,0,80,81,1,0,72,73,1,1,1,1,247,0,36,1,0,0,0,2,55,1,0,0,0,4,57,1,
+        0,0,0,6,67,1,0,0,0,8,77,1,0,0,0,10,85,1,0,0,0,12,93,1,0,0,0,14,114,
+        1,0,0,0,16,127,1,0,0,0,18,135,1,0,0,0,20,138,1,0,0,0,22,153,1,0,
+        0,0,24,161,1,0,0,0,26,168,1,0,0,0,28,177,1,0,0,0,30,185,1,0,0,0,
+        32,190,1,0,0,0,34,195,1,0,0,0,36,37,3,2,1,0,37,38,5,0,0,1,38,1,1,
+        0,0,0,39,56,3,16,8,0,40,56,3,14,7,0,41,56,3,18,9,0,42,56,3,12,6,
+        0,43,56,3,20,10,0,44,56,3,22,11,0,45,56,3,24,12,0,46,56,3,26,13,
+        0,47,56,3,34,17,0,48,56,3,8,4,0,49,56,3,4,2,0,50,56,3,6,3,0,51,56,
+        3,10,5,0,52,56,3,28,14,0,53,56,3,32,16,0,54,56,3,30,15,0,55,39,1,
+        0,0,0,55,40,1,0,0,0,55,41,1,0,0,0,55,42,1,0,0,0,55,43,1,0,0,0,55,
+        44,1,0,0,0,55,45,1,0,0,0,55,46,1,0,0,0,55,47,1,0,0,0,55,48,1,0,0,
+        0,55,49,1,0,0,0,55,50,1,0,0,0,55,51,1,0,0,0,55,52,1,0,0,0,55,53,
+        1,0,0,0,55,54,1,0,0,0,56,3,1,0,0,0,57,59,5,16,0,0,58,60,5,32,0,0,
+        59,58,1,0,0,0,59,60,1,0,0,0,60,62,1,0,0,0,61,63,5,3,0,0,62,61,1,
+        0,0,0,62,63,1,0,0,0,63,65,1,0,0,0,64,66,5,1,0,0,65,64,1,0,0,0,65,
+        66,1,0,0,0,66,5,1,0,0,0,67,69,5,17,0,0,68,70,5,32,0,0,69,68,1,0,
+        0,0,69,70,1,0,0,0,70,72,1,0,0,0,71,73,5,3,0,0,72,71,1,0,0,0,72,73,
+        1,0,0,0,73,75,1,0,0,0,74,76,5,1,0,0,75,74,1,0,0,0,75,76,1,0,0,0,
+        76,7,1,0,0,0,77,78,5,20,0,0,78,80,7,0,0,0,79,81,5,83,0,0,80,79,1,
+        0,0,0,80,81,1,0,0,0,81,83,1,0,0,0,82,84,5,1,0,0,83,82,1,0,0,0,83,
+        84,1,0,0,0,84,9,1,0,0,0,85,86,5,19,0,0,86,88,5,32,0,0,87,89,5,3,
+        0,0,88,87,1,0,0,0,88,89,1,0,0,0,89,91,1,0,0,0,90,92,5,1,0,0,91,90,
+        1,0,0,0,91,92,1,0,0,0,92,11,1,0,0,0,93,94,5,24,0,0,94,99,5,49,0,
+        0,95,96,5,48,0,0,96,98,5,49,0,0,97,95,1,0,0,0,98,101,1,0,0,0,99,
+        97,1,0,0,0,99,100,1,0,0,0,100,103,1,0,0,0,101,99,1,0,0,0,102,104,
+        5,46,0,0,103,102,1,0,0,0,103,104,1,0,0,0,104,106,1,0,0,0,105,107,
+        5,47,0,0,106,105,1,0,0,0,106,107,1,0,0,0,107,109,1,0,0,0,108,110,
+        5,3,0,0,109,108,1,0,0,0,109,110,1,0,0,0,110,112,1,0,0,0,111,113,
+        5,1,0,0,112,111,1,0,0,0,112,113,1,0,0,0,113,13,1,0,0,0,114,115,5,
+        25,0,0,115,117,5,42,0,0,116,118,5,43,0,0,117,116,1,0,0,0,118,119,
+        1,0,0,0,119,117,1,0,0,0,119,120,1,0,0,0,120,122,1,0,0,0,121,123,
+        5,3,0,0,122,121,1,0,0,0,122,123,1,0,0,0,123,125,1,0,0,0,124,126,
+        5,1,0,0,125,124,1,0,0,0,125,126,1,0,0,0,126,15,1,0,0,0,127,128,5,
+        23,0,0,128,130,5,40,0,0,129,131,5,3,0,0,130,129,1,0,0,0,130,131,
+        1,0,0,0,131,133,1,0,0,0,132,134,5,1,0,0,133,132,1,0,0,0,133,134,
+        1,0,0,0,134,17,1,0,0,0,135,136,5,26,0,0,136,137,5,53,0,0,137,19,
+        1,0,0,0,138,145,5,30,0,0,139,146,5,64,0,0,140,146,5,65,0,0,141,146,
+        5,66,0,0,142,143,5,60,0,0,143,144,5,61,0,0,144,146,5,67,0,0,145,
+        139,1,0,0,0,145,140,1,0,0,0,145,141,1,0,0,0,145,142,1,0,0,0,146,
+        148,1,0,0,0,147,149,5,58,0,0,148,147,1,0,0,0,148,149,1,0,0,0,149,
+        151,1,0,0,0,150,152,5,1,0,0,151,150,1,0,0,0,151,152,1,0,0,0,152,
+        21,1,0,0,0,153,154,5,27,0,0,154,156,5,57,0,0,155,157,5,3,0,0,156,
+        155,1,0,0,0,156,157,1,0,0,0,157,159,1,0,0,0,158,160,5,1,0,0,159,
+        158,1,0,0,0,159,160,1,0,0,0,160,23,1,0,0,0,161,163,5,28,0,0,162,
+        164,5,3,0,0,163,162,1,0,0,0,163,164,1,0,0,0,164,166,1,0,0,0,165,
+        167,5,1,0,0,166,165,1,0,0,0,166,167,1,0,0,0,167,25,1,0,0,0,168,169,
+        5,31,0,0,169,170,5,70,0,0,170,172,7,1,0,0,171,173,5,71,0,0,172,171,
+        1,0,0,0,172,173,1,0,0,0,173,175,1,0,0,0,174,176,5,1,0,0,175,174,
+        1,0,0,0,175,176,1,0,0,0,176,27,1,0,0,0,177,178,5,18,0,0,178,180,
+        5,34,0,0,179,181,5,3,0,0,180,179,1,0,0,0,180,181,1,0,0,0,181,183,
+        1,0,0,0,182,184,5,1,0,0,183,182,1,0,0,0,183,184,1,0,0,0,184,29,1,
+        0,0,0,185,186,5,21,0,0,186,188,5,36,0,0,187,189,7,2,0,0,188,187,
+        1,0,0,0,188,189,1,0,0,0,189,31,1,0,0,0,190,191,5,22,0,0,191,193,
+        5,35,0,0,192,194,5,1,0,0,193,192,1,0,0,0,193,194,1,0,0,0,194,33,
+        1,0,0,0,195,197,5,29,0,0,196,198,5,78,0,0,197,196,1,0,0,0,197,198,
+        1,0,0,0,198,202,1,0,0,0,199,201,5,76,0,0,200,199,1,0,0,0,201,204,
+        1,0,0,0,202,200,1,0,0,0,202,203,1,0,0,0,203,206,1,0,0,0,204,202,
+        1,0,0,0,205,207,5,77,0,0,206,205,1,0,0,0,206,207,1,0,0,0,207,209,
+        1,0,0,0,208,210,5,1,0,0,209,208,1,0,0,0,209,210,1,0,0,0,210,35,1,
+        0,0,0,38,55,59,62,65,69,72,75,80,83,88,91,99,103,106,109,112,119,
+        122,125,130,133,145,148,151,156,159,163,166,172,175,180,183,188,
+        193,197,202,206,209
     ]
 
 class BaseParser ( Parser ):
@@ -100,30 +104,30 @@ class BaseParser ( Parser ):
 
     literalNames = [ "<INVALID>", "'\\n'", "<INVALID>", "<INVALID>", "':'", 
                      "<INVALID>", "'.'", "'/'", "'('", "')'", "'['", "']'", 
-                     "'\"'", "'''", "'\\'", "<INVALID>", "<INVALID>", "'QUIT'", 
-                     "'USE'", "'API'", "'SQL'", "<INVALID>", "'SPOOL'", 
-                     "<INVALID>", "'SLEEP'", "<INVALID>", "'> {%'", "'ASSERT'", 
-                     "'_START'", "'_LOAD'", "'_HOST'", "'_IF'", "'_ENDIF'", 
-                     "'_SET'", "'_LOOP'", "'_WHENEVER'", "<INVALID>", "<INVALID>", 
+                     "'\"'", "'''", "'\\'", "<INVALID>", "'_EXIT'", "'_QUIT'", 
+                     "'_SPOOL'", "'_SLEEP'", "'_USE'", "<INVALID>", "'> {%'", 
+                     "'_ASSERT'", "'_START'", "'_LOAD'", "'_HOST'", "'_IF'", 
+                     "'_ENDIF'", "'_SET'", "'_LOOP'", "'_WHENEVER'", "<INVALID>", 
                      "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                      "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                      "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
-                     "'LOOP'", "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
-                     "<INVALID>", "'\"\"\"'", "<INVALID>", "<INVALID>", 
+                     "<INVALID>", "'LOOP'", "<INVALID>", "<INVALID>", "<INVALID>", 
+                     "<INVALID>", "<INVALID>", "'\"\"\"'", "<INVALID>", 
                      "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
-                     "<INVALID>", "'BEGIN'", "'UNTIL'", "<INVALID>", "<INVALID>", 
-                     "'BREAK'", "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
-                     "<INVALID>", "'ERROR'" ]
+                     "<INVALID>", "<INVALID>", "'BEGIN'", "'UNTIL'", "<INVALID>", 
+                     "<INVALID>", "'BREAK'", "'END'", "<INVALID>", "<INVALID>", 
+                     "<INVALID>", "<INVALID>", "'ERROR'", "<INVALID>", "<INVALID>", 
+                     "'EXIT'", "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
+                     "<INVALID>", "<INVALID>", "'API'", "'SQL'" ]
 
     symbolicNames = [ "<INVALID>", "CRLF", "COMMA", "SEMICOLON", "COLON", 
                       "AT", "DOT", "SLASH", "BRACKET_OPEN", "BRACKET_CLOSE", 
                       "SQUARE_OPEN", "SQUARE_CLOSE", "DOUBLE_QUOTE", "SINGLE_QUOTE", 
-                      "ESCAPE", "SPACE", "EXIT", "QUIT", "USE", "API", "SQL", 
-                      "CONTINUE", "SPOOL", "END", "SLEEP", "ECHO_OPEN", 
-                      "SCRIPT_OPEN", "ASSERT", "START", "LOAD", "HOST", 
-                      "IF", "ENDIF", "SET", "LOOP", "WHENEVER", "INT", "DECIMAL", 
-                      "String", "ScriptBlock", "EchoBlock", "ASSERT_SPACE", 
-                      "ASSERT_OPEN", "ASSERT_CLOSE", "ASSERT_EXPRESSION", 
+                      "ESCAPE", "SPACE", "EXIT", "QUIT", "SPOOL", "SLEEP", 
+                      "USE", "ECHO_OPEN", "SCRIPT_OPEN", "ASSERT", "START", 
+                      "LOAD", "HOST", "IF", "ENDIF", "SET", "LOOP", "WHENEVER", 
+                      "INT", "DECIMAL", "String", "ScriptBlock", "EchoBlock", 
+                      "ASSERT_SPACE", "ASSERT_OPEN", "ASSERT_CLOSE", "ASSERT_EXPRESSION", 
                       "LOAD_SPACE", "LOAD_OPTION", "LOAD_EXPRESSION", "LOAD_CRLF", 
                       "START_SPACE", "START_LOOP", "START_INT", "START_COMMA", 
                       "START_EXPRESSION", "START_CRLF", "HOST_SPACE", "HOST_TAG", 
@@ -133,33 +137,31 @@ class BaseParser ( Parser ):
                       "LOOP_CONTINUE", "LOOP_EXPRESSION", "LOOP_CRLF", "WHENEVER_SPACE", 
                       "WHENEVER_ERROR", "WHENEVER_SEMICOLON", "WHENEVER_CONTINUE", 
                       "WHENEVER_EXIT", "WHENEVER_CRLF", "SET_SPACE", "SET_EXPRESSION", 
-                      "SET_SEMICOLON", "SET_AT", "SET_CRLF" ]
+                      "SET_SEMICOLON", "SET_AT", "SET_CRLF", "USE_API", 
+                      "USE_SQL", "USE_SPACE", "USE_SEMICOLON", "USE_CRLF" ]
 
     RULE_prog = 0
     RULE_baseCommand = 1
-    RULE_singleExpression = 2
-    RULE_expression = 3
-    RULE_exit = 4
-    RULE_quit = 5
-    RULE_use = 6
-    RULE_sleep = 7
-    RULE_start = 8
-    RULE_load = 9
-    RULE_assert = 10
-    RULE_host = 11
-    RULE_loop = 12
-    RULE_if = 13
-    RULE_endif = 14
-    RULE_whenever = 15
-    RULE_spool = 16
-    RULE_echo = 17
-    RULE_script = 18
-    RULE_set = 19
+    RULE_exit = 2
+    RULE_quit = 3
+    RULE_use = 4
+    RULE_sleep = 5
+    RULE_start = 6
+    RULE_load = 7
+    RULE_assert = 8
+    RULE_host = 9
+    RULE_loop = 10
+    RULE_if = 11
+    RULE_endif = 12
+    RULE_whenever = 13
+    RULE_spool = 14
+    RULE_echo = 15
+    RULE_script = 16
+    RULE_set = 17
 
-    ruleNames =  [ "prog", "baseCommand", "singleExpression", "expression", 
-                   "exit", "quit", "use", "sleep", "start", "load", "assert", 
-                   "host", "loop", "if", "endif", "whenever", "spool", "echo", 
-                   "script", "set" ]
+    ruleNames =  [ "prog", "baseCommand", "exit", "quit", "use", "sleep", 
+                   "start", "load", "assert", "host", "loop", "if", "endif", 
+                   "whenever", "spool", "echo", "script", "set" ]
 
     EOF = Token.EOF
     CRLF=1
@@ -179,72 +181,73 @@ class BaseParser ( Parser ):
     SPACE=15
     EXIT=16
     QUIT=17
-    USE=18
-    API=19
-    SQL=20
-    CONTINUE=21
-    SPOOL=22
-    END=23
-    SLEEP=24
-    ECHO_OPEN=25
-    SCRIPT_OPEN=26
-    ASSERT=27
-    START=28
-    LOAD=29
-    HOST=30
-    IF=31
-    ENDIF=32
-    SET=33
-    LOOP=34
-    WHENEVER=35
-    INT=36
-    DECIMAL=37
-    String=38
-    ScriptBlock=39
-    EchoBlock=40
-    ASSERT_SPACE=41
-    ASSERT_OPEN=42
-    ASSERT_CLOSE=43
-    ASSERT_EXPRESSION=44
-    LOAD_SPACE=45
-    LOAD_OPTION=46
-    LOAD_EXPRESSION=47
-    LOAD_CRLF=48
-    START_SPACE=49
-    START_LOOP=50
-    START_INT=51
-    START_COMMA=52
-    START_EXPRESSION=53
-    START_CRLF=54
-    HOST_SPACE=55
-    HOST_TAG=56
-    HOST_BLOCK=57
-    IF_SPACE=58
-    IF_OPEN=59
-    IF_CLOSE=60
-    IF_EXPRESSION=61
-    LOOP_SEMICOLON=62
-    LOOP_SPACE=63
-    LOOP_BEGIN=64
-    LOOP_UNTIL=65
-    LOOP_OPEN=66
-    LOOP_CLOSE=67
-    LOOP_BREAK=68
-    LOOP_END=69
-    LOOP_CONTINUE=70
-    LOOP_EXPRESSION=71
-    LOOP_CRLF=72
-    WHENEVER_SPACE=73
-    WHENEVER_ERROR=74
-    WHENEVER_SEMICOLON=75
-    WHENEVER_CONTINUE=76
-    WHENEVER_EXIT=77
-    WHENEVER_CRLF=78
-    SET_SPACE=79
-    SET_EXPRESSION=80
-    SET_SEMICOLON=81
-    SET_AT=82
-    SET_CRLF=83
+    SPOOL=18
+    SLEEP=19
+    USE=20
+    ECHO_OPEN=21
+    SCRIPT_OPEN=22
+    ASSERT=23
+    START=24
+    LOAD=25
+    HOST=26
+    IF=27
+    ENDIF=28
+    SET=29
+    LOOP=30
+    WHENEVER=31
+    INT=32
+    DECIMAL=33
+    String=34
+    ScriptBlock=35
+    EchoBlock=36
+    ASSERT_SPACE=37
+    ASSERT_OPEN=38
+    ASSERT_CLOSE=39
+    ASSERT_EXPRESSION=40
+    LOAD_SPACE=41
+    LOAD_OPTION=42
+    LOAD_EXPRESSION=43
+    LOAD_CRLF=44
+    START_SPACE=45
+    START_LOOP=46
+    START_INT=47
+    START_COMMA=48
+    START_EXPRESSION=49
+    START_CRLF=50
+    HOST_SPACE=51
+    HOST_TAG=52
+    HOST_BLOCK=53
+    IF_SPACE=54
+    IF_OPEN=55
+    IF_CLOSE=56
+    IF_EXPRESSION=57
+    LOOP_SEMICOLON=58
+    LOOP_SPACE=59
+    LOOP_BEGIN=60
+    LOOP_UNTIL=61
+    LOOP_OPEN=62
+    LOOP_CLOSE=63
+    LOOP_BREAK=64
+    LOOP_END=65
+    LOOP_CONTINUE=66
+    LOOP_EXPRESSION=67
+    LOOP_CRLF=68
+    WHENEVER_SPACE=69
+    WHENEVER_ERROR=70
+    WHENEVER_SEMICOLON=71
+    WHENEVER_CONTINUE=72
+    WHENEVER_EXIT=73
+    WHENEVER_CRLF=74
+    SET_SPACE=75
+    SET_EXPRESSION=76
+    SET_SEMICOLON=77
+    SET_AT=78
+    SET_CRLF=79
+    USE_API=80
+    USE_SQL=81
+    USE_SPACE=82
+    USE_SEMICOLON=83
+    USE_CRLF=84
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
@@ -287,9 +290,9 @@ class BaseParser ( Parser ):
         self.enterRule(localctx, 0, self.RULE_prog)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 40
+            self.state = 36
             self.baseCommand()
-            self.state = 41
+            self.state = 37
             self.match(BaseParser.EOF)
         except RecognitionException as re:
             localctx.exception = re
@@ -343,6 +346,34 @@ class BaseParser ( Parser ):
             return self.getTypedRuleContext(BaseParser.SetContext,0)
 
 
+        def use(self):
+            return self.getTypedRuleContext(BaseParser.UseContext,0)
+
+
+        def exit(self):
+            return self.getTypedRuleContext(BaseParser.ExitContext,0)
+
+
+        def quit(self):
+            return self.getTypedRuleContext(BaseParser.QuitContext,0)
+
+
+        def sleep(self):
+            return self.getTypedRuleContext(BaseParser.SleepContext,0)
+
+
+        def spool(self):
+            return self.getTypedRuleContext(BaseParser.SpoolContext,0)
+
+
+        def script(self):
+            return self.getTypedRuleContext(BaseParser.ScriptContext,0)
+
+
+        def echo(self):
+            return self.getTypedRuleContext(BaseParser.EchoContext,0)
+
+
         def getRuleIndex(self):
             return BaseParser.RULE_baseCommand
 
@@ -360,246 +391,91 @@ class BaseParser ( Parser ):
         localctx = BaseParser.BaseCommandContext(self, self._ctx, self.state)
         self.enterRule(localctx, 2, self.RULE_baseCommand)
         try:
-            self.state = 52
+            self.state = 55
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [27]:
+            if token in [23]:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 43
+                self.state = 39
                 self.assert_()
                 pass
-            elif token in [29]:
+            elif token in [25]:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 44
+                self.state = 40
                 self.load()
                 pass
-            elif token in [30]:
+            elif token in [26]:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 45
+                self.state = 41
                 self.host()
                 pass
-            elif token in [28]:
+            elif token in [24]:
                 self.enterOuterAlt(localctx, 4)
-                self.state = 46
+                self.state = 42
                 self.start()
                 pass
-            elif token in [34]:
+            elif token in [30]:
                 self.enterOuterAlt(localctx, 5)
-                self.state = 47
+                self.state = 43
                 self.loop()
                 pass
-            elif token in [31]:
+            elif token in [27]:
                 self.enterOuterAlt(localctx, 6)
-                self.state = 48
+                self.state = 44
                 self.if_()
                 pass
-            elif token in [32]:
+            elif token in [28]:
                 self.enterOuterAlt(localctx, 7)
-                self.state = 49
+                self.state = 45
                 self.endif()
                 pass
-            elif token in [35]:
+            elif token in [31]:
                 self.enterOuterAlt(localctx, 8)
-                self.state = 50
+                self.state = 46
                 self.whenever()
                 pass
-            elif token in [33]:
+            elif token in [29]:
                 self.enterOuterAlt(localctx, 9)
-                self.state = 51
+                self.state = 47
                 self.set_()
+                pass
+            elif token in [20]:
+                self.enterOuterAlt(localctx, 10)
+                self.state = 48
+                self.use()
+                pass
+            elif token in [16]:
+                self.enterOuterAlt(localctx, 11)
+                self.state = 49
+                self.exit()
+                pass
+            elif token in [17]:
+                self.enterOuterAlt(localctx, 12)
+                self.state = 50
+                self.quit()
+                pass
+            elif token in [19]:
+                self.enterOuterAlt(localctx, 13)
+                self.state = 51
+                self.sleep()
+                pass
+            elif token in [18]:
+                self.enterOuterAlt(localctx, 14)
+                self.state = 52
+                self.spool()
+                pass
+            elif token in [22]:
+                self.enterOuterAlt(localctx, 15)
+                self.state = 53
+                self.script()
+                pass
+            elif token in [21]:
+                self.enterOuterAlt(localctx, 16)
+                self.state = 54
+                self.echo()
                 pass
             else:
                 raise NoViableAltException(self)
-
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
-
-
-    class SingleExpressionContext(ParserRuleContext):
-        __slots__ = 'parser'
-
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
-            super().__init__(parent, invokingState)
-            self.parser = parser
-
-        def String(self):
-            return self.getToken(BaseParser.String, 0)
-
-        def DOT(self):
-            return self.getToken(BaseParser.DOT, 0)
-
-        def SLASH(self):
-            return self.getToken(BaseParser.SLASH, 0)
-
-        def BRACKET_OPEN(self):
-            return self.getToken(BaseParser.BRACKET_OPEN, 0)
-
-        def BRACKET_CLOSE(self):
-            return self.getToken(BaseParser.BRACKET_CLOSE, 0)
-
-        def ESCAPE(self):
-            return self.getToken(BaseParser.ESCAPE, 0)
-
-        def SQUARE_OPEN(self):
-            return self.getToken(BaseParser.SQUARE_OPEN, 0)
-
-        def SQUARE_CLOSE(self):
-            return self.getToken(BaseParser.SQUARE_CLOSE, 0)
-
-        def DOUBLE_QUOTE(self):
-            return self.getToken(BaseParser.DOUBLE_QUOTE, 0)
-
-        def SINGLE_QUOTE(self):
-            return self.getToken(BaseParser.SINGLE_QUOTE, 0)
-
-        def getRuleIndex(self):
-            return BaseParser.RULE_singleExpression
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitSingleExpression" ):
-                return visitor.visitSingleExpression(self)
-            else:
-                return visitor.visitChildren(self)
-
-
-
-
-    def singleExpression(self):
-
-        localctx = BaseParser.SingleExpressionContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 4, self.RULE_singleExpression)
-        self._la = 0 # Token type
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 54
-            _la = self._input.LA(1)
-            if not(((_la) & ~0x3f) == 0 and ((1 << _la) & 274877939648) != 0):
-                self._errHandler.recoverInline(self)
-            else:
-                self._errHandler.reportMatch(self)
-                self.consume()
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
-
-
-    class ExpressionContext(ParserRuleContext):
-        __slots__ = 'parser'
-
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
-            super().__init__(parent, invokingState)
-            self.parser = parser
-
-        def String(self, i:int=None):
-            if i is None:
-                return self.getTokens(BaseParser.String)
-            else:
-                return self.getToken(BaseParser.String, i)
-
-        def DOT(self, i:int=None):
-            if i is None:
-                return self.getTokens(BaseParser.DOT)
-            else:
-                return self.getToken(BaseParser.DOT, i)
-
-        def COLON(self, i:int=None):
-            if i is None:
-                return self.getTokens(BaseParser.COLON)
-            else:
-                return self.getToken(BaseParser.COLON, i)
-
-        def SLASH(self, i:int=None):
-            if i is None:
-                return self.getTokens(BaseParser.SLASH)
-            else:
-                return self.getToken(BaseParser.SLASH, i)
-
-        def BRACKET_OPEN(self, i:int=None):
-            if i is None:
-                return self.getTokens(BaseParser.BRACKET_OPEN)
-            else:
-                return self.getToken(BaseParser.BRACKET_OPEN, i)
-
-        def BRACKET_CLOSE(self, i:int=None):
-            if i is None:
-                return self.getTokens(BaseParser.BRACKET_CLOSE)
-            else:
-                return self.getToken(BaseParser.BRACKET_CLOSE, i)
-
-        def ESCAPE(self, i:int=None):
-            if i is None:
-                return self.getTokens(BaseParser.ESCAPE)
-            else:
-                return self.getToken(BaseParser.ESCAPE, i)
-
-        def SQUARE_OPEN(self, i:int=None):
-            if i is None:
-                return self.getTokens(BaseParser.SQUARE_OPEN)
-            else:
-                return self.getToken(BaseParser.SQUARE_OPEN, i)
-
-        def SQUARE_CLOSE(self, i:int=None):
-            if i is None:
-                return self.getTokens(BaseParser.SQUARE_CLOSE)
-            else:
-                return self.getToken(BaseParser.SQUARE_CLOSE, i)
-
-        def DOUBLE_QUOTE(self, i:int=None):
-            if i is None:
-                return self.getTokens(BaseParser.DOUBLE_QUOTE)
-            else:
-                return self.getToken(BaseParser.DOUBLE_QUOTE, i)
-
-        def SINGLE_QUOTE(self, i:int=None):
-            if i is None:
-                return self.getTokens(BaseParser.SINGLE_QUOTE)
-            else:
-                return self.getToken(BaseParser.SINGLE_QUOTE, i)
-
-        def getRuleIndex(self):
-            return BaseParser.RULE_expression
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitExpression" ):
-                return visitor.visitExpression(self)
-            else:
-                return visitor.visitChildren(self)
-
-
-
-
-    def expression(self):
-
-        localctx = BaseParser.ExpressionContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 6, self.RULE_expression)
-        self._la = 0 # Token type
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 57 
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            while True:
-                self.state = 56
-                _la = self._input.LA(1)
-                if not(((_la) & ~0x3f) == 0 and ((1 << _la) & 274877939664) != 0):
-                    self._errHandler.recoverInline(self)
-                else:
-                    self._errHandler.reportMatch(self)
-                    self.consume()
-                self.state = 59 
-                self._errHandler.sync(self)
-                _la = self._input.LA(1)
-                if not (((_la) & ~0x3f) == 0 and ((1 << _la) & 274877939664) != 0):
-                    break
 
         except RecognitionException as re:
             localctx.exception = re
@@ -623,6 +499,9 @@ class BaseParser ( Parser ):
         def INT(self):
             return self.getToken(BaseParser.INT, 0)
 
+        def SEMICOLON(self):
+            return self.getToken(BaseParser.SEMICOLON, 0)
+
         def CRLF(self):
             return self.getToken(BaseParser.CRLF, 0)
 
@@ -641,25 +520,33 @@ class BaseParser ( Parser ):
     def exit(self):
 
         localctx = BaseParser.ExitContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 8, self.RULE_exit)
+        self.enterRule(localctx, 4, self.RULE_exit)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 61
+            self.state = 57
             self.match(BaseParser.EXIT)
-            self.state = 63
+            self.state = 59
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==36:
-                self.state = 62
+            if _la==32:
+                self.state = 58
                 self.match(BaseParser.INT)
 
 
-            self.state = 66
+            self.state = 62
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            if _la==3:
+                self.state = 61
+                self.match(BaseParser.SEMICOLON)
+
+
+            self.state = 65
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==1:
-                self.state = 65
+                self.state = 64
                 self.match(BaseParser.CRLF)
 
 
@@ -685,6 +572,9 @@ class BaseParser ( Parser ):
         def INT(self):
             return self.getToken(BaseParser.INT, 0)
 
+        def SEMICOLON(self):
+            return self.getToken(BaseParser.SEMICOLON, 0)
+
         def CRLF(self):
             return self.getToken(BaseParser.CRLF, 0)
 
@@ -703,25 +593,33 @@ class BaseParser ( Parser ):
     def quit(self):
 
         localctx = BaseParser.QuitContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 10, self.RULE_quit)
+        self.enterRule(localctx, 6, self.RULE_quit)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 68
+            self.state = 67
             self.match(BaseParser.QUIT)
-            self.state = 70
+            self.state = 69
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==36:
-                self.state = 69
+            if _la==32:
+                self.state = 68
                 self.match(BaseParser.INT)
 
 
-            self.state = 73
+            self.state = 72
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            if _la==3:
+                self.state = 71
+                self.match(BaseParser.SEMICOLON)
+
+
+            self.state = 75
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==1:
-                self.state = 72
+                self.state = 74
                 self.match(BaseParser.CRLF)
 
 
@@ -744,11 +642,14 @@ class BaseParser ( Parser ):
         def USE(self):
             return self.getToken(BaseParser.USE, 0)
 
-        def API(self):
-            return self.getToken(BaseParser.API, 0)
+        def USE_API(self):
+            return self.getToken(BaseParser.USE_API, 0)
 
-        def SQL(self):
-            return self.getToken(BaseParser.SQL, 0)
+        def USE_SQL(self):
+            return self.getToken(BaseParser.USE_SQL, 0)
+
+        def USE_SEMICOLON(self):
+            return self.getToken(BaseParser.USE_SEMICOLON, 0)
 
         def CRLF(self):
             return self.getToken(BaseParser.CRLF, 0)
@@ -768,24 +669,32 @@ class BaseParser ( Parser ):
     def use(self):
 
         localctx = BaseParser.UseContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 12, self.RULE_use)
+        self.enterRule(localctx, 8, self.RULE_use)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 75
+            self.state = 77
             self.match(BaseParser.USE)
-            self.state = 76
+            self.state = 78
             _la = self._input.LA(1)
-            if not(_la==19 or _la==20):
+            if not(_la==80 or _la==81):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
                 self.consume()
-            self.state = 78
+            self.state = 80
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            if _la==83:
+                self.state = 79
+                self.match(BaseParser.USE_SEMICOLON)
+
+
+            self.state = 83
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==1:
-                self.state = 77
+                self.state = 82
                 self.match(BaseParser.CRLF)
 
 
@@ -811,6 +720,9 @@ class BaseParser ( Parser ):
         def INT(self):
             return self.getToken(BaseParser.INT, 0)
 
+        def SEMICOLON(self):
+            return self.getToken(BaseParser.SEMICOLON, 0)
+
         def CRLF(self):
             return self.getToken(BaseParser.CRLF, 0)
 
@@ -829,19 +741,27 @@ class BaseParser ( Parser ):
     def sleep(self):
 
         localctx = BaseParser.SleepContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 14, self.RULE_sleep)
+        self.enterRule(localctx, 10, self.RULE_sleep)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 80
+            self.state = 85
             self.match(BaseParser.SLEEP)
-            self.state = 81
+            self.state = 86
             self.match(BaseParser.INT)
-            self.state = 83
+            self.state = 88
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            if _la==3:
+                self.state = 87
+                self.match(BaseParser.SEMICOLON)
+
+
+            self.state = 91
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==1:
-                self.state = 82
+                self.state = 90
                 self.match(BaseParser.CRLF)
 
 
@@ -903,55 +823,55 @@ class BaseParser ( Parser ):
     def start(self):
 
         localctx = BaseParser.StartContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 16, self.RULE_start)
+        self.enterRule(localctx, 12, self.RULE_start)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 85
+            self.state = 93
             self.match(BaseParser.START)
-            self.state = 86
+            self.state = 94
             self.match(BaseParser.START_EXPRESSION)
-            self.state = 91
+            self.state = 99
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==52:
-                self.state = 87
+            while _la==48:
+                self.state = 95
                 self.match(BaseParser.START_COMMA)
-                self.state = 88
+                self.state = 96
                 self.match(BaseParser.START_EXPRESSION)
-                self.state = 93
+                self.state = 101
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 95
+            self.state = 103
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==50:
-                self.state = 94
+            if _la==46:
+                self.state = 102
                 self.match(BaseParser.START_LOOP)
 
 
-            self.state = 98
+            self.state = 106
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==51:
-                self.state = 97
+            if _la==47:
+                self.state = 105
                 self.match(BaseParser.START_INT)
 
 
-            self.state = 101
+            self.state = 109
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==3:
-                self.state = 100
+                self.state = 108
                 self.match(BaseParser.SEMICOLON)
 
 
-            self.state = 104
+            self.state = 112
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==1:
-                self.state = 103
+                self.state = 111
                 self.match(BaseParser.CRLF)
 
 
@@ -1004,39 +924,39 @@ class BaseParser ( Parser ):
     def load(self):
 
         localctx = BaseParser.LoadContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 18, self.RULE_load)
+        self.enterRule(localctx, 14, self.RULE_load)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 106
+            self.state = 114
             self.match(BaseParser.LOAD)
-            self.state = 107
+            self.state = 115
             self.match(BaseParser.LOAD_OPTION)
-            self.state = 109 
+            self.state = 117 
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
-                self.state = 108
+                self.state = 116
                 self.match(BaseParser.LOAD_EXPRESSION)
-                self.state = 111 
+                self.state = 119 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==47):
+                if not (_la==43):
                     break
 
-            self.state = 114
+            self.state = 122
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==3:
-                self.state = 113
+                self.state = 121
                 self.match(BaseParser.SEMICOLON)
 
 
-            self.state = 117
+            self.state = 125
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==1:
-                self.state = 116
+                self.state = 124
                 self.match(BaseParser.CRLF)
 
 
@@ -1083,27 +1003,27 @@ class BaseParser ( Parser ):
     def assert_(self):
 
         localctx = BaseParser.AssertContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 20, self.RULE_assert)
+        self.enterRule(localctx, 16, self.RULE_assert)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 119
+            self.state = 127
             self.match(BaseParser.ASSERT)
-            self.state = 120
+            self.state = 128
             self.match(BaseParser.ASSERT_EXPRESSION)
-            self.state = 122
+            self.state = 130
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==3:
-                self.state = 121
+                self.state = 129
                 self.match(BaseParser.SEMICOLON)
 
 
-            self.state = 125
+            self.state = 133
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==1:
-                self.state = 124
+                self.state = 132
                 self.match(BaseParser.CRLF)
 
 
@@ -1144,12 +1064,12 @@ class BaseParser ( Parser ):
     def host(self):
 
         localctx = BaseParser.HostContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 22, self.RULE_host)
+        self.enterRule(localctx, 18, self.RULE_host)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 127
+            self.state = 135
             self.match(BaseParser.HOST)
-            self.state = 128
+            self.state = 136
             self.match(BaseParser.HOST_BLOCK)
         except RecognitionException as re:
             localctx.exception = re
@@ -1179,11 +1099,8 @@ class BaseParser ( Parser ):
         def LOOP_CONTINUE(self):
             return self.getToken(BaseParser.LOOP_CONTINUE, 0)
 
-        def LOOP_SEMICOLON(self):
-            return self.getToken(BaseParser.LOOP_SEMICOLON, 0)
-
-        def CRLF(self):
-            return self.getToken(BaseParser.CRLF, 0)
+        def LOOP_BEGIN(self):
+            return self.getToken(BaseParser.LOOP_BEGIN, 0)
 
         def LOOP_UNTIL(self):
             return self.getToken(BaseParser.LOOP_UNTIL, 0)
@@ -1191,8 +1108,11 @@ class BaseParser ( Parser ):
         def LOOP_EXPRESSION(self):
             return self.getToken(BaseParser.LOOP_EXPRESSION, 0)
 
-        def LOOP_BEGIN(self):
-            return self.getToken(BaseParser.LOOP_BEGIN, 0)
+        def LOOP_SEMICOLON(self):
+            return self.getToken(BaseParser.LOOP_SEMICOLON, 0)
+
+        def CRLF(self):
+            return self.getToken(BaseParser.CRLF, 0)
 
         def getRuleIndex(self):
             return BaseParser.RULE_loop
@@ -1209,57 +1129,51 @@ class BaseParser ( Parser ):
     def loop(self):
 
         localctx = BaseParser.LoopContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 24, self.RULE_loop)
+        self.enterRule(localctx, 20, self.RULE_loop)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 130
+            self.state = 138
             self.match(BaseParser.LOOP)
-            self.state = 139
+            self.state = 145
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [68]:
-                self.state = 131
+            if token in [64]:
+                self.state = 139
                 self.match(BaseParser.LOOP_BREAK)
                 pass
-            elif token in [69]:
-                self.state = 132
+            elif token in [65]:
+                self.state = 140
                 self.match(BaseParser.LOOP_END)
                 pass
-            elif token in [70]:
-                self.state = 133
+            elif token in [66]:
+                self.state = 141
                 self.match(BaseParser.LOOP_CONTINUE)
                 pass
-            elif token in [64, 65]:
-                self.state = 135
-                self._errHandler.sync(self)
-                _la = self._input.LA(1)
-                if _la==64:
-                    self.state = 134
-                    self.match(BaseParser.LOOP_BEGIN)
-
-
-                self.state = 137
+            elif token in [60]:
+                self.state = 142
+                self.match(BaseParser.LOOP_BEGIN)
+                self.state = 143
                 self.match(BaseParser.LOOP_UNTIL)
-                self.state = 138
+                self.state = 144
                 self.match(BaseParser.LOOP_EXPRESSION)
                 pass
             else:
                 raise NoViableAltException(self)
 
-            self.state = 142
+            self.state = 148
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==62:
-                self.state = 141
+            if _la==58:
+                self.state = 147
                 self.match(BaseParser.LOOP_SEMICOLON)
 
 
-            self.state = 145
+            self.state = 151
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==1:
-                self.state = 144
+                self.state = 150
                 self.match(BaseParser.CRLF)
 
 
@@ -1306,27 +1220,27 @@ class BaseParser ( Parser ):
     def if_(self):
 
         localctx = BaseParser.IfContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 26, self.RULE_if)
+        self.enterRule(localctx, 22, self.RULE_if)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 147
+            self.state = 153
             self.match(BaseParser.IF)
-            self.state = 148
+            self.state = 154
             self.match(BaseParser.IF_EXPRESSION)
-            self.state = 150
+            self.state = 156
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==3:
-                self.state = 149
+                self.state = 155
                 self.match(BaseParser.SEMICOLON)
 
 
-            self.state = 153
+            self.state = 159
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==1:
-                self.state = 152
+                self.state = 158
                 self.match(BaseParser.CRLF)
 
 
@@ -1370,25 +1284,25 @@ class BaseParser ( Parser ):
     def endif(self):
 
         localctx = BaseParser.EndifContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 28, self.RULE_endif)
+        self.enterRule(localctx, 24, self.RULE_endif)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 155
+            self.state = 161
             self.match(BaseParser.ENDIF)
-            self.state = 157
+            self.state = 163
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==3:
-                self.state = 156
+                self.state = 162
                 self.match(BaseParser.SEMICOLON)
 
 
-            self.state = 160
+            self.state = 166
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==1:
-                self.state = 159
+                self.state = 165
                 self.match(BaseParser.CRLF)
 
 
@@ -1441,34 +1355,34 @@ class BaseParser ( Parser ):
     def whenever(self):
 
         localctx = BaseParser.WheneverContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 30, self.RULE_whenever)
+        self.enterRule(localctx, 26, self.RULE_whenever)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 162
+            self.state = 168
             self.match(BaseParser.WHENEVER)
-            self.state = 163
+            self.state = 169
             self.match(BaseParser.WHENEVER_ERROR)
-            self.state = 164
+            self.state = 170
             _la = self._input.LA(1)
-            if not(_la==76 or _la==77):
+            if not(_la==72 or _la==73):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
                 self.consume()
-            self.state = 166
+            self.state = 172
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==75:
-                self.state = 165
+            if _la==71:
+                self.state = 171
                 self.match(BaseParser.WHENEVER_SEMICOLON)
 
 
-            self.state = 169
+            self.state = 175
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==1:
-                self.state = 168
+                self.state = 174
                 self.match(BaseParser.CRLF)
 
 
@@ -1515,27 +1429,27 @@ class BaseParser ( Parser ):
     def spool(self):
 
         localctx = BaseParser.SpoolContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 32, self.RULE_spool)
+        self.enterRule(localctx, 28, self.RULE_spool)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 171
+            self.state = 177
             self.match(BaseParser.SPOOL)
-            self.state = 172
+            self.state = 178
             self.match(BaseParser.String)
-            self.state = 174
+            self.state = 180
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==3:
-                self.state = 173
+                self.state = 179
                 self.match(BaseParser.SEMICOLON)
 
 
-            self.state = 177
+            self.state = 183
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==1:
-                self.state = 176
+                self.state = 182
                 self.match(BaseParser.CRLF)
 
 
@@ -1582,19 +1496,19 @@ class BaseParser ( Parser ):
     def echo(self):
 
         localctx = BaseParser.EchoContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 34, self.RULE_echo)
+        self.enterRule(localctx, 30, self.RULE_echo)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 179
+            self.state = 185
             self.match(BaseParser.ECHO_OPEN)
-            self.state = 180
+            self.state = 186
             self.match(BaseParser.EchoBlock)
-            self.state = 182
+            self.state = 188
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,30,self._ctx)
+            la_ = self._interp.adaptivePredict(self._input,32,self._ctx)
             if la_ == 1:
-                self.state = 181
+                self.state = 187
                 _la = self._input.LA(1)
                 if not(_la==-1 or _la==1):
                     self._errHandler.recoverInline(self)
@@ -1643,19 +1557,19 @@ class BaseParser ( Parser ):
     def script(self):
 
         localctx = BaseParser.ScriptContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 36, self.RULE_script)
+        self.enterRule(localctx, 32, self.RULE_script)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 184
+            self.state = 190
             self.match(BaseParser.SCRIPT_OPEN)
-            self.state = 185
+            self.state = 191
             self.match(BaseParser.ScriptBlock)
-            self.state = 187
+            self.state = 193
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==1:
-                self.state = 186
+                self.state = 192
                 self.match(BaseParser.CRLF)
 
 
@@ -1708,43 +1622,43 @@ class BaseParser ( Parser ):
     def set_(self):
 
         localctx = BaseParser.SetContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 38, self.RULE_set)
+        self.enterRule(localctx, 34, self.RULE_set)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 189
+            self.state = 195
             self.match(BaseParser.SET)
-            self.state = 191
+            self.state = 197
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==82:
-                self.state = 190
+            if _la==78:
+                self.state = 196
                 self.match(BaseParser.SET_AT)
 
 
-            self.state = 196
+            self.state = 202
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==80:
-                self.state = 193
+            while _la==76:
+                self.state = 199
                 self.match(BaseParser.SET_EXPRESSION)
-                self.state = 198
+                self.state = 204
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 200
+            self.state = 206
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==81:
-                self.state = 199
+            if _la==77:
+                self.state = 205
                 self.match(BaseParser.SET_SEMICOLON)
 
 
-            self.state = 203
+            self.state = 209
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==1:
-                self.state = 202
+                self.state = 208
                 self.match(BaseParser.CRLF)
 
 

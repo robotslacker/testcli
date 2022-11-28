@@ -1,4 +1,4 @@
-# Generated from D:/Work/testcli/testcli/antlr\BaseParser.g4 by ANTLR 4.11.1
+# Generated from BaseParser.g4 by ANTLR 4.11.1
 from antlr4 import *
 if __name__ is not None and "." in __name__:
     from .BaseParser import BaseParser
@@ -16,16 +16,6 @@ class BaseParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by BaseParser#baseCommand.
     def visitBaseCommand(self, ctx:BaseParser.BaseCommandContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by BaseParser#singleExpression.
-    def visitSingleExpression(self, ctx:BaseParser.SingleExpressionContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by BaseParser#expression.
-    def visitExpression(self, ctx:BaseParser.ExpressionContext):
         return self.visitChildren(ctx)
 
 

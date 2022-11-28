@@ -43,9 +43,6 @@ from .testoption import TestOptions
 from .__init__ import __version__
 from .sqlparse import SQLAnalyze
 from .apiparse import APIAnalyze
-from .global_var import globalEmbeddScriptScope
-from .global_var import localEmbeddScriptScope
-from .global_var import lastCommandResult
 
 OFLAG_LOGFILE = 1
 OFLAG_LOGGER = 2
@@ -874,9 +871,8 @@ class TestCli(object):
                     full_text = full_text + '\n' + text
                 if self.testOptions.get('NAMESPACE') == "SQL":
                     # 判断SQL语句是否已经结束
-                    (ret_bCommandCompleted, ret_CommandSplitResults,
-                     ret_CommandSplitResultsWithComments, ret_CommandHints,
-                     ret_errorCode, ret_errorMsg) = SQLAnalyze(full_text)
+                    (ret_bCommandCompleted, ret_CommandSplitResults, ret_errorCode, ret_errorMsg) = \
+                        SQLAnalyze(full_text)
                     if ret_errorCode != 0:
                         # 即使出错（可能是解析规则未覆盖导致，并不一定是真的SQL语句错误），那么除非看到截止符号，就认为语句没有结束
                         if full_text.strip().endswith(';') or full_text.strip().endswith('\n/'):
@@ -1122,15 +1118,21 @@ class TestCli(object):
 
             # 如果用户指定了用户名，口令，尝试直接进行数据库连接
             if self.logon:
-                if not self.DoCommand("connect " + str(self.logon)):
+                if not self.DoCommand("_connect " + str(self.logon)):
                     raise EOFError
 
             # 如果传递的参数中有脚本文件，先执行脚本文件, 执行完成后自动退出
             try:
-                self.DoCommand('_start ' + self.commandScript)
+                # 如果有脚本目录，则运行的时候切换到脚本所在的目录下，运行结束后要返回当前目录
+                currentPwd = os.getcwd()
+                scriptDir = os.path.dirname(str(self.commandScript))
+                scriptBase = os.path.basename(str(self.commandScript))
+                os.chdir(scriptDir)
+                self.DoCommand('_start ' + scriptBase)
+                os.chdir(currentPwd)
             except TestCliException:
                 raise EOFError
-            self.DoCommand('exit')
+            self.DoCommand('_exit')
         except (TestCliException, EOFError):
             if self.testOptions.get("JOBMANAGER") == "ON":
                 # 如果还有活动的事务，标记事务为失败信息

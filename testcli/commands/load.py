@@ -5,6 +5,7 @@ import os
 import re
 import sys
 from testcli.testcliexception import TestCliException
+from testcli.commands.embeddScript import localEmbeddScriptScope
 
 pluginModule = {}
 pluginFunction = {}
@@ -14,12 +15,15 @@ def loadPlugin(pluginFile: str):
     global pluginFunction
     global pluginModule
 
+    # 首先在当前目录下查找
+    # 如果找不到，则去程序所在的目录下去寻找
     if not os.path.exists(pluginFile):
-        yield {
-            "type": "error",
-            "message": "plugin file [" + os.path.abspath(pluginFile) + "] does not exist!",
-        }
-        return
+        if not os.path.exists(os.path.join(os.path.abspath(__file__), pluginFile)):
+            yield {
+                "type": "error",
+                "message": "plugin file [" + os.path.abspath(pluginFile) + "] does not exist!",
+            }
+            return
     pluginFileHandler = open(pluginFile, "r")
     pluginContents = pluginFileHandler.readlines()
 
@@ -37,6 +41,7 @@ def loadPlugin(pluginFile: str):
             spec_class.loader.exec_module(module_class)
             pluginClass = getattr(module_class, className)
             pluginModule[className] = pluginClass
+            localEmbeddScriptScope[className] = pluginModule[className]
             yield {
                 "type": "result",
                 "title": None,
@@ -60,6 +65,7 @@ def loadPlugin(pluginFile: str):
             spec_function.loader.exec_module(module_function)
             pluginFunc = getattr(module_function, funcName)
             pluginFunction[funcName] = pluginFunc
+            localEmbeddScriptScope[funcName] = pluginFunction[funcName]
             yield {
                 "type": "result",
                 "title": None,
@@ -76,16 +82,6 @@ def loadPlugin(pluginFile: str):
         "columnTypes": None,
         "status": 'Plugin file loaded successful.'
     }
-
-
-def _Class(className: str):
-    global pluginModule
-    return pluginModule[className]
-
-
-def _Func(functionName: str):
-    global pluginFunction
-    return pluginFunction[functionName]
 
 
 # 加载数据库驱动

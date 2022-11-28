@@ -1,4 +1,4 @@
-SQL> connect /mem
+SQL> _connect /mem
 Database connected.
 SQL> _if {% 3==2 %}
 SQL> select 1+2 from dual;
@@ -27,7 +27,7 @@ SQL> select 3+4 from dual;
 +--------+---+
 1 row selected.
 SQL>
-SQL> connect /mem
+SQL> _connect /mem
 Database connected.
 SQL> create table aaa (id int);
 0 row affected.

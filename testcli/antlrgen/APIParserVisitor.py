@@ -1,4 +1,4 @@
-# Generated from D:/Work/testcli/testcli/antlr\APIParser.g4 by ANTLR 4.11.1
+# Generated from APIParser.g4 by ANTLR 4.11.1
 from antlr4 import *
 if __name__ is not None and "." in __name__:
     from .APIParser import APIParser
@@ -19,26 +19,6 @@ class APIParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by APIParser#exit.
-    def visitExit(self, ctx:APIParser.ExitContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#quit.
-    def visitQuit(self, ctx:APIParser.QuitContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#use.
-    def visitUse(self, ctx:APIParser.UseContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#sleep.
-    def visitSleep(self, ctx:APIParser.SleepContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by APIParser#singleExpression.
     def visitSingleExpression(self, ctx:APIParser.SingleExpressionContext):
         return self.visitChildren(ctx)
@@ -46,46 +26,6 @@ class APIParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by APIParser#expression.
     def visitExpression(self, ctx:APIParser.ExpressionContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#start.
-    def visitStart(self, ctx:APIParser.StartContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#loadmap.
-    def visitLoadmap(self, ctx:APIParser.LoadmapContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#wheneverError.
-    def visitWheneverError(self, ctx:APIParser.WheneverErrorContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#spool.
-    def visitSpool(self, ctx:APIParser.SpoolContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#echo.
-    def visitEcho(self, ctx:APIParser.EchoContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#internal.
-    def visitInternal(self, ctx:APIParser.InternalContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#set.
-    def visitSet(self, ctx:APIParser.SetContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#script.
-    def visitScript(self, ctx:APIParser.ScriptContext):
         return self.visitChildren(ctx)
 
 
@@ -166,6 +106,91 @@ class APIParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by APIParser#httpMessageBodyOther.
     def visitHttpMessageBodyOther(self, ctx:APIParser.HttpMessageBodyOtherContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by APIParser#baseCommand.
+    def visitBaseCommand(self, ctx:APIParser.BaseCommandContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by APIParser#exit.
+    def visitExit(self, ctx:APIParser.ExitContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by APIParser#quit.
+    def visitQuit(self, ctx:APIParser.QuitContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by APIParser#use.
+    def visitUse(self, ctx:APIParser.UseContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by APIParser#sleep.
+    def visitSleep(self, ctx:APIParser.SleepContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by APIParser#start.
+    def visitStart(self, ctx:APIParser.StartContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by APIParser#load.
+    def visitLoad(self, ctx:APIParser.LoadContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by APIParser#assert.
+    def visitAssert(self, ctx:APIParser.AssertContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by APIParser#host.
+    def visitHost(self, ctx:APIParser.HostContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by APIParser#loop.
+    def visitLoop(self, ctx:APIParser.LoopContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by APIParser#if.
+    def visitIf(self, ctx:APIParser.IfContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by APIParser#endif.
+    def visitEndif(self, ctx:APIParser.EndifContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by APIParser#whenever.
+    def visitWhenever(self, ctx:APIParser.WheneverContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by APIParser#spool.
+    def visitSpool(self, ctx:APIParser.SpoolContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by APIParser#echo.
+    def visitEcho(self, ctx:APIParser.EchoContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by APIParser#script.
+    def visitScript(self, ctx:APIParser.ScriptContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by APIParser#set.
+    def visitSet(self, ctx:APIParser.SetContext):
         return self.visitChildren(ctx)
 
 

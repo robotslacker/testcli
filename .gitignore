@@ -1,12 +1,10 @@
 .idea/
 .cache/
-.vscode/settings.json
 .coverage/
+.vscode/
+.pytest_cache/
 gen/
 localtest/
-http/
-csv/
-stresstest/
 build/
 dist/
 *egg-info/

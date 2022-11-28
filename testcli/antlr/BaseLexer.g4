@@ -1,3 +1,4 @@
+// 基础词法
 lexer grammar BaseLexer;
 
 options {
@@ -23,24 +24,22 @@ SINGLE_QUOTE        : '\'';
 ESCAPE              : '\\';
 SPACE               : [ \t]+ ->channel(HIDDEN);
 
-EXIT                : 'EXIT';
-QUIT                : 'QUIT';
-USE                 : 'USE';
-API                 : 'API';
-SQL                 : 'SQL';
-CONTINUE            : 'CONTINUE';
-SPOOL               : 'SPOOL';
-END                 : 'END';
-SLEEP               : 'SLEEP';
+EXIT                : '_EXIT';
+QUIT                : '_QUIT';
+SPOOL               : '_SPOOL';
+SLEEP               : '_SLEEP';
+
+// 切换应用模式
+USE                 : '_USE' -> pushMode(UseMode);
 
 // 回显随后的脚本
-ECHO_OPEN           : 'ECHO' .*? (CRLF | EOF) ->pushMode(EchoMode);
+ECHO_OPEN           : '_ECHO' .*? (CRLF | EOF) ->pushMode(EchoMode);
 
 // 执行内置的Python脚本
 SCRIPT_OPEN         : '> {%' ->pushMode(ScriptMode);
 
 // 表达式判断，用来验证执行结果
-ASSERT              :  'ASSERT' -> pushMode(AssertMode);
+ASSERT              :  '_ASSERT' -> pushMode(AssertMode);
 
 // 执行脚本
 START               : '_START' -> pushMode(StartMode);
@@ -145,8 +144,15 @@ WHENEVER_EXIT       : 'EXIT';
 WHENEVER_CRLF       : CRLF -> popMode;
 
 mode SetMode;
-SET_SPACE        : [ \t]+ -> channel (HIDDEN);
-SET_EXPRESSION   : String;
-SET_SEMICOLON    : ';';
-SET_AT           : '@';
-SET_CRLF         : CRLF -> popMode;
+SET_SPACE           : [ \t]+ -> channel (HIDDEN);
+SET_EXPRESSION      : String;
+SET_SEMICOLON       : ';';
+SET_AT              : '@';
+SET_CRLF            : CRLF -> popMode;
+
+mode UseMode;
+USE_API             : 'API';
+USE_SQL             : 'SQL';
+USE_SPACE           : [ \t]+ -> channel (HIDDEN);
+USE_SEMICOLON       : ';';
+USE_CRLF            : CRLF -> popMode;

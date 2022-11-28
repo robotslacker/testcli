@@ -17,61 +17,26 @@ baseCommand:
       | endif
       | whenever
       | set
+      | use
+      | exit
+      | quit
+      | sleep
+      | spool
+      | script
+      | echo
       ;
 
-//baseCommand:
-//      exit
-//      | quit
-//      | use
-//      | sleep
-//      | start
-//      | wheneverError
-//      | spool
-//      | set
-//      | script
-//      | echo
-//      | assert
-//      | EOF
-//      ;
-
-singleExpression
-        : (String
-        | DOT
-        | SLASH
-        | BRACKET_OPEN
-        | BRACKET_CLOSE
-        | ESCAPE
-        | SQUARE_OPEN
-        | SQUARE_CLOSE
-        | DOUBLE_QUOTE
-        | SINGLE_QUOTE )
-        ;
-
-expression
-        : (String
-        | DOT
-        | COLON
-        | SLASH
-        | BRACKET_OPEN
-        | BRACKET_CLOSE
-        | ESCAPE
-        | SQUARE_OPEN
-        | SQUARE_CLOSE
-        | DOUBLE_QUOTE
-        | SINGLE_QUOTE )+
-        ;
-
 // Exit
-exit    : EXIT INT? CRLF? ;
+exit    : EXIT INT? SEMICOLON? CRLF?;
 
 // quit
-quit    : QUIT INT? CRLF?;
+quit    : QUIT INT? SEMICOLON? CRLF?;
 
 // use
-use     : USE (API|SQL) CRLF?;
+use     : USE (USE_API|USE_SQL) (USE_SEMICOLON)? CRLF?;
 
 // sleep
-sleep   : SLEEP INT CRLF?;
+sleep   : SLEEP INT SEMICOLON? CRLF?;
 
 start   : START START_EXPRESSION (START_COMMA START_EXPRESSION)* START_LOOP? START_INT? SEMICOLON? CRLF?;
 
@@ -86,7 +51,7 @@ host    : HOST HOST_BLOCK;
 
 // 循环处理操作
 loop    : LOOP
-          (LOOP_BREAK | LOOP_END | LOOP_CONTINUE | LOOP_BEGIN LOOP_UNTIL LOOP_EXPRESSION)) (LOOP_SEMICOLON)? CRLF?
+          (LOOP_BREAK | LOOP_END | LOOP_CONTINUE | LOOP_BEGIN LOOP_UNTIL LOOP_EXPRESSION) (LOOP_SEMICOLON)? CRLF?
         ;
 
 // IF条件表达式

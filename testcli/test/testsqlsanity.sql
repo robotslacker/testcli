@@ -1,4 +1,4 @@
-connect /mem
+_connect /mem
 create table aaa (id int);
 insert into aaa values(10);
 insert into aaa values(6);
@@ -10,8 +10,8 @@ delete from aaa where id =6;
 select 1 from dual;
 
 -- 正确的Assert语句
-Assert {% 3==3 %};
+_Assert {% 3==3 %};
 -- 错误的Assert语句
-Assert {% 1==2 %};
+_Assert {% 1==2 %};
 
-exit 3
+_exit 3

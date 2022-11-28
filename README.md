@@ -3,14 +3,14 @@
 TestCli 是一个主要用Python完成的，命令快速的测试工具。  
 设计目的：  
     1： 满足数据库方面的相关功能测试、压力测试需要。  
-    2： 能够作为一个日常小工具，进行数据库的日常操作。    
-    3： 能够根据需要快速、灵活的生成测试需要的随机数据。   
-    4： 能够操作Kafka消息队列。   
-    5： 能够操作HDFS上的文件。  
-    6： 完成基于执行结果比对的回归测试校验。
+    2： 满足API方面的相关功能测试、压力测试需要。  
+    3： 能够作为一个日常小工具，进行数据库的日常操作。    
+    4： 能够根据需要快速、灵活的生成测试需要的随机数据。   
+    5： 能够操作Kafka消息队列。   
+    6： 能够操作HDFS上的文件。  
+    7： 完成基于执行结果比对的回归测试校验。
 
 程序可以通过JPype连接数据库的JDBC驱动。      
-也可以通过ODBC标准连接数据库的ODBC驱动，但是这部分并没有经过严谨的测试。    
 
 TestCli 目前可以支持的数据库有：  
    * Oracle,MySQL,PostgreSQL,SQLServer,TeraData, Hive, H2等主流通用数据库  
@@ -53,14 +53,19 @@ TestCli 目前支持的数据类型有：
 ### 谁需要使用这个工具
 
 需要通过SQL语句来查看、维护数据库的。  
+需要通过API语句来完成业务的。  
 需要进行各种数据库功能测试、压力测试的。  
-需要用统一的方式来连接各种不同数据库的。    
+需要进行各种API功能测试、压力测试的。  
+需要用统一的方式来连接各种不同数据库的。  
+需要在一个测试程序内部组合使用数据库请求、API请求的。  
+
 
 ### 为什么要设计这个工具
 这个工具的存在目的不是为了替代各种数据库的命令行工具，如Oracle的SQLPlus，MYSQL的mysql等  
-这个工具的存在目的是在尽可能地兼容这些命令行工具的同时提供测试工作需要的相关特性。  
+这个工具的存在目的不是为了替代PostMan，JMeter等测试工具。  
+这个工具的存在目的是在尽可能地兼容这些命令行工具的同时提供测试工作需要的相关特性。    
 这些特性包括：  
-1：并发脚本的支持，通过在脚本中使用JOBManager，可以同时执行多个脚本，同时利用时间戳还可以同步脚本之前的行为。  
+1：并发脚本的支持，通过在脚本中使用JOBManager，可以同时执行多个脚本，同时利用时间戳还可以同步脚本之前的行为。    
 2：一些internal的命令，可以完成数据库之外的相关操作。  
 
 
@@ -69,46 +74,35 @@ TestCli 目前支持的数据类型有：
 安装的前提有：
    * 有一个Python 3.6以上的环境
    * 能够连接到互联网上， 便于下载必要的包
-   * 安装JDK8
+   * 安装JDK8或者JDK11  
    * 对于Windows平台，需要提前安装微软的C++编译器（jpype1使用了JNI技术，需要动态编译）  
-   * 对于Linux平台，  需要提前安装gcc编译器，unixODBC开发环境，以及Python3的开发包（原因同上）  
+   * 对于Linux平台，  需要提前安装gcc编译器，以及Python3的开发包（原因同上）  
      yum install -y gcc-c++ gcc  
-     yum install -y unixODBC  unixODBC-devel
      yum install python3<?>-devel(在Anaconda环境下，这一步不是必须的. ?是具体的Python版本，根据自己的环境决定)
-        
-   * 对于MAC平台，  需要提前安装gcc编译器，以及unixODBC开发环境  
+   * 对于MAC平台，  需要提前安装gcc编译器    
      brew install gcc  
-     brew install unixODBC
 
 依赖的第三方安装包：  
    * 这些安装包会在robotslacker-TestCli安装的时候自动随带安装
-   * setproctitle             : Python通过setproctitle来设置进程名称，从而在多进程并发时候给调试人员以帮助
    * click                    : Python的命令行参数处理
-   * prompt_toolkit           : 用于提供包括提示符功能的控制台终端的显示样式
    * hdfs                     : HDFS类库，支持对HDFS文件操作
-   * requests                 ：HTTP客户端请求协议
-   * websockets               : HTTP客户端请求协议
-   * pydantic                 : FastAPI服务端支持
-   * uvicorn[standard]        : FastAPI服务端支持
-   * fastapi                  : FastAPI服务端支持
-其他：
-   对于Linux和MAC，在安装后需要手工加载confluent_kafka来保证kafka操作的正常
-   * pip install confluent_kafka
-   
-   对于Windows，由于confluent_kafka目前不支持Windows，所以无需安装，也不能使用该功能
-   
+   * JPype1                   : Python的Java请求封装，用于完成JDBC请求调用  
+   * paramiko                 : Python的SSH协议支持，用于完成远程主机操作  
+   * prompt_toolkit           : 用于提供包括提示符功能的控制台终端的显示样式
+   * setproctitle             : Python通过setproctitle来设置进程名称，从而在多进程并发时候给调试人员以帮助
+   * urllib3                  : HTTP客户端请求操作   
+
+   * antlr4-python3-runtime   : 编译需要，用来编译生成Antlr4的Python文件
 
 利用PIP来安装：
 ```
-   pip install -U robotslacker-TestCli
+   pip install -U robotslacker-testcli
 ```
 
-安装后步骤-下载驱动程序：  
-   * 根据你的测试需要， 下载 https://github.com/robotslacker/TestCli/blob/master/TestCli/jlib/下对应的Jar包
-   * 放置jar包到 <PYTHON_HONE>/../site-packages/TestCli/jlib下
+安装后步骤-更新驱动程序配置：  
+   * 根据你的需要， 放置自己的jar包到 <PYTHON_HONE>/../site-packages/testcli/jlib下
    * github上提供的仅仅是一些测试用的Jar包，如果你有自己的需要，可以用自己的文件覆盖上述下载的文件
-
-安装后步骤-根据需要修改TestCli/conf/TestCli.ini文件：  
+   * 根据需要修改testCli/conf/testCli.ini文件：  
    * 默认情况下，这个文件不需要修改
    * 如果你需要定义自己内网的驱动程序下载服务器，你需要修改这个文件
    * 如果你需要定义自己的数据库驱动，你需要修改这个文件
@@ -331,7 +325,7 @@ sub_1.sql 2020-05-25 17:46:23       0.00        loaddriver localtest\linkoopdb-j
 sub_1.sql 2020-05-25 17:46:23       0.28        connect admin/123456  0             Scenario1
 sub_1.sql 2020-05-25 17:46:24       0.00        SET ECHO ON   0             Scenario1
 sub_1.sql 2020-05-25 17:46:24       0.00        SET TIMING ON 0             Scenario2
-sub_1.sql 2020-05-25 17:46:24       0.01        LOADSQLMAP stresstest 0             Scenario2
+sub_1.sql 2020-05-25 17:46:24       0.01        LOADCOMMANDMAP stresstest 0             Scenario2
 sub_1.sql 2020-05-25 17:46:24       0.92        ANALYZE TRUNCATE STATISTICS   0             Scenario3
 sub_1.sql 2020-05-25 17:46:25       0.02        SELECT count(SESSION_ID)  FROM INFORMATI      0             Scenario3
 sub_1.sql 2020-05-25 17:46:25       1.37        drop user testuser if exists cascade  0             Scenario3
@@ -360,7 +354,7 @@ SQL> help
 | help         | Show this help.                                     |
 | host         | 执行操作系统命令                                    |
 | loaddriver   | 加载数据库驱动文件                                  |
-| loadsqlmap   | 加载SQL映射文件                                     |
+| loadcommandMap   | 加载SQL映射文件                                     |
 | quit         | Quit.                                               |
 | session      | 数据库连接会话管理                                  |
 | set          | 设置运行时选项                                      |
@@ -546,13 +540,13 @@ SQL> loaddriver [database_name]  [jdbc_jarfile]
 ```
 
 ### 加载SQL重写配置文件
-在TestCli命令行里头，可以通过loadsqlmap命令来加载SQL重写配置文件
+在TestCli命令行里头，可以通过loadcommandMap命令来加载SQL重写配置文件
 ```
 (base) TestCli 
 SQL*Cli Release 0.0.31
-SQL> loadsqlmap map1
+SQL> loadcommandMap map1
 Mapping file loaded.
-这里的map1表示一个重写配置文件，这里可以写多个配置文件的名字，比如loadsqlmap map1,map2,map3，多个文件名之间用逗号分隔
+这里的map1表示一个重写配置文件，这里可以写多个配置文件的名字，比如loadcommandMap map1,map2,map3，多个文件名之间用逗号分隔
 
 重写文件的查找顺序：
    1.  以map1为例子，如果map1是一个全路径或者基于当前目录的相对目录，则以全路径或相对目录为准。这时候参数应该带有后缀
@@ -560,9 +554,9 @@ Mapping file loaded.
    同时存在多个配置的情况下，配置会被叠加
 
 启用SQL重写的方法：
-   1.   在命令行里面，通过TestCli --sqlmap map1的方式来执行重写文件的位置
-   2.   定义在系统环境变量TestCli_SQLMAPPING中指定。 如果定义了命令行参数，则系统环境变量不生效
-   3.   通过在SQL输入窗口，输入loadsqlmap的方式来指定
+   1.   在命令行里面，通过TestCli --commandMap map1的方式来执行重写文件的位置
+   2.   定义在系统环境变量TestCli_COMMANDMAPPING中指定。 如果定义了命令行参数，则系统环境变量不生效
+   3.   通过在SQL输入窗口，输入loadcommandMap的方式来指定
 
 重写文件的写法要求：
    以下是一个重写文件的典型格式， 1，2，3，4，5 是文件的行号，不是真实内容：
@@ -909,7 +903,7 @@ Mapping file loaded.
 &emsp; &emsp; 13. SQLREWRITE  
 ```
     控制是否启用SQL重写，默认是ON。
-    当设置为OFF的时候，无论运行是否指定了SQLMAP，映射都不会工作
+    当设置为OFF的时候，无论运行是否指定了COMMANDMAP，映射都不会工作
 ```
 #### 控制参数解释-SQL_EXECUTE
 &emsp; &emsp; 14. SQL_EXECUTE  
@@ -1732,7 +1726,7 @@ SQL> __internal__ job timer slave_finished;
     logon=None,                             # 默认登录信息，None表示不需要
     logfilename=None,                       # 程序输出文件名，None表示不需要
     sqlscript=None,                         # 脚本文件名，None表示不需要
-    sqlmap=None,                            # SQL映射文件名，None表示不需要
+    commandMap=None,                            # SQL映射文件名，None表示不需要
     nologo=False,                           # 是否不打印登陆时的Logo信息，True的时候不打印
     breakwitherror=False,                   # 遇到SQL错误，是否立刻退出
     sqlperf=None,                           # SQL审计文件输出名，None表示不需要
@@ -1752,7 +1746,7 @@ SQL> __internal__ job timer slave_finished;
         logfilename=[log FileName],                          -- 日志文件名
         logon=[Login User/Login Password|None],              -- 登录用户名/密码， 可以为None，为None的时候后续的脚本中必须包含连接信息，默认为None
         sqlscript=[SQL Script FileName],                     -- SQL脚本名称，必须填写
-        sqlmap=[SQL Mapping FileName | None],                -- 默认为None
+        commandMap=[SQL Mapping FileName | None],                -- 默认为None
         nologo=True|False,                                   -- 默认为False
         sqlperf=[SQL Performence Log FileName | None],       -- 默认为None
         clientcharset=[client charset | UTF-8],              -- 客户端字符集，默认为UTF-8

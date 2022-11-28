@@ -1,30 +1,30 @@
-connect /mem
-session show;
+_connect /mem
+_session show;
 
 create table aaa (id int);
 insert into aaa values(10);
 select * from aaa;
 
-session save session1;
+_session save session1;
 
-connect /mem
+_connect /mem
 create table aaa (id int);
 insert into aaa values(20);
 select * from aaa;
 
-session save session2;
+_session save session2;
 
-session show;
+_session show;
 
-session restore session1;
+_session restore session1;
 select * from aaa;
-session restore session2;
+_session restore session2;
 select * from aaa;
 
-session release session1;
-session release session2;
+_session release session1;
+_session release session2;
 
-session show;
+_session show;
 select * from aaa;
 
 

@@ -5,15 +5,26 @@ import unittest
 import os
 import jpype
 import tempfile
+import uvicorn
 from testcli.sqlparse import SQLAnalyze
 from testcli.apiparse import APIAnalyze
 from testcli.compare import POSIXCompare
 from testcli.sqlclijdbc import connect as jdbcconnect
+from testcli.test.testmockserver import startMockServer
+from testcli.test.testmockserver import stopMockServer
 
 
 class TestSynatx(unittest.TestCase):
+    # @classmethod
+    # def setUpClass(cls):
+    #     startMockServer()
+    #
+    # @classmethod
+    # def tearDownClass(cls):
+    #     stopMockServer()
+
     def test_SQLAnalyze_NullString(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("")
         self.assertTrue(isFinished)
         self.assertIsNone(ret_CommandSplitResult)
@@ -21,24 +32,24 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_ConnectLocalMem(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("connect /mem")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect /mem")
         self.assertTrue(isFinished)
         self.assertEqual({'localService': 'mem', 'name': 'CONNECT'}, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_ConnectLocalMeta(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("connect /metadata")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect /metadata")
         self.assertTrue(isFinished)
         self.assertEqual({'localService': 'metadata', 'name': 'CONNECT'}, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_ConnectWithoutServer(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("connect admin/123456")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect admin/123456")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'CONNECT',
                           'password': '123456',
@@ -48,8 +59,8 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_ConnectOracle8(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("connect \"工具人1号\"/123456@jdbc:oracle:thin://192.168.1.72:1521:xe")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect \"工具人1号\"/123456@jdbc:oracle:thin://192.168.1.72:1521:xe")
         self.assertTrue(isFinished)
         self.assertEqual({'driver': 'jdbc',
                           'driverSchema': 'oracle',
@@ -65,8 +76,8 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_ConnectOracle11(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("connect system/123456@jdbc:oracle:thin://192.168.1.72:1521/xe")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect system/123456@jdbc:oracle:thin://192.168.1.72:1521/xe")
         self.assertTrue(isFinished)
         self.assertEqual({'driver': 'jdbc',
                           'driverSchema': 'oracle',
@@ -81,8 +92,8 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_ConnectTeradata(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("connect testdblink/testdblink@jdbc:teradata://192.168.1.136/testbase")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect testdblink/testdblink@jdbc:teradata://192.168.1.136/testbase")
         self.assertTrue(isFinished)
         self.assertEqual({'driver': 'jdbc',
                           'driverSchema': 'teradata',
@@ -95,8 +106,8 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_ConnectH2Mem(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("connect sa/sa@jdbc:h2tcp:tcp://127.0.0.1:19091/mem:test")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect sa/sa@jdbc:h2tcp:tcp://127.0.0.1:19091/mem:test")
         self.assertTrue(isFinished)
         self.assertEqual({'driver': 'jdbc',
                           'driverSchema': 'h2tcp',
@@ -111,14 +122,14 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_Load(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_load plugin aaa")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'LOAD', 'option': 'PLUGIN', 'pluginFile': 'aaa'}, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_load driver oracle 'd:\\temp\\aa.txt' ")
         self.assertTrue(isFinished)
         self.assertEqual(
@@ -132,7 +143,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_load map '/abcd/efg/aa.txt' ")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'LOAD', 'option': 'MAP', 'mapFile': '/abcd/efg/aa.txt'}, ret_CommandSplitResult)
@@ -140,8 +151,16 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_ExitWithCode(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("exit 3")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_exit 3")
+        self.assertTrue(isFinished)
+        self.assertEqual({'name': 'EXIT',
+                          'exitValue': 3}, ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = APIAnalyze("_exit 3")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'EXIT',
                           'exitValue': 3}, ret_CommandSplitResult)
@@ -149,8 +168,8 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_ExitWithoutCode(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("exit ")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_exit ")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'EXIT',
                           'exitValue': 0}, ret_CommandSplitResult)
@@ -158,8 +177,8 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_QuitWithCode(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("quit 3")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_quit 3")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'QUIT',
                           'exitValue': 3}, ret_CommandSplitResult)
@@ -167,8 +186,8 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_QuitWithoutCode(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("quit ")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_quit ")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'QUIT',
                           'exitValue': 0}, ret_CommandSplitResult)
@@ -176,23 +195,23 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_Disconnect(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("disconnect")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_disconnect")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'DISCONNECT'}, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_Assert(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("Assert {% assert expresssion %}")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_Assert {% assert expresssion %}")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'ASSERT', 'expression': ' assert expresssion '}, ret_CommandSplitResult)
         self.assertEqual(None, ret_errorMsg)
         self.assertEqual(0, ret_errorCode)
 
     def test_SQLAnalyze_Set(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_set")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'SET', 'scope': 'local'}, ret_CommandSplitResult)
@@ -200,7 +219,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_SetVariable(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_set @aa bbb")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'SET',
@@ -211,7 +230,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_Set2Parameter(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_set XX YY")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'SET',
@@ -222,7 +241,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_Set3Parameter(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_set ZZ DD FF")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'SET',
@@ -234,22 +253,22 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_Sleep(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("sleep 3")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_sleep 3")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'SLEEP', 'sleepTime': 3}, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_CommitAndRollback(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("commit")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'COMMIT', 'statement': 'commit'}, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("rollback")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'ROLLBACK', 'statement': 'rollback'}, ret_CommandSplitResult)
@@ -261,8 +280,8 @@ class TestSynatx(unittest.TestCase):
                          "bbb" + "\n" + \
                          "-- fasdfads" + "\n" + \
                          "# fdsfdasfdsafdsa"
-        strEcho = "echo aa.txt \n" + strEchoContent + "\n" + "echo off"
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        strEcho = "_echo aa.txt \n" + strEchoContent + "\n" + "echo off"
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze(strEcho)
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'ECHO',
@@ -273,7 +292,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_Select(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("Select 1+2 from dual;")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'SELECT',
@@ -283,7 +302,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_SelectNotFinish(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("Select 1+2 from dual")
         self.assertFalse(isFinished)
         self.assertEqual('SELECT', ret_CommandSplitResult["name"])
@@ -291,7 +310,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual("missing SQL_END at '<EOF>'", ret_errorMsg)
 
     def test_SQLAnalyze_SelectWithSlash(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("Select 1+2 from dual\n/")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'SELECT', 'statement': 'Select 1+2 from dual'}, ret_CommandSplitResult)
@@ -299,39 +318,39 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_SelectMultiLine(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("Select 1+2,\n 3+4 \n from dual\n/")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'SELECT', 'statement': 'Select 1+2,\n 3+4 \n from dual'}, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-    def test_SQLAnalyze_USERAPI(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("use api")
+    def test_SQLAnalyze_USEAPI(self):
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_use api")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'USE', 'nameSpace': 'API'}, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-    def test_SQLAnalyze_USERSQL(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("use sql")
+    def test_SQLAnalyze_USESQL(self):
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_use sql")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'USE', 'nameSpace': 'SQL'}, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-    def test_SQLAnalyze_USERXXX(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("use XXX")
+    def test_SQLAnalyze_USEXXX(self):
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_use XXX")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'USE', 'nameSpace': None}, ret_CommandSplitResult)
         self.assertEqual(1, ret_errorCode)
-        self.assertEqual("line1:4  mismatched input 'XXX' expecting {'API', 'SQL'}", ret_errorMsg.strip())
+        self.assertEqual("line1:8  missing {'API', 'SQL'} at '<EOF>'", ret_errorMsg.strip())
 
     def test_SQLAnalyze_CreateProcedure(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("Create Procedure proc \n test ..;\n/")
         self.assertTrue(isFinished)
         self.assertEqual(
@@ -341,7 +360,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_Start(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_start c:\\abcd\\defg.sql")
         self.assertTrue(isFinished)
         self.assertEqual(
@@ -351,7 +370,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_StartMultiFiles(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_start c:\\abcd\\defg.sql,c:\\abcd\\xxxx.sql")
         self.assertTrue(isFinished)
         self.assertEqual(
@@ -369,7 +388,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_StartWithLoop(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_start c:\\abcd\\defg.sql LOOP 5")
         self.assertTrue(isFinished)
         self.assertEqual(
@@ -386,7 +405,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_Declare(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("Declare Begin xxx \n end;\n/")
         self.assertTrue(isFinished)
         self.assertEqual(
@@ -396,7 +415,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_Begin(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("Begin xxx \n end;\n/")
         self.assertTrue(isFinished)
         self.assertEqual(
@@ -406,8 +425,8 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_Spool(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("Spool aa.txt")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_Spool aa.txt")
         self.assertTrue(isFinished)
         self.assertEqual(
             {'file': 'aa.txt', 'name': 'SPOOL'},
@@ -415,8 +434,8 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("Spool off")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_Spool off")
         self.assertTrue(isFinished)
         self.assertEqual(
             {'file': 'off', 'name': 'SPOOL'},
@@ -428,7 +447,7 @@ class TestSynatx(unittest.TestCase):
         scriptHeader = "> {%\n"
         script = "Hello World"
         scriptEnd = "\n%}\n"
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze(scriptHeader + script + scriptEnd)
         self.assertTrue(isFinished)
         self.assertEqual(
@@ -440,7 +459,7 @@ class TestSynatx(unittest.TestCase):
         scriptHeader = "> {% "
         script = "i=i+1"
         scriptEnd = " %}\n"
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze(scriptHeader + script + scriptEnd)
         self.assertTrue(isFinished)
         self.assertEqual(
@@ -450,8 +469,8 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_Session(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("Session save xxx")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_Session save xxx")
         self.assertTrue(isFinished)
         self.assertEqual(
             {'action': 'SAVE', 'name': 'SESSION', 'sessionName': 'xxx'},
@@ -459,8 +478,8 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("Session release xxx")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_Session release xxx")
         self.assertTrue(isFinished)
         self.assertEqual(
             {'action': 'RELEASE', 'name': 'SESSION', 'sessionName': 'xxx'},
@@ -468,8 +487,8 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("Session restore xxx")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_Session restore xxx")
         self.assertTrue(isFinished)
         self.assertEqual(
             {'action': 'RESTORE', 'name': 'SESSION', 'sessionName': 'xxx'},
@@ -477,8 +496,8 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("Session saveurl xxx")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_Session saveurl xxx")
         self.assertTrue(isFinished)
         self.assertEqual(
             {'action': 'SAVEURL', 'name': 'SESSION', 'sessionName': 'xxx'},
@@ -486,8 +505,8 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("Session show xxx")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_Session show xxx")
         self.assertTrue(isFinished)
         self.assertEqual(
             {'action': 'SHOW', 'name': 'SESSION', 'sessionName': 'xxx'},
@@ -495,21 +514,21 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("Session yyy xxx")
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_Session yyy xxx")
         self.assertTrue(isFinished)
         self.assertEqual(
             {'action': '', 'name': 'SESSION', 'sessionName': 'yyy'},
             ret_CommandSplitResult)
         self.assertEqual(1, ret_errorCode)
-        self.assertEqual("line1:12  extraneous input 'xxx' expecting <EOF> ", ret_errorMsg)
+        self.assertEqual("line1:13  extraneous input 'xxx' expecting <EOF> ", ret_errorMsg)
 
     def test_SQLAnalyze_Host(self):
         script = '"""' + "\n" + \
                  'help' + "\n" + \
                  'dir' + "\n" + \
                  '"""'
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_HOST " + script)
         self.assertEqual(None, ret_errorMsg)
         self.assertEqual(0, ret_errorCode)
@@ -522,28 +541,28 @@ class TestSynatx(unittest.TestCase):
             ret_CommandSplitResult)
 
     def test_SQLAnalyze_Loop(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_LOOP END")
         self.assertEqual(None, ret_errorMsg)
         self.assertEqual(0, ret_errorCode)
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'LOOP', 'rule': 'END'}, ret_CommandSplitResult)
 
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_LOOP BREAK")
         self.assertEqual(None, ret_errorMsg)
         self.assertEqual(0, ret_errorCode)
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'LOOP', 'rule': 'BREAK'}, ret_CommandSplitResult)
 
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_LOOP CONTINUE")
         self.assertEqual(None, ret_errorMsg)
         self.assertEqual(0, ret_errorCode)
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'LOOP', 'rule': 'CONTINUE'}, ret_CommandSplitResult)
 
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_LOOP BEGIN UNTIL {% i>=3 %}")
         self.assertEqual(None, ret_errorMsg)
         self.assertEqual(0, ret_errorCode)
@@ -553,14 +572,14 @@ class TestSynatx(unittest.TestCase):
             ret_CommandSplitResult)
 
     def test_SQLAnalyze_Whenever(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_WHENEVER ERROR CONTINUE")
         self.assertEqual(None, ret_errorMsg)
         self.assertEqual(0, ret_errorCode)
         self.assertTrue(isFinished)
         self.assertEqual({'action': 'continue', 'condition': 'error', 'name': 'WHENEVER'}, ret_CommandSplitResult)
 
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_WHENEVER ERROR EXIT")
         self.assertEqual(None, ret_errorMsg)
         self.assertEqual(0, ret_errorCode)
@@ -568,14 +587,14 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual({'action': 'exit', 'condition': 'error', 'name': 'WHENEVER'}, ret_CommandSplitResult)
 
     def test_SQLAnalyze_If(self):
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_ENDIF")
         self.assertEqual(None, ret_errorMsg)
         self.assertEqual(0, ret_errorCode)
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'ENDIF'}, ret_CommandSplitResult)
 
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_IF {% aa=bb %}")
         self.assertEqual(None, ret_errorMsg)
         self.assertEqual(0, ret_errorCode)
@@ -795,6 +814,38 @@ class TestSynatx(unittest.TestCase):
                     print(line)
         self.assertTrue(compareResult)
 
+    def test_SQLLoadPlugin(self):
+        scriptFile = "testplugin.sql"
+
+        scriptBaseFile = os.path.splitext(scriptFile)[0]
+        fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
+        fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
+        fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
+
+        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        from testcli.testcli import TestCli
+        testcli = TestCli(
+            logfilename=fullLogFile,
+            HeadlessMode=True,
+            nologo=True,
+            script=fullScriptFile
+        )
+        retValue = testcli.run_cli()
+        self.assertEqual(0, retValue)
+
+        # 对文件进行比对，判断返回结果是否吻合
+        compareHandler = POSIXCompare()
+        compareResult, compareReport = compareHandler.compare_text_files(
+            file1=fullLogFile,
+            file2=fullRefFile,
+            CompareIgnoreTailOrHeadBlank=True
+        )
+        if not compareResult:
+            for line in compareReport:
+                if line.startswith("-") or line.startswith("+"):
+                    print(line)
+        self.assertTrue(compareResult)
+
     def test_APIAnalyze_MultiPart(self):
         scriptFile = "testapisynatx-multipart.api"
 
@@ -807,7 +858,7 @@ class TestSynatx(unittest.TestCase):
         script = "".join(scriptFileHandler.readlines())
         scriptFileHandler.close()
 
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = APIAnalyze(script)
         self.assertTrue(isFinished)
         self.assertEqual(0, ret_errorCode)
@@ -847,11 +898,11 @@ class TestSynatx(unittest.TestCase):
         script = "".join(scriptFileHandler.readlines())
         scriptFileHandler.close()
 
-        (isFinished, ret_CommandSplitResult, _, _, ret_errorCode, ret_errorMsg) \
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = APIAnalyze(script)
-        self.assertTrue(isFinished)
-        self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
 
         data = json.dumps(obj=ret_CommandSplitResult,
                           sort_keys=True,
