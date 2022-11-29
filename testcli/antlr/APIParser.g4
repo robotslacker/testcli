@@ -15,23 +15,6 @@ command:
       | EOF
       ;
 
-singleExpression
-        : (String 
-        | DOT 
-        | SLASH 
-        | BRACKET_OPEN 
-        | BRACKET_CLOSE
-        | ESCAPE
-        | SQUARE_OPEN 
-        | SQUARE_CLOSE 
-        | DOUBLE_QUOTE 
-        | SINGLE_QUOTE )
-        ;
-
-expression
-        : (singleExpression )+
-        ;
-
 /**
  * 17: API语句
  * HTTP 请求

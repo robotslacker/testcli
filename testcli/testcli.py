@@ -31,13 +31,12 @@ from .sqlclijdbc import SQLCliJDBCException
 
 from .cmdexecute import CmdExecute
 from .cmdmapping import CmdMapping
-from .testwrapper import TestWrapper
 from .hdfswrapper import HDFSWrapper
 from .sshwrapper import SshWrapper
 from .testcliexception import TestCliException
 from .testclimeta import TestCliMeta
-from .sqlclijobmanager import JOBManager
-from .sqlclitransactionmanager import TransactionManager
+from .testclijobmanager import JOBManager
+from .testclitransactionmanager import TransactionManager
 from .datawrapper import DataWrapper
 from .testoption import TestOptions
 from .__init__ import __version__
@@ -96,7 +95,6 @@ class TestCli(object):
         self.cmdExecuteHandler = CmdExecute()           # 函数句柄，具体来执行语句
         self.httpHandler = urllib3.PoolManager()        # Http请求线程池，用于处理API请求
         self.testOptions = TestOptions()                # 程序运行中各种参数
-        self.TestHandler = TestWrapper()                # 测试管理
         self.HdfsHandler = HDFSWrapper()                # HDFS文件操作
         self.JobHandler = JOBManager()                  # 并发任务管理器
         self.TransactionHandler = TransactionManager()  # 事务管理器
@@ -211,7 +209,6 @@ class TestCli(object):
         self.cmdExecuteHandler.workerName = self.WorkerName
         self.cmdExecuteHandler.cmdMappingHandler = self.cmdMappingHandler
 
-        self.TestHandler.SQLOptions = self.testOptions
         self.DataHandler.SQLOptions = self.testOptions
 
         # 设置WHENEVER_SQLERROR

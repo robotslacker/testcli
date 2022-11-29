@@ -1,7 +1,0 @@
-JPype1
-setproctitle
-urllib3
-click
-prompt_toolkit
-paramiko
-antlr4-python3-runtime

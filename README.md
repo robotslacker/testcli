@@ -1613,265 +1613,172 @@ SQL> do some sql
 SQL> __internal__ job timer slave_finished;
 ```
 
+***  
+#### 脚本中使用ECHO来生成简易的文件
+
 ***
-#### 后台执行脚本在主程序退出时候的影响
-如果当前有后台程序运行：  
-1： 控制台应用：EXIT将不会退出，而是会提示你需要等待后台进程完成工作  
-2： 脚本应用：  EXIT不会直接退出，而是会等待后台进程完成工作后再退出  
+#### 程序退出
+如果你执行一个脚本，则在以下三种情况下会退出
+1. 脚本执行失败。并且设置_WHENEVER ERROR EXIT <INT>的时候。退出的值将是这里的<INT>值
+2. 脚本执行结束。退出值为0
+3. 脚本中包含了_EXIT <INT>或者_QUIT <INT>语句。退出的值将是这里的<INT>值, 如果不填写，将为0
 
-#### 将TestCli启动为服务器C/S模式中的服务器
-```
-   OS> TestCli --server [Port]
-   此处的Port为一个合法有效的端口号，启动后，TestCli会绑定这个端口号，并接受客户端请求 
-```
+如果你在命令行中执行，则只有下面情况下会退出
+1. 输入了_EXIT <INT>或者_QUIT <INT>语句。退出的值将是这里的<INT>值, 如果不填写，将为0
 
-#### 将TestCli启动为服务器C/S模式中的客户端
-```
-   OS> SET TestCli_REMOTESERVER XXX.XXXX.XXXX.XXXX:PORT
-   OS> TestCli
-   这里的IP和Port为服务器的地址， 指定后，随后执行的语句和本地的Standalone模式完全相同
- 
-```
+如果当前有后台程序(通过JOBManager启动的)运行：  
+1： 控制台应用：_EXIT将不会直接退出，而是会提示你需要等待后台进程完成工作  
+2： 脚本中应用：_EXIT将不会直接退出，而是会等待后台进程完成工作后再退出
+3： 控制台应用：_QUIT将会直接退出，无论是否有后台进程在工作  
+4： 脚本中应用：_QUIT将会直接退出，无论是否有后台进程在工作
 
-### 程序员必读部分
+***
+## 程序员必读部分
+
 #### 程序代码结构
 ```
----------- TestCli
---------------- __init__.py                   # 包标识文件，用来记录版本信息
---------------- commandanalyze.py             # 对用户或者脚本输入的命令进行判断，判断是否需要后续解析，或者执行内部命令
---------------- datawrapper.py                # 程序中对测试数据文件的相关支持
---------------- testwrapper.py                # 程序中对测试命令的相关支持
---------------- kafkawrapper.py               # 程序中对kafka操作的相关支持
---------------- hdfswrapper.py                # 程序中对HDFS文件操作的相关支持
---------------- main.py                       # 主程序，命令行控制界面，参数输入控制
---------------- TestCli.py                     # 主程序
---------------- TestCliexception.py            # 自定义程序异常类
---------------- TestClijdbcapi.py              # 数据库操作封装，JDBC模式
---------------- TestCliodbcapi.py              # 数据库操作封装，ODBC模式，这里只是一个封装，用来完成编译器检测，具体实现逻辑在odbc目录
---------------- TestClitransactionmanager.py   # 后台作业中的业务统计管理
---------------- TestClijobmanager.py           # 后台作业管理实现
---------------- sqlexecute.py                 # 程序主要逻辑文件，具体执行SQL语句
---------------- sqlinternal.py                # 执行internal命令
---------------- sqloption.py                  # 程序运行参数显示及控制实现
---------------- sqlparse.py                   # 用来解析SQL语句，判断注释部分，语句的分段、分行等
---------------- sqlremoteserver.py            # 用来支持TestCli作为一个远程服务器启动时的相关支持
----------- setup.py                           # Python打包发布程序
----------- setup.cfg                          # Python打包发布程序配置
----------- README.md                          # 应用程序说明
----------- conf                               # 配置文件目录
---------------  TestCli.conf                   # 程序配置文件
----------- profile                            # 程序初始化脚本存放目录
---------------  default                       # 默认的程序初始化脚本
----------- jlib                               # 应用程序连接数据库需要的各种jar包
---------------  Dm7JdbcDriver17.jar
---------------  gbase-connector-java-8.3-bin.jar
---------------  hadoop-common-2.7.2.jar
---------------  hive-jdbc-1.2.2-standalone.jar
---------------  kingbasejdbc4.jar
---------------  linkoopdb-jdbc-3.0.0.jar
---------------  mysql-connector-java-8.0.20.jar
---------------  ojdbc8.jar
---------------  oscarJDBC.jar
---------------  postgresql-42.2.12.jar
---------------  sqljdbc42.jar
---------------  tdgssconfig.jar
---------------  terajdbc4.jar
---------------  xxxx1.jar                 
---------------  xxxx2.jar        
----------- odbc                               # ODBC代码C语言封装
---------------  ceoApiTypes.c
---------------  ceoConnection.c
---------------  ceoCursor.c
---------------  ceoDbType.c
---------------  ceoError.c
---------------  ceoModule.c
---------------  ceoModule.h
---------------  ceoTransform.c
---------------  ceoUtils.c
---------------  ceoVar.c
---------------  CMakeLists.txt
----------- .gitignore                         # git控制文件
----------- uploadpypi.bat                     # windows平台下用来向pypi更新安装包的相关命令
----------- uploadpypi.sh                      # Linux平台下用来向pypi更新安装包的相关命令
----------- .vscode                            # Visual Stuio Code 工程配置目录
---------------  launch.json                   # Visual Stuio Code 工程启动文件
+TestCli
+│  LICENSE.txt                                        # 许可信息描述，没啥不许可的，Github非要提供一个
+│  README.md                                          # 本说明文档
+│  setup.py                                           # 打包配置
+│  uploadpypi.bat                                     # 上传当前发布包到Pypi网站
+│
+└─testcli
+    │  apiparse.py                                    # API语句解析，将Antlr访问结果转为Object
+    │  apivisitor.py                                  # Antlr访问脚本，用来描述APIParser叶子节点行为
+    │  cmdexecute.py                                  # 根据解析结果，执行相关语句
+    │  cmdmapping.py                                  # 脚本映射关系，将脚本内容在执行前根据需要进行改写
+    │  compare.py                                     # 公用方法，完成文件差异化比对，提供LCS以及MYES算法
+    │  datawrapper.py                                 # 业务实现。用来完成随机数据的生成
+    │  global_var.py                                  # 全局变量，其中定义内置脚本的命名空间，程序最后一次执行结果等
+    │  hdfswrapper.py                                 # 业务实现。用来完成HDFS数据操作
+    │  main.py                                        # 主程序入口。只能用模块的方式启动
+    │  sqlclijdbc.py                                  # 业务实现。通过JDBC的方式来实现SQL操作
+    │  sqlparse.py                                    # SQL语句解析，将Antlr访问结果转为Object
+    │  sqlvisitor.py                                  # Antlr访问脚本，用来描述SQLParser叶子节点行为
+    │  sshwrapper.py                                  # 业务实现。用来完成远程SSH操作
+    │  testcli.py                                     # 主程序。处理命令行输入信息，根据脚本调用不同的业务实现
+    │  testcliexception.py                            # 例外程序定义
+    │  testclijobmanager.py                           # 并发任务，任务调度管理
+    │  testclimeta.py                                 # 并发业务，数据字典信息
+    │  testclitransactionmanager.py                   # 并发业务，交易事务管理
+    │  testoption.py                                  # 程序运行选项配置
+    │  __init__.py                                    # 模块声明
+    │  
+    ├─antlr
+    │      antlr-4.11.1-complete.jar                  # Antlr编译开发依赖。非运行需要
+    │      APILexer.g4                                # API词法定义，继承来自Base
+    │      APIParser.g4                               # API语法解析，继承来自Base
+    │      BaseLexer.g4                               # 基本词法定义
+    │      BaseParser.g4                              # 基础语法解析
+    │      generate.bat                               # 辅助工具，编译g4文件，生成antlrgen下文件，非运行需要
+    │      SQLLexer.g4                                # SQL词法定义，继承来自Base
+    │      SQLParser.g4                               # SQL语法解析，继承来自Base
+    │      
+    ├─antlrgen                                        # 该目录下所有文件均为Antlr自动生成，不能自行编辑，无说明
+    │  │  APILexer.interp
+    │  │  APILexer.py
+    │  │  APILexer.tokens
+    │  │  APIParser.interp
+    │  │  APIParser.py
+    │  │  APIParser.tokens
+    │  │  APIParserVisitor.py
+    │  │  SQLLexer.interp
+    │  │  SQLLexer.py
+    │  │  SQLLexer.tokens
+    │  │  SQLParser.interp
+    │  │  SQLParser.py
+    │  │  SQLParser.tokens
+    │  │  SQLParserVisitor.py
+    │  │  __init__.py
+    │  │  
+    ├─commands
+    │  │  assertExpression.py                         # 命令实现。 ASSERT语句
+    │  │  cliSleep.py                                 # 命令实现。 SLEEP语句
+    │  │  embeddScript.py                             # 命令实现。 {% %} 内置脚本语句
+    │  │  exit.py                                     # 命令实现。 EXIT|QUIT语句
+    │  │  host.py                                     # 命令实现。 HOST语句
+    │  │  load.py                                     # 命令实现。 LOAD语句
+    │  │  session.py                                  # 命令实现。 SESSION语句
+    │  │  setOptions.py                               # 命令实现。 SET语句
+    │  │  __init__.py
+    │  │  
+    ├─conf
+    │      testcli.ini                                # 配置文件，用来记录SQL驱动程序的驱动信息
+    │      
+    ├─docs
+    │      PyCharm运行配置.png                         # IDE环境配置说明。非运行需要
+    │      
+    ├─jlib
+    │      Dm7JdbcDriver17.jar                        # 达梦数据库驱动程序。非运行必须
+    │      gbase-connector-java-8.3-bin.jar           # gbase数据库驱动程序。非运行必须
+    │      h2-1.4.200.jar                             # H2数据库驱动程序。非运行必须。但是运行JOB管理必须
+    │      hadoop-common-2.7.2.jar                    # HIVE数据库驱动附属程序。非运行必须。
+    │      hive-jdbc-1.2.2-standalone.jar             # HIVE数据库驱动程序。非运行必须。
+    │      kingbase8.jar                              # 人大金仓kingbase数据库驱动程序。非运行必须。
+    │      kingbasejdbc4.jar                          # 人大金仓kingbase 8数据库驱动程序。非运行必须。
+    │      linkoopdb-jdbc-4.0.0.jar                   # Zettabase数据库驱动程序。非运行必须。
+    │      mssql-jdbc-9.2.0.jre8.jar                  # 微软SQLServer数据库驱动程序。非运行必须。
+    │      mysql-connector-java-8.0.20.jar            # MYSQL数据库驱动程序。非运行必须。
+    │      ojdbc8.jar                                 # Oracle数据库驱动程序。非运行必须。
+    │      oscarJDBC.jar                              # 神州oscar数据库驱动程序。非运行必须。
+    │      postgresql-42.2.12.jar                     # Postgresql数据库驱动程序。非运行必须。
+    │      protobuf-java-3.15.6.jar                   # HIVE数据库驱动附属程序。非运行必须。
+    │      Qcubic.jar                                 # 快立方数据库驱动程序。非运行必须。
+    │      README                                     # 驱动简要说明。非运行必须。
+    │      snowflake-jdbc-3.9.2.jar                   # SnowFlake数据库驱动程序。非运行必须。
+    │      tdgssconfig.jar                            # TD数据库驱动附属程序。非运行必须。
+    │      terajdbc4.jar                              # TD数据库驱动程序。非运行必须。
+    │      trino-jdbc-366.jar                         # Trino数据库驱动程序。非运行必须。
+    │      vertica-jdbc-9.3.1-0.jar                   # vertica数据库驱动程序。非运行必须。
+    │      xdb.jar                                    # Oracle数据库驱动附属程序（针对XMLType类型）。非运行必须。
+    │      xmlparserv2.jar                            # Oracle数据库驱动附属程序（针对XMLType类型）。非运行必须。
+    │      
+    ├─profile
+    │      default                                    # 程序默认初始化执行脚本
+    │      
+    ├─test                                            # 测试程序目录，非运行必须。
+    │  │  pytest.ini                                  # unittest测试程序配置
+    │  │  testapisynatx-get.api                       # 测试用例。 语法解析->API HTTP_GET. API脚本
+    │  │  testapisynatx-get.ref                       # 测试用例。 语法解析->API HTTP_GET. 脚本执行结果比对
+    │  │  testapisynatx-multipart.api                 # 测试用例。 语法解析->API MultiPart. API脚本
+    │  │  testapisynatx-multipart.ref                 # 测试用例。 语法解析->API MultiPart. 脚本执行结果比对
+    │  │  testcliunittest.py                          # 单元测试主程序
+    │  │  testmockserver.py                           # 本地模拟HTTP Server程序，用来完成API测试
+    │  │  testplugin.py
+    │  │  testplugin.ref
+    │  │  testplugin.sql
+    │  │  testsessionmanage.ref
+    │  │  testsessionmanage.sql
+    │  │  testsqlembeddscript.ref
+    │  │  testsqlembeddscript.sql
+    │  │  testsqlifandloop.ref
+    │  │  testsqlifandloop.sql
+    │  │  testsqlsanity.ref
+    │  │  testsqlsanity.sql
+    │  │  testsqlsleep.ref
+    │  │  testsqlsleep.sql
+    │  │  testsqlwithurl.ref
+    │  │  testsqlwithurl.sql
+    │  │  __init__.py
+    │  │  
+    └───────
 ```
+
 #### 线程安全性
 目前程序在设计上，是充分考虑到了线程安全性的。
 
-#### 通过Python API方式调用本应用程序
+#### 从源代码中启动应用程序
 ```
-    from TestCli.TestCli import TestCli
-
-    # 初始化环境句柄，标记屏幕上不打印任何输出信息    
-    m_TestCli = TestCli(HeadlessMode=True)
-
-    # cmdExecuteHandler.run会用yield的方式分批返回SQL执行结果    
-    for title, cur, headers, columnTypes, status in \
-            m_TestCli.cmdExecuteHandler.run("Connect ....."):
-        print(title, cur, headers, columnTypes, status)
-
-    for title, cur, headers, columnTypes, status in \
-            m_TestCli.cmdExecuteHandler.run("Select * FROM XXX"):
-        print(title, cur, headers, columnTypes, status)
-    
-    # 返回结果包含5个方面的内容 (title, rows, headers, columnTypes, status).
-    #     title       表头信息
-    #     rows        结果数据集
-    #     headers     结果集的header定义，列名信息
-    #     columnTypes 列类型，字符串格式
-    #     status       返回结果汇总消息
- 
-    # 其中TestCli初始化参数有：
-    logon=None,                             # 默认登录信息，None表示不需要
-    logfilename=None,                       # 程序输出文件名，None表示不需要
-    sqlscript=None,                         # 脚本文件名，None表示不需要
-    commandMap=None,                            # SQL映射文件名，None表示不需要
-    nologo=False,                           # 是否不打印登陆时的Logo信息，True的时候不打印
-    breakwitherror=False,                   # 遇到SQL错误，是否立刻退出
-    sqlperf=None,                           # SQL审计文件输出名，None表示不需要
-    Console=sys.stdout,                     # 控制台输出，默认为sys.stdout,即标准输出
-    HeadlessMode=False,                     # 是否为无终端模式，无终端模式下，任何屏幕信息都不会被输出
-    WorkerName='MAIN',                     # 程序别名，可用来区分不同的应用程序
-    logger=None,                            # 程序输出日志句柄
-    clientcharset='UTF-8',                 # 客户端字符集，在读取SQL文件时，采纳这个字符集，默认为UTF-8
-    resultcharset='UTF-8',                 # 输出字符集，在打印输出文件，日志的时候均采用这个字符集
-    EnableJobManager=True,                  # 是否开启后台调度程序管理模块，否则无法使用JOB类相关命令
-    profile=None                            # 程序初始化执行脚本
-```
-#### 通过本地API方式远程调用本应用程序
-```
-    from TestCli.TestCli import TestCli
-    TestCli = TestCli(
-        logfilename=[log FileName],                          -- 日志文件名
-        logon=[Login User/Login Password|None],              -- 登录用户名/密码， 可以为None，为None的时候后续的脚本中必须包含连接信息，默认为None
-        sqlscript=[SQL Script FileName],                     -- SQL脚本名称，必须填写
-        commandMap=[SQL Mapping FileName | None],                -- 默认为None
-        nologo=True|False,                                   -- 默认为False
-        sqlperf=[SQL Performence Log FileName | None],       -- 默认为None
-        clientcharset=[client charset | UTF-8],              -- 客户端字符集，默认为UTF-8
-        resultcharset=[result charset | UTF-8],              -- 结果集字符集，默认为UTF-8
-        profile=[init FileName|None]                         -- 初始化文件名称，默认为None
-    )
-    # 运行主程序
-    TestCli.run_cli()
-
+    # 进入到工程目录
+    cd testcli
+    # 进入到工程目录后，看到的文件结构应该是这样的
+    # 
 ```
 
-#### 通过RestAPI方式远程调用本应用程序
-程序支持用POST以及WebSocket方式来远程调用本程序，调用的前提是：
-```
- 
-```
-程序支持用POST以及WebSocket方式来远程调用本程序，调用的方式是：  
-登录：
-```
-    request_data = json.dumps({})
-    headers = {'Content-Type': 'application/json', 'accept': 'application/json'}
-    ret = requests.post("http://TestCli_REMOTESERVER:PORT/DoLogin",
-                        data=request_data,
-                        headers=headers)
-
-    返回的结果为：
-    {
-        "ret":  -1,
-        "message":  错误消息
-    }
-    或者:
-    {
-        "ret":  0,
-        "clientid":  客户端ID标识
-    }
-```
-执行语句：
-```
-        def show_result(p_result):
-            '''
-            返回的结果可能是多种类型，处理的时候需要根据type的结果来判断具体的数据格式：
-            SQL解析结果：
-            {
-                "type": "parse",
-                "rawCommand": "原始命令语句",
-                "formattedCommand": "被排版后的命令语句（包含注释信息）",
-                "rewrotedCommand": "被改写后的命令语句（已经被排版过），如果不存在改写，则不存在",
-                "script"："Command当前执行的脚本名称"
-            }
-            SQL执行结果：
-            {
-                "type": "result",
-                "title": "表头信息",
-                "rows": "结果数据集",
-                "headers": "结果集的header定义，列名信息",
-                "columnTypes": "列类型，字符串格式",
-                "status": "返回结果汇总消息"
-            }
-            SQL错误信息：
-            {
-                "type": "error",
-                "message": "错误描述"
-            }
-            SQL回显信息：
-            {
-                "type": "error",
-                "message": "错误描述",
-                "script"："SQL当前执行的脚本名称"
-            }
-            '''
-        async def test_ws_quote():
-            async with websockets.connect("ws://" + os.environ["TestCli_REMOTESERVER"] + "/DoCommand") \
-                    as websocket:
-                request_data = json.dumps(
-                    {
-                        'clientid': str(self.ClientID),
-                        'op': 'execute',
-                        'command': str(text)
-                    })
-                await websocket.send(request_data)
-                while True:
-                    try:
-                        ret = await websocket.recv()
-                        result = json.loads(ret)
-                        show_result(result)
-                        )
-                    except websockets.ConnectionClosedOK:
-                        return
-        asyncio.get_event_loop().run_until_complete(test_ws_quote())
-    result = run_remote()
-```
-退出：
-```
-    request_data = json.dumps(
-        {
-            "clientid": self.ClientID
-        })
-    headers = {'Content-Type': 'application/json', 'accept': 'application/json'}
-    ret = requests.post("http://TestCli_REMOTESERVER:PORT/DoLogout",
-                        data=request_data,
-                        headers=headers)
-    返回的结果为：
-    {
-        "ret":  -1,
-        "message":  错误消息
-    }
-    或者:
-    {
-        "ret":  0,
-    }
-
-```
 #### 程序调试
 ```
-   SQL> set DEBUG ON
+   SQL> _set DEBUG ON
    打开DEBUG后，程序将会输出大量的调试信息，以及错误发生时的堆栈信息
 
-```
-
-
-#### 已知问题
-```
-在Python3.7以及以上的版本中，会出现ttypes的导入错误  
-这是由于Hbase的相关程序不支持Python3.7以及以上版本  
-需要：
-下载https://github.com/data-infra/infrastructure/tree/master/hbase中内容，
-替换本地site-packages/hbase/Hbase.py和ttypes.py
 ```

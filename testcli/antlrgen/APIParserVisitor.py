@@ -19,16 +19,6 @@ class APIParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by APIParser#singleExpression.
-    def visitSingleExpression(self, ctx:APIParser.SingleExpressionContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by APIParser#expression.
-    def visitExpression(self, ctx:APIParser.ExpressionContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by APIParser#http.
     def visitHttp(self, ctx:APIParser.HttpContext):
         return self.visitChildren(ctx)

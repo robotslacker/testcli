@@ -215,30 +215,6 @@ class APIVisitor(APIParserVisitor):
         self.errorCode = errorCode
         self.errorMsg = errorMsg
 
-    def visitSingleExpression(self, ctx: APIParser.SingleExpressionContext):
-        expression = ctx.getText()
-
-        # 获取错误代码
-        errorCode = 0
-        errorMsg = None
-        if ctx.exception is not None:
-            errorCode = -1
-            errorMsg = ctx.exception.message
-
-        return expression, errorCode, errorMsg
-
-    def visitExpression(self, ctx: APIParser.ExpressionContext):
-        expression = ctx.getText()
-
-        # 获取错误代码
-        errorCode = 0
-        errorMsg = None
-        if ctx.exception is not None:
-            errorCode = -1
-            errorMsg = ctx.exception.message
-
-        return expression, errorCode, errorMsg
-
     def visitSet(self, ctx: APIParser.SetContext):
         parsedObject = {'name': 'SET'}
 
