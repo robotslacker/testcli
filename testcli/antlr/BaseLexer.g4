@@ -137,6 +137,7 @@ LOOP_CRLF       : CRLF -> popMode;
 
 mode WheneverMode;
 WHENEVER_SPACE      : [ \t]+ -> channel (HIDDEN);
+WHENEVER_EXITCODE   : INT;
 WHENEVER_ERROR      : 'ERROR';
 WHENEVER_SEMICOLON  : ';';
 WHENEVER_CONTINUE   : 'CONTINUE';

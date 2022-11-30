@@ -1,0 +1,32 @@
+SQL> _connect /mem;
+Database connected.
+SQL> _whenever error continue;
+SQL> select 1+2 from dual;
++--------+---+
+|   ##   | 3 |
++--------+---+
+|      1 | 3 |
++--------+---+
+1 row selected.
+SQL> select a from aaa;
+Table "AAA" not found; SQL statement:
+select a from aaa [42102-200]
+SQL> select 3+4 from dual;
++--------+---+
+|   ##   | 7 |
++--------+---+
+|      1 | 7 |
++--------+---+
+1 row selected.
+SQL>
+SQL> _whenever error exit 3;
+SQL> select 1+2 from dual;
++--------+---+
+|   ##   | 3 |
++--------+---+
+|      1 | 3 |
++--------+---+
+1 row selected.
+SQL> select a from aaa;
+Table "AAA" not found; SQL statement:
+select a from aaa [42102-200]

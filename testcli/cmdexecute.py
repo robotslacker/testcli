@@ -10,15 +10,15 @@ import re
 import platform
 import binascii
 import decimal
-import random
 import traceback
+import urllib3
 from .sqlclijdbc import SQLCliJDBCException
 from .sqlclijdbc import SQLCliJDBCLargeObject
 from .sqlclijdbc import SQLCliJDBCTimeOutException
 from .sqlparse import SQLAnalyze
 from .apiparse import APIAnalyze
 from .sqlparse import SQLFormatWithPrefix
-from .apiparse import APIFormatWithPrefix
+from .apiparse import APIRequestStringFormatWithPrefix
 
 from .commands.load import loadPlugin
 from .commands.load import loadDriver
@@ -28,12 +28,20 @@ from .commands.session import sessionManage
 from .commands.assertExpression import assertExpression
 from .commands.assertExpression import evalExpression
 from .commands.embeddScript import executeEmbeddScript
+from .commands.connectdb import connectDb, disconnectDb
+from .commands.start import executeFile
 from .commands.host import executeLocalCommand
+from .commands.spool import spool
+from .commands.echo import echo_input
 from .commands.setOptions import setOptions
 from .commands.cliSleep import cliSleep
+from .commands.userNameSpace import userNameSpace
+from .commands.whenever import setWheneverAction
 
+from .common import rewriteSQLStatement
+from .common import rewriteAPIStatement
 from .testcliexception import TestCliException
-from .global_var import lastCommandResult
+from .globalvar import lastCommandResult
 
 
 class CmdExecute(object):
@@ -71,10 +79,6 @@ class CmdExecute(object):
         self.scriptTimeOut = -1       # 脚本执行的超时时间设置
         self.timeout = -1             # 当前SQL的超时时间设置
         self.timeOutMode = None       # COMMAND|SCRIPT|NONE
-
-        # 记录最后命令返回的结果
-        self.lastJsonCommandResult = None
-        self.lastElapsedTime = 0
 
         # 数据库连接
         self.sqlConn = None
@@ -432,32 +436,42 @@ class CmdExecute(object):
             body = "".join(apiRequest["contents"])
         else:
             body = ""
-        ret = httpHandler.request(
-            method=httpMethod,
-            url=httpRequestTarget,
-            headers=headers,
-            fields=fields,
-            body=body
-        )
-        data = ret.data.decode('utf-8')
         try:
-            data = json.loads(data)
-            data = json.dumps(obj=data,
-                              sort_keys=True,
-                              indent=4,
-                              separators=(',', ': '),
-                              ensure_ascii=False)
-        except JSONDecodeError:
-            pass
-        # 返回的对象不是一个JSON
-        yield {
-            "type":         "result",
-            "title":        None,
-            "rows":         None,
-            "headers":      None,
-            "columnTypes":  None,
-            "status":       data
-        }
+            ret = httpHandler.request(
+                method=httpMethod,
+                url=httpRequestTarget,
+                headers=headers,
+                fields=fields,
+                body=body
+            )
+            result = {"status": ret.status}
+            data = ret.data.decode('utf-8')
+            try:
+                data = json.loads(data)
+            except JSONDecodeError:
+                # 返回的对象不是一个JSON
+                pass
+            result["content"] = data
+            result = json.dumps(obj=result,
+                                sort_keys=True,
+                                indent=4,
+                                separators=(',', ': '),
+                                ensure_ascii=False)
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": result
+            }
+            return
+        except (urllib3.exceptions.MaxRetryError, ) as ex:
+            yield {
+                "type": "error",
+                "message": str(ex)
+            }
+            return
 
     def executeSQLStatement(self, sql: str, sqlHints, startTime):
         """
@@ -471,10 +485,9 @@ class CmdExecute(object):
             self.sqlCursor = self.sqlConn.cursor()
         else:
             # 进入到SQL执行阶段，不是特殊命令, 数据库连接也不存在, 直接报错
-            if self.testOptions.get("WHENEVER_SQLERROR") == "EXIT":
+            if self.testOptions.get("WHENEVER_ERROR") == "EXIT":
                 raise TestCliException("Not Connected. ")
             else:
-                self.lastJsonCommandResult = None
                 yield {
                     "type": "error",
                     "message": "Not connected. "
@@ -575,18 +588,6 @@ class CmdExecute(object):
                             if bDataChanged:
                                 result[i] = tuple(rowResult)
 
-                    # 保存之前的运行结果
-                    if result is None:
-                        rowCount = 0
-                    else:
-                        rowCount = len(result)
-                    self.lastJsonCommandResult = {"desc": headers,
-                                                  "rows": rowCount,
-                                                  "elapsed": time.time() - startTime,
-                                                  "result": result,
-                                                  "status": 0,
-                                                  "warnings": sqlWarnings}
-
                     # 返回SQL结果
                     if sqlStatus == 1:
                         yield {
@@ -678,86 +679,7 @@ class CmdExecute(object):
                                 raise TestCliException("LogMask Hint Error: " + sqlHints["LogMask"])
                     if bErrorMessageHasChanged:
                         sqlErrorMessage = "\n".join(sqlMultiLineErrorMessage)
-
-                self.lastJsonCommandResult = {"elapsed": time.time() - startTime,
-                                              "message": sqlErrorMessage,
-                                              "status": -1,
-                                              "rows": 0}
-
-                # 发生了JDBC的SQL语法错误
-                if self.testOptions.get("WHENEVER_SQLERROR") == "EXIT":
-                    raise TestCliException(sqlErrorMessage)
-                else:
-                    yield {"type": "error", "message": sqlErrorMessage}
-
-    '''
-        重写指定的语句
-        在正式执行之前，对语句进行重新，替换掉MAPPING或者环境变量中的信息
-        输入：
-            statement              原语句
-            commandScriptFile      语句所在的脚本文件（用于MAPPING，做映射使用)
-        输出：
-            statement              修改后的语句，可能和原语句相同
-            rewrotedCommandHistory 改写历史记录
-    '''
-    def rewriteRunStatement(self, statement: str, commandScriptFile: str):
-        # 命令可能会被多次改写
-        rewrotedCommandHistory = []
-
-        # 如果打开了回写，并且指定了输出文件，且SQL被改写过，输出改写后的SQL
-        if self.testOptions.get("TESTREWRITE").upper() == 'ON':
-            while True:
-                beforeRewriteStatement = statement
-                afterRewriteStatement = self.mappingHandler.RewriteSQL(commandScriptFile, beforeRewriteStatement)
-                if beforeRewriteStatement != afterRewriteStatement:  # 命令已经发生了改变
-                    # 记录被改写的命令
-                    if self.testOptions.get("NAMESPACE") == "SQL":
-                        rewrotedCommandHistory.append(
-                            SQLFormatWithPrefix("Your SQL has been changed to:\n" + afterRewriteStatement, 'REWROTED '))
-                    if self.testOptions.get("NAMESPACE") == "API":
-                        rewrotedCommandHistory.append(
-                            APIFormatWithPrefix("Your API has been changed to:\n" + afterRewriteStatement, 'REWROTED '))
-                    statement = afterRewriteStatement
-                else:
-                    # 一直循环到没有任何东西可以被替换
-                    break
-
-        # 保留原脚本
-        rawStatement = statement
-
-        while True:
-            # 替换脚本中的变量信息
-            # 替换： 一： 系统的环境变量,即{{env}}
-            # 替换： 二:  系统内嵌脚本中的变量{{eval}}
-            match_obj = re.search(r"{{(.*?)}}", statement, re.IGNORECASE | re.DOTALL)
-            if match_obj:
-                searchResult = str(match_obj.group(0))
-                varName = str(match_obj.group(1)).strip()
-                # 尝试本地变量
-                try:
-                    evalResult = evalExpression(self.cliHandler, varName)
-                    statement = statement.replace(searchResult, str(evalResult))
-                except NameError:
-                    # 非环境变量
-                    pass
-                # 尝试环境变量
-                if varName in os.environ:
-                    statement = statement.replace(searchResult, os.environ[varName])
-            else:
-                # 没有任何可以替换的了
-                break
-
-        # 语句发生了变化
-        if rawStatement != statement:
-            # 记录被变量信息改写的命令
-            if self.testOptions.get("NAMESPACE") == "SQL":
-                rewrotedCommandHistory.append(
-                    SQLFormatWithPrefix("Your SQL has been changed to:\n" + statement, 'REWROTED '))
-            if self.testOptions.get("NAMESPACE") == "API":
-                rewrotedCommandHistory.append(
-                    APIFormatWithPrefix("Your API has been changed to:\n" + statement, 'REWROTED '))
-
-        return statement, rewrotedCommandHistory
+                yield {"type": "error", "message": sqlErrorMessage}
 
     '''
         处理命令行的Hint信息
@@ -936,7 +858,6 @@ class CmdExecute(object):
                             # 所有的提示信息
                             ret_CommandHints.append(currentHints)
                             # 清空语句的变量
-                            currentStatement = None
                             currentStatementWithComments = None
 
                     # 没有任何有效的语句，可能是空行或者完全的注释
@@ -997,13 +918,13 @@ class CmdExecute(object):
                 break
 
             # 记录命令开始时间
-            start = time.time()
+            startTime = time.time()
 
             # 首先打印原有语句
             if self.testOptions.get("NAMESPACE") == "SQL":
                 formattedCommand = SQLFormatWithPrefix(ret_CommandSplitResultsWithComments[pos])
             if self.testOptions.get("NAMESPACE") == "API":
-                formattedCommand = APIFormatWithPrefix(ret_CommandSplitResultsWithComments[pos])
+                formattedCommand = APIRequestStringFormatWithPrefix(ret_CommandSplitResultsWithComments[pos])
 
             # 如果是空语句，不需要执行，但可能是完全注释行
             # 也可能是一个解析错误的语句
@@ -1090,7 +1011,7 @@ class CmdExecute(object):
                            "SQL_UNKNOWN"]
             if parseObject["name"] == "ECHO":
                 # 将后续内容回显到指定的文件中
-                for commandResult in self.cliHandler.echo_input(
+                for commandResult in echo_input(
                         cls=self.cliHandler,
                         fileName=parseObject["param"],
                         block=parseObject["block"],
@@ -1098,7 +1019,7 @@ class CmdExecute(object):
                     yield commandResult
             elif parseObject["name"] == "START":
                 # 执行脚本文件
-                for commandResult in self.cliHandler.execute_from_file(
+                for commandResult in executeFile(
                         cls=self.cliHandler,
                         scriptFileList=parseObject["scriptList"],
                         loopTimes=parseObject["loopTimes"],
@@ -1118,7 +1039,7 @@ class CmdExecute(object):
             elif parseObject["name"] == "CONNECT":
                 # 执行CONNECT命令
                 if self.testOptions.get("NAMESPACE") == "SQL":
-                    for commandResult in self.cliHandler.connect_db(
+                    for commandResult in connectDb(
                             cls=self.cliHandler,
                             connectProperties=parseObject
                     ):
@@ -1139,7 +1060,7 @@ class CmdExecute(object):
             elif parseObject["name"] == "DISCONNECT":
                 # 执行DISCONNECT命令
                 if self.testOptions.get("NAMESPACE") == "SQL":
-                    for commandResult in self.cliHandler.disconnect_db(
+                    for commandResult in disconnectDb(
                             cls=self.cliHandler
                     ):
                         yield commandResult
@@ -1155,7 +1076,8 @@ class CmdExecute(object):
                     continue
                 sqlCommand = parseObject["statement"]
                 # 根据语句中的变量或者其他定义信息来重写当前语句
-                sqlCommand, rewrotedCommandList = self.rewriteRunStatement(
+                sqlCommand, rewrotedCommandList = rewriteSQLStatement(
+                    cls=self.cliHandler,
                     statement=sqlCommand,
                     commandScriptFile=commandScriptFile
                 )
@@ -1173,13 +1095,10 @@ class CmdExecute(object):
                 commandHintList = self.parseHints(list(ret_CommandHints[pos]))
 
                 # 执行SQL语句
-                startTime = time.time()
                 for result in self.executeSQLStatement(
                         sql=sqlCommand,
                         sqlHints=commandHintList,
                         startTime=0):
-                    endTime = time.time()
-                    lastCommandResult["elapsed"] = endTime - startTime
                     if result["type"] == "result":
                         lastCommandResult["rows"] = result["rows"]
                         lastCommandResult["headers"] = result["headers"]
@@ -1188,7 +1107,7 @@ class CmdExecute(object):
                         lastCommandResult["headers"] = []
                     yield result
             elif parseObject["name"] in ["USE"]:
-                for commandResult in self.cliHandler.set_nameSpace(
+                for commandResult in userNameSpace(
                         cls=self.cliHandler,
                         nameSpace=parseObject["nameSpace"]
                 ):
@@ -1200,7 +1119,7 @@ class CmdExecute(object):
                 ):
                     yield commandResult
             elif parseObject["name"] in ["SPOOL"]:
-                for commandResult in self.cliHandler.spool(
+                for commandResult in spool(
                         cls=self.cliHandler,
                         fileName=parseObject["file"]
                 ):
@@ -1247,10 +1166,10 @@ class CmdExecute(object):
                 if self.ifMode and not self.ifCondition:
                     pos = pos + 1
                     continue
-                httpRequestTarget = parseObject["httpRequestTarget"]
                 # 根据语句中的变量或者其他定义信息来重写当前语句
-                httpRequestTarget, rewrotedCommandList = self.rewriteRunStatement(
-                    statement=httpRequestTarget,
+                httpRequestTarget, rewrotedCommandList = rewriteAPIStatement(
+                    cls=self.cliHandler,
+                    requestObject=parseObject,
                     commandScriptFile=commandScriptFile
                 )
                 if len(rewrotedCommandList) != 0:
@@ -1262,7 +1181,6 @@ class CmdExecute(object):
                         "rewrotedCommand": rewrotedCommandList,
                         "script": commandScriptFile
                     }
-                    parseObject["httpRequestTarget"] = httpRequestTarget
 
                 # 处理Hints信息
                 commandHintList = self.parseHints(list(ret_CommandHints[pos]))
@@ -1319,6 +1237,13 @@ class CmdExecute(object):
                     self.loopMode = True
                     self.loopStartPos = pos
                     self.loopCondition = not evalExpression(self.cliHandler, parseObject["UNTIL"])
+            elif parseObject["name"] in ["WHENEVER"]:
+                for result in setWheneverAction(
+                        cls=self.cliHandler,
+                        action=parseObject["action"],
+                        exitCode=parseObject["exitCode"]
+                ):
+                    yield result
             elif parseObject["name"] in ["UNKNOWN"]:
                 yield {"type": "error",
                        "message": "TESTCLI_0000:  " + parseObject["reason"]}
@@ -1326,14 +1251,14 @@ class CmdExecute(object):
                 raise TestCliException("FDDFSFDFSDSFD " + str(parseObject))
 
             # 如果需要，打印语句执行时间
-            end = time.time()
-            self.lastElapsedTime = end - start
+            endTime = time.time()
+            lastCommandResult["elapsed"] = endTime - startTime
 
             # 记录SQL日志信息
             if self.testOptions.get("SILENT").upper() == 'OFF':
                 yield {
                     "type": "statistics",
-                    "elapsed": self.lastElapsedTime,
+                    "elapsed": endTime - startTime,
                 }
 
             # 开始执行下一个语句

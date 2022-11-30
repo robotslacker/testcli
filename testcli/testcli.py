@@ -10,7 +10,6 @@ import setproctitle
 import click
 import configparser
 import hashlib
-import codecs
 import unicodedata
 import itertools
 import urllib3
@@ -18,16 +17,10 @@ import shutil
 from multiprocessing import Lock
 from time import strftime, localtime
 from urllib.error import URLError
-import jpype
 
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.shortcuts import PromptSession
 from prompt_toolkit.formatted_text import HTML
-
-# 加载JDBC驱动和ODBC驱动
-from .sqlclijdbc import connect as jdbcconnect
-from .sqlclijdbc import SQLCliJDBCTimeOutException
-from .sqlclijdbc import SQLCliJDBCException
 
 from .cmdexecute import CmdExecute
 from .cmdmapping import CmdMapping
@@ -76,7 +69,8 @@ class TestCli(object):
             script=None,                            # 脚本文件名，None表示命令行模式
             commandMap=None,                        # SQL映射文件名，None表示不存在
             nologo=False,                           # 是否不打印登陆时的Logo信息，True的时候不打印
-            breakwitherror=False,                   # 遇到SQL错误，是否中断脚本后续执行，立刻退出
+            breakWithError=False,                   # 遇到命令行错误，是否中断脚本后续执行，立刻退出
+            breakErrorCode=255,                     # 遇到命令行错误时候的退出代码
             sqlperf=None,                           # SQL审计文件输出名，None表示不需要
             Console=sys.stdout,                     # 控制台输出，默认为sys.stdout,即标准输出
             HeadlessMode=False,                     # 是否为无终端模式，无终端模式下，任何屏幕信息都不会被输出
@@ -108,12 +102,13 @@ class TestCli(object):
         self.prompt_app = None                          # PromptKit控制台
         self.echofilename = None                        # 当前回显文件的文件名称
         self.Version = __version__                      # 当前程序版本
-        self.ClientID = None                            # 远程连接时的客户端ID
         self.SQLPerfFile = None                         # SQLPerf文件名
         self.SQLPerfFileHandle = None                   # SQLPerf文件句柄
         self.PerfFileLocker = None                      # 进程锁, 用来在输出perf文件的时候控制并发写文件
         self.xlogfilename = None                        # xlog文件名
-
+        self.breakWithError = breakWithError            # 是否在遇到错误的时候退出
+        self.breakErrorCode = breakErrorCode            # 遇到错误的退出代码
+        
         # 数据库连接的各种参数
         # 每次连接后需要保存这些变量，下次可以直接重新连接，如果不填写相关信息，则默认上次连接信息
         self.db_conn = None                             # 当前应用的数据库连接句柄
@@ -211,9 +206,11 @@ class TestCli(object):
 
         self.DataHandler.SQLOptions = self.testOptions
 
-        # 设置WHENEVER_SQLERROR
-        if breakwitherror:
-            self.testOptions.set("WHENEVER_SQLERROR", "EXIT")
+        # 设置WHENEVER_ERROR
+        if breakWithError:
+            self.testOptions.set("WHENEVER_ERROR", "EXIT " + str(self.breakErrorCode))
+        else:
+            self.testOptions.set("WHENEVER_ERROR", "CONTINUE")
 
         # 加载程序的配置文件
         self.AppOptions = configparser.ConfigParser()
@@ -348,400 +345,6 @@ class TestCli(object):
         if self.MetaHandler is not None:
             self.MetaHandler.ShutdownServer()
             self.MetaHandler = None
-
-    # 连接数据库
-    @staticmethod
-    def connect_db(cls, connectProperties, timeout: int = -1):
-        # 如果当前的连接存在，且当前连接没有被保存，则断开当前的连接
-        # 如果当前连接已经被保存，这里不做任何操作
-        if cls.db_conn is not None:
-            if cls.db_sessionName is None:
-                # 如果之前数据库连接没有被保存，则强制断开连接
-                cls.db_conn.close()
-                cls.db_conn = None
-                cls.cmdExecuteHandler.sqlConn = None
-            else:
-                if cls.db_saved_conn[cls.db_sessionName][0] is None:
-                    # 之前并没有保留数据库连接
-                    cls.db_conn.close()
-                    cls.db_conn = None
-                    cls.cmdExecuteHandler.sqlConn = None
-
-        # 一旦开始数据库连接，则当前连接会被置空，以保证连接错误的影响能够对后续的语句产生作用
-        cls.db_conn = None
-        cls.cmdExecuteHandler.sqlConn = None
-
-        if cls.db_connectionConf is None:
-            raise TestCliException("Please load driver first.")
-
-        # 如果连接内容仅仅就一个mem，则连接到memory db上
-        if "localService" in connectProperties:
-            if connectProperties["localService"] == "mem":
-                # 内置一个mem，用户调试需要
-                connectProperties["service"] = "X"
-                connectProperties["username"] = "sa"
-                connectProperties["password"] = "sa"
-                connectProperties["driver"] = "jdbc"
-                connectProperties["driverSchema"] = "h2mem"
-                connectProperties["driverType"] = "mem"
-                connectProperties["host"] = "0.0.0.0"
-                connectProperties["port"] = 0
-                connectProperties["parameters"] = {}
-            elif connectProperties["localService"] == "meta":
-                # 如果连接内容仅仅就一个META，则连接到内置的jobmanager db
-                connectProperties["service"] = "mem:testclimeta"
-                connectProperties["username"] = "sa"
-                connectProperties["password"] = "sa"
-                connectProperties["driver"] = "jdbc"
-                connectProperties["driverSchema"] = "h2tcp"
-                connectProperties["driverType"] = "tcp"
-                connectProperties["host"] = "0.0.0.0"
-                connectProperties["port"] = 0
-                connectProperties["parameters"] = {}
-            else:
-                raise TestCliException("Invalid localservice. MEM|METADATA only.")
-
-        # 连接数据库
-        try:
-            # 如果当前未指定参数，缺省为上一次连接的参数
-            if "driverSchema" not in connectProperties:
-                connectProperties["driverSchema"] = cls.db_driverSchema
-            if "username" not in connectProperties:
-                connectProperties["username"] = cls.db_username
-            if "password" not in connectProperties:
-                connectProperties["password"] = cls.db_password
-            if "driver" not in connectProperties:
-                connectProperties["driver"] = cls.db_driver
-            if "driverSchema" not in connectProperties:
-                connectProperties["driverSchema"] = cls.db_driverSchema
-            if "driverType" not in connectProperties:
-                connectProperties["driverType"] = cls.db_driverType
-            if "host" not in connectProperties:
-                connectProperties["host"] = cls.db_host
-            if "port" not in connectProperties:
-                if cls.db_port is not None:
-                    connectProperties["port"] = int(cls.db_port)
-                else:
-                    connectProperties["port"] = None
-            if "service" not in connectProperties:
-                connectProperties["service"] = cls.db_service
-            if "parameters" not in connectProperties:
-                connectProperties["parameters"] = cls.db_parameters
-
-            if connectProperties["driver"] == 'jdbc':  # JDBC 连接数据库
-                if connectProperties["driverSchema"] is None:
-                    # 必须指定数据库驱动类型
-                    raise TestCliException("Unknown database [" + str(connectProperties["driverSchema"]) + "]." +
-                                           "Connect Failed. Missed configuration in conf/testcli.ini.")
-
-                # 读取配置文件，判断随后JPype连接的时候使用具体哪一个Jar包
-                jarList = []
-                driverClass = ""
-                jdbcURL = None
-                jdbcProp = ""
-                for jarConfig in cls.db_connectionConf:
-                    jarList.extend(jarConfig["FullName"])
-                for jarConfig in cls.db_connectionConf:
-                    if jarConfig["Database"].upper() == str(connectProperties["driverSchema"]).upper():
-                        driverClass = jarConfig["ClassName"]
-                        jdbcURL = jarConfig["JDBCURL"]
-                        jdbcProp = jarConfig["JDBCProp"]
-                        break
-                if jdbcURL is None:
-                    # 没有找到Jar包
-                    raise TestCliException("Unknown database [" + str(connectProperties["driverSchema"]) + "]." +
-                                           "Connect Failed. Missed configuration in conf/testcli.ini.")
-
-                # 如果没有指定数据库类型，则无法进行数据库连接
-                if driverClass is None:
-                    raise TestCliException(
-                        "Missed driver config [" + connectProperties["driverSchema"] + "]. Database Connect Failed. ")
-
-                # 替换连接字符串中的变量信息
-                # 连接字符串中可以出现的变量有：  ${host} ${port} ${service} ${driverType}
-                jdbcURL = jdbcURL.replace("${host}", connectProperties["host"])
-                jdbcURL = jdbcURL.replace("${port}", str(connectProperties["port"]))
-                if cls.db_port is None:
-                    jdbcURL = jdbcURL.replace(":${port}", "")
-                else:
-                    jdbcURL = jdbcURL.replace("${port}", str(cls.db_port))
-                jdbcURL = jdbcURL.replace("${service}", connectProperties["service"])
-                jdbcURL = jdbcURL.replace("${driverType}", connectProperties["driverType"])
-
-                # 构造连接参数
-                jdbcConnProp = {}
-                if "username" in connectProperties:
-                    jdbcConnProp['user'] = connectProperties["username"]
-                if "password" in connectProperties:
-                    jdbcConnProp['password'] = connectProperties["password"]
-                # 处理连接参数中的属性信息，既包括配置文件中提供的参数，也包括连接命令行中输入的
-                if jdbcProp is not None:
-                    for row in jdbcProp.strip().split(','):
-                        props = row.split(':')
-                        if len(props) == 2:
-                            propName = str(props[0]).strip()
-                            propValue = str(props[1]).strip()
-                            jdbcConnProp[propName] = propValue
-                if connectProperties["parameters"] is not None:
-                    for propName, propValue in connectProperties["parameters"].items():
-                        jdbcConnProp[propName] = propValue
-
-                # 尝试数据库连接，保持一定的重试次数，一直到连接上
-                retryCount = 0
-                while True:
-                    try:
-                        cls.db_conn = jdbcconnect(
-                            jclassname=driverClass,
-                            url=jdbcURL,
-                            driverArgs=jdbcConnProp,
-                            jars=jarList,
-                            timeoutLimit=timeout)
-                        break
-                    except SQLCliJDBCTimeOutException as je:
-                        raise je
-                    except SQLCliJDBCException as je:
-                        if "TESTCLI_DEBUG" in os.environ:
-                            print('traceback.print_exc():\n%s' % traceback.print_exc())
-                            print('traceback.format_exc():\n%s' % traceback.format_exc())
-                        retryCount = retryCount + 1
-                        if retryCount >= int(cls.testOptions.get("CONN_RETRY_TIMES")):
-                            raise je
-                        else:
-                            time.sleep(2)
-                            continue
-
-                # 将当前DB的连接字符串备份到变量中， 便于SET命令展示
-                cls.testOptions.set("CONNURL", str(jdbcURL))
-                cls.testOptions.set("CONNSCHEMA", str(connectProperties["username"]))
-
-                # 成功连接后，保留当前连接的所有信息，以便下一次连接
-                cls.db_url = jdbcURL
-                cls.db_username = connectProperties["username"]
-                cls.db_password = connectProperties["password"]
-                cls.db_driver = connectProperties["driver"]
-                cls.db_driverSchema = connectProperties["driverSchema"]
-                cls.db_driverType = connectProperties["driverType"]
-                cls.db_host = connectProperties["host"]
-                cls.db_port = connectProperties["port"]
-                cls.db_service = connectProperties["service"]
-                cls.db_parameters = connectProperties["parameters"]
-
-                # 保存连接句柄
-                cls.cmdExecuteHandler.sqlConn = cls.db_conn
-            else:
-                raise TestCliException("Current driver [" + str(connectProperties["driver"]) + "] is not supported.")
-        except TestCliException as se:  # Connecting to a database fail.
-            raise se
-        except Exception as e:  # Connecting to a database fail.
-            if "TESTCLI_DEBUG" in os.environ:
-                print('traceback.print_exc():\n%s' % traceback.print_exc())
-                print('traceback.format_exc():\n%s' % traceback.format_exc())
-                print("db_sessionName = [" + str(cls.db_sessionName) + "]")
-                print("db_user = [" + connectProperties["username"] + "]")
-                print("db_pass = [" + connectProperties["password"] + "]")
-                print("db_driver = [" + connectProperties["driver"] + "]")
-                print("db_driverSchema = [" + connectProperties["driverSchema"] + "]")
-                print("db_driverType = [" + connectProperties["driverType"] + "]")
-                print("db_host = [" + connectProperties["host"] + "]")
-                print("db_port = [" + str(connectProperties["port"]) + "]")
-                print("db_service = [" + connectProperties["service"] + "]")
-                print("db_parameters = [" + str(connectProperties["parameters"]) + "]")
-                print("db_url = [" + str(cls.db_url) + "]")
-                print("jar_file = [" + str(cls.db_connectionConf) + "]")
-            if str(e).find("SQLInvalidAuthorizationSpecException") != -1:
-                raise TestCliException(str(jpype.java.sql.SQLInvalidAuthorizationSpecException(e).getCause()))
-            else:
-                raise TestCliException(str(e))
-        yield {
-            "type": "result",
-            "title": None,
-            "rows": None,
-            "headers": None,
-            "columnTypes": None,
-            "status": 'Database connected.'
-        }
-
-    # 断开数据库连接
-    @staticmethod
-    def disconnect_db(cls):
-        if cls.db_conn:
-            cls.db_conn.close()
-        cls.db_conn = None
-        cls.cmdExecuteHandler.sqlConn = None
-        yield {
-            "type": "result",
-            "title": None,
-            "rows": None,
-            "headers": None,
-            "columnTypes": None,
-            "status": 'Database disconnected.'
-        }
-
-    # 从文件中执行SQL
-    @staticmethod
-    def execute_from_file(cls, scriptFileList, loopTimes=1):
-        for nPos in range(0, loopTimes):
-            for scriptFile in scriptFileList:
-                # 将scriptFile根据平台进行转义
-                try:
-                    if str(scriptFile).startswith("'"):
-                        scriptFile = scriptFile[1:]
-                    if str(scriptFile).endswith("'"):
-                        scriptFile = scriptFile[:-1]
-                    with open(os.path.expanduser(scriptFile), encoding=cls.testOptions.get("SCRIPT_ENCODING")) as f:
-                        query = f.read()
-
-                    # 空文件直接返回
-                    if len(query) == 0:
-                        continue
-
-                    # 处理脚本文件头数据, 文件开头的0xFEFF,codecs.BOM_UTF8忽略不看
-                    if ord(query[0]) == 0xFEFF:
-                        # 去掉脚本文件可能包含的UTF-BOM
-                        query = query[1:]
-                    if query[:3] == codecs.BOM_UTF8:
-                        # 去掉脚本文件可能包含的UTF-BOM
-                        query = query[3:]
-
-                    # Scenario, Transaction等Hint信息不会带入到下一个脚本文件中
-                    cls.cmdExecuteHandler.scenario = ''
-                    cls.cmdExecuteHandler.transaction = ''
-                    cls.cmdExecuteHandler.setStartTime(time.time())
-
-                    # 这里需要把command按照namespace分离，即不同的namespace分开执行
-                    # 避免切换namespace后，解析导致的问题
-                    # 其中：
-                    #   __use__ namespace 为一段
-                    #   两个 __use__ namespace之间为一段
-                    commandList = []
-                    lastCommand = None
-                    lastNameSpace = cls.nameSpace
-                    for commandLine in query.split("\n"):
-                        match_obj = re.match(r"(\s+)?__USE__(\s+)NAMESPACE(\s+)(.*)$",
-                                             commandLine, re.IGNORECASE | re.DOTALL)
-                        if match_obj:
-                            newNameSpace = match_obj.group(4).strip().upper()
-                            if lastCommand is not None:
-                                commandList.append({"nameSpace": lastNameSpace, "script": lastCommand})
-                                lastCommand = None
-                            commandList.append({"nameSpace": "GENERAL", "script": commandLine})
-                            lastNameSpace = newNameSpace
-                            lastNameSpace = lastNameSpace.strip().upper().strip(';')
-                            continue
-                        else:
-                            if lastCommand is None:
-                                lastCommand = commandLine
-                            else:
-                                lastCommand = lastCommand + "\n" + commandLine
-                    if lastCommand is not None:
-                        commandList.append({"nameSpace": lastNameSpace, "script": lastCommand})
-
-                    # 分段执行执行的语句
-                    for command in commandList:
-                        for executeResult in \
-                                cls.cmdExecuteHandler.runStatement(
-                                    statement=command["script"],
-                                    commandScriptFile=os.path.expanduser(scriptFile),
-                                    nameSpace=command["nameSpace"]
-                                ):
-                            yield executeResult
-                except IOError as e:
-                    yield {
-                        "type": "result",
-                        "title": None,
-                        "rows": None,
-                        "headers": None,
-                        "columnTypes": None,
-                        "status": "Execute script [" + str(os.path.abspath(scriptFile)) + "] failed. " + repr(e)
-                    }
-
-    # 将当前及随后的输出打印到指定的文件中
-    @staticmethod
-    def spool(cls, fileName: str):
-        if fileName.strip().upper() == 'OFF':
-            # close spool file
-            if len(cls.SpoolFileHandler) == 0:
-                yield {
-                    "type": "result",
-                    "title": None,
-                    "rows": None,
-                    "headers": None,
-                    "columnTypes": None,
-                    "status": "not spooling currently"
-                }
-                return
-            else:
-                cls.SpoolFileHandler[-1].close()
-                cls.SpoolFileHandler.pop()
-                yield {
-                    "type": "result",
-                    "title": None,
-                    "rows": None,
-                    "headers": None,
-                    "columnTypes": None,
-                    "status": None
-                }
-                return
-
-        if cls.logfilename is not None:
-            # 如果当前主程序启用了日志，则spool日志的默认输出目录为logfile的目录
-            spoolFileName = os.path.join(os.path.dirname(cls.logfilename), fileName.strip())
-        else:
-            # 如果主程序没有启用日志，则输出为当前目录
-            spoolFileName = fileName.strip()
-
-        # 如果当前有打开的Spool文件，关闭它
-        try:
-            cls.SpoolFileHandler.append(open(spoolFileName, "w", encoding=cls.testOptions.get("RESULT_ENCODING")))
-        except IOError as e:
-            raise TestCliException("SQLCLI-00000: IO Exception " + repr(e))
-        yield {
-            "type": "result",
-            "title": None,
-            "rows": None,
-            "headers": None,
-            "columnTypes": None,
-            "status": None
-        }
-        return
-
-    # 将当前及随后的屏幕输入存放到脚本文件中
-    @staticmethod
-    def echo_input(cls, fileName: str, block: str):
-        try:
-            f = open(fileName, "w", encoding=cls.testOptions.get("RESULT_ENCODING"))
-            f.write(block)
-            f.close()
-            return [{
-                "type": "result",
-                "title": None,
-                "rows": None,
-                "headers": None,
-                "columnTypes": None,
-                "status": "File [" + str(fileName) + "] generated successful."
-            }]
-        except IOError as ie:
-            return [{
-                "type": "result",
-                "title": None,
-                "rows": None,
-                "headers": None,
-                "columnTypes": None,
-                "status": "File [" + str(fileName) + "] generated failed. " + str(ie)
-            }]
-
-    # 切换程序运行空间
-    @staticmethod
-    def set_nameSpace(cls, nameSpace: str):
-        cls.testOptions.set("NAMESPACE", nameSpace)
-        yield {
-            "type": "result",
-            "title": None,
-            "rows": None,
-            "headers": None,
-            "columnTypes": None,
-            "status": "Current NameSpace: " + str(nameSpace) + "."
-        }
 
     # 执行特殊的命令
     @staticmethod
@@ -993,6 +596,11 @@ class TestCli(object):
                         self.echo('Running time elapsed: %9.2f seconds' % result["elapsed"])
                     if self.testOptions.get('TIME').upper() == 'ON':
                         self.echo('Current clock time  :' + strftime("%Y-%m-%d %H:%M:%S", localtime()))
+                if result["type"] == "error":
+                    # 如果遇到了错误，且要求退出，则立刻退出
+                    if self.breakWithError:
+                        self.exitValue = self.breakErrorCode
+                        raise EOFError
             # 返回正确执行的消息
             return True
         except EOFError as e:
@@ -1004,8 +612,6 @@ class TestCli(object):
                 print('traceback.format_exc():\n%s' % traceback.format_exc())
             # 用户执行的SQL出了错误, 由于SQLExecute已经打印了错误消息，这里直接退出
             self.output(None, e.message)
-            if self.testOptions.get("WHENEVER_SQLERROR").upper() == "EXIT":
-                raise e
         except Exception as e:
             if "TESTCLI_DEBUG" in os.environ:
                 print('traceback.print_exc():\n%s' % traceback.print_exc())
@@ -1135,7 +741,6 @@ class TestCli(object):
                 # 如果还有活动的事务，标记事务为失败信息
                 for m_Transaction in self.TransactionHandler.getAllTransactions():
                     self.TransactionHandler.TransactionFail(m_Transaction.Transaction_Name)
-            # TestCliException只有在被设置了WHENEVER_SQLERROR为EXIT的时候，才会被捕获到
 
         # 退出进程, 如果要求不显示logo，则也不会显示Disconnected字样
         if self.exitValue == 0:

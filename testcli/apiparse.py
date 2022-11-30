@@ -26,31 +26,44 @@ class APIClientErrorListener(ErrorListener):
         super().syntaxError(recognizer, offendingSymbol, line, column, msg, e)
 
 
-def APIFormatWithPrefix(p_szCommentSQLScript, p_szOutputPrefix=""):
+def APIRequestStringFormatWithPrefix(commentSQLScript, outputPrefix=""):
     bAPIPrefix = 'API> '
 
     # 如果是完全空行的内容，则直接返回SQL前缀
-    if len(p_szCommentSQLScript) == 0:
+    if len(commentSQLScript) == 0:
         return bAPIPrefix
 
-    # 把所有的SQL换行, 第一行加入[API >]， 随后加入[   >]
-    m_FormattedString = None
-    m_CommentSQLLists = p_szCommentSQLScript.split('\n')
-    if len(p_szCommentSQLScript) >= 1:
+    # 把所有的API换行, 第一行加入[API >]， 随后加入[   >]
+    formattedString = None
+    commentSQLLists = commentSQLScript.split('\n')
+    if len(commentSQLScript) >= 1:
         # 如果原来的内容最后一个字符就是回车换行符，split函数会在后面补一个换行符，这里要去掉，否则前端显示就会多一个空格
-        if p_szCommentSQLScript[-1] == "\n":
-            del m_CommentSQLLists[-1]
+        if commentSQLScript[-1] == "\n":
+            del commentSQLLists[-1]
 
     # 拼接字符串
-    for pos in range(0, len(m_CommentSQLLists)):
+    for pos in range(0, len(commentSQLLists)):
         if pos == 0:
-            m_FormattedString = p_szOutputPrefix + bAPIPrefix + m_CommentSQLLists[pos]
+            formattedString = outputPrefix + bAPIPrefix + commentSQLLists[pos]
         else:
-            m_FormattedString = \
-                m_FormattedString + '\n' + p_szOutputPrefix + bAPIPrefix + m_CommentSQLLists[pos]
-        if len(m_CommentSQLLists[pos].strip()) != 0:
+            formattedString = \
+                formattedString + '\n' + outputPrefix + bAPIPrefix + commentSQLLists[pos]
+        if len(commentSQLLists[pos].strip()) != 0:
             bAPIPrefix = '   > '
-    return m_FormattedString
+    return formattedString
+
+
+def APIRequestObjectFormatWithPrefix(headerPrefix, requestObject, outputPrefix):
+    bAPIPrefix = 'API> '
+
+    # 把所有的API换行, 第一行加入[API >]， 随后加入[   >]
+    formattedString = outputPrefix + bAPIPrefix + headerPrefix
+
+    # 打印Header信息
+    if "httpRequestTarget" in requestObject:
+        formattedString = formattedString + outputPrefix + '   > ' + \
+                          requestObject["httpMethod"] + " " + requestObject["httpRequestTarget"]
+    return formattedString
 
 
 def APIAnalyze(apiCommandPlainText: str, defaultNameSpace: str = "API"):

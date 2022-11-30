@@ -1,0 +1,26 @@
+API> _use api
+Current NameSpace: API.
+API>
+API> > {%
+   > import os
+   > os.environ["host"] = "127.0.0.1"
+   > %}
+API>
+API> > {% port=8000 %}
+API> ### aaa
+   > GET http://{{host}}:{{port}}/health
+   >     ?requestId=1 HTTP/1.1
+   > Accept: application/json
+   > X-Language: zh_CN
+   > Content-Type: application/json
+   >
+   >
+   > ###
+REWROTED API> Your API has been changed to:
+REWROTED    > GET http://127.0.0.1:8000/health
+{
+    "content": {
+        "status": "OK"
+    },
+    "status": 200
+}

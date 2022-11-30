@@ -5,23 +5,24 @@ import unittest
 import os
 import jpype
 import tempfile
-import uvicorn
 from testcli.sqlparse import SQLAnalyze
 from testcli.apiparse import APIAnalyze
 from testcli.compare import POSIXCompare
 from testcli.sqlclijdbc import connect as jdbcconnect
-from testcli.test.testmockserver import startMockServer
-from testcli.test.testmockserver import stopMockServer
+from testcli.test.testmockserver import startServer
+from testcli.test.testmockserver import stopServer
+from testcli.test.testmockserver import waitServerRunning
 
 
 class TestSynatx(unittest.TestCase):
-    # @classmethod
-    # def setUpClass(cls):
-    #     startMockServer()
-    #
-    # @classmethod
-    # def tearDownClass(cls):
-    #     stopMockServer()
+    @classmethod
+    def setUpClass(cls):
+        startServer()
+        waitServerRunning()
+
+    @classmethod
+    def tearDownClass(cls):
+        stopServer()
 
     def test_SQLAnalyze_NullString(self):
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
@@ -577,14 +578,16 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
         self.assertEqual(0, ret_errorCode)
         self.assertTrue(isFinished)
-        self.assertEqual({'action': 'continue', 'condition': 'error', 'name': 'WHENEVER'}, ret_CommandSplitResult)
+        self.assertEqual(
+            {'action': 'continue', 'condition': 'error', 'exitCode': 0, 'name': 'WHENEVER'}, ret_CommandSplitResult)
 
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("_WHENEVER ERROR EXIT")
+            = SQLAnalyze("_WHENEVER ERROR EXIT 3")
         self.assertEqual(None, ret_errorMsg)
         self.assertEqual(0, ret_errorCode)
         self.assertTrue(isFinished)
-        self.assertEqual({'action': 'exit', 'condition': 'error', 'name': 'WHENEVER'}, ret_CommandSplitResult)
+        self.assertEqual(
+            {'action': 'exit', 'condition': 'error', 'exitCode': 3, 'name': 'WHENEVER'}, ret_CommandSplitResult)
 
     def test_SQLAnalyze_If(self):
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
@@ -846,6 +849,38 @@ class TestSynatx(unittest.TestCase):
                     print(line)
         self.assertTrue(compareResult)
 
+    def test_SQLWhenever(self):
+        scriptFile = "testsqlwhenever.sql"
+
+        scriptBaseFile = os.path.splitext(scriptFile)[0]
+        fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
+        fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
+        fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
+
+        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        from testcli.testcli import TestCli
+        testcli = TestCli(
+            logfilename=fullLogFile,
+            HeadlessMode=True,
+            nologo=True,
+            script=fullScriptFile
+        )
+        retValue = testcli.run_cli()
+        self.assertEqual(3, retValue)
+
+        # 对文件进行比对，判断返回结果是否吻合
+        compareHandler = POSIXCompare()
+        compareResult, compareReport = compareHandler.compare_text_files(
+            file1=fullLogFile,
+            file2=fullRefFile,
+            CompareIgnoreTailOrHeadBlank=True
+        )
+        if not compareResult:
+            for line in compareReport:
+                if line.startswith("-") or line.startswith("+"):
+                    print(line)
+        self.assertTrue(compareResult)
+
     def test_APIAnalyze_MultiPart(self):
         scriptFile = "testapisynatx-multipart.api"
 
@@ -912,6 +947,38 @@ class TestSynatx(unittest.TestCase):
         logFileHandler = open(fullLogFile, "w")
         logFileHandler.write(data)
         logFileHandler.close()
+
+        # 对文件进行比对，判断返回结果是否吻合
+        compareHandler = POSIXCompare()
+        compareResult, compareReport = compareHandler.compare_text_files(
+            file1=fullLogFile,
+            file2=fullRefFile,
+            CompareIgnoreTailOrHeadBlank=True
+        )
+        if not compareResult:
+            for line in compareReport:
+                if line.startswith("-") or line.startswith("+"):
+                    print(line)
+        self.assertTrue(compareResult)
+
+    def test_APIExecute_Get(self):
+        scriptFile = "testapiget.api"
+
+        scriptBaseFile = os.path.splitext(scriptFile)[0]
+        fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
+        fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
+        fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
+
+        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        from testcli.testcli import TestCli
+        testcli = TestCli(
+            logfilename=fullLogFile,
+            HeadlessMode=True,
+            nologo=True,
+            script=fullScriptFile
+        )
+        retValue = testcli.run_cli()
+        self.assertEqual(0, retValue)
 
         # 对文件进行比对，判断返回结果是否吻合
         compareHandler = POSIXCompare()

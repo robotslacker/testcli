@@ -8,7 +8,7 @@ class TestOptions(object):
     def __init__(self):
         self.testOptionList = []
 
-        self.testOptionList.append({"Name": "WHENEVER_SQLERROR",
+        self.testOptionList.append({"Name": "WHENEVER_ERROR",
                                     "Value": "CONTINUE",
                                     "Comments": '',
                                     "Hidden": False})

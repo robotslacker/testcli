@@ -1,7 +1,14 @@
 # -*- coding: utf-8 -*-
+import time
+
 import uvicorn
+import urllib3
 from fastapi import FastAPI
 from multiprocessing import Process
+
+# 进程和端口信息
+appHost = "127.0.0.1"
+appPort = 8000
 
 # 全局进程信息（即mockApp的信息）
 proc = None
@@ -10,25 +17,25 @@ proc = None
 mockApp = FastAPI()
 
 
-def runMockServer():
+def runServer():
     """
     This function to run configured uvicorn server.
     """
-    uvicorn.run(app=mockApp, host="127.0.0.1", port=8000)
+    uvicorn.run(app=mockApp, host=appHost, port=appPort)
 
 
-def startMockServer():
+def startServer():
     """
     This function to start a new process (start the server).
     """
     global proc
     # create process instance and set the target to run function.
     # use daemon mode to stop the process whenever the program stopped.
-    proc = Process(target=runMockServer, args=(), daemon=True)
+    proc = Process(target=runServer, args=(), daemon=True)
     proc.start()
 
 
-def stopMockServer():
+def stopServer():
     """
     This function to join (stop) the process (stop the server).
     """
@@ -41,11 +48,33 @@ def stopMockServer():
         join(0.25)
 
 
-@mockApp.get('/')
-def home():
-    return {"message": "Hello World"}
+def waitServerRunning():
+    httpHandler = urllib3.PoolManager()
+    healthURL = "http://" + str(appHost) + ":" + str(appPort) + "/health"
+    while True:
+        try:
+            ret = httpHandler.request(
+                method="GET",
+                url=healthURL,
+                retries=False,
+                timeout=2.0,
+            )
+            data = ret.data.decode('utf-8')
+            if data == "{\"status\":\"OK\"}":
+                break
+        except urllib3.exceptions.TimeoutError:
+            # 没有链接上，等待2秒钟后再试
+            time.sleep(2)
+            pass
+
+
+@mockApp.get('/health')
+def health():
+    return {"status": "OK"}
 
 
 # 主程序
 if __name__ == '__main__':
-    uvicorn.run(mockApp, host="127.0.0.1", port=8000)
+    startServer()
+    waitServerRunning()
+    time.sleep(3600)

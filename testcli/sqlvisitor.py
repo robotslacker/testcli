@@ -705,6 +705,10 @@ class SQLVisitor(SQLParserVisitor):
             parsedObject.update({"action": 'exit'})
         if ctx.WHENEVER_ERROR():
             parsedObject.update({"condition": 'error'})
+        if ctx.WHENEVER_EXITCODE():
+            parsedObject.update({"exitCode": int(ctx.WHENEVER_EXITCODE().getText())})
+        else:
+            parsedObject.update({"exitCode": 0})
 
         # 获取错误代码
         errorCode = 0
