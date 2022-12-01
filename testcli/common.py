@@ -3,7 +3,6 @@ import copy
 import os
 import re
 from .sqlparse import SQLFormatWithPrefix
-from .apiparse import APIRequestStringFormatWithPrefix
 from .apiparse import APIRequestObjectFormatWithPrefix
 from .commands.assertExpression import evalExpression
 
@@ -111,3 +110,98 @@ def rewriteAPIStatement(cls, requestObject: [], commandScriptFile: str):
                 outputPrefix='REWROTED '))
 
     return requestObject, rewrotedRequestObjects
+
+
+def parseSQLHints(commandHints: list):
+    commandHintList = {}
+
+    for commandHint in commandHints:
+        # [Hint]  Scenario:XXXX   -- 相关SQL的Scenariox信息，仅仅作为日志信息供查看
+        match_obj = re.search(
+            r"^Scenario:(.*)", commandHint, re.IGNORECASE | re.DOTALL)
+        if match_obj:
+            senario = match_obj.group(1)
+            # 如果只有一个内容， 规则是:Scenario:ScenarioName
+            commandHintList["Scenario"] = senario
+            continue
+
+        # [Hint]  order           -- SQLCli将会把随后的SQL语句进行排序输出，原程序的输出顺序被忽略
+        match_obj = re.search(r"^order", commandHint, re.IGNORECASE | re.DOTALL)
+        if match_obj:
+            commandHintList["Order"] = True
+            continue
+
+        # [Hint]  LogFilter      -- SQLCli会过滤随后显示的输出信息，对于符合过滤条件的，将会被过滤
+        match_obj = re.search(
+            r"^LogFilter(\s+)(.*)", commandHint, re.IGNORECASE | re.DOTALL)
+        if match_obj:
+            # 可能有多个Filter信息
+            sqlFilter = match_obj.group(5).strip()
+            if "LogFilter" in commandHintList:
+                commandHintList["LogFilter"].append(sqlFilter)
+            else:
+                commandHintList["LogFilter"] = [sqlFilter, ]
+            continue
+
+        # [Hint]  LogMask      -- SQLCli会掩码随后显示的输出信息，对于符合掩码条件的，将会被掩码
+        match_obj = re.search(
+            r"^LogMask(\s+)(.*)", commandHint, re.IGNORECASE | re.DOTALL)
+        if match_obj:
+            sqlMask = match_obj.group(5).strip()
+            if "LogMask" in commandHintList:
+                commandHintList["LogMask"].append(sqlMask)
+            else:
+                commandHintList["LogMask"] = [sqlMask]
+            continue
+
+        # [Hint]  SQL_DIRECT   -- SQLCli执行的时候将不再尝试解析语句，而是直接解析执行
+        match_obj = re.search(r"^SQL_DIRECT", commandHint, re.IGNORECASE | re.DOTALL)
+        if match_obj:
+            commandHintList["SQL_DIRECT"] = True
+            continue
+
+        # [Hint]  SQL_PREPARE   -- SQLCli执行的时候将首先尝试解析语句，随后执行
+        match_obj = re.search(r"^SQL_PREPARE", commandHint, re.IGNORECASE | re.DOTALL)
+        if match_obj:
+            commandHintList["SQL_PREPARE"] = True
+            continue
+    return commandHintList
+
+
+def parseAPIHints(commandHints: list):
+    commandHintList = {}
+
+    for commandHint in commandHints:
+        # [Hint]  Scenario:XXXX   -- 相关SQL的Scenariox信息，仅仅作为日志信息供查看
+        match_obj = re.search(
+            r"^Scenario:(.*)", commandHint, re.IGNORECASE | re.DOTALL)
+        if match_obj:
+            senario = match_obj.group(1)
+            # 如果只有一个内容， 规则是:Scenario:ScenarioName
+            commandHintList["Scenario"] = senario
+            continue
+
+        # [Hint]  LogFilter      -- SQLCli会过滤随后显示的输出信息，对于符合过滤条件的，将会被过滤
+        match_obj = re.search(
+            r"^LogFilter(\s+)(.*)", commandHint, re.IGNORECASE | re.DOTALL)
+        if match_obj:
+            # 可能有多个Filter信息
+            sqlFilter = match_obj.group(5).strip()
+            if "LogFilter" in commandHintList:
+                commandHintList["LogFilter"].append(sqlFilter)
+            else:
+                commandHintList["LogFilter"] = [sqlFilter, ]
+            continue
+
+        # [Hint]  LogMask      -- SQLCli会掩码随后显示的输出信息，对于符合掩码条件的，将会被掩码
+        match_obj = re.search(
+            r"^LogMask(\s+)(.*)", commandHint, re.IGNORECASE | re.DOTALL)
+        if match_obj:
+            sqlMask = match_obj.group(5).strip()
+            if "LogMask" in commandHintList:
+                commandHintList["LogMask"].append(sqlMask)
+            else:
+                commandHintList["LogMask"] = [sqlMask]
+            continue
+
+    return commandHintList

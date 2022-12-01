@@ -5,7 +5,7 @@ options {
     caseInsensitive = true;
 }
 
-channels { HINT_CHANNEL, COMMENT_CHANNEL }
+channels { COMMENT_CHANNEL }
 
 // HTTP 请求进入Http处理模式
 HTTP_OPEN   : '###' .*? CRLF ->pushMode(HttpMode);
@@ -13,20 +13,15 @@ HTTP_OPEN   : '###' .*? CRLF ->pushMode(HttpMode);
 // 脚本模式
 SCRIPT_OPEN : '> {%' ->pushMode(ScriptMode);
 
-// 注释模式
-COMMENT_OPEN: '//' .*? CRLF ->channel(HIDDEN);
+// 注释
+COMMENT1     :  '//' .*? (CRLF | EOF) ->channel(HIDDEN);
+COMMENT2     :  '--' .*? (CRLF | EOF) ->channel(HIDDEN);
 
-// --提示
-MINUS_MINUS_HINT   : '--' ' '* '[Hint]' .*? CRLF ->channel(HINT_CHANNEL);
-
-// --SQL注释
-MINUS_MINUS_COMMENT   : '--' .*? (CRLF | EOF) ->channel(COMMENT_CHANNEL);
-HASH_COMMENT      : '#' ~'#' .*? CRLF ->channel(COMMENT_CHANNEL);
 /**
  * Http请求模式
  */
 mode HttpMode;
-
+HTTP_COMMENT: '//' .*? CRLF ->channel(COMMENT_CHANNEL);
 HTTP_CRLF: CRLF->type(CRLF);
 DIVIDE: '/';
 SP: [ \t]+ -> channel (HIDDEN);
@@ -46,16 +41,6 @@ HttpMethod
 // HTTP 请求结束符号
 HTTP_CLOSE
       : '###' ->popMode;
-
-// 提示信息
-HttpHint
-      : ('//' ' '? '[Hint]'  .*? CRLF) ->channel(HINT_CHANNEL)
-      ;
-
-// 注释
-HttpComment
-      : ('//' .*? CRLF) ->channel(COMMENT_CHANNEL)
-      ;
 
 /**
  * 分割URI
@@ -126,14 +111,9 @@ HttpMultipartBoundary
       : ('--' String CRLF) ->mode(HttpHeaderFieldMode)
       ;
 
-// 提示信息
-HttpMessageBodyHint
-      : ('//' ' '? '[Hint]'  .*? CRLF) ->channel(HINT_CHANNEL)
-      ;
-
 // 注释
 HttpMessageBodyComment
-      : ('//' .*? CRLF) ->channel(COMMENT_CHANNEL)
+      : ('//' .*? CRLF) ->channel(HIDDEN)
       ;
 
 // 处理操作

@@ -40,6 +40,8 @@ from .commands.whenever import setWheneverAction
 
 from .common import rewriteSQLStatement
 from .common import rewriteAPIStatement
+from .common import parseSQLHints
+from .common import parseAPIHints
 from .testcliexception import TestCliException
 from .globalvar import lastCommandResult
 
@@ -420,6 +422,23 @@ class CmdExecute(object):
             apiHints               提示信息            
     '''
     def executeAPIStatement(self, apiRequest, apiHints, startTime):
+        """
+        返回内容：
+            错误情况下：
+            {
+                "type": "error",
+                "message": apiErrorMessage
+            }
+            正确情况下：
+            {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": content
+            }
+        """
         httpHandler = self.cliHandler.httpHandler
 
         httpMethod = apiRequest["httpMethod"]
@@ -476,7 +495,20 @@ class CmdExecute(object):
     def executeSQLStatement(self, sql: str, sqlHints, startTime):
         """
         返回内容：
-
+            错误情况下：
+            {
+                "type": "error",
+                "message": sqlErrorMessage
+            }
+            正确情况下：
+            {
+                "type": "result",
+                "title": title,
+                "rows": result,
+                "headers": headers,
+                "columnTypes": columnTypes,
+                "status": status
+            }
         """
 
         # 进入到SQL执行阶段, 开始执行SQL语句
@@ -680,69 +712,6 @@ class CmdExecute(object):
                     if bErrorMessageHasChanged:
                         sqlErrorMessage = "\n".join(sqlMultiLineErrorMessage)
                 yield {"type": "error", "message": sqlErrorMessage}
-
-    '''
-        处理命令行的Hint信息
-        输入：
-            commandHints            字符串方式的Hint输入
-        输出:
-            commandHintList         用Key-Value方式返回的Hint信息                          
-    '''
-    @staticmethod
-    def parseHints(commandHints: list):
-        commandHintList = {}
-
-        for commandHint in commandHints:
-            # [Hint]  Scenario:XXXX   -- 相关SQL的Scenariox信息，仅仅作为日志信息供查看
-            match_obj = re.search(
-                r"^Scenario:(.*)", commandHint, re.IGNORECASE | re.DOTALL)
-            if match_obj:
-                senario = match_obj.group(1)
-                # 如果只有一个内容， 规则是:Scenario:ScenarioName
-                commandHintList["Scenario"] = senario
-                continue
-
-            # [Hint]  order           -- SQLCli将会把随后的SQL语句进行排序输出，原程序的输出顺序被忽略
-            match_obj = re.search(r"^order", commandHint, re.IGNORECASE | re.DOTALL)
-            if match_obj:
-                commandHintList["Order"] = True
-                continue
-
-            # [Hint]  LogFilter      -- SQLCli会过滤随后显示的输出信息，对于符合过滤条件的，将会被过滤
-            match_obj = re.search(
-                r"^LogFilter(\s+)(.*)", commandHint, re.IGNORECASE | re.DOTALL)
-            if match_obj:
-                # 可能有多个Filter信息
-                sqlFilter = match_obj.group(5).strip()
-                if "LogFilter" in commandHintList:
-                    commandHintList["LogFilter"].append(sqlFilter)
-                else:
-                    commandHintList["LogFilter"] = [sqlFilter, ]
-                continue
-
-            # [Hint]  LogMask      -- SQLCli会掩码随后显示的输出信息，对于符合掩码条件的，将会被掩码
-            match_obj = re.search(
-                r"^LogMask(\s+)(.*)", commandHint, re.IGNORECASE | re.DOTALL)
-            if match_obj:
-                sqlMask = match_obj.group(5).strip()
-                if "LogMask" in commandHintList:
-                    commandHintList["LogMask"].append(sqlMask)
-                else:
-                    commandHintList["LogMask"] = [sqlMask]
-                continue
-
-            # [Hint]  SQL_DIRECT   -- SQLCli执行的时候将不再尝试解析语句，而是直接解析执行
-            match_obj = re.search(r"^SQL_DIRECT", commandHint, re.IGNORECASE | re.DOTALL)
-            if match_obj:
-                commandHintList["SQL_DIRECT"] = True
-                continue
-
-            # [Hint]  SQL_PREPARE   -- SQLCli执行的时候将首先尝试解析语句，随后执行
-            match_obj = re.search(r"^SQL_PREPARE", commandHint, re.IGNORECASE | re.DOTALL)
-            if match_obj:
-                commandHintList["SQL_PREPARE"] = True
-                continue
-        return commandHintList
 
     def runStatement(self, statement: str, commandScriptFile: str, nameSpace: str):
         # Remove spaces and EOL
@@ -1092,7 +1061,7 @@ class CmdExecute(object):
                     }
 
                 # 处理Hints信息
-                commandHintList = self.parseHints(list(ret_CommandHints[pos]))
+                commandHintList = parseSQLHints(list(ret_CommandHints[pos]))
 
                 # 执行SQL语句
                 for result in self.executeSQLStatement(
@@ -1102,9 +1071,13 @@ class CmdExecute(object):
                     if result["type"] == "result":
                         lastCommandResult["rows"] = result["rows"]
                         lastCommandResult["headers"] = result["headers"]
-                    else:
+                        lastCommandResult["message"] = result["status"]
+                        lastCommandResult["errorCode"] = 0
+                    if result["type"] == "error":
                         lastCommandResult["rows"] = []
                         lastCommandResult["headers"] = []
+                        lastCommandResult["message"] = result["message"]
+                        lastCommandResult["errorCode"] = 1
                     yield result
             elif parseObject["name"] in ["USE"]:
                 for commandResult in userNameSpace(
@@ -1183,13 +1156,21 @@ class CmdExecute(object):
                     }
 
                 # 处理Hints信息
-                commandHintList = self.parseHints(list(ret_CommandHints[pos]))
+                commandHintList = parseAPIHints(list(ret_CommandHints[pos]))
 
                 # 执行HTTP请求
                 for result in self.executeAPIStatement(
                         apiRequest=parseObject,
                         apiHints=commandHintList,
                         startTime=0):
+                    if result["type"] == "result":
+                        data = json.loads(result["status"])
+                        lastCommandResult["data"] = data["status"]
+                        lastCommandResult["status"] = data["content"]
+                        lastCommandResult["errorCode"] = 0
+                    if result["type"] == "error":
+                        lastCommandResult["message"] = result["message"]
+                        lastCommandResult["errorCode"] = 1
                     yield result
             elif parseObject["name"] in ["HOST"]:
                 # 执行主机操作系统命令

@@ -33,13 +33,7 @@ class APIVisitor(APIParserVisitor):
     """
     @staticmethod
     def getSourceInterval(ctx):
-        start, end = ctx.getSourceInterval()
-        while start > 0:
-            token = ctx.parser._input.tokens[start-1]
-            if token.channel != APILexer.HINT_CHANNEL:
-                break
-            start -= 1
-        return start, end
+        return ctx.getSourceInterval()
 
     """
         功能：返回指定通道文本
@@ -380,16 +374,29 @@ class APIVisitor(APIParserVisitor):
         # HTTP_OPEN的格式是 ### STRING的格式
         # 分割STRING作为title属性返回
         title = ctx.HTTP_OPEN().getText().partition(' ')[2]
-        
+
         if (title is not None) and title != '':
             title = title.splitlines()[0].strip()
 
         if (title is not None) and (title != ''):
             parsedObject.update({'title': title})
-        
+
+        # 获取源文件
+        hints = []
+        start, end = self.getSourceInterval(ctx)
+        tokens = ctx.parser._input.tokens[start:end+1]
+        for token in tokens:
+            if token.channel == APILexer.COMMENT_CHANNEL:
+                commentLine = str(token.text).strip()
+                matchObj = re.match(r"//\s+@(.*)$", commentLine, re.DOTALL)
+                if matchObj:
+                    hints.append(matchObj.group(1))
+        parsedObject.update({'hints': hints})
+
         #  HTTP消息的处理
-        result, code, message = self.visit(ctx.httpMessage())
-        parsedObject.update(result)
+        if ctx.httpMessage() is not None:
+            result, code, message = self.visit(ctx.httpMessage())
+            parsedObject.update(result)
 
         # 处理错误信息
         errorCode = 0
@@ -419,7 +426,7 @@ class APIVisitor(APIParserVisitor):
         # 处理请求行
         result, code, message = self.visit(ctx.httpRequestLine())
         parsedObject.update(result)
-        
+
         # 处理请求域
         if ctx.httpHeaderFields() is not None:
             result, code, message = self.visit(ctx.httpHeaderFields())

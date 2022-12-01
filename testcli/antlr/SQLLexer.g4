@@ -5,7 +5,7 @@ options {
     caseInsensitive = true;
 }
 
-channels { HINT_CHANNEL, COMMENT_CHANNEL, SQLSTATEMENT_CHANNEL }
+channels {SQLSTATEMENT_CHANNEL }
 
 // 关键字
 CONNECT: '_CONNECT' -> pushMode(ConnectMode);
@@ -13,15 +13,8 @@ SESSION: '_SESSION' -> pushMode(SessionMode);
 
 DISCONNECT: '_DISCONNECT';
 
-// 注释模式
-COMMENT_OPEN: '//' .*? CRLF ->channel(HIDDEN);
-
-// --提示
-MINUS_MINUS_HINT   : '--' ' '* '[Hint]' .*? CRLF ->channel(HINT_CHANNEL);
-
 // --SQL注释
-MINUS_MINUS_COMMENT   : '--' .*? (CRLF | EOF) ->channel(COMMENT_CHANNEL);
-HASH_COMMENT      : '#' ~'#' .*? CRLF ->channel(COMMENT_CHANNEL);
+MINUS_MINUS_COMMENT   : '--' .*? (CRLF | EOF) ->channel(HIDDEN);
 
 // SQL创建语句
 SQL_CREATE:     'CREATE' -> mode(SQLStatementMode) ;

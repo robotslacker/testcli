@@ -6,7 +6,10 @@ os.environ["host"] = "127.0.0.1"
 %}
 
 > {% port=8000 %}
+// [Hint] Hello
+-- [Hint] Hello2
 ### aaa
+// @hint
 GET http://{{host}}:{{port}}/health
     ?requestId=1 HTTP/1.1
 Accept: application/json

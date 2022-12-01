@@ -5,8 +5,6 @@ options {
     caseInsensitive = true;
 }
 
-channels { HINT_CHANNEL, COMMENT_CHANNEL, SQLSTATEMENT_CHANNEL }
-
 // 分割符号
 CRLF                : '\n';
 COMMA               : ',';

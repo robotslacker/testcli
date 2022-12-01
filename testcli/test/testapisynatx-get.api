@@ -1,4 +1,7 @@
 ### aaa
+// @no-rediect
+// @Hello
+// nothing
 GET https://{{host}}:{{port}}/ares/cloud/service/getRequestStatus
     ?requestId=1
     &dryRun=False   HTTP/1.1

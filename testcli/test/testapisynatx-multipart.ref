@@ -2,6 +2,7 @@
     "headers": {
         "Content-Type": " multipart/form-data; boundary=boundary"
     },
+    "hints": [],
     "httpFields": {},
     "httpMethod": "POST",
     "httpRequestTarget": "http://example.com/api/upload",

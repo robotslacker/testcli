@@ -10,7 +10,7 @@ else:
 
 def serializedATN():
     return [
-        4,1,107,324,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,
+        4,1,103,324,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,
         7,6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,
         13,2,14,7,14,2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,2,
         20,7,20,2,21,7,21,2,22,7,22,2,23,7,23,2,24,7,24,2,25,7,25,2,26,7,
@@ -39,10 +39,10 @@ def serializedATN():
         33,306,8,33,1,34,1,34,3,34,310,8,34,1,34,5,34,313,8,34,10,34,12,
         34,316,9,34,1,34,3,34,319,8,34,1,34,3,34,322,8,34,1,34,0,0,35,0,
         2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,
-        48,50,52,54,56,58,60,62,64,66,68,0,4,1,1,43,43,2,0,7,7,39,39,1,0,
-        103,104,1,1,7,7,354,0,70,1,0,0,0,2,76,1,0,0,0,4,78,1,0,0,0,6,88,
-        1,0,0,0,8,93,1,0,0,0,10,96,1,0,0,0,12,98,1,0,0,0,14,103,1,0,0,0,
-        16,106,1,0,0,0,18,110,1,0,0,0,20,112,1,0,0,0,22,117,1,0,0,0,24,122,
+        48,50,52,54,56,58,60,62,64,66,68,0,4,1,1,42,42,2,0,5,5,37,37,1,0,
+        99,100,1,1,5,5,354,0,70,1,0,0,0,2,76,1,0,0,0,4,78,1,0,0,0,6,88,1,
+        0,0,0,8,93,1,0,0,0,10,96,1,0,0,0,12,98,1,0,0,0,14,103,1,0,0,0,16,
+        106,1,0,0,0,18,110,1,0,0,0,20,112,1,0,0,0,22,117,1,0,0,0,24,122,
         1,0,0,0,26,128,1,0,0,0,28,132,1,0,0,0,30,136,1,0,0,0,32,140,1,0,
         0,0,34,143,1,0,0,0,36,163,1,0,0,0,38,165,1,0,0,0,40,175,1,0,0,0,
         42,185,1,0,0,0,44,193,1,0,0,0,46,201,1,0,0,0,48,222,1,0,0,0,50,235,
@@ -50,24 +50,24 @@ def serializedATN():
         0,0,60,276,1,0,0,0,62,289,1,0,0,0,64,297,1,0,0,0,66,302,1,0,0,0,
         68,307,1,0,0,0,70,71,3,2,1,0,71,72,5,0,0,1,72,1,1,0,0,0,73,77,3,
         36,18,0,74,77,3,4,2,0,75,77,5,0,0,1,76,73,1,0,0,0,76,74,1,0,0,0,
-        76,75,1,0,0,0,77,3,1,0,0,0,78,82,5,1,0,0,79,81,5,7,0,0,80,79,1,0,
+        76,75,1,0,0,0,77,3,1,0,0,0,78,82,5,1,0,0,79,81,5,5,0,0,80,79,1,0,
         0,0,81,84,1,0,0,0,82,80,1,0,0,0,82,83,1,0,0,0,83,85,1,0,0,0,84,82,
         1,0,0,0,85,86,3,6,3,0,86,87,7,0,0,0,87,5,1,0,0,0,88,89,3,8,4,0,89,
         91,3,14,7,0,90,92,3,22,11,0,91,90,1,0,0,0,91,92,1,0,0,0,92,7,1,0,
-        0,0,93,94,3,10,5,0,94,95,3,12,6,0,95,9,1,0,0,0,96,97,5,42,0,0,97,
-        11,1,0,0,0,98,99,5,46,0,0,99,13,1,0,0,0,100,102,3,16,8,0,101,100,
+        0,0,93,94,3,10,5,0,94,95,3,12,6,0,95,9,1,0,0,0,96,97,5,41,0,0,97,
+        11,1,0,0,0,98,99,5,43,0,0,99,13,1,0,0,0,100,102,3,16,8,0,101,100,
         1,0,0,0,102,105,1,0,0,0,103,101,1,0,0,0,103,104,1,0,0,0,104,15,1,
-        0,0,0,105,103,1,0,0,0,106,107,3,18,9,0,107,108,5,48,0,0,108,109,
-        3,20,10,0,109,17,1,0,0,0,110,111,5,47,0,0,111,19,1,0,0,0,112,113,
-        5,50,0,0,113,114,5,51,0,0,114,21,1,0,0,0,115,118,3,24,12,0,116,118,
+        0,0,0,105,103,1,0,0,0,106,107,3,18,9,0,107,108,5,45,0,0,108,109,
+        3,20,10,0,109,17,1,0,0,0,110,111,5,44,0,0,111,19,1,0,0,0,112,113,
+        5,47,0,0,113,114,5,48,0,0,114,21,1,0,0,0,115,118,3,24,12,0,116,118,
         3,30,15,0,117,115,1,0,0,0,117,116,1,0,0,0,118,119,1,0,0,0,119,117,
         1,0,0,0,119,120,1,0,0,0,120,23,1,0,0,0,121,123,3,26,13,0,122,121,
         1,0,0,0,123,124,1,0,0,0,124,122,1,0,0,0,124,125,1,0,0,0,125,126,
-        1,0,0,0,126,127,5,52,0,0,127,25,1,0,0,0,128,129,3,28,14,0,129,130,
-        3,14,7,0,130,131,3,30,15,0,131,27,1,0,0,0,132,133,5,53,0,0,133,29,
+        1,0,0,0,126,127,5,49,0,0,127,25,1,0,0,0,128,129,3,28,14,0,129,130,
+        3,14,7,0,130,131,3,30,15,0,131,27,1,0,0,0,132,133,5,50,0,0,133,29,
         1,0,0,0,134,137,3,32,16,0,135,137,3,34,17,0,136,134,1,0,0,0,136,
         135,1,0,0,0,137,138,1,0,0,0,138,136,1,0,0,0,138,139,1,0,0,0,139,
-        31,1,0,0,0,140,141,5,56,0,0,141,33,1,0,0,0,142,144,7,1,0,0,143,142,
+        31,1,0,0,0,140,141,5,52,0,0,141,33,1,0,0,0,142,144,7,1,0,0,143,142,
         1,0,0,0,144,145,1,0,0,0,145,143,1,0,0,0,145,146,1,0,0,0,146,35,1,
         0,0,0,147,164,3,50,25,0,148,164,3,48,24,0,149,164,3,52,26,0,150,
         164,3,46,23,0,151,164,3,54,27,0,152,164,3,56,28,0,153,164,3,58,29,
@@ -77,57 +77,57 @@ def serializedATN():
         0,0,163,149,1,0,0,0,163,150,1,0,0,0,163,151,1,0,0,0,163,152,1,0,
         0,0,163,153,1,0,0,0,163,154,1,0,0,0,163,155,1,0,0,0,163,156,1,0,
         0,0,163,157,1,0,0,0,163,158,1,0,0,0,163,159,1,0,0,0,163,160,1,0,
-        0,0,163,161,1,0,0,0,163,162,1,0,0,0,164,37,1,0,0,0,165,167,5,22,
-        0,0,166,168,5,37,0,0,167,166,1,0,0,0,167,168,1,0,0,0,168,170,1,0,
-        0,0,169,171,5,9,0,0,170,169,1,0,0,0,170,171,1,0,0,0,171,173,1,0,
-        0,0,172,174,5,7,0,0,173,172,1,0,0,0,173,174,1,0,0,0,174,39,1,0,0,
-        0,175,177,5,23,0,0,176,178,5,37,0,0,177,176,1,0,0,0,177,178,1,0,
-        0,0,178,180,1,0,0,0,179,181,5,9,0,0,180,179,1,0,0,0,180,181,1,0,
-        0,0,181,183,1,0,0,0,182,184,5,7,0,0,183,182,1,0,0,0,183,184,1,0,
-        0,0,184,41,1,0,0,0,185,186,5,26,0,0,186,188,7,2,0,0,187,189,5,106,
-        0,0,188,187,1,0,0,0,188,189,1,0,0,0,189,191,1,0,0,0,190,192,5,7,
-        0,0,191,190,1,0,0,0,191,192,1,0,0,0,192,43,1,0,0,0,193,194,5,25,
-        0,0,194,196,5,37,0,0,195,197,5,9,0,0,196,195,1,0,0,0,196,197,1,0,
-        0,0,197,199,1,0,0,0,198,200,5,7,0,0,199,198,1,0,0,0,199,200,1,0,
-        0,0,200,45,1,0,0,0,201,202,5,29,0,0,202,207,5,71,0,0,203,204,5,70,
-        0,0,204,206,5,71,0,0,205,203,1,0,0,0,206,209,1,0,0,0,207,205,1,0,
-        0,0,207,208,1,0,0,0,208,211,1,0,0,0,209,207,1,0,0,0,210,212,5,68,
-        0,0,211,210,1,0,0,0,211,212,1,0,0,0,212,214,1,0,0,0,213,215,5,69,
-        0,0,214,213,1,0,0,0,214,215,1,0,0,0,215,217,1,0,0,0,216,218,5,9,
-        0,0,217,216,1,0,0,0,217,218,1,0,0,0,218,220,1,0,0,0,219,221,5,7,
-        0,0,220,219,1,0,0,0,220,221,1,0,0,0,221,47,1,0,0,0,222,223,5,30,
-        0,0,223,225,5,64,0,0,224,226,5,65,0,0,225,224,1,0,0,0,226,227,1,
+        0,0,163,161,1,0,0,0,163,162,1,0,0,0,164,37,1,0,0,0,165,167,5,20,
+        0,0,166,168,5,35,0,0,167,166,1,0,0,0,167,168,1,0,0,0,168,170,1,0,
+        0,0,169,171,5,7,0,0,170,169,1,0,0,0,170,171,1,0,0,0,171,173,1,0,
+        0,0,172,174,5,5,0,0,173,172,1,0,0,0,173,174,1,0,0,0,174,39,1,0,0,
+        0,175,177,5,21,0,0,176,178,5,35,0,0,177,176,1,0,0,0,177,178,1,0,
+        0,0,178,180,1,0,0,0,179,181,5,7,0,0,180,179,1,0,0,0,180,181,1,0,
+        0,0,181,183,1,0,0,0,182,184,5,5,0,0,183,182,1,0,0,0,183,184,1,0,
+        0,0,184,41,1,0,0,0,185,186,5,24,0,0,186,188,7,2,0,0,187,189,5,102,
+        0,0,188,187,1,0,0,0,188,189,1,0,0,0,189,191,1,0,0,0,190,192,5,5,
+        0,0,191,190,1,0,0,0,191,192,1,0,0,0,192,43,1,0,0,0,193,194,5,23,
+        0,0,194,196,5,35,0,0,195,197,5,7,0,0,196,195,1,0,0,0,196,197,1,0,
+        0,0,197,199,1,0,0,0,198,200,5,5,0,0,199,198,1,0,0,0,199,200,1,0,
+        0,0,200,45,1,0,0,0,201,202,5,27,0,0,202,207,5,67,0,0,203,204,5,66,
+        0,0,204,206,5,67,0,0,205,203,1,0,0,0,206,209,1,0,0,0,207,205,1,0,
+        0,0,207,208,1,0,0,0,208,211,1,0,0,0,209,207,1,0,0,0,210,212,5,64,
+        0,0,211,210,1,0,0,0,211,212,1,0,0,0,212,214,1,0,0,0,213,215,5,65,
+        0,0,214,213,1,0,0,0,214,215,1,0,0,0,215,217,1,0,0,0,216,218,5,7,
+        0,0,217,216,1,0,0,0,217,218,1,0,0,0,218,220,1,0,0,0,219,221,5,5,
+        0,0,220,219,1,0,0,0,220,221,1,0,0,0,221,47,1,0,0,0,222,223,5,28,
+        0,0,223,225,5,60,0,0,224,226,5,61,0,0,225,224,1,0,0,0,226,227,1,
         0,0,0,227,225,1,0,0,0,227,228,1,0,0,0,228,230,1,0,0,0,229,231,5,
-        9,0,0,230,229,1,0,0,0,230,231,1,0,0,0,231,233,1,0,0,0,232,234,5,
-        7,0,0,233,232,1,0,0,0,233,234,1,0,0,0,234,49,1,0,0,0,235,236,5,28,
-        0,0,236,238,5,62,0,0,237,239,5,9,0,0,238,237,1,0,0,0,238,239,1,0,
-        0,0,239,241,1,0,0,0,240,242,5,7,0,0,241,240,1,0,0,0,241,242,1,0,
-        0,0,242,51,1,0,0,0,243,244,5,31,0,0,244,245,5,75,0,0,245,53,1,0,
-        0,0,246,253,5,35,0,0,247,254,5,86,0,0,248,254,5,87,0,0,249,254,5,
-        88,0,0,250,251,5,82,0,0,251,252,5,83,0,0,252,254,5,89,0,0,253,247,
+        7,0,0,230,229,1,0,0,0,230,231,1,0,0,0,231,233,1,0,0,0,232,234,5,
+        5,0,0,233,232,1,0,0,0,233,234,1,0,0,0,234,49,1,0,0,0,235,236,5,26,
+        0,0,236,238,5,58,0,0,237,239,5,7,0,0,238,237,1,0,0,0,238,239,1,0,
+        0,0,239,241,1,0,0,0,240,242,5,5,0,0,241,240,1,0,0,0,241,242,1,0,
+        0,0,242,51,1,0,0,0,243,244,5,29,0,0,244,245,5,71,0,0,245,53,1,0,
+        0,0,246,253,5,33,0,0,247,254,5,82,0,0,248,254,5,83,0,0,249,254,5,
+        84,0,0,250,251,5,78,0,0,251,252,5,79,0,0,252,254,5,85,0,0,253,247,
         1,0,0,0,253,248,1,0,0,0,253,249,1,0,0,0,253,250,1,0,0,0,254,256,
-        1,0,0,0,255,257,5,80,0,0,256,255,1,0,0,0,256,257,1,0,0,0,257,259,
-        1,0,0,0,258,260,5,7,0,0,259,258,1,0,0,0,259,260,1,0,0,0,260,55,1,
-        0,0,0,261,262,5,32,0,0,262,264,5,79,0,0,263,265,5,9,0,0,264,263,
-        1,0,0,0,264,265,1,0,0,0,265,267,1,0,0,0,266,268,5,7,0,0,267,266,
-        1,0,0,0,267,268,1,0,0,0,268,57,1,0,0,0,269,271,5,33,0,0,270,272,
-        5,9,0,0,271,270,1,0,0,0,271,272,1,0,0,0,272,274,1,0,0,0,273,275,
-        5,7,0,0,274,273,1,0,0,0,274,275,1,0,0,0,275,59,1,0,0,0,276,277,5,
-        36,0,0,277,281,5,93,0,0,278,282,5,95,0,0,279,280,5,96,0,0,280,282,
-        5,92,0,0,281,278,1,0,0,0,281,279,1,0,0,0,282,284,1,0,0,0,283,285,
-        5,94,0,0,284,283,1,0,0,0,284,285,1,0,0,0,285,287,1,0,0,0,286,288,
-        5,7,0,0,287,286,1,0,0,0,287,288,1,0,0,0,288,61,1,0,0,0,289,290,5,
-        24,0,0,290,292,5,39,0,0,291,293,5,9,0,0,292,291,1,0,0,0,292,293,
-        1,0,0,0,293,295,1,0,0,0,294,296,5,7,0,0,295,294,1,0,0,0,295,296,
-        1,0,0,0,296,63,1,0,0,0,297,298,5,27,0,0,298,300,5,58,0,0,299,301,
+        1,0,0,0,255,257,5,76,0,0,256,255,1,0,0,0,256,257,1,0,0,0,257,259,
+        1,0,0,0,258,260,5,5,0,0,259,258,1,0,0,0,259,260,1,0,0,0,260,55,1,
+        0,0,0,261,262,5,30,0,0,262,264,5,75,0,0,263,265,5,7,0,0,264,263,
+        1,0,0,0,264,265,1,0,0,0,265,267,1,0,0,0,266,268,5,5,0,0,267,266,
+        1,0,0,0,267,268,1,0,0,0,268,57,1,0,0,0,269,271,5,31,0,0,270,272,
+        5,7,0,0,271,270,1,0,0,0,271,272,1,0,0,0,272,274,1,0,0,0,273,275,
+        5,5,0,0,274,273,1,0,0,0,274,275,1,0,0,0,275,59,1,0,0,0,276,277,5,
+        34,0,0,277,281,5,89,0,0,278,282,5,91,0,0,279,280,5,92,0,0,280,282,
+        5,88,0,0,281,278,1,0,0,0,281,279,1,0,0,0,282,284,1,0,0,0,283,285,
+        5,90,0,0,284,283,1,0,0,0,284,285,1,0,0,0,285,287,1,0,0,0,286,288,
+        5,5,0,0,287,286,1,0,0,0,287,288,1,0,0,0,288,61,1,0,0,0,289,290,5,
+        22,0,0,290,292,5,37,0,0,291,293,5,7,0,0,292,291,1,0,0,0,292,293,
+        1,0,0,0,293,295,1,0,0,0,294,296,5,5,0,0,295,294,1,0,0,0,295,296,
+        1,0,0,0,296,63,1,0,0,0,297,298,5,25,0,0,298,300,5,54,0,0,299,301,
         7,3,0,0,300,299,1,0,0,0,300,301,1,0,0,0,301,65,1,0,0,0,302,303,5,
-        2,0,0,303,305,5,57,0,0,304,306,5,7,0,0,305,304,1,0,0,0,305,306,1,
-        0,0,0,306,67,1,0,0,0,307,309,5,34,0,0,308,310,5,101,0,0,309,308,
-        1,0,0,0,309,310,1,0,0,0,310,314,1,0,0,0,311,313,5,99,0,0,312,311,
-        1,0,0,0,313,316,1,0,0,0,314,312,1,0,0,0,314,315,1,0,0,0,315,318,
-        1,0,0,0,316,314,1,0,0,0,317,319,5,100,0,0,318,317,1,0,0,0,318,319,
-        1,0,0,0,319,321,1,0,0,0,320,322,5,7,0,0,321,320,1,0,0,0,321,322,
-        1,0,0,0,322,69,1,0,0,0,49,76,82,91,103,117,119,124,136,138,145,163,
+        2,0,0,303,305,5,53,0,0,304,306,5,5,0,0,305,304,1,0,0,0,305,306,1,
+        0,0,0,306,67,1,0,0,0,307,309,5,32,0,0,308,310,5,97,0,0,309,308,1,
+        0,0,0,309,310,1,0,0,0,310,314,1,0,0,0,311,313,5,95,0,0,312,311,1,
+        0,0,0,313,316,1,0,0,0,314,312,1,0,0,0,314,315,1,0,0,0,315,318,1,
+        0,0,0,316,314,1,0,0,0,317,319,5,96,0,0,318,317,1,0,0,0,318,319,1,
+        0,0,0,319,321,1,0,0,0,320,322,5,5,0,0,321,320,1,0,0,0,321,322,1,
+        0,0,0,322,69,1,0,0,0,49,76,82,91,103,117,119,124,136,138,145,163,
         167,170,173,177,180,183,188,191,196,199,207,211,214,217,220,227,
         230,233,238,241,253,256,259,264,267,271,274,281,284,287,292,295,
         300,305,309,314,318,321
@@ -145,14 +145,13 @@ class APIParser ( Parser ):
 
     literalNames = [ "<INVALID>", "<INVALID>", "'> {%'", "<INVALID>", "<INVALID>", 
                      "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
-                     "<INVALID>", "<INVALID>", "<INVALID>", "'.'", "<INVALID>", 
-                     "'('", "')'", "'['", "']'", "'\"'", "'''", "'\\'", 
-                     "<INVALID>", "'_EXIT'", "'_QUIT'", "'_SPOOL'", "'_SLEEP'", 
-                     "'_USE'", "<INVALID>", "'_ASSERT'", "'_START'", "'_LOAD'", 
-                     "'_HOST'", "'_IF'", "'_ENDIF'", "'_SET'", "'_LOOP'", 
-                     "'_WHENEVER'", "<INVALID>", "<INVALID>", "<INVALID>", 
-                     "<INVALID>", "<INVALID>", "<INVALID>", "'###'", "<INVALID>", 
+                     "<INVALID>", "'.'", "<INVALID>", "'('", "')'", "'['", 
+                     "']'", "'\"'", "'''", "'\\'", "<INVALID>", "'_EXIT'", 
+                     "'_QUIT'", "'_SPOOL'", "'_SLEEP'", "'_USE'", "<INVALID>", 
+                     "'_ASSERT'", "'_START'", "'_LOAD'", "'_HOST'", "'_IF'", 
+                     "'_ENDIF'", "'_SET'", "'_LOOP'", "'_WHENEVER'", "<INVALID>", 
                      "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
+                     "<INVALID>", "<INVALID>", "'###'", "<INVALID>", "<INVALID>", 
                      "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                      "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                      "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
@@ -167,19 +166,18 @@ class APIParser ( Parser ):
                      "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                      "<INVALID>", "<INVALID>", "'API'", "'SQL'" ]
 
-    symbolicNames = [ "<INVALID>", "HTTP_OPEN", "SCRIPT_OPEN", "COMMENT_OPEN", 
-                      "MINUS_MINUS_HINT", "MINUS_MINUS_COMMENT", "HASH_COMMENT", 
-                      "CRLF", "COMMA", "SEMICOLON", "COLON", "AT", "DOT", 
-                      "SLASH", "BRACKET_OPEN", "BRACKET_CLOSE", "SQUARE_OPEN", 
-                      "SQUARE_CLOSE", "DOUBLE_QUOTE", "SINGLE_QUOTE", "ESCAPE", 
-                      "SPACE", "EXIT", "QUIT", "SPOOL", "SLEEP", "USE", 
-                      "ECHO_OPEN", "ASSERT", "START", "LOAD", "HOST", "IF", 
-                      "ENDIF", "SET", "LOOP", "WHENEVER", "INT", "DECIMAL", 
-                      "String", "DIVIDE", "SP", "HttpMethod", "HTTP_CLOSE", 
-                      "HttpHint", "HttpComment", "HttpRequestTarget", "HttpHeaderFieldName", 
+    symbolicNames = [ "<INVALID>", "HTTP_OPEN", "SCRIPT_OPEN", "COMMENT1", 
+                      "COMMENT2", "CRLF", "COMMA", "SEMICOLON", "COLON", 
+                      "AT", "DOT", "SLASH", "BRACKET_OPEN", "BRACKET_CLOSE", 
+                      "SQUARE_OPEN", "SQUARE_CLOSE", "DOUBLE_QUOTE", "SINGLE_QUOTE", 
+                      "ESCAPE", "SPACE", "EXIT", "QUIT", "SPOOL", "SLEEP", 
+                      "USE", "ECHO_OPEN", "ASSERT", "START", "LOAD", "HOST", 
+                      "IF", "ENDIF", "SET", "LOOP", "WHENEVER", "INT", "DECIMAL", 
+                      "String", "HTTP_COMMENT", "DIVIDE", "SP", "HttpMethod", 
+                      "HTTP_CLOSE", "HttpRequestTarget", "HttpHeaderFieldName", 
                       "FIELD_COLON", "FIELD_CRLF", "HttpHeaderFieldValue", 
                       "HttpHeaderFieldValueEnd", "HttpMultipartBoundaryEnd", 
-                      "HttpMultipartBoundary", "HttpMessageBodyHint", "HttpMessageBodyComment", 
+                      "HttpMultipartBoundary", "HttpMessageBodyComment", 
                       "HttpMessageBodyOperate", "ScriptBlock", "EchoBlock", 
                       "ASSERT_SPACE", "ASSERT_OPEN", "ASSERT_CLOSE", "ASSERT_EXPRESSION", 
                       "LOAD_SPACE", "LOAD_OPTION", "LOAD_EXPRESSION", "LOAD_CRLF", 
@@ -244,111 +242,107 @@ class APIParser ( Parser ):
     EOF = Token.EOF
     HTTP_OPEN=1
     SCRIPT_OPEN=2
-    COMMENT_OPEN=3
-    MINUS_MINUS_HINT=4
-    MINUS_MINUS_COMMENT=5
-    HASH_COMMENT=6
-    CRLF=7
-    COMMA=8
-    SEMICOLON=9
-    COLON=10
-    AT=11
-    DOT=12
-    SLASH=13
-    BRACKET_OPEN=14
-    BRACKET_CLOSE=15
-    SQUARE_OPEN=16
-    SQUARE_CLOSE=17
-    DOUBLE_QUOTE=18
-    SINGLE_QUOTE=19
-    ESCAPE=20
-    SPACE=21
-    EXIT=22
-    QUIT=23
-    SPOOL=24
-    SLEEP=25
-    USE=26
-    ECHO_OPEN=27
-    ASSERT=28
-    START=29
-    LOAD=30
-    HOST=31
-    IF=32
-    ENDIF=33
-    SET=34
-    LOOP=35
-    WHENEVER=36
-    INT=37
-    DECIMAL=38
-    String=39
-    DIVIDE=40
-    SP=41
-    HttpMethod=42
-    HTTP_CLOSE=43
-    HttpHint=44
-    HttpComment=45
-    HttpRequestTarget=46
-    HttpHeaderFieldName=47
-    FIELD_COLON=48
-    FIELD_CRLF=49
-    HttpHeaderFieldValue=50
-    HttpHeaderFieldValueEnd=51
-    HttpMultipartBoundaryEnd=52
-    HttpMultipartBoundary=53
-    HttpMessageBodyHint=54
-    HttpMessageBodyComment=55
-    HttpMessageBodyOperate=56
-    ScriptBlock=57
-    EchoBlock=58
-    ASSERT_SPACE=59
-    ASSERT_OPEN=60
-    ASSERT_CLOSE=61
-    ASSERT_EXPRESSION=62
-    LOAD_SPACE=63
-    LOAD_OPTION=64
-    LOAD_EXPRESSION=65
-    LOAD_CRLF=66
-    START_SPACE=67
-    START_LOOP=68
-    START_INT=69
-    START_COMMA=70
-    START_EXPRESSION=71
-    START_CRLF=72
-    HOST_SPACE=73
-    HOST_TAG=74
-    HOST_BLOCK=75
-    IF_SPACE=76
-    IF_OPEN=77
-    IF_CLOSE=78
-    IF_EXPRESSION=79
-    LOOP_SEMICOLON=80
-    LOOP_SPACE=81
-    LOOP_BEGIN=82
-    LOOP_UNTIL=83
-    LOOP_OPEN=84
-    LOOP_CLOSE=85
-    LOOP_BREAK=86
-    LOOP_END=87
-    LOOP_CONTINUE=88
-    LOOP_EXPRESSION=89
-    LOOP_CRLF=90
-    WHENEVER_SPACE=91
-    WHENEVER_EXITCODE=92
-    WHENEVER_ERROR=93
-    WHENEVER_SEMICOLON=94
-    WHENEVER_CONTINUE=95
-    WHENEVER_EXIT=96
-    WHENEVER_CRLF=97
-    SET_SPACE=98
-    SET_EXPRESSION=99
-    SET_SEMICOLON=100
-    SET_AT=101
-    SET_CRLF=102
-    USE_API=103
-    USE_SQL=104
-    USE_SPACE=105
-    USE_SEMICOLON=106
-    USE_CRLF=107
+    COMMENT1=3
+    COMMENT2=4
+    CRLF=5
+    COMMA=6
+    SEMICOLON=7
+    COLON=8
+    AT=9
+    DOT=10
+    SLASH=11
+    BRACKET_OPEN=12
+    BRACKET_CLOSE=13
+    SQUARE_OPEN=14
+    SQUARE_CLOSE=15
+    DOUBLE_QUOTE=16
+    SINGLE_QUOTE=17
+    ESCAPE=18
+    SPACE=19
+    EXIT=20
+    QUIT=21
+    SPOOL=22
+    SLEEP=23
+    USE=24
+    ECHO_OPEN=25
+    ASSERT=26
+    START=27
+    LOAD=28
+    HOST=29
+    IF=30
+    ENDIF=31
+    SET=32
+    LOOP=33
+    WHENEVER=34
+    INT=35
+    DECIMAL=36
+    String=37
+    HTTP_COMMENT=38
+    DIVIDE=39
+    SP=40
+    HttpMethod=41
+    HTTP_CLOSE=42
+    HttpRequestTarget=43
+    HttpHeaderFieldName=44
+    FIELD_COLON=45
+    FIELD_CRLF=46
+    HttpHeaderFieldValue=47
+    HttpHeaderFieldValueEnd=48
+    HttpMultipartBoundaryEnd=49
+    HttpMultipartBoundary=50
+    HttpMessageBodyComment=51
+    HttpMessageBodyOperate=52
+    ScriptBlock=53
+    EchoBlock=54
+    ASSERT_SPACE=55
+    ASSERT_OPEN=56
+    ASSERT_CLOSE=57
+    ASSERT_EXPRESSION=58
+    LOAD_SPACE=59
+    LOAD_OPTION=60
+    LOAD_EXPRESSION=61
+    LOAD_CRLF=62
+    START_SPACE=63
+    START_LOOP=64
+    START_INT=65
+    START_COMMA=66
+    START_EXPRESSION=67
+    START_CRLF=68
+    HOST_SPACE=69
+    HOST_TAG=70
+    HOST_BLOCK=71
+    IF_SPACE=72
+    IF_OPEN=73
+    IF_CLOSE=74
+    IF_EXPRESSION=75
+    LOOP_SEMICOLON=76
+    LOOP_SPACE=77
+    LOOP_BEGIN=78
+    LOOP_UNTIL=79
+    LOOP_OPEN=80
+    LOOP_CLOSE=81
+    LOOP_BREAK=82
+    LOOP_END=83
+    LOOP_CONTINUE=84
+    LOOP_EXPRESSION=85
+    LOOP_CRLF=86
+    WHENEVER_SPACE=87
+    WHENEVER_EXITCODE=88
+    WHENEVER_ERROR=89
+    WHENEVER_SEMICOLON=90
+    WHENEVER_CONTINUE=91
+    WHENEVER_EXIT=92
+    WHENEVER_CRLF=93
+    SET_SPACE=94
+    SET_EXPRESSION=95
+    SET_SEMICOLON=96
+    SET_AT=97
+    SET_CRLF=98
+    USE_API=99
+    USE_SQL=100
+    USE_SPACE=101
+    USE_SEMICOLON=102
+    USE_CRLF=103
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
@@ -442,7 +436,7 @@ class APIParser ( Parser ):
             self.state = 76
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [2, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36]:
+            if token in [2, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 73
                 self.baseCommand()
@@ -519,7 +513,7 @@ class APIParser ( Parser ):
             self.state = 82
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==7:
+            while _la==5:
                 self.state = 79
                 self.match(APIParser.CRLF)
                 self.state = 84
@@ -530,7 +524,7 @@ class APIParser ( Parser ):
             self.httpMessage()
             self.state = 86
             _la = self._input.LA(1)
-            if not(_la==-1 or _la==43):
+            if not(_la==-1 or _la==42):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -589,7 +583,7 @@ class APIParser ( Parser ):
             self.state = 91
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if ((_la) & ~0x3f) == 0 and ((1 << _la) & 81065343048482944) != 0:
+            if ((_la) & ~0x3f) == 0 and ((1 << _la) & 5629636973166624) != 0:
                 self.state = 90
                 self.httpMessageBody()
 
@@ -763,7 +757,7 @@ class APIParser ( Parser ):
             self.state = 103
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==47:
+            while _la==44:
                 self.state = 100
                 self.httpHeaderField()
                 self.state = 105
@@ -960,11 +954,11 @@ class APIParser ( Parser ):
                 self.state = 117
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
-                if token in [53]:
+                if token in [50]:
                     self.state = 115
                     self.httpMultipart()
                     pass
-                elif token in [7, 39, 56]:
+                elif token in [5, 37, 52]:
                     self.state = 116
                     self.httpMessageBodyContent()
                     pass
@@ -974,7 +968,7 @@ class APIParser ( Parser ):
                 self.state = 119 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (((_la) & ~0x3f) == 0 and ((1 << _la) & 81065343048482944) != 0):
+                if not (((_la) & ~0x3f) == 0 and ((1 << _la) & 5629636973166624) != 0):
                     break
 
         except RecognitionException as re:
@@ -1031,7 +1025,7 @@ class APIParser ( Parser ):
                 self.state = 124 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==53):
+                if not (_la==50):
                     break
 
             self.state = 126
@@ -1183,11 +1177,11 @@ class APIParser ( Parser ):
                     self.state = 136
                     self._errHandler.sync(self)
                     token = self._input.LA(1)
-                    if token in [56]:
+                    if token in [52]:
                         self.state = 134
                         self.httpMessageBodyOperate()
                         pass
-                    elif token in [7, 39]:
+                    elif token in [5, 37]:
                         self.state = 135
                         self.httpMessageBodyOther()
                         pass
@@ -1294,7 +1288,7 @@ class APIParser ( Parser ):
                 if _alt == 1:
                     self.state = 142
                     _la = self._input.LA(1)
-                    if not(_la==7 or _la==39):
+                    if not(_la==5 or _la==37):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
@@ -1406,72 +1400,72 @@ class APIParser ( Parser ):
             self.state = 163
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [28]:
+            if token in [26]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 147
                 self.assert_()
                 pass
-            elif token in [30]:
+            elif token in [28]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 148
                 self.load()
                 pass
-            elif token in [31]:
+            elif token in [29]:
                 self.enterOuterAlt(localctx, 3)
                 self.state = 149
                 self.host()
                 pass
-            elif token in [29]:
+            elif token in [27]:
                 self.enterOuterAlt(localctx, 4)
                 self.state = 150
                 self.start()
                 pass
-            elif token in [35]:
+            elif token in [33]:
                 self.enterOuterAlt(localctx, 5)
                 self.state = 151
                 self.loop()
                 pass
-            elif token in [32]:
+            elif token in [30]:
                 self.enterOuterAlt(localctx, 6)
                 self.state = 152
                 self.if_()
                 pass
-            elif token in [33]:
+            elif token in [31]:
                 self.enterOuterAlt(localctx, 7)
                 self.state = 153
                 self.endif()
                 pass
-            elif token in [36]:
+            elif token in [34]:
                 self.enterOuterAlt(localctx, 8)
                 self.state = 154
                 self.whenever()
                 pass
-            elif token in [34]:
+            elif token in [32]:
                 self.enterOuterAlt(localctx, 9)
                 self.state = 155
                 self.set_()
                 pass
-            elif token in [26]:
+            elif token in [24]:
                 self.enterOuterAlt(localctx, 10)
                 self.state = 156
                 self.use()
                 pass
-            elif token in [22]:
+            elif token in [20]:
                 self.enterOuterAlt(localctx, 11)
                 self.state = 157
                 self.exit()
                 pass
-            elif token in [23]:
+            elif token in [21]:
                 self.enterOuterAlt(localctx, 12)
                 self.state = 158
                 self.quit()
                 pass
-            elif token in [25]:
+            elif token in [23]:
                 self.enterOuterAlt(localctx, 13)
                 self.state = 159
                 self.sleep()
                 pass
-            elif token in [24]:
+            elif token in [22]:
                 self.enterOuterAlt(localctx, 14)
                 self.state = 160
                 self.spool()
@@ -1481,7 +1475,7 @@ class APIParser ( Parser ):
                 self.state = 161
                 self.script()
                 pass
-            elif token in [27]:
+            elif token in [25]:
                 self.enterOuterAlt(localctx, 16)
                 self.state = 162
                 self.echo()
@@ -1541,7 +1535,7 @@ class APIParser ( Parser ):
             self.state = 167
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==37:
+            if _la==35:
                 self.state = 166
                 self.match(APIParser.INT)
 
@@ -1549,7 +1543,7 @@ class APIParser ( Parser ):
             self.state = 170
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==9:
+            if _la==7:
                 self.state = 169
                 self.match(APIParser.SEMICOLON)
 
@@ -1557,7 +1551,7 @@ class APIParser ( Parser ):
             self.state = 173
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==7:
+            if _la==5:
                 self.state = 172
                 self.match(APIParser.CRLF)
 
@@ -1614,7 +1608,7 @@ class APIParser ( Parser ):
             self.state = 177
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==37:
+            if _la==35:
                 self.state = 176
                 self.match(APIParser.INT)
 
@@ -1622,7 +1616,7 @@ class APIParser ( Parser ):
             self.state = 180
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==9:
+            if _la==7:
                 self.state = 179
                 self.match(APIParser.SEMICOLON)
 
@@ -1630,7 +1624,7 @@ class APIParser ( Parser ):
             self.state = 183
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==7:
+            if _la==5:
                 self.state = 182
                 self.match(APIParser.CRLF)
 
@@ -1689,7 +1683,7 @@ class APIParser ( Parser ):
             self.match(APIParser.USE)
             self.state = 186
             _la = self._input.LA(1)
-            if not(_la==103 or _la==104):
+            if not(_la==99 or _la==100):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -1697,7 +1691,7 @@ class APIParser ( Parser ):
             self.state = 188
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==106:
+            if _la==102:
                 self.state = 187
                 self.match(APIParser.USE_SEMICOLON)
 
@@ -1705,7 +1699,7 @@ class APIParser ( Parser ):
             self.state = 191
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==7:
+            if _la==5:
                 self.state = 190
                 self.match(APIParser.CRLF)
 
@@ -1764,7 +1758,7 @@ class APIParser ( Parser ):
             self.state = 196
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==9:
+            if _la==7:
                 self.state = 195
                 self.match(APIParser.SEMICOLON)
 
@@ -1772,7 +1766,7 @@ class APIParser ( Parser ):
             self.state = 199
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==7:
+            if _la==5:
                 self.state = 198
                 self.match(APIParser.CRLF)
 
@@ -1846,7 +1840,7 @@ class APIParser ( Parser ):
             self.state = 207
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==70:
+            while _la==66:
                 self.state = 203
                 self.match(APIParser.START_COMMA)
                 self.state = 204
@@ -1858,7 +1852,7 @@ class APIParser ( Parser ):
             self.state = 211
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==68:
+            if _la==64:
                 self.state = 210
                 self.match(APIParser.START_LOOP)
 
@@ -1866,7 +1860,7 @@ class APIParser ( Parser ):
             self.state = 214
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==69:
+            if _la==65:
                 self.state = 213
                 self.match(APIParser.START_INT)
 
@@ -1874,7 +1868,7 @@ class APIParser ( Parser ):
             self.state = 217
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==9:
+            if _la==7:
                 self.state = 216
                 self.match(APIParser.SEMICOLON)
 
@@ -1882,7 +1876,7 @@ class APIParser ( Parser ):
             self.state = 220
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==7:
+            if _la==5:
                 self.state = 219
                 self.match(APIParser.CRLF)
 
@@ -1953,13 +1947,13 @@ class APIParser ( Parser ):
                 self.state = 227 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==65):
+                if not (_la==61):
                     break
 
             self.state = 230
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==9:
+            if _la==7:
                 self.state = 229
                 self.match(APIParser.SEMICOLON)
 
@@ -1967,7 +1961,7 @@ class APIParser ( Parser ):
             self.state = 233
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==7:
+            if _la==5:
                 self.state = 232
                 self.match(APIParser.CRLF)
 
@@ -2026,7 +2020,7 @@ class APIParser ( Parser ):
             self.state = 238
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==9:
+            if _la==7:
                 self.state = 237
                 self.match(APIParser.SEMICOLON)
 
@@ -2034,7 +2028,7 @@ class APIParser ( Parser ):
             self.state = 241
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==7:
+            if _la==5:
                 self.state = 240
                 self.match(APIParser.CRLF)
 
@@ -2150,19 +2144,19 @@ class APIParser ( Parser ):
             self.state = 253
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [86]:
+            if token in [82]:
                 self.state = 247
                 self.match(APIParser.LOOP_BREAK)
                 pass
-            elif token in [87]:
+            elif token in [83]:
                 self.state = 248
                 self.match(APIParser.LOOP_END)
                 pass
-            elif token in [88]:
+            elif token in [84]:
                 self.state = 249
                 self.match(APIParser.LOOP_CONTINUE)
                 pass
-            elif token in [82]:
+            elif token in [78]:
                 self.state = 250
                 self.match(APIParser.LOOP_BEGIN)
                 self.state = 251
@@ -2176,7 +2170,7 @@ class APIParser ( Parser ):
             self.state = 256
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==80:
+            if _la==76:
                 self.state = 255
                 self.match(APIParser.LOOP_SEMICOLON)
 
@@ -2184,7 +2178,7 @@ class APIParser ( Parser ):
             self.state = 259
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==7:
+            if _la==5:
                 self.state = 258
                 self.match(APIParser.CRLF)
 
@@ -2243,7 +2237,7 @@ class APIParser ( Parser ):
             self.state = 264
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==9:
+            if _la==7:
                 self.state = 263
                 self.match(APIParser.SEMICOLON)
 
@@ -2251,7 +2245,7 @@ class APIParser ( Parser ):
             self.state = 267
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==7:
+            if _la==5:
                 self.state = 266
                 self.match(APIParser.CRLF)
 
@@ -2305,7 +2299,7 @@ class APIParser ( Parser ):
             self.state = 271
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==9:
+            if _la==7:
                 self.state = 270
                 self.match(APIParser.SEMICOLON)
 
@@ -2313,7 +2307,7 @@ class APIParser ( Parser ):
             self.state = 274
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==7:
+            if _la==5:
                 self.state = 273
                 self.match(APIParser.CRLF)
 
@@ -2381,11 +2375,11 @@ class APIParser ( Parser ):
             self.state = 281
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [95]:
+            if token in [91]:
                 self.state = 278
                 self.match(APIParser.WHENEVER_CONTINUE)
                 pass
-            elif token in [96]:
+            elif token in [92]:
                 self.state = 279
                 self.match(APIParser.WHENEVER_EXIT)
                 self.state = 280
@@ -2397,7 +2391,7 @@ class APIParser ( Parser ):
             self.state = 284
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==94:
+            if _la==90:
                 self.state = 283
                 self.match(APIParser.WHENEVER_SEMICOLON)
 
@@ -2405,7 +2399,7 @@ class APIParser ( Parser ):
             self.state = 287
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==7:
+            if _la==5:
                 self.state = 286
                 self.match(APIParser.CRLF)
 
@@ -2464,7 +2458,7 @@ class APIParser ( Parser ):
             self.state = 292
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==9:
+            if _la==7:
                 self.state = 291
                 self.match(APIParser.SEMICOLON)
 
@@ -2472,7 +2466,7 @@ class APIParser ( Parser ):
             self.state = 295
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==7:
+            if _la==5:
                 self.state = 294
                 self.match(APIParser.CRLF)
 
@@ -2534,7 +2528,7 @@ class APIParser ( Parser ):
             if la_ == 1:
                 self.state = 299
                 _la = self._input.LA(1)
-                if not(_la==-1 or _la==7):
+                if not(_la==-1 or _la==5):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -2592,7 +2586,7 @@ class APIParser ( Parser ):
             self.state = 305
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==7:
+            if _la==5:
                 self.state = 304
                 self.match(APIParser.CRLF)
 
@@ -2655,7 +2649,7 @@ class APIParser ( Parser ):
             self.state = 309
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==101:
+            if _la==97:
                 self.state = 308
                 self.match(APIParser.SET_AT)
 
@@ -2663,7 +2657,7 @@ class APIParser ( Parser ):
             self.state = 314
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==99:
+            while _la==95:
                 self.state = 311
                 self.match(APIParser.SET_EXPRESSION)
                 self.state = 316
@@ -2673,7 +2667,7 @@ class APIParser ( Parser ):
             self.state = 318
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==100:
+            if _la==96:
                 self.state = 317
                 self.match(APIParser.SET_SEMICOLON)
 
@@ -2681,7 +2675,7 @@ class APIParser ( Parser ):
             self.state = 321
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==7:
+            if _la==5:
                 self.state = 320
                 self.match(APIParser.CRLF)
 

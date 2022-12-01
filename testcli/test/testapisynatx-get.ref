@@ -7,6 +7,10 @@
         "Content-Type": " application/json",
         "X-Language": " zh_CN"
     },
+    "hints": [
+        "no-rediect",
+        "Hello"
+    ],
     "httpFields": {
         "dryRun": "False",
         "requestId": "1"

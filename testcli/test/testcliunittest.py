@@ -982,6 +982,7 @@ class TestSynatx(unittest.TestCase):
 
         # 对文件进行比对，判断返回结果是否吻合
         compareHandler = POSIXCompare()
+
         compareResult, compareReport = compareHandler.compare_text_files(
             file1=fullLogFile,
             file2=fullRefFile,

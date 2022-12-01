@@ -7,7 +7,10 @@ API> > {%
    > %}
 API>
 API> > {% port=8000 %}
+API> // [Hint] Hello
+API> -- [Hint] Hello2
 API> ### aaa
+   > // @hint
    > GET http://{{host}}:{{port}}/health
    >     ?requestId=1 HTTP/1.1
    > Accept: application/json
