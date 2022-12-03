@@ -34,11 +34,6 @@ class SQLVisitor(SQLParserVisitor):
     @staticmethod
     def getSourceInterval(ctx):
         start, end = ctx.getSourceInterval()
-        while start > 0:
-            token = ctx.parser._input.tokens[start-1]
-            if token.channel != SQLLexer.HINT_CHANNEL:
-                break
-            start -= 1
         return start, end
 
     """
@@ -518,18 +513,152 @@ class SQLVisitor(SQLParserVisitor):
         self.errorCode = errorCode
         self.errorMsg = errorMsg
 
+    def visitJob(self, ctx: SQLParser.JobContext):
+        parsedObject = {'name': 'JOB'}
+
+        if ctx.JOB_SHOW() is not None:
+            jobName = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
+            parsedObject.update({"action": "show"})
+            parsedObject.update({"jobName": jobName})
+        if ctx.JOB_WAIT() is not None:
+            jobName = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
+            parsedObject.update({"action": "wait"})
+            parsedObject.update({"jobName": jobName})
+        if ctx.JOB_SHUTDOWN() is not None:
+            jobName = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
+            parsedObject.update({"action": "shutdown"})
+            parsedObject.update({"jobName": jobName})
+        if ctx.JOB_ABORT() is not None:
+            jobName = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
+            parsedObject.update({"action": "abort"})
+            parsedObject.update({"jobName": jobName})
+        if ctx.JOB_START() is not None:
+            jobName = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
+            parsedObject.update({"action": "start"})
+            parsedObject.update({"jobName": jobName})
+        if ctx.JOB_TIMER() is not None:
+            timerPoint = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
+            parsedObject.update({"action": "start"})
+            parsedObject.update({"timerPoint": timerPoint})
+        if ctx.JOB_DEREGISTER() is not None:
+            parsedObject.update({"action": "deregister"})
+        if ctx.JOB_REGISTER() is not None:
+            jobName = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
+            parsedObject.update({"action": "register"})
+            parsedObject.update({"jobName": jobName})
+        if ctx.JOB_SET() is not None:
+            parsedObject.update({"action": "set"})
+            param = {}
+            paramKey = None
+            nPos = 0
+            for expression in ctx.JOB_EXPRESSION():
+                if nPos == 0:
+                    jobName = str(expression.getText()).strip()
+                    parsedObject.update({"jobName": jobName})
+                else:
+                    if paramKey is None:
+                        paramKey = str(expression.getText()).strip()
+                    else:
+                        paramValue = str(expression.getText()).strip()
+                        param[paramKey] = paramValue
+                        paramKey = None
+                nPos = nPos + 1
+            parsedObject.update({"param": param})
+        if ctx.JOB_CREATE() is not None:
+            parsedObject.update({"action": "create"})
+            param = {}
+            paramKey = None
+            nPos = 0
+            for expression in ctx.JOB_EXPRESSION():
+                if nPos == 0:
+                    jobName = str(expression.getText()).strip()
+                    parsedObject.update({"jobName": jobName})
+                else:
+                    if paramKey is None:
+                        paramKey = str(expression.getText()).strip()
+                    else:
+                        paramValue = str(expression.getText()).strip()
+                        param[paramKey] = paramValue
+                        paramKey = None
+                nPos = nPos + 1
+            parsedObject.update({"param": param})
+
+        # 处理错误信息
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = 1
+            errorMsg = ctx.exception.message
+            self.isFinished = False
+
+        self.parsedObject = parsedObject
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
+
+    def visitSsh(self, ctx: SQLParser.SshContext):
+        parsedObject = {'name': 'SSH'}
+
+        if ctx.SSH_SAVE() is not None:
+            parsedObject.update({"action": "save"})
+            if ctx.SSH_EXPRESSION() is not None:
+                parsedObject.update({"sessionName": str(ctx.SSH_EXPRESSION()[0].getText())})
+            else:
+                parsedObject.update({"sessionName": None})
+        if ctx.SSH_RESTORE() is not None:
+            parsedObject.update({"action": "restore"})
+            if ctx.SSH_EXPRESSION() is not None:
+                parsedObject.update({"sessionName": str(ctx.SSH_EXPRESSION()[0].getText())})
+            else:
+                parsedObject.update({"sessionName": None})
+        if ctx.SSH_DISCONNECT() is not None:
+            parsedObject.update({"action": "disconnect"})
+        if ctx.SSH_EXECUTE() is not None:
+            parsedObject.update({"action": "execute"})
+            commands = []
+            for expression in ctx.SSH_EXPRESSION():
+                commands.append(str(expression.getText()))
+            parsedObject.update({"command": " ".join(commands)})
+        if ctx.SSH_CONNECT() is not None:
+            parsedObject.update({"action": "connect"})
+            parsedObject.update({"host": str(ctx.SSH_EXPRESSION()[0].getText())})
+            if ctx.SSH_USER() is not None:
+                parsedObject.update({"user": str(ctx.SSH_EXPRESSION()[1].getText())})
+            if ctx.SSH_PASSWORD() is not None:
+                parsedObject.update({"password": str(ctx.SSH_EXPRESSION()[2].getText())})
+            if ctx.SSH_KEYFILE() is not None:
+                keyFileName = str(ctx.SSH_EXPRESSION()[2].getText())
+                if keyFileName.startswith('"') and keyFileName.endswith('"'):
+                    keyFileName = keyFileName[1:-1]
+                parsedObject.update({"keyFile": keyFileName})
+
+        # 处理错误信息
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = 1
+            errorMsg = ctx.exception.message
+            self.isFinished = False
+
+        self.parsedObject = parsedObject
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
+
     def visitStart(self, ctx: SQLParser.StartContext):
         parsedObject = {'name': 'START'}
-        if ctx.START_INT() is not None:
-            parsedObject.update({'loopTimes': int(ctx.START_INT().getText())})
-        else:
-            parsedObject.update({'loopTimes': 1})
 
-        expression_list = []
+        # 第一个参数为脚本名称，随后的参数为运行参数
+        argv = []
         if ctx.START_EXPRESSION() is not None:
+            nPos = 0
             for expression in ctx.START_EXPRESSION():
-                expression_list.append(str(expression.getText()))
-        parsedObject.update({'scriptList': expression_list})
+                if nPos == 0:
+                    parsedObject.update({'script': str(expression.getText())})
+                    nPos = nPos + 1
+                else:
+                    argv.append(str(expression.getText()))
+        else:
+            parsedObject.update({'script': None})
+        parsedObject.update({"argv": argv})
 
         # 处理错误信息
         errorCode = 0

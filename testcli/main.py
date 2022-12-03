@@ -88,6 +88,11 @@ def cli(
 
 
 if __name__ == "__main__":
+    # keyFile = open("D:\\zettabasecloudcn.pem", 'r')
+    # print("lll = " + str("D:\\zettabasecloudcn.pem"))
+    # if True:
+    #     sys.exit(0)
+    #
     # 根据cli的结果退出，如果意外，退出返回值为255
     try:
         cli()

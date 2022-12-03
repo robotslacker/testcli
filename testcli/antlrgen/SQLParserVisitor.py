@@ -259,5 +259,15 @@ class SQLParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by SQLParser#ssh.
+    def visitSsh(self, ctx:SQLParser.SshContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SQLParser#job.
+    def visitJob(self, ctx:SQLParser.JobContext):
+        return self.visitChildren(ctx)
+
+
 
 del SQLParser

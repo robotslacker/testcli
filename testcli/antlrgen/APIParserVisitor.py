@@ -184,5 +184,15 @@ class APIParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by APIParser#ssh.
+    def visitSsh(self, ctx:APIParser.SshContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by APIParser#job.
+    def visitJob(self, ctx:APIParser.JobContext):
+        return self.visitChildren(ctx)
+
+
 
 del APIParser

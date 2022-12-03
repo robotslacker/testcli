@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 globalEmbeddScriptScope = {}
+
+# 内嵌脚本执行时候的命名空间
 localEmbeddScriptScope = {}
 
 # 最后一次执行后的结果

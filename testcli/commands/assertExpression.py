@@ -16,14 +16,10 @@ def assertExpression(cls, expression: str):
                 "columnTypes": "",
                 "status": "Assert " + ("successful." if ret else "fail.")
             }
-    except (SyntaxError, NameError) as ae:
+    except (SyntaxError, NameError, AttributeError) as ae:
         yield {
-            "type": "result",
-            "title": "",
-            "rows": "",
-            "headers": "",
-            "columnTypes": "",
-            "status": "Assert fail. SyntaxError =>[" + str(ae) + "]"
+            "type": "error",
+            "message": "Assert fail. SyntaxError =>[" + str(ae) + "]"
         }
 
 

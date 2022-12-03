@@ -61,6 +61,12 @@ LOOP                : '_LOOP' -> pushMode(LoopMode);
 // 一旦错误，将会执行的操作
 WHENEVER            : '_WHENEVER' -> pushMode(WheneverMode);
 
+// 执行远程操作系统命令
+SSH                 : '_SSH' ->pushMode(SshMode);
+
+// 执行并行任务的控制
+JOB                 : '_JOB' ->pushMode(JobMode);
+
 INT                 : DIGIT+ ;
 DECIMAL             : DIGIT+ '.' DIGIT+ ;
 String              : (OBS_TEXT | UNRESERVED | SUBDELIMS | PCTENCODED | DoubleQuoteString | SingleQuoteString)+;
@@ -102,9 +108,6 @@ LOAD_CRLF           : CRLF -> popMode;
 
 mode StartMode;
 START_SPACE        : [ \t]+ -> channel (HIDDEN);
-START_LOOP         : 'LOOP';
-START_INT          : INT;
-START_COMMA        : ',';
 START_EXPRESSION   :
     (OBS_TEXT | UNRESERVED | SUBDELIMS | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' )+;
 START_CRLF         : CRLF -> popMode;
@@ -155,3 +158,40 @@ USE_SQL             : 'SQL';
 USE_SPACE           : [ \t]+ -> channel (HIDDEN);
 USE_SEMICOLON       : ';';
 USE_CRLF            : CRLF -> popMode;
+
+mode SshMode;
+SSH_CONNECT         : 'CONNECT';
+SSH_WITH            : 'WITH';
+SSH_USER            : 'USER';
+SSH_KEYFILE         : 'KEYFILE';
+SSH_PASSWORD        : 'PASSWORD';
+SSH_EXECUTE         : 'EXECUTE';
+SSH_DISCONNECT      : 'DISCONNECT';
+SSH_SAVE            : 'SAVE';
+SSH_RESTORE         : 'RESTORE';
+SSH_SPACE           : [ \t]+ -> channel (HIDDEN);
+SSH_SEMICOLON       : ';';
+SSH_CRLF            : CRLF -> popMode;
+SSH_EXPRESSION      :
+    (OBS_TEXT | UNRESERVED | SUBDELIMS | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' | '@' )+;
+
+mode JobMode;
+JOB_SPACE           : [ \t]+ -> channel (HIDDEN);
+JOB_SEMICOLON       : ';';
+JOB_EQUAL           : '=';
+JOB_CRLF            : CRLF -> popMode;
+JOB_CREATE          : 'CREATE';
+JOB_SHOW            : 'SHOW';
+JOB_SET             : 'SET';
+JOB_START           : 'START';
+JOB_WAIT            : 'WAIT';
+JOB_SHUTDOWN        : 'SHUTDOWN';
+JOB_ABORT           : 'ABORT';
+JOB_TIMER           : 'TIMER';
+JOB_REGISTER        : 'REGISTER';
+JOB_DEREGISTER      : 'DEREGISTER';
+JOB_WORKER          : 'WORKER';
+JOB_TO              : 'TO';
+JOB_EXPRESSION      :
+    (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' )+;
+

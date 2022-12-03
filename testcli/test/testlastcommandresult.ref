@@ -1,0 +1,50 @@
+SQL> _use sql
+Current NameSpace: SQL.
+SQL> _connect /mem
+Database connected.
+SQL> create table aaa (id int);
+0 row affected.
+SQL> insert into aaa values(10);
+1 row affected.
+SQL> select * from aaa;
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 | 10 |
++--------+----+
+1 row selected.
+SQL>
+SQL> > {%  x = lastCommandResult %}
+SQL> _assert {%  x["errorCode"] == 0 %}
+Assert successful.
+SQL> _assert {%  lastCommandResult["rows"][0][0] == 10 %}
+Assert successful.
+SQL>
+SQL> _use api
+Current NameSpace: API.
+API>
+API> > {% host="127.0.0.1" %}
+API> > {% port=8000 %}
+API> // [Hint] aa
+API> ### aaa
+   > // @no-redirect
+   > GET http://{{host}}:{{port}}/health
+   >     ?requestId=1 HTTP/1.1
+   > Accept: application/json
+   > X-Language: zh_CN
+   > Content-Type: application/json
+   >
+   > ###
+REWROTED API> Your API has been changed to:
+REWROTED    > GET http://127.0.0.1:8000/health
+{
+    "content": {
+        "status": "OK"
+    },
+    "status": 200
+}
+API>
+API> _assert {%  lastCommandResult["status"] == 200 %}
+Assert successful.
+API> _assert {%  str(lastCommandResult["data"]) == "{\'status\': \'OK\'}" %}
+Assert successful.

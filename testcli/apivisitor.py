@@ -186,16 +186,20 @@ class APIVisitor(APIParserVisitor):
 
     def visitStart(self, ctx: APIParser.StartContext):
         parsedObject = {'name': 'START'}
-        if ctx.START_INT() is not None:
-            parsedObject.update({'loopTimes': int(ctx.START_INT().getText())})
-        else:
-            parsedObject.update({'loopTimes': 1})
 
-        expression_list = []
+        # 第一个参数为脚本名称，随后的参数为运行参数
+        argv = []
         if ctx.START_EXPRESSION() is not None:
+            nPos = 0
             for expression in ctx.START_EXPRESSION():
-                expression_list.append(str(expression.getText()))
-        parsedObject.update({'scriptList': expression_list})
+                if nPos == 0:
+                    parsedObject.update({'script': str(expression.getText())})
+                    nPos = nPos + 1
+                else:
+                    argv.append(str(expression.getText()))
+        else:
+            parsedObject.update({'script': None})
+        parsedObject.update({"argv": argv})
 
         # 处理错误信息
         errorCode = 0

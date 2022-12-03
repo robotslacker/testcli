@@ -24,6 +24,8 @@ baseCommand:
       | spool
       | script
       | echo
+      | ssh
+      | job
       ;
 
 // Exit
@@ -38,7 +40,7 @@ use     : USE (USE_API|USE_SQL) (USE_SEMICOLON)? CRLF?;
 // sleep
 sleep   : SLEEP INT SEMICOLON? CRLF?;
 
-start   : START START_EXPRESSION (START_COMMA START_EXPRESSION)* START_LOOP? START_INT? SEMICOLON? CRLF?;
+start   : START (START_EXPRESSION)+ SEMICOLON? CRLF?;
 
 // 加载数据库驱动，映射文件，插件等
 load    : LOAD LOAD_OPTION (LOAD_EXPRESSION)+ SEMICOLON? CRLF?;
@@ -81,3 +83,32 @@ script
 // 16：SET 语句
 set     : SET (SET_AT)?(SET_EXPRESSION)* (SET_SEMICOLON)? CRLF?;
 
+// SSH 远程连接
+ssh     :
+           SSH
+           (
+            (SSH_CONNECT SSH_EXPRESSION SSH_WITH SSH_USER SSH_EXPRESSION SSH_KEYFILE SSH_EXPRESSION) |
+            (SSH_CONNECT SSH_EXPRESSION SSH_WITH SSH_USER SSH_EXPRESSION (SSH_PASSWORD SSH_EXPRESSION)?) |
+            (SSH_EXECUTE (SSH_EXPRESSION)+) |
+            (SSH_DISCONNECT) |
+            (SSH_SAVE SSH_EXPRESSION) |
+            (SSH_RESTORE SSH_EXPRESSION) |
+           )
+           (SSH_SEMICOLON)? CRLF?;
+
+// JOB 并发作业控制
+job      :
+           JOB
+           (
+             (JOB_WAIT JOB_EXPRESSION) |
+             (JOB_SHOW JOB_EXPRESSION) |
+             (JOB_ABORT JOB_EXPRESSION) |
+             (JOB_SHUTDOWN JOB_EXPRESSION) |
+             (JOB_TIMER JOB_EXPRESSION) |
+             (JOB_START JOB_EXPRESSION) |
+             (JOB_DEREGISTER JOB_WORKER) |
+             (JOB_REGISTER JOB_WORKER JOB_TO JOB_EXPRESSION) |
+             (JOB_SET JOB_EXPRESSION (JOB_EXPRESSION JOB_EQUAL JOB_EXPRESSION)+) |
+             (JOB_CREATE JOB_EXPRESSION (JOB_EXPRESSION JOB_EQUAL JOB_EXPRESSION)+)
+           )
+           (JOB_SEMICOLON)? CRLF?;

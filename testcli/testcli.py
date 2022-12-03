@@ -25,7 +25,6 @@ from prompt_toolkit.formatted_text import HTML
 from .cmdexecute import CmdExecute
 from .cmdmapping import CmdMapping
 from .hdfswrapper import HDFSWrapper
-from .sshwrapper import SshWrapper
 from .testcliexception import TestCliException
 from .testclimeta import TestCliMeta
 from .testclijobmanager import JOBManager
@@ -94,7 +93,6 @@ class TestCli(object):
         self.TransactionHandler = TransactionManager()  # 事务管理器
         self.DataHandler = DataWrapper()                # 随机临时数处理
         self.MetaHandler = TestCliMeta()                # SQLCli元数据
-        self.sshHandler = SshWrapper()                  # 处理SSH连接
         self.SpoolFileHandler = []                      # Spool文件句柄, 是一个数组，可能发生嵌套
         self.EchoFileHandler = None                     # 当前回显文件句柄
         self.AppOptions = None                          # 应用程序的配置参数

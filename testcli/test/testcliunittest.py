@@ -365,42 +365,16 @@ class TestSynatx(unittest.TestCase):
             = SQLAnalyze("_start c:\\abcd\\defg.sql")
         self.assertTrue(isFinished)
         self.assertEqual(
-            {'loopTimes': 1, 'name': 'START', 'scriptList': ['c:\\abcd\\defg.sql']},
+            {'argv': [], 'name': 'START', 'script': 'c:\\abcd\\defg.sql'},
             ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-    def test_SQLAnalyze_StartMultiFiles(self):
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("_start c:\\abcd\\defg.sql,c:\\abcd\\xxxx.sql")
+            = SQLAnalyze("_start c:\\abcd\\defg.sql  abc def")
         self.assertTrue(isFinished)
         self.assertEqual(
-            {
-                'loopTimes': 1,
-                'name': 'START',
-                'scriptList':
-                    [
-                        'c:\\abcd\\defg.sql',
-                        'c:\\abcd\\xxxx.sql'
-                    ],
-            },
-            ret_CommandSplitResult)
-        self.assertEqual(0, ret_errorCode)
-        self.assertEqual(None, ret_errorMsg)
-
-    def test_SQLAnalyze_StartWithLoop(self):
-        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("_start c:\\abcd\\defg.sql LOOP 5")
-        self.assertTrue(isFinished)
-        self.assertEqual(
-            {
-                'loopTimes': 5,
-                'name': 'START',
-                'scriptList':
-                    [
-                        'c:\\abcd\\defg.sql'
-                    ],
-            },
+            {'argv': ['abc', 'def'], 'name': 'START', 'script': 'c:\\abcd\\defg.sql'},
             ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
@@ -604,7 +578,156 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(isFinished)
         self.assertEqual({'expression': 'aa=bb', 'name': 'IF'}, ret_CommandSplitResult)
 
-    def test_SQLExecute(self):
+    def test_SQLAnalyze_Ssh(self):
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_SSH disconnect")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual({'action': 'disconnect', 'name': 'SSH'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_SSH save node1")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual({'action': 'save', 'name': 'SSH', 'sessionName': 'node1'},
+                         ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_SSH restore node1")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual({'action': 'restore', 'name': 'SSH', 'sessionName': 'node1'},
+                         ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_SSH execute ls aa bb cc --dd --ex ")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual({'action': 'execute', 'command': 'ls aa bb cc --dd --ex', 'name': 'SSH'},
+                         ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_SSH connect node1 with user root password PaSsW@rd926 ")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'connect',
+             'host': 'node1',
+             'name': 'SSH',
+             'password': 'PaSsW@rd926',
+             'user': 'root'},
+            ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_SSH connect node1 with user root")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'connect',
+             'host': 'node1',
+             'name': 'SSH',
+             'user': 'root'},
+            ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_SSH connect node1 with user root keyfile aabcdef==fadsfsd")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'connect',
+             'host': 'node1',
+             'keyFile': 'aabcdef==fadsfsd',
+             'name': 'SSH',
+             'user': 'root'},
+            ret_CommandSplitResult)
+
+    def test_SQLAnalyze_Job(self):
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_JOB WAIT abcd")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual({'action': 'wait', 'jobName': 'abcd', 'name': 'JOB'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_JOB SHOW abcd")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual({'action': 'show', 'jobName': 'abcd', 'name': 'JOB'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_JOB ABORT abcd")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual({'action': 'abort', 'jobName': 'abcd', 'name': 'JOB'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_JOB SHUTDOWN abcd")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual({'action': 'shutdown', 'jobName': 'abcd', 'name': 'JOB'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_JOB TIMER tp1")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual({'action': 'start', 'name': 'JOB', 'timerPoint': 'tp1'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_JOB START abcd")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual({'action': 'start', 'jobName': 'abcd', 'name': 'JOB'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_JOB DEREGISTER WORKER")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual({'action': 'deregister', 'name': 'JOB'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_JOB REGISTER WORKER TO ABCD")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual({'action': 'register', 'jobName': 'ABCD', 'name': 'JOB'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_JOB SET ABCD Key1=Value1 Key2=Value2")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'set',
+             'jobName': 'ABCD',
+             'name': 'JOB',
+             'param': {'Key1': 'Value1', 'Key2': 'Value2'}}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_JOB CREATE ABCD Key1=Value1 Key2=Value2")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'create',
+             'jobName': 'ABCD',
+             'name': 'JOB',
+             'param': {'Key1': 'Value1', 'Key2': 'Value2'}}, ret_CommandSplitResult)
+
+    def test_SQLExecuteSanity(self):
         scriptFile = "testsqlsanity.sql"
 
         scriptBaseFile = os.path.splitext(scriptFile)[0]
@@ -623,6 +746,39 @@ class TestSynatx(unittest.TestCase):
         retValue = testcli.run_cli()
         # 脚本中包含了Exit的字样，所以判断是否等于exitValue （3）
         self.assertEqual(3, retValue)
+
+        # 对文件进行比对，判断返回结果是否吻合
+        compareHandler = POSIXCompare()
+        compareResult, compareReport = compareHandler.compare_text_files(
+            file1=fullLogFile,
+            file2=fullRefFile,
+            CompareIgnoreTailOrHeadBlank=True
+        )
+        if not compareResult:
+            for line in compareReport:
+                if line.startswith("-") or line.startswith("+"):
+                    print(line)
+        self.assertTrue(compareResult)
+
+    def test_SQLExecuteWithStartParameter(self):
+        scriptFile = "testsqlstart.sql"
+
+        scriptBaseFile = os.path.splitext(scriptFile)[0]
+        fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
+        fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
+        fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
+
+        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        from testcli.testcli import TestCli
+        testcli = TestCli(
+            logfilename=fullLogFile,
+            HeadlessMode=True,
+            nologo=True,
+            script=fullScriptFile
+        )
+        retValue = testcli.run_cli()
+        # 脚本中包含了Exit的字样，所以判断是否等于exitValue （3）
+        self.assertEqual(0, retValue)
 
         # 对文件进行比对，判断返回结果是否吻合
         compareHandler = POSIXCompare()
@@ -963,6 +1119,39 @@ class TestSynatx(unittest.TestCase):
 
     def test_APIExecute_Get(self):
         scriptFile = "testapiget.api"
+
+        scriptBaseFile = os.path.splitext(scriptFile)[0]
+        fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
+        fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
+        fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
+
+        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        from testcli.testcli import TestCli
+        testcli = TestCli(
+            logfilename=fullLogFile,
+            HeadlessMode=True,
+            nologo=True,
+            script=fullScriptFile
+        )
+        retValue = testcli.run_cli()
+        self.assertEqual(0, retValue)
+
+        # 对文件进行比对，判断返回结果是否吻合
+        compareHandler = POSIXCompare()
+
+        compareResult, compareReport = compareHandler.compare_text_files(
+            file1=fullLogFile,
+            file2=fullRefFile,
+            CompareIgnoreTailOrHeadBlank=True
+        )
+        if not compareResult:
+            for line in compareReport:
+                if line.startswith("-") or line.startswith("+"):
+                    print(line)
+        self.assertTrue(compareResult)
+
+    def test_lastcommandresult(self):
+        scriptFile = "testlastcommandresult.sql"
 
         scriptBaseFile = os.path.splitext(scriptFile)[0]
         fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
