@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
-import re
-import os
-import shlex
 from antlr4 import InputStream
 from antlr4 import CommonTokenStream
 from antlr4.error.ErrorListener import ErrorListener
-from .datawrapper import random_ascii_letters_and_digits
-from .testcliexception import TestCliException
 from .antlrgen.SQLLexer import SQLLexer
 from .antlrgen.SQLParser import SQLParser
 from .sqlvisitor import SQLVisitor

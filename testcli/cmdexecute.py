@@ -38,7 +38,6 @@ from .commands.cliSleep import cliSleep
 from .commands.userNameSpace import userNameSpace
 from .commands.whenever import setWheneverAction
 from .commands.ssh import executeSshRequest
-from .commands.job import executeJobRequest
 
 from .common import rewriteSQLStatement
 from .common import rewriteAPIStatement
@@ -1234,8 +1233,8 @@ class CmdExecute(object):
                         requestObject=parseObject,
                 ):
                     yield result
-            elif parseObject["name"] in ["SSH"]:
-                for result in executeJobRequest(
+            elif parseObject["name"] in ["JOB"]:
+                for result in self.cliHandler.JobHandler.processRequest(
                         cls=self.cliHandler,
                         requestObject=parseObject,
                 ):

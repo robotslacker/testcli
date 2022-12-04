@@ -100,6 +100,7 @@ ssh     :
 job      :
            JOB
            (
+             (JOB_MANGER (JOB_ON | JOB_OFF)) |
              (JOB_WAIT JOB_EXPRESSION) |
              (JOB_SHOW JOB_EXPRESSION) |
              (JOB_ABORT JOB_EXPRESSION) |
@@ -109,6 +110,6 @@ job      :
              (JOB_DEREGISTER JOB_WORKER) |
              (JOB_REGISTER JOB_WORKER JOB_TO JOB_EXPRESSION) |
              (JOB_SET JOB_EXPRESSION (JOB_EXPRESSION JOB_EQUAL JOB_EXPRESSION)+) |
-             (JOB_CREATE JOB_EXPRESSION (JOB_EXPRESSION JOB_EQUAL JOB_EXPRESSION)+)
+             (JOB_CREATE JOB_EXPRESSION (JOB_EXPRESSION JOB_EQUAL JOB_EXPRESSION)*)
            )
            (JOB_SEMICOLON)? CRLF?;

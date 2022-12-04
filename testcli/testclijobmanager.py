@@ -1,27 +1,278 @@
 # -*- coding: utf-8 -*-
 import multiprocessing
-import re
 import threading
 import time
 import os
 import datetime
 import copy
 from multiprocessing import Lock
-
+import traceback
+import configparser
+import jpype
+import socket
 from .testcliexception import TestCliException
+from .sqlclijdbc import connect as jdbcconnect
 
 
+# 并发作业处理
+'''
+    通过JobManager来完成并发作业控制
+    
+    程序通过多进程的方式来实现并发操作，每一个并发度都是一个单独的进程，利用Python的MultiProcess来处理。
+    
+'''
+
+
+# TestCli的Meta管理，使用H2数据库作为管理方式
+class TestCliMeta(object):
+    def __init__(self):
+        self.JobManagerEnabled = False
+        self.dbConn = None
+        self.MetaServer = None
+        self.MetaURL = None
+        self.MetaPort = 0
+        self.JarList = None
+
+    def setJVMJarList(self, p_JarList):
+        self.JarList = p_JarList
+
+    def DisConnect(self):
+        if self.dbConn is not None:
+            self.dbConn.close()
+
+    def ShutdownServer(self):
+        if self.MetaServer is not None:
+            # 先停止数据库连接
+            if self.dbConn is not None:
+                self.dbConn.close()
+            # 再停止数据库服务
+            try:
+                self.MetaServer.stop()
+                self.MetaServer.shutdown()
+            except Exception:
+                if "TESTCLI_DEBUG" in os.environ:
+                    print('traceback.print_exc():\n%s' % traceback.print_exc())
+                    print('traceback.format_exc():\n%s' % traceback.format_exc())
+            self.MetaServer = None
+
+    def StartAsServer(self):
+        # 检查TESTCLI_HOME是否存在
+        try:
+            # 读取配置文件，并连接数据库
+            m_AppOptions = configparser.ConfigParser()
+            m_conf_filename = os.path.join(os.path.dirname(__file__), "conf", "testcli.ini")
+            m_AppOptions.read(m_conf_filename)
+            m_MetaClass = m_AppOptions.get("meta_driver", "driver")
+            m_MetaDriverFile = os.path.join(os.path.dirname(__file__),
+                                            "jlib", m_AppOptions.get("meta_driver", "filename"))
+            if not os.path.exists(m_MetaDriverFile):
+                raise TestCliException("TestCli-0000: "
+                                       "TestCliMeta:: Driver file [" + m_MetaDriverFile +
+                                       "] does not exist! JobManager Aborted!")
+            m_MetaDriverURL = m_AppOptions.get("meta_driver", "jdbcurl")
+            self.dbConn = jdbcconnect(jclassname=m_MetaClass, url=m_MetaDriverURL,
+                                      driverArgs={'user': 'sa', 'password': 'sa'},
+                                      jars=self.JarList)
+            if self.dbConn is None:
+                raise TestCliException("TestCli-0000: "
+                                       "TestCliMeta:: Connect to meta failed! JobManager Aborted!")
+            # 设置AutoCommit为False
+            self.dbConn.setAutoCommit(False)
+
+            # 获得一个可用的端口
+            if "TESTCLI_METAPORT" in os.environ:
+                self.MetaPort = int(os.environ["TESTCLI_METAPORT"])
+            else:
+                m_PortFileLocker = Lock()
+                m_PortFileLocker.acquire()
+                self.MetaPort = 0
+                try:
+                    sock = socket.socket()
+                    sock.bind(('', 0))
+                    self.MetaPort = sock.getsockname()[1]
+                    sock.close()
+                except Exception:
+                    if "TESTCLI_DEBUG" in os.environ:
+                        print('traceback.print_exc():\n%s' % traceback.print_exc())
+                        print('traceback.format_exc():\n%s' % traceback.format_exc())
+                    self.MetaPort = 0
+                m_PortFileLocker.release()
+                if self.MetaPort == 0:
+                    raise TestCliException("TestCli-0000: "
+                                           "TestCliMeta:: Can't get avalable port! JobManager Aborted!")
+
+            # 启动一个TCP Server，用来给其他后续的H2连接（主要是子进程）
+            # 端口号为随机获得，或者利用固定的参数
+            self.MetaServer = jpype.JClass("org.h2.tools.Server").\
+                createTcpServer("-tcp", "-tcpAllowOthers", "-tcpPort", str(self.MetaPort))
+            self.MetaServer.start()
+            self.MetaURL = "tcp://127.0.0.1:" + str(self.MetaPort)
+
+            # 初始化Meta数据库表
+            m_db_cursor = self.dbConn.cursor()
+
+            m_SQL = "Create Table IF Not Exists TESTCLI_ServerInfo" \
+                    "(" \
+                    "ProcessID       Integer," \
+                    "ParentProcessID Integer," \
+                    "ProcessPath     VARCHAR(500)," \
+                    "StartTime       TimeStamp," \
+                    "EndTime         TimeStamp" \
+                    ")"
+            m_db_cursor.execute(m_SQL)
+            m_SQL = "CREATE TABLE IF Not Exists TESTCLI_JOBS" \
+                    "(" \
+                    "JOB_ID                     Integer," \
+                    "JOB_Name                   VARCHAR(500)," \
+                    "JOB_TAG                    VARCHAR(500)," \
+                    "Starter_Interval           Integer," \
+                    "Starter_Last_Active_Time   TimeStamp," \
+                    "Parallel                   Integer," \
+                    "Loop                       Integer," \
+                    "Started_JOBS               Integer," \
+                    "Failed_JOBS                Integer," \
+                    "Finished_JOBS              Integer," \
+                    "Active_JOBS                Integer," \
+                    "Error_Message              VARCHAR(500)," \
+                    "Script                     VARCHAR(500)," \
+                    "Script_FullName            VARCHAR(500)," \
+                    "Think_Time                 Integer," \
+                    "Timeout                    Integer," \
+                    "Submit_Time                TimeStamp," \
+                    "Start_Time                 TimeStamp," \
+                    "End_Time                   TimeStamp," \
+                    "Blowout_Threshold_Count    Integer," \
+                    "Status                     VARCHAR(500)" \
+                    ")"
+            m_db_cursor.execute(m_SQL)
+            m_SQL = "CREATE TABLE IF Not Exists TESTCLI_WORKERS" \
+                    "(" \
+                    "JOB_ID                     Integer," \
+                    "JOB_Name                   VARCHAR(500)," \
+                    "JOB_TAG                    VARCHAR(500)," \
+                    "WorkerHandler_ID           Integer," \
+                    "ProcessID                  Integer," \
+                    "start_time                 BIGINT," \
+                    "end_time                   BIGINT," \
+                    "exit_code                  Integer," \
+                    "Finished_Status            VARCHAR(500)," \
+                    "Timer_Point                VARCHAR(500)" \
+                    ")"
+            m_db_cursor.execute(m_SQL)
+            m_SQL = "CREATE TABLE IF Not Exists TESTCLI_WORKERS_HISTORY" \
+                    "(" \
+                    "JOB_ID                     Integer," \
+                    "JOB_Name                   VARCHAR(500)," \
+                    "JOB_TAG                    VARCHAR(500)," \
+                    "WorkerHandler_ID           Integer," \
+                    "ProcessID                  Integer," \
+                    "start_time                 BIGINT," \
+                    "end_time                   BIGINT," \
+                    "exit_code                  Integer," \
+                    "Finished_Status            VARCHAR(500)," \
+                    "Timer_Point                VARCHAR(500)" \
+                    ")"
+            m_db_cursor.execute(m_SQL)
+            m_SQL = "CREATE TABLE IF Not Exists TESTCLI_TRANSACTIONS" \
+                    "(" \
+                    "Transaction_Name           VARCHAR(500)," \
+                    "Transaction_StartTime      Integer," \
+                    "Transaction_EndTime        Integer,"\
+                    "Transaction_Status         Integer" \
+                    ")"
+            m_db_cursor.execute(m_SQL)
+            m_SQL = "CREATE TABLE IF Not Exists TESTCLI_TRANSACTIONS_STATISTICS" \
+                    "(" \
+                    "Transaction_Name           VARCHAR(500)," \
+                    "Max_Transaction_Time       Integer," \
+                    "Min_Transaction_Time       Integer," \
+                    "Sum_Transaction_Time       Integer," \
+                    "Transaction_Count          Integer," \
+                    "Transaction_Failed_Count   Integer," \
+                    "Transaction_Items          ARRAY default ARRAY[]" \
+                    ")"
+            m_db_cursor.execute(m_SQL)
+            m_db_cursor.close()
+
+            m_ProcessID = os.getpid()
+            m_ParentProcessID = os.getppid()
+            m_ProcessPath = os.path.dirname(__file__)
+            m_SQL = "Insert Into TESTCLI_ServerInfo(ProcessID, ParentProcessID, ProcessPath, StartTime)" \
+                    "Values(" + str(m_ProcessID) + "," + str(m_ParentProcessID) + \
+                    ",'" + str(m_ProcessPath) + "', CURRENT_TIMESTAMP())"
+            m_db_cursor = self.dbConn.cursor()
+            m_db_cursor.execute(m_SQL)
+            m_db_cursor.close()
+            self.dbConn.commit()
+
+            # 任务调度管理只有在Meta能够成功连接的情况下才可以使用
+            self.JobManagerEnabled = False
+        except TestCliException as se:
+            raise se
+        except Exception as e:
+            if "TESTCLI_DEBUG" in os.environ:
+                print('traceback.print_exc():\n%s' % traceback.print_exc())
+                print('traceback.format_exc():\n%s' % traceback.format_exc())
+            raise TestCliException("TestCli-0000: "
+                                   "TestCliMeta:: " + str(e) + " JobManager Aborted!")
+
+    def ConnectServer(self, p_MetaServerURL):
+        if p_MetaServerURL is None:
+            # 如果没有Meta的连接信息，直接退出
+            return
+
+        try:
+            # 读取配置文件，并连接数据库
+            m_AppOptions = configparser.ConfigParser()
+            m_conf_filename = os.path.join(os.path.dirname(__file__), "conf", "testcli.ini")
+            if os.path.exists(m_conf_filename):
+                m_AppOptions.read(m_conf_filename)
+            else:
+                if "TESTCLI_DEBUG" in os.environ:
+                    print("DEBUG:: TestCliMeta:: testcli.ini does not exist! JobManager Connect Failed!")
+                return
+            m_MetaClass = m_AppOptions.get("meta_driver", "driver")
+            m_MetaDriverFile = os.path.join(os.path.dirname(__file__),
+                                            "jlib", m_AppOptions.get("meta_driver", "filename"))
+            if not os.path.exists(m_MetaDriverFile):
+                if "TESTCLI_DEBUG" in os.environ:
+                    print("DEBUG:: TestCliMeta:: Driver file does not exist! JobManager Connect Failed!")
+                return
+            m_MetaDriverURL = m_AppOptions.get("meta_driver", "jdbcurl")
+            m_MetaDriverURL = m_MetaDriverURL.replace("mem", p_MetaServerURL + "/mem")
+            self.dbConn = jdbcconnect(jclassname=m_MetaClass, url=m_MetaDriverURL,
+                                      driverArgs={'user': 'sa', 'password': 'sa'},
+                                      jars=self.JarList)
+            if self.dbConn is None:
+                if "TESTCLI_DEBUG" in os.environ:
+                    print("DEBUG:: TestCliMeta:: Connect to meta failed! JobManager Connect Failed!")
+                return
+
+            # 设置AutoCommit为False
+            self.dbConn.setAutoCommit(False)
+        except Exception:
+            if "TESTCLI_DEBUG" in os.environ:
+                print('traceback.print_exc():\n%s' % traceback.print_exc())
+                print('traceback.format_exc():\n%s' % traceback.format_exc())
+
+    def DisConnectServer(self):
+        if self.dbConn:
+            self.dbConn.close()
+
+
+# 工作进程信息
 class Workers:
     def __init__(self):
-        self.WorkerHandler_ID = 0        # 任务处理器编号，范围是1-parallel
+        self.WorkerHandler_ID = 0      # 任务处理器编号，范围是1-parallel
         self.ProcessID = 0             # 进程信息，这里存放的是进程PID，如果没有进程存在，这里是0
         self.start_time = None         # 进程开始时间，这里存放的是UnixTimeStamp
         self.end_time = None           # 进程结束时间，这里存放的是UnixTimeStamp
         self.exit_code = 0             # 进程退出状态
         self.Finished_Status = ""      # 进程结束状态，有FINISHED, ABORTED, SHUTDOWN,
-        self.Timer_Point = []          # 进程当前已经到达的检查点
+        self.Timer_Point = []          # 进程当前已经到达的聚合点
 
 
+# 任务信息
 class JOB:
     def __init__(self):
         self.id = 0
@@ -68,8 +319,8 @@ class JOB:
         return self.job_name
 
     # 设置JOBID
-    def setJobName(self, p_szJobName):
-        self.job_name = p_szJobName
+    def setJobName(self, jobName):
+        self.job_name = jobName
 
     # 返回任务提交的时间
     def getSubmitTime(self):
@@ -251,9 +502,9 @@ class JOB:
 
     # 根据进程ID信息返回当前的Worker信息
     def getWorkerByProcessID(self, p_nProcessID):
-        for m_Worker in self.workers.values():
-            if m_Worker.ProcessID == p_nProcessID:
-                return m_Worker
+        for worker in self.workers.values():
+            if worker.ProcessID == p_nProcessID:
+                return worker
         return None
 
     # 设置Worker信息
@@ -280,7 +531,7 @@ class JOB:
     # 返回一个包含WorkerHandlerID的列表
     def getWorkerStarter(self):
         currenttime = int(time.mktime(datetime.datetime.now().timetuple()))
-        m_IDLEHandlerIDList = []
+        idleWorkerHandlerList = []
         if self.active_jobs >= self.parallel:
             # 如果当前活动进程数量已经超过了并发要求，直接退出
             return []
@@ -303,25 +554,25 @@ class JOB:
                         if self.workers[nPos].end_time + self.think_time > currenttime:
                             # 还不满足ThinkTime的限制要求，跳过
                             continue
-                    if len(m_IDLEHandlerIDList) >= (self.parallel - self.active_jobs):
+                    if len(idleWorkerHandlerList) >= (self.parallel - self.active_jobs):
                         # 如果已经要启动的进程已经满足最大进程数限制，则不再考虑新进程
                         break
                     else:
-                        m_IDLEHandlerIDList.append(nPos)
+                        idleWorkerHandlerList.append(nPos)
                 else:
                     # 进程当前不空闲
                     continue
             else:
                 # 不存在该Worker信息, 不需要考虑thinktime, 可以启动
-                if len(m_IDLEHandlerIDList) >= (self.parallel - self.active_jobs):
+                if len(idleWorkerHandlerList) >= (self.parallel - self.active_jobs):
                     # 如果已经要启动的进程已经满足最大进程数限制，则不再考虑新进程
                     break
                 else:
-                    m_IDLEHandlerIDList.append(nPos)
+                    idleWorkerHandlerList.append(nPos)
         # 更新批次启动时间的时间
         if self.starter_interval != 0:
             self.starter_last_active_time = currenttime
-        return m_IDLEHandlerIDList
+        return idleWorkerHandlerList
 
     # 启动作业任务
     def StartWorker(self, p_MetaConn, p_WorkerHandlerID: int, p_ProcessID: int):
@@ -546,7 +797,7 @@ class JOBManager(object):
             return m_Job
 
     # 根据JobName返回指定的JOB信息
-    def getJobByName(self, p_szJobName):
+    def getJobByName(self, jobName):
         # 返回指定的Job信息，如果找不到，返回None
         m_SQL = "SELECT Job_ID,Job_Name,Starter_Interval, " \
                 "Starter_Last_Active_Time, Parallel, Loop, " \
@@ -554,7 +805,7 @@ class JOBManager(object):
                 "Script, Script_FullName, Think_Time, Timeout, " \
                 "Submit_Time, Start_Time, End_Time, " \
                 "Blowout_Threshold_Count, Status, JOB_TAG " \
-                "FROM TESTCLI_JOBS WHERE JOB_NAME = '" + str(p_szJobName) + "'"
+                "FROM TESTCLI_JOBS WHERE JOB_NAME = '" + str(jobName) + "'"
         m_db_cursor = self.MetaConn.cursor()
         m_db_cursor.execute(m_SQL)
         m_rs = m_db_cursor.fetchone()
@@ -630,7 +881,7 @@ class JOBManager(object):
 
         # 运行子进程的时候，不需要启动JOBManager
         m_SQLCli = TestCli(
-            sqlscript=p_args["sqlscript"],
+            script=p_args["script"],
             logon=p_args["logon"],
             logfilename=p_args["logfilename"],
             commandMap=p_args["commandMap"],
@@ -749,8 +1000,8 @@ class JOBManager(object):
                             m_SQL_ScriptBaseName = os.path.basename(m_Script_FileName)
                             m_SQL_ScriptFullName = os.path.abspath(m_Script_FileName)
                         else:
-                            if self.getProcessContextInfo("sqlscript") is not None:
-                                m_SQL_ScriptHomeDirectory = os.path.dirname(self.getProcessContextInfo("sqlscript"))
+                            if self.getProcessContextInfo("script") is not None:
+                                m_SQL_ScriptHomeDirectory = os.path.dirname(self.getProcessContextInfo("script"))
                                 if os.path.isfile(os.path.join(m_SQL_ScriptHomeDirectory, m_Script_FileName)):
                                     m_SQL_ScriptBaseName = \
                                         os.path.basename(os.path.join(m_SQL_ScriptHomeDirectory, m_Script_FileName))
@@ -791,7 +1042,7 @@ class JOBManager(object):
                                   "nologo": self.getProcessContextInfo("nologo"),
                                   "sqlperf": self.getProcessContextInfo("sqlperf"),
                                   "commandMap": self.getProcessContextInfo("commandMap"),
-                                  "sqlscript": m_Job.getScriptFullName(),
+                                  "script": m_Job.getScriptFullName(),
                                   "workername":
                                       m_Job.getJobName() + "#" + str(m_WorkerStarter) + "-" +
                                       str(m_JOB_Sequence+1)
@@ -939,7 +1190,6 @@ class JOBManager(object):
                 m_db_cursor.execute(m_SQL, parameters=m_Data)
             m_db_cursor.close()
             self.MetaConn.commit()
-            lala = self.getAllJobs()
         except Exception:
             print("Internal error:: Save Job write not complete. ")
             import traceback
@@ -952,25 +1202,25 @@ class JOBManager(object):
     # 提交一个任务
     def createjob(self, p_szname: str):
         # 初始化一个任务
-        m_Job = JOB()
-        m_Job.setSubmitTime(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())))
+        job = JOB()
+        job.setSubmitTime(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())))
 
         # 创建第一个JOB的时候，初始化共享服务器
         if not self.isAgentStarted:
             self.registerAgent()
 
         # 设置JOBID
-        m_Job.setJobID(self.JobID + 1)
-        m_Job.setJobName(p_szJobName=p_szname)
+        job.setJobID(self.JobID + 1)
+        job.setJobName(jobName=p_szname)
 
         # 当前的JOBID加一
         self.JobID = self.JobID + 1
 
         # 返回JOB信息
-        return m_Job
+        return job
 
     # 显示当前所有已经提交的任务信息
-    def showjob(self, p_szjobName: str):
+    def showjob(self, jobName: str):
         """
             job_name status active_jobs failed_jobs finished_jobs submit_time start_time end_time
 
@@ -979,7 +1229,7 @@ class JOBManager(object):
             blowout_threshold_count
         """
         # 如果输入的参数为all，则显示全部的JOB信息
-        if p_szjobName.lower() == "all":
+        if jobName.lower() == "all":
             m_Header = ["job_name", "tag", "status", "active_jobs", "failed_jobs", "finished_jobs",
                         "submit_time", "start_time", "end_time", "message"]
             m_Result = []
@@ -988,14 +1238,21 @@ class JOBManager(object):
                                  m_JOB.getFailedJobs(), m_JOB.getFinishedJobs(),
                                  str(m_JOB.getSubmitTime()), str(m_JOB.getStartTime()),
                                  str(m_JOB.getEndTime()), str(m_JOB.getErrorMessage())])
-            return None, m_Result, m_Header, None, "Total [" + str(len(m_Result)) + "] Jobs."
+            return {
+                "type": "result",
+                "title": None,
+                "rows": m_Result,
+                "headers": m_Header,
+                "columnTypes": None,
+                "status": "Total [" + str(len(m_Result)) + "] Jobs."
+            }
         else:
             strMessages = ""
-            m_Job = self.getJobByName(p_szjobName)
+            m_Job = self.getJobByName(jobName)
             if m_Job is None:
-                return None, None, None, None, "JOB [" + p_szjobName + "] does not exist."
+                return None, None, None, None, "JOB [" + jobName + "] does not exist."
             strMessages = strMessages + 'JOB_Name = [{0:12}]; ID = [{1:4d}]; Tag = [{2:12}], Status = [{3:12}]\n'.\
-                format(p_szjobName, m_Job.getJobID(), m_Job.getTag(), m_Job.getStatus())
+                format(jobName, m_Job.getJobID(), m_Job.getTag(), m_Job.getStatus())
             strMessages = strMessages + 'ActiveJobs/FailedJobs/FinishedJobs: [{0:15d}/{1:15d}/{2:15d}]\n'.\
                 format(m_Job.getActiveJobs(), m_Job.getFailedJobs(), m_Job.getFinishedJobs())
             strMessages = strMessages + 'Submit Time: [{0:70}]\n'.format(str(m_Job.getSubmitTime()))
@@ -1038,7 +1295,14 @@ class JOBManager(object):
                            m_StartTime, m_EndTime, str(m_Worker.Timer_Point))
                 strMessages = strMessages + '+{0:10s}+{1:10s}+{2:20s}+{3:20s}+{4:20s}+\n'.\
                     format('-' * 10, '-' * 10, '-' * 20, '-' * 20, '-' * 20)
-            return None, None, None, None, strMessages
+            return {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": strMessages
+            }
 
     # 启动JOB
     def startjob(self, p_jobName: str):
@@ -1333,95 +1597,173 @@ class JOBManager(object):
         # 当前有活动进程存在
         return len(self.ProcessID) == 0
 
-    # 处理JOB的相关命令
-    def Process_Command(self, p_szCommand: str):
-        if self.MetaConn is None:
-            # 如果没有Meta连接，直接退出
-            return None, None, None, None, "TestCli-0000: JOB Manager is not started. command abort!"
-
-        m_szSQL = p_szCommand.strip()
-
-        # 创建新的JOB
-        match_obj = re.match(r"job\s+create\s+(.*)(\s+)?$", m_szSQL, re.IGNORECASE | re.DOTALL)
-        if match_obj:
-            m_ParameterList = str(match_obj.group(1)).strip().split()
-            # 第一个参数是JOBNAME
-            m_JobName = m_ParameterList[0].strip()
-            m_Job = self.createjob(m_JobName)
-            m_ParameterList = m_ParameterList[1:]
-            for pos in range(0, len(m_ParameterList) // 2):
-                parameterName = m_ParameterList[2*pos]
-                parameterValue = m_ParameterList[2 * pos + 1]
-                m_Job.setjob(parameterName, parameterValue)
-            self.SaveJob(m_Job)
-            return None, None, None, None, "JOB [" + m_JobName + "] create successful."
-
-        # 显示当前的JOB
-        match_obj = re.match(r"job\s+show\s+(.*)$", m_szSQL, re.IGNORECASE | re.DOTALL)
-        if match_obj:
-            m_JobName = str(match_obj.group(1)).strip()
-            return self.showjob(m_JobName)
-
-        # 设置JOB的各种参数
-        match_obj = re.match(r"job\s+set\s+(.*)\s+(.*)\s+(.*)$", m_szSQL, re.IGNORECASE | re.DOTALL)
-        if match_obj:
-            m_JobName = str(match_obj.group(1)).strip()
-            parameterName = str(match_obj.group(2)).strip()
-            parameterValue = str(match_obj.group(3)).strip()
-            m_Job = self.getJobByName(m_JobName)
-            m_Job.setjob(parameterName, parameterValue)
-            self.SaveJob(m_Job)
-            return None, None, None, None, "JOB [" + m_JobName + "] set successful."
-
-        # 启动JOB
-        match_obj = re.match(r"job\s+start\s+(.*)$", m_szSQL, re.IGNORECASE | re.DOTALL)
-        if match_obj:
-            m_JobName = str(match_obj.group(1)).strip()
-            nJobStarted = self.startjob(m_JobName)
-            return None, None, None, None, "Total [" + str(nJobStarted) + "] jobs started."
-
-        # 等待JOB完成
-        match_obj = re.match(r"job\s+wait\s+(.*)$", m_szSQL, re.IGNORECASE | re.DOTALL)
-        if match_obj:
-            m_JobName = str(match_obj.group(1)).strip()
-            self.waitjob(m_JobName)
-            return None, None, None, None, "All jobs [" + m_JobName + "] finished."
-
-        # 等待JOB的检查点完成
-        match_obj = re.match(r"job\s+timer\s+(.*)$", m_szSQL, re.IGNORECASE | re.DOTALL)
-        if match_obj:
-            m_TimerPoint = str(match_obj.group(1)).strip()
-            self.waitjobtimer(m_TimerPoint)
-            return None, None, None, None, "TimerPoint [" + m_TimerPoint + "] has arrived."
-
-        # 终止JOB作业
-        match_obj = re.match(r"job\s+shutdown\s+(.*)$", m_szSQL, re.IGNORECASE | re.DOTALL)
-        if match_obj:
-            m_JobName = str(match_obj.group(1)).strip()
-            nJobShutdowned = self.shutdownjob(m_JobName)
-            return None, None, None, None, "Total [" + str(nJobShutdowned) + "] jobs shutdowned."
-
-        # 放弃JOB作业
-        match_obj = re.match(r"job\s+abort\s+(.*)$", m_szSQL, re.IGNORECASE | re.DOTALL)
-        if match_obj:
-            m_JobName = str(match_obj.group(1)).strip()
-            nJobAborted = self.abortjob(m_JobName)
-            return None, None, None, None, "Total [" + str(nJobAborted) + "] jobs aborted."
-
-        # 注册当前Worker到指定的JOB上
-        match_obj = re.match(r"job\s+register\s+worker\s+to\s+(.*)$", m_szSQL, re.IGNORECASE | re.DOTALL)
-        if match_obj:
-            m_JobName = str(match_obj.group(1)).strip()
-            self.registerjob(m_JobName)
-            return None, None, None, None, "Register worker to Job [" + str(m_JobName) + "] Successful."
-
-        # 取消当前Worker的注册
-        match_obj = re.match(r"job\s+unregister\s+worker(\s+)?$", m_szSQL, re.IGNORECASE | re.DOTALL)
-        if match_obj:
+    def processRequest(self, cls, requestObject):
+        if requestObject["action"] == "startJobmanager":
+            if cls.testOptions.get("JOBMANAGER").upper() == "OFF":
+                cls.MetaHandler.StartAsServer()
+                # 标记JOB队列管理使用的数据库连接
+                if cls.MetaHandler.dbConn is not None:
+                    os.environ["TESTCLI_JOBMANAGERURL"] = cls.MetaHandler.MetaURL
+                    cls.JobHandler.setMetaConn(cls.MetaHandler.dbConn)
+                    cls.testOptions.set("JOBMANAGER", "ON")
+                    cls.testOptions.set("JOBMANAGER_METAURL", cls.MetaHandler.MetaURL)
+                    yield {
+                        "type": "result",
+                        "title": None,
+                        "rows": None,
+                        "headers": None,
+                        "columnTypes": None,
+                        "status": "TestCli Job manager started successful."
+                    }
+                else:
+                    yield {
+                        "type": "error",
+                        "message": "TestCli Job manager started fail."
+                    }
+            else:
+                yield {
+                    "type": "error",
+                    "message": "TestCli Job manager already started. You can not start job manager again."
+                }
+        if requestObject["action"] == "stopJobmanager":
+            if cls.testOptions.get("JOBMANAGER").upper() == "ON":
+                del os.environ["TESTCLI_JOBMANAGERURL"]
+                cls.testOptions.set("JOBMANAGER", "OFF")
+                cls.testOptions.set("JOBMANAGER_METAURL", '')
+                cls.MetaHandler.ShutdownServer()
+                yield {
+                    "type": "result",
+                    "title": None,
+                    "rows": None,
+                    "headers": None,
+                    "columnTypes": None,
+                    "status": "TestCli Job manager stopped successful."
+                }
+            else:
+                yield {
+                    "type": "error",
+                    "message": "TestCli Job manager already stopped. You can not stop job manager again."
+                }
+        if requestObject["action"] == "show":
+            jobName = requestObject["jobName"]
+            yield self.showjob(jobName)
+        if requestObject["action"] == "create":
+            jobName = requestObject["jobName"]
+            params = dict(requestObject["param"])
+            job = self.createjob(jobName)
+            for parameterName, parameterValue in params.items():
+                job.setjob(parameterName, parameterValue)
+            self.SaveJob(job)
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": "Job [" + jobName + "] created successful."
+            }
+        if requestObject["action"] == "set":
+            jobName = requestObject["jobName"]
+            params = dict(requestObject["param"])
+            job = self.getJobByName(jobName)
+            for parameterName, parameterValue in params.items():
+                job.setjob(parameterName, parameterValue)
+            self.SaveJob(job)
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": "Job [" + jobName + "] set successful."
+            }
+        if requestObject["action"] == "start":
+            jobName = requestObject["jobName"]
+            nJobStarted = self.startjob(jobName)
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": "Total [" + str(nJobStarted) + "] jobs started."
+            }
+        if requestObject["action"] == "wait":
+            jobName = str(requestObject["jobName"])
+            self.waitjob(jobName)
+            if jobName.strip().upper() == "ALL":
+                yield {
+                    "type": "result",
+                    "title": None,
+                    "rows": None,
+                    "headers": None,
+                    "columnTypes": None,
+                    "status": "All jobs finished."
+                }
+            else:
+                yield {
+                    "type": "result",
+                    "title": None,
+                    "rows": None,
+                    "headers": None,
+                    "columnTypes": None,
+                    "status": "Job [" + jobName + "] finished."
+                }
+        if requestObject["action"] == "shutdown":
+            jobName = requestObject["jobName"]
+            nJobShutdowned = self.shutdownjob(jobName)
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": "Total [" + str(nJobShutdowned) + "] jobs shutdown complete."
+            }
+        if requestObject["action"] == "abort":
+            jobName = requestObject["jobName"]
+            nJobAbortted = self.abortjob(jobName)
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": "Total [" + str(nJobAbortted) + "] jobs abort complete."
+            }
+        if requestObject["action"] == "timer":
+            timerPoint = requestObject["timerPoint"]
+            self.waitjobtimer(timerPoint)
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": "TimerPoint [" + timerPoint + "] has arrived."
+            }
+        if requestObject["action"] == "register":
+            jobName = requestObject["jobName"]
+            self.registerjob(jobName)
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": "Register worker to Job [" + str(jobName) + "] successful."
+            }
+        if requestObject["action"] == "deregister":
             self.unregisterjob()
-            return None, None, None, None, "Worker has been unregistered Successful."
-
-        raise TestCliException("Invalid JOB Command [" + m_szSQL + "]")
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": "Worker has deregistered successful."
+            }
+        return
 
     # 设置进程的启动相关上下文信息
     def setProcessContextInfo(self, p_ContextName, p_ContextValue):

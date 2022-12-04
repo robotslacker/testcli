@@ -26,9 +26,8 @@ from .cmdexecute import CmdExecute
 from .cmdmapping import CmdMapping
 from .hdfswrapper import HDFSWrapper
 from .testcliexception import TestCliException
-from .testclimeta import TestCliMeta
+from .testclijobmanager import TestCliMeta
 from .testclijobmanager import JOBManager
-from .testclitransactionmanager import TransactionManager
 from .datawrapper import DataWrapper
 from .testoption import TestOptions
 from .__init__ import __version__
@@ -90,7 +89,6 @@ class TestCli(object):
         self.testOptions = TestOptions()                # 程序运行中各种参数
         self.HdfsHandler = HDFSWrapper()                # HDFS文件操作
         self.JobHandler = JOBManager()                  # 并发任务管理器
-        self.TransactionHandler = TransactionManager()  # 事务管理器
         self.DataHandler = DataWrapper()                # 随机临时数处理
         self.MetaHandler = TestCliMeta()                # SQLCli元数据
         self.SpoolFileHandler = []                      # Spool文件句柄, 是一个数组，可能发生嵌套
@@ -193,7 +191,6 @@ class TestCli(object):
         self.JobHandler.setProcessContextInfo("sqlperf", sqlperf)
         self.JobHandler.setProcessContextInfo("logfilename", self.logfilename)
         self.JobHandler.setProcessContextInfo("script", self.commandScript)
-        self.TransactionHandler.cmdExecuteHandler = self.cmdExecuteHandler
 
         # 设置其他的变量
         self.cmdExecuteHandler.cliHandler = self
@@ -299,7 +296,6 @@ class TestCli(object):
             # 对于被主进程调用的进程，则不需要考虑, 连接到主进程的Meta服务商
             self.MetaHandler.ConnectServer(m_JobManagerURL)
             self.JobHandler.setMetaConn(self.MetaHandler.dbConn)
-            self.TransactionHandler.setMetaConn(self.MetaHandler.dbConn)
             self.testOptions.set("JOBMANAGER_METAURL", m_JobManagerURL)
 
         # 处理传递的映射文件, 首先加载参数的部分，如果环境变量里头有设置，则环境变量部分会叠加参数部分
@@ -735,10 +731,7 @@ class TestCli(object):
                 raise EOFError
             self.DoCommand('_exit')
         except (TestCliException, EOFError):
-            if self.testOptions.get("JOBMANAGER") == "ON":
-                # 如果还有活动的事务，标记事务为失败信息
-                for m_Transaction in self.TransactionHandler.getAllTransactions():
-                    self.TransactionHandler.TransactionFail(m_Transaction.Transaction_Name)
+            pass
 
         # 退出进程, 如果要求不显示logo，则也不会显示Disconnected字样
         if self.exitValue == 0:

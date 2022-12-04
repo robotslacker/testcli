@@ -516,37 +516,42 @@ class SQLVisitor(SQLParserVisitor):
     def visitJob(self, ctx: SQLParser.JobContext):
         parsedObject = {'name': 'JOB'}
 
-        if ctx.JOB_SHOW() is not None:
+        if ctx.JOB_MANGER() is not None:
+            if ctx.JOB_ON():
+                parsedObject.update({"action": "startJobmanager"})
+            if ctx.JOB_OFF():
+                parsedObject.update({"action": "stopJobmanager"})
+        elif ctx.JOB_SHOW() is not None:
             jobName = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
             parsedObject.update({"action": "show"})
             parsedObject.update({"jobName": jobName})
-        if ctx.JOB_WAIT() is not None:
+        elif ctx.JOB_WAIT() is not None:
             jobName = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
             parsedObject.update({"action": "wait"})
             parsedObject.update({"jobName": jobName})
-        if ctx.JOB_SHUTDOWN() is not None:
+        elif ctx.JOB_SHUTDOWN() is not None:
             jobName = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
             parsedObject.update({"action": "shutdown"})
             parsedObject.update({"jobName": jobName})
-        if ctx.JOB_ABORT() is not None:
+        elif ctx.JOB_ABORT() is not None:
             jobName = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
             parsedObject.update({"action": "abort"})
             parsedObject.update({"jobName": jobName})
-        if ctx.JOB_START() is not None:
+        elif ctx.JOB_START() is not None:
             jobName = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
             parsedObject.update({"action": "start"})
             parsedObject.update({"jobName": jobName})
-        if ctx.JOB_TIMER() is not None:
+        elif ctx.JOB_TIMER() is not None:
             timerPoint = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
-            parsedObject.update({"action": "start"})
+            parsedObject.update({"action": "timer"})
             parsedObject.update({"timerPoint": timerPoint})
-        if ctx.JOB_DEREGISTER() is not None:
+        elif ctx.JOB_DEREGISTER() is not None:
             parsedObject.update({"action": "deregister"})
-        if ctx.JOB_REGISTER() is not None:
+        elif ctx.JOB_REGISTER() is not None:
             jobName = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
             parsedObject.update({"action": "register"})
             parsedObject.update({"jobName": jobName})
-        if ctx.JOB_SET() is not None:
+        elif ctx.JOB_SET() is not None:
             parsedObject.update({"action": "set"})
             param = {}
             paramKey = None
@@ -564,7 +569,7 @@ class SQLVisitor(SQLParserVisitor):
                         paramKey = None
                 nPos = nPos + 1
             parsedObject.update({"param": param})
-        if ctx.JOB_CREATE() is not None:
+        elif ctx.JOB_CREATE() is not None:
             parsedObject.update({"action": "create"})
             param = {}
             paramKey = None

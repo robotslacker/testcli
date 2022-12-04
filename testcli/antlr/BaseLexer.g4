@@ -191,6 +191,9 @@ JOB_TIMER           : 'TIMER';
 JOB_REGISTER        : 'REGISTER';
 JOB_DEREGISTER      : 'DEREGISTER';
 JOB_WORKER          : 'WORKER';
+JOB_MANGER          : 'JOBMANAGER';
+JOB_ON              : 'ON';
+JOB_OFF             : 'OFF';
 JOB_TO              : 'TO';
 JOB_EXPRESSION      :
     (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' )+;

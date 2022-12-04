@@ -650,6 +650,20 @@ class TestSynatx(unittest.TestCase):
 
     def test_SQLAnalyze_Job(self):
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_JOB JOBMANAGER ON")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual({'action': 'startJobmanager', 'name': 'JOB'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_JOB JOBMANAGER OFF")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual({'action': 'stopJobmanager', 'name': 'JOB'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_JOB WAIT abcd")
         self.assertEqual(None, ret_errorMsg)
         self.assertEqual(0, ret_errorCode)
@@ -682,7 +696,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
         self.assertEqual(0, ret_errorCode)
         self.assertTrue(isFinished)
-        self.assertEqual({'action': 'start', 'name': 'JOB', 'timerPoint': 'tp1'}, ret_CommandSplitResult)
+        self.assertEqual({'action': 'timer', 'name': 'JOB', 'timerPoint': 'tp1'}, ret_CommandSplitResult)
 
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_JOB START abcd")
@@ -1036,6 +1050,38 @@ class TestSynatx(unittest.TestCase):
                 if line.startswith("-") or line.startswith("+"):
                     print(line)
         self.assertTrue(compareResult)
+
+    # def test_SQLJobManager(self):
+    #     scriptFile = "testjobmanager.sql"
+    #
+    #     scriptBaseFile = os.path.splitext(scriptFile)[0]
+    #     fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
+    #     fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
+    #     fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
+    #
+    #     # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+    #     from testcli.testcli import TestCli
+    #     testcli = TestCli(
+    #         logfilename=fullLogFile,
+    #         HeadlessMode=True,
+    #         nologo=True,
+    #         script=fullScriptFile
+    #     )
+    #     retValue = testcli.run_cli()
+    #     self.assertEqual(3, retValue)
+    #
+    #     # 对文件进行比对，判断返回结果是否吻合
+    #     compareHandler = POSIXCompare()
+    #     compareResult, compareReport = compareHandler.compare_text_files(
+    #         file1=fullLogFile,
+    #         file2=fullRefFile,
+    #         CompareIgnoreTailOrHeadBlank=True
+    #     )
+    #     if not compareResult:
+    #         for line in compareReport:
+    #             if line.startswith("-") or line.startswith("+"):
+    #                 print(line)
+    #     self.assertTrue(compareResult)
 
     def test_APIAnalyze_MultiPart(self):
         scriptFile = "testapisynatx-multipart.api"

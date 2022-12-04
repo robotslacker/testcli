@@ -69,36 +69,6 @@ def setOptions(cls, options):
             "status": None
         }, ]
 
-    # 处理JOBMANAGER选项
-    if optionName.upper() == "JOBMANAGER":
-        if optionValue.upper() == 'ON' and cls.testOptions.get("JOBMANAGER").upper() == "OFF":
-            # 本次打开，之前为OFF
-            # 连接到Meta服务上
-            cls.MetaHandler.StartAsServer(p_ServerParameter=None)
-            # 标记JOB队列管理使用的数据库连接
-            if cls.MetaHandler.dbConn is not None:
-                os.environ["TESTCLI_JOBMANAGERURL"] = cls.MetaHandler.MetaURL
-                cls.JobHandler.setMetaConn(cls.MetaHandler.dbConn)
-                cls.TransactionHandler.setMetaConn(cls.MetaHandler.dbConn)
-                cls.testOptions.set("JOBMANAGER", "ON")
-                cls.testOptions.set("JOBMANAGER_METAURL", cls.MetaHandler.MetaURL)
-        elif optionValue.upper() == 'OFF' and cls.testOptions.get("JOBMANAGER").upper() == "ON":
-            del os.environ["TESTCLI_JOBMANAGERURL"]
-            cls.testOptions.set("JOBMANAGER", "OFF")
-            cls.testOptions.set("JOBMANAGER_METAURL", '')
-            cls.MetaHandler.ShutdownServer()
-        else:
-            raise TestCliException("SQLCLI-00000: "
-                                   "Unknown option [" + str(optionValue) + "] for JOBMANAGER. ON/OFF only.")
-        return [{
-            "type": "result",
-            "title": None,
-            "rows": None,
-            "headers": None,
-            "columnTypes": None,
-            "status": None
-        }, ]
-
     # 对于子进程，连接到JOB管理服务
     if optionName.upper() == "JOBMANAGER_METAURL":
         if cls.testOptions.get("JOBMANAGER") == "ON":

@@ -236,7 +236,7 @@ class HDFSWrapper(object):
         try:
             m_szSQL = p_szSQL.strip()
             match_obj = re.match(r"hdfs\s+connect\s+(.*)\s+with\s+user\s+(.*)$",
-                                m_szSQL, re.IGNORECASE | re.DOTALL)
+                                 m_szSQL, re.IGNORECASE | re.DOTALL)
             if match_obj:
                 m_HDFSServer = str(match_obj.group(1)).strip()
                 m_HDFSUser = str(match_obj.group(2)).strip()
@@ -244,14 +244,14 @@ class HDFSWrapper(object):
                 return None, None, None, None, "Hdfs Server set successful."
 
             match_obj = re.match(r"hdfs\s+cd\s+(.*)$",
-                                m_szSQL, re.IGNORECASE | re.DOTALL)
+                                 m_szSQL, re.IGNORECASE | re.DOTALL)
             if match_obj:
                 m_HDFSPath = str(match_obj.group(1)).strip()
                 self.HDFS_CD(m_HDFSPath)
                 return None, None, None, None, "Hdfs root dir change successful."
 
             match_obj = re.match(r"hdfs\s+status\s+(.*)$",
-                                m_szSQL, re.IGNORECASE | re.DOTALL)
+                                 m_szSQL, re.IGNORECASE | re.DOTALL)
             if match_obj:
                 m_TargetFileList = str(match_obj.group(1)).strip()
                 m_ReturnFileList = self.HDFS_status(m_TargetFileList)
@@ -295,7 +295,7 @@ class HDFSWrapper(object):
                        None, "Total " + str(len(m_Result)) + " files listed."
 
             match_obj = re.match(r"hdfs\s+rm\s+(.*)$",
-                                m_szSQL, re.IGNORECASE | re.DOTALL)
+                                 m_szSQL, re.IGNORECASE | re.DOTALL)
             if match_obj:
                 # 不支持在rm的路径中加入通配符，但是最后文件名可以包含通配符
                 m_Bak_WebFSDir = self.__m_HDFS_WebFSDir__
@@ -317,14 +317,14 @@ class HDFSWrapper(object):
                 return None, None, None, None, "Hdfs file deleted successful."
 
             match_obj = re.match(r"hdfs\s+makedirs\s+(.*)$",
-                                m_szSQL, re.IGNORECASE | re.DOTALL)
+                                 m_szSQL, re.IGNORECASE | re.DOTALL)
             if match_obj:
                 m_Dir = str(match_obj.group(1)).strip()
                 self.HDFS_makedirs(m_Dir)
                 return None, None, None, None, "Hdfs directory created successful."
 
             match_obj = re.match(r"hdfs\s+set_permission\s+(.*)\s+(.*)$",
-                                m_szSQL, re.IGNORECASE | re.DOTALL)
+                                 m_szSQL, re.IGNORECASE | re.DOTALL)
             if match_obj:
                 m_File = str(match_obj.group(1)).strip()
                 m_FilePermission = str(match_obj.group(2)).strip()
@@ -334,12 +334,12 @@ class HDFSWrapper(object):
             m_FileUpload = ""
             m_TargetDir = None
             match_obj = re.match(r"hdfs\s+upload\s+(.*)$",
-                                m_szSQL, re.IGNORECASE | re.DOTALL)
+                                 m_szSQL, re.IGNORECASE | re.DOTALL)
             if match_obj:
                 m_FileUpload = str(match_obj.group(1)).strip()
                 m_TargetDir = ""
             match_obj = re.match(r"hdfs\s+upload\s+(.*)\s+(.*)$",
-                                m_szSQL, re.IGNORECASE | re.DOTALL)
+                                 m_szSQL, re.IGNORECASE | re.DOTALL)
             if match_obj:
                 m_FileUpload = str(match_obj.group(1)).strip()
                 m_TargetDir = str(match_obj.group(2)).strip()
@@ -350,12 +350,12 @@ class HDFSWrapper(object):
             m_FileDownload = ""
             m_TargetDir = None
             match_obj = re.match(r"hdfs\s+download\s+(.*)$",
-                                m_szSQL, re.IGNORECASE | re.DOTALL)
+                                 m_szSQL, re.IGNORECASE | re.DOTALL)
             if match_obj:
                 m_FileDownload = str(match_obj.group(1)).strip()
                 m_TargetDir = ""
             match_obj = re.match(r"hdfs\s+download\s+(.*)\s+(.*)$",
-                                m_szSQL, re.IGNORECASE | re.DOTALL)
+                                 m_szSQL, re.IGNORECASE | re.DOTALL)
             if match_obj:
                 m_FileDownload = str(match_obj.group(1)).strip()
                 m_TargetDir = str(match_obj.group(2)).strip()
@@ -365,11 +365,11 @@ class HDFSWrapper(object):
 
             m_TargetFileList = None
             match_obj = re.match(r"hdfs\s+list(\s+)?$",
-                                m_szSQL, re.IGNORECASE | re.DOTALL)
+                                 m_szSQL, re.IGNORECASE | re.DOTALL)
             if match_obj:
                 m_TargetFileList = ""
             match_obj = re.match(r"hdfs\s+list\s+(.*)?$",
-                                m_szSQL, re.IGNORECASE | re.DOTALL)
+                                 m_szSQL, re.IGNORECASE | re.DOTALL)
             if match_obj:
                 m_TargetFileList = str(match_obj.group(1)).strip()
             if m_TargetFileList is not None:
