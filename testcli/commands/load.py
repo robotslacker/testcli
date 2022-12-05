@@ -10,7 +10,7 @@ pluginModule = {}
 pluginFunction = {}
 
 
-def loadPlugin(pluginFile: str):
+def loadPlugin(cls, pluginFile: str):
     global pluginFunction
     global pluginModule
 
@@ -23,7 +23,7 @@ def loadPlugin(pluginFile: str):
                 "message": "plugin file [" + os.path.abspath(pluginFile) + "] does not exist!",
             }
             return
-    pluginFileHandler = open(pluginFile, "r")
+    pluginFileHandler = open(file=pluginFile, mode="r", encoding=cls.testOptions.get("SCRIPT_ENCODING"))
     pluginContents = pluginFileHandler.readlines()
 
     # 导入plugin的外部模块

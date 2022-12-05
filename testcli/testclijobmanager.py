@@ -888,7 +888,7 @@ class JOBManager(object):
             nologo=p_args["nologo"],
             HeadlessMode=True,
             WorkerName=p_args["workername"],
-            sqlperf=p_args["sqlperf"]
+            xlog=p_args["xlog"]
         )
         m_SQLCli.run_cli()
 
@@ -1040,7 +1040,7 @@ class JOBManager(object):
                         # 循环启动所有的进程
                         m_args = {"logon": self.getProcessContextInfo("logon"),
                                   "nologo": self.getProcessContextInfo("nologo"),
-                                  "sqlperf": self.getProcessContextInfo("sqlperf"),
+                                  "xlog": self.getProcessContextInfo("xlog"),
                                   "commandMap": self.getProcessContextInfo("commandMap"),
                                   "script": m_Job.getScriptFullName(),
                                   "workername":
@@ -1613,17 +1613,17 @@ class JOBManager(object):
                         "rows": None,
                         "headers": None,
                         "columnTypes": None,
-                        "status": "TestCli Job manager started successful."
+                        "status": "Job manager started successful."
                     }
                 else:
                     yield {
                         "type": "error",
-                        "message": "TestCli Job manager started fail."
+                        "message": "Job manager started fail."
                     }
             else:
                 yield {
                     "type": "error",
-                    "message": "TestCli Job manager already started. You can not start job manager again."
+                    "message": "Job manager already started. You can not start job manager again."
                 }
         if requestObject["action"] == "stopJobmanager":
             if cls.testOptions.get("JOBMANAGER").upper() == "ON":
@@ -1637,12 +1637,12 @@ class JOBManager(object):
                     "rows": None,
                     "headers": None,
                     "columnTypes": None,
-                    "status": "TestCli Job manager stopped successful."
+                    "status": "Job manager stopped successful."
                 }
             else:
                 yield {
                     "type": "error",
-                    "message": "TestCli Job manager already stopped. You can not stop job manager again."
+                    "message": "Job manager already stopped. You can not stop job manager again."
                 }
         if requestObject["action"] == "show":
             jobName = requestObject["jobName"]

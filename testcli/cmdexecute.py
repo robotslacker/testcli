@@ -1120,6 +1120,7 @@ class CmdExecute(object):
             elif parseObject["name"] in ["LOAD"]:
                 if parseObject["option"] == "PLUGIN":
                     for commandResult in loadPlugin(
+                            cls=self.cliHandler,
                             pluginFile=parseObject["pluginFile"]
                     ):
                         yield commandResult
@@ -1251,9 +1252,24 @@ class CmdExecute(object):
 
             # 记录SQL日志信息
             if self.testOptions.get("SILENT").upper() == 'OFF':
+                if "status" in lastCommandResult:
+                    commandStatus = lastCommandResult["status"]
+                else:
+                    commandStatus = 0
+                if "errorMessage" in lastCommandResult:
+                    errorMessage = lastCommandResult["errorMessage"]
+                else:
+                    errorMessage = ""
                 yield {
                     "type": "statistics",
+                    "startedTime": startTime,
                     "elapsed": endTime - startTime,
+                    "thread_name": self.workerName,
+                    "rawCommand": ret_CommandSplitResultsWithComments[pos],
+                    "command": json.dumps(obj=parseObject, sort_keys=True, ensure_ascii=False),
+                    "commandStatus": commandStatus,
+                    "errorMessage": errorMessage,
+                    "scenario" : self.scenario
                 }
 
             # 开始执行下一个语句

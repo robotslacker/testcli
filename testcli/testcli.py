@@ -69,7 +69,7 @@ class TestCli(object):
             nologo=False,                           # 是否不打印登陆时的Logo信息，True的时候不打印
             breakWithError=False,                   # 遇到命令行错误，是否中断脚本后续执行，立刻退出
             breakErrorCode=255,                     # 遇到命令行错误时候的退出代码
-            sqlperf=None,                           # SQL审计文件输出名，None表示不需要
+            xlog=None,                              # 扩展日志信息文件输出名，None表示不需要
             Console=sys.stdout,                     # 控制台输出，默认为sys.stdout,即标准输出
             HeadlessMode=False,                     # 是否为无终端模式，无终端模式下，任何屏幕信息都不会被输出
             WorkerName='MAIN',                      # 程序别名，可用来区分不同的应用程序,
@@ -98,8 +98,8 @@ class TestCli(object):
         self.prompt_app = None                          # PromptKit控制台
         self.echofilename = None                        # 当前回显文件的文件名称
         self.Version = __version__                      # 当前程序版本
-        self.SQLPerfFile = None                         # SQLPerf文件名
-        self.SQLPerfFileHandle = None                   # SQLPerf文件句柄
+        self.xlogFile = None                         # xlog文件名
+        self.xlogFileHandle = None                   # xlog文件句柄
         self.PerfFileLocker = None                      # 进程锁, 用来在输出perf文件的时候控制并发写文件
         self.xlogfilename = None                        # xlog文件名
         self.breakWithError = breakWithError            # 是否在遇到错误的时候退出
@@ -139,7 +139,7 @@ class TestCli(object):
         self.logfilename = logfilename
         self.Console = Console
         self.HeadlessMode = HeadlessMode
-        self.SQLPerfFile = sqlperf
+        self.xlogFile = xlog
         if HeadlessMode:
             self.Console = open(os.devnull, "w")
         self.logger = logger
@@ -188,7 +188,7 @@ class TestCli(object):
         self.JobHandler.setProcessContextInfo("logon", self.logon)
         self.JobHandler.setProcessContextInfo("nologo", self.nologo)
         self.JobHandler.setProcessContextInfo("commandMap", self.commandMap)
-        self.JobHandler.setProcessContextInfo("sqlperf", sqlperf)
+        self.JobHandler.setProcessContextInfo("xlog", xlog)
         self.JobHandler.setProcessContextInfo("logfilename", self.logfilename)
         self.JobHandler.setProcessContextInfo("script", self.commandScript)
 
@@ -724,9 +724,14 @@ class TestCli(object):
                 currentPwd = os.getcwd()
                 scriptDir = os.path.dirname(str(self.commandScript))
                 scriptBase = os.path.basename(str(self.commandScript))
-                os.chdir(scriptDir)
+                if scriptDir.strip() != "":
+                    # 如果脚本不是当前目录，需要切换到脚本目录下
+                    # 如果脚本是当前目录，切换到空目录会报错，所以不能切换
+                    os.chdir(scriptDir)
                 self.DoCommand('_start ' + scriptBase)
-                os.chdir(currentPwd)
+                if scriptDir.strip() != "":
+                    # 如果发生了脚本切换，则执行脚本后要返回切换前的目录
+                    os.chdir(currentPwd)
             except TestCliException:
                 raise EOFError
             self.DoCommand('_exit')
@@ -1101,7 +1106,7 @@ class TestCli(object):
 
         return output
 
-    def Log_Statistics(self, p_SQLResult):
+    def Log_Statistics(self, commandResult):
         # 开始时间         StartedTime
         # 消耗时间         elapsed
         # SQL的前20个字母  SQLPrefix
@@ -1110,7 +1115,7 @@ class TestCli(object):
         # 线程名称         thread_name
 
         # 如果没有打开性能日志记录文件，直接跳过
-        if self.SQLPerfFile is None:
+        if self.xlogFile is None:
             return
 
         # 初始化文件加锁机制
@@ -1120,43 +1125,42 @@ class TestCli(object):
         # 多进程，多线程写入，考虑锁冲突
         try:
             self.PerfFileLocker.acquire()
-            if not os.path.exists(self.SQLPerfFile):
+            if not os.path.exists(self.xlogFile):
                 # 如果文件不存在，创建文件，并写入文件头信息
-                self.SQLPerfFileHandle = open(self.SQLPerfFile, "a", encoding="utf-8")
-                self.SQLPerfFileHandle.write("Script\tStarted\telapsed\tRawCommand\tCommand\t"
-                                             "CommandStatus\tErrorMessage\tWorkerName\t"
-                                             "Suite\tCase\tScenario\tTransaction\n")
-                self.SQLPerfFileHandle.close()
+                self.xlogFileHandle = open(self.xlogFile, "a", encoding="utf-8")
+                self.xlogFileHandle.write("Script\tStarted\telapsed\tRawCommand\tCommand\t"
+                                          "CommandStatus\tErrorMessage\tWorkerName\t"
+                                          "Suite\tCase\tScenario\n")
+                self.xlogFileHandle.close()
 
             # 对于多线程运行，这里的thread_name格式为JOB_NAME#副本数-完成次数
             # 对于单线程运行，这里的thread_name格式为固定的MAIN
-            m_ThreadName = str(p_SQLResult["thread_name"])
+            threadName = str(commandResult["thread_name"])
 
             # 打开Perf文件
-            self.SQLPerfFileHandle = open(self.SQLPerfFile, "a", encoding="utf-8")
+            self.xlogFileHandle = open(self.xlogFile, "a", encoding="utf-8")
             # 写入内容信息
             if self.commandScript is None:
-                m_SQL_Script = "Console"
+                script = "Console"
             else:
-                m_SQL_Script = str(os.path.basename(self.commandScript))
-            self.SQLPerfFileHandle.write(
-                m_SQL_Script + "\t" +
-                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(p_SQLResult["startedTime"])) + "\t" +
-                "%8.2f" % p_SQLResult["elapsed"] + "\t" +
-                str(p_SQLResult["rawCommand"]).replace("\n", " ").replace("\t", "    ") + "\t" +
-                str(p_SQLResult["command"]).replace("\n", " ").replace("\t", "    ") + "\t" +
-                str(p_SQLResult["commandStatus"]) + "\t" +
-                str(p_SQLResult["errorMessage"]).replace("\n", " ").replace("\t", "    ") + "\t" +
-                str(m_ThreadName) + "\t" +
+                script = str(os.path.basename(self.commandScript))
+            self.xlogFileHandle.write(
+                script + "\t" +
+                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(commandResult["startedTime"])) + "\t" +
+                "%8.2f" % commandResult["elapsed"] + "\t" +
+                str(commandResult["rawCommand"]).replace("\n", " ").replace("\t", "    ") + "\t" +
+                str(commandResult["command"]).replace("\n", " ").replace("\t", "    ") + "\t" +
+                str(commandResult["commandStatus"]) + "\t" +
+                str(commandResult["errorMessage"]).replace("\n", " ").replace("\t", "    ") + "\t" +
+                str(threadName) + "\t" +
                 str(self.suitename) + "\t" +
                 str(self.casename) + "\t" +
-                str(p_SQLResult["scenario"]) + "\t" +
-                str(p_SQLResult["transaction"]) +
+                str(commandResult["scenario"])  +
                 "\n"
             )
-            self.SQLPerfFileHandle.flush()
-            self.SQLPerfFileHandle.close()
+            self.xlogFileHandle.flush()
+            self.xlogFileHandle.close()
         except Exception as ex:
-            print("Internal error:: perf file write not complete. " + repr(ex))
+            print("Internal error:: perf file [" + str(self.xlogFile) + "] write not complete. " + repr(ex))
         finally:
             self.PerfFileLocker.release()

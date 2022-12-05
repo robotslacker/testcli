@@ -14,13 +14,13 @@ appExitValue = 0
 
 
 @click.command()
-@click.option("--version", is_flag=True, help="Output SQLCLI version.")
+@click.option("--version", is_flag=True, help="Output TestCli version.")
 @click.option("--logon", type=str, help="logon user name and password. user/pass",)
 @click.option("--logfile", type=str, help="Log every query and its results to a file.",)
-@click.option("--execute", type=str, help="Execute SQL script.")
-@click.option("--commandmap", type=str, help="Command Mapping file.")
+@click.option("--execute", type=str, help="Execute command script.")
+@click.option("--commandmap", type=str, help="Command mapping file.")
 @click.option("--nologo", is_flag=True, help="Execute with no-logo mode.")
-@click.option("--sqlperf", type=str, help="SQL performance Log.")
+@click.option("--xlog", type=str, help="Command extended log.")
 @click.option("--syncdriver", is_flag=True, help="Download jdbc jar from file server.")
 @click.option("--clientcharset", type=str, help="Set client charset. Default is UTF-8.")
 @click.option("--resultcharset", type=str, help="Set result charset. Default is same to clientCharset.")
@@ -35,7 +35,7 @@ def cli(
         execute,
         commandmap,
         nologo,
-        sqlperf,
+        xlog,
         syncdriver,
         clientcharset,
         resultcharset,
@@ -50,12 +50,12 @@ def cli(
 
     # 从服务器下下载程序需要的各种jar包
     if syncdriver:
-        sqlcli = TestCli(
+        testcli = TestCli(
             logfilename=logfile,
             logon=logon,
             nologo=nologo
         )
-        sqlcli.syncdriver()
+        testcli.syncdriver()
         return
 
     # 程序自检
@@ -74,7 +74,7 @@ def cli(
         script=execute,
         commandMap=commandmap,
         nologo=nologo,
-        sqlperf=sqlperf,
+        xlog=xlog,
         clientCharset=clientcharset,
         resultCharset=resultcharset,
         profile=profile,
@@ -88,11 +88,6 @@ def cli(
 
 
 if __name__ == "__main__":
-    # keyFile = open("D:\\zettabasecloudcn.pem", 'r')
-    # print("lll = " + str("D:\\zettabasecloudcn.pem"))
-    # if True:
-    #     sys.exit(0)
-    #
     # 根据cli的结果退出，如果意外，退出返回值为255
     try:
         cli()

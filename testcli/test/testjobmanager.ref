@@ -1,0 +1,28 @@
+SQL> _job jobmanager on;
+Job manager started successful.
+SQL>
+SQL> _connect /meta
+Database connected.
+SQL> create table testtab(id int, col1 char(10));
+0 row affected.
+SQL> insert into testtab values(10, 'Master');
+1 row affected.
+SQL>
+SQL> _job create myjob script testjobmanagerslave1.sql tag test1;
+Job [myjob] created successful.
+SQL> _job create myjob script testjobmanagerslave2.sql tag test1;
+Job [myjob] created successful.
+SQL>
+SQL> _job start all;
+Total [2] jobs started.
+SQL> _job wait all;
+All jobs finished.
+SQL> select * from testtab order by id;
++--------+----+--------+
+|   ##   | ID |  COL1  |
++--------+----+--------+
+|      1 | 10 | Master |
+|      2 | 20 | slave1 |
+|      3 | 30 | slave2 |
++--------+----+--------+
+3 rows selected.

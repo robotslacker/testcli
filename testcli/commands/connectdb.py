@@ -47,6 +47,12 @@ def connectDb(cls, connectProperties, timeout: int = -1):
             connectProperties["port"] = 0
             connectProperties["parameters"] = {}
         elif connectProperties["localService"] == "meta":
+            jobManagerURL = str(cls.testOptions.get("JOBMANAGER_METAURL")).strip()
+            if len(jobManagerURL) == 0:
+                raise TestCliException("TestCli-0000:  Meta is used for jobmanager, but you have not enable it.")
+            hostAndport = str(jobManagerURL).replace("tcp://", "").split(':')
+            host = hostAndport[0]
+            port = hostAndport[1]
             # 如果连接内容仅仅就一个META，则连接到内置的jobmanager db
             connectProperties["service"] = "mem:testclimeta"
             connectProperties["username"] = "sa"
@@ -54,11 +60,11 @@ def connectDb(cls, connectProperties, timeout: int = -1):
             connectProperties["driver"] = "jdbc"
             connectProperties["driverSchema"] = "h2tcp"
             connectProperties["driverType"] = "tcp"
-            connectProperties["host"] = "0.0.0.0"
-            connectProperties["port"] = 0
+            connectProperties["host"] = host
+            connectProperties["port"] = port
             connectProperties["parameters"] = {}
         else:
-            raise TestCliException("Invalid localservice. MEM|METADATA only.")
+            raise TestCliException("Invalid localservice. MEM|META only.")
 
     # 连接数据库
     try:
