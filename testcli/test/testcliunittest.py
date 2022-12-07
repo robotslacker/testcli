@@ -32,7 +32,8 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-    def test_SQLAnalyze_ConnectLocalMem(self):
+    def test_SQLAnalyze_ConnectH2Mem(self):
+        # connect with local h2 mem
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_connect /mem")
         self.assertTrue(isFinished)
@@ -40,7 +41,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-    def test_SQLAnalyze_ConnectLocalMeta(self):
+        # Connect with testcli metadata
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_connect /metadata")
         self.assertTrue(isFinished)
@@ -48,7 +49,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-    def test_SQLAnalyze_ConnectWithoutServer(self):
+        # connect without server url
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_connect admin/123456")
         self.assertTrue(isFinished)
@@ -59,7 +60,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-    def test_SQLAnalyze_ConnectOracle8(self):
+        # Connect with Oracle8
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_connect \"工具人1号\"/123456@jdbc:oracle:thin://192.168.1.72:1521:xe")
         self.assertTrue(isFinished)
@@ -76,7 +77,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-    def test_SQLAnalyze_ConnectOracle11(self):
+        # Connect with Oracle11
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_connect system/123456@jdbc:oracle:thin://192.168.1.72:1521/xe")
         self.assertTrue(isFinished)
@@ -92,7 +93,8 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-    def test_SQLAnalyze_ConnectTeradata(self):
+        # connect with teradata
+        # teradata与众不同，其没有serviceName的存在
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_connect testdblink/testdblink@jdbc:teradata://192.168.1.136/testbase")
         self.assertTrue(isFinished)
@@ -106,7 +108,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-    def test_SQLAnalyze_ConnectH2Mem(self):
+        # Connect with named h2 session
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_connect sa/sa@jdbc:h2tcp:tcp://127.0.0.1:19091/mem:test")
         self.assertTrue(isFinished)
@@ -114,6 +116,38 @@ class TestSynatx(unittest.TestCase):
                           'driverSchema': 'h2tcp',
                           'driverType': 'tcp',
                           'host': '127.0.0.1',
+                          'name': 'CONNECT',
+                          'password': 'sa',
+                          'port': 19091,
+                          'service': 'mem:test',
+                          'username': 'sa'}, ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        # Connect with IPV6
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect sa/sa@jdbc:h2tcp:tcp://[0:0:0:0:0:ffff:192.1.56.10]:19091/mem:test")
+        self.assertTrue(isFinished)
+        self.assertEqual({'driver': 'jdbc',
+                          'driverSchema': 'h2tcp',
+                          'driverType': 'tcp',
+                          'host': '[0:0:0:0:0:ffff:192.1.56.10]',
+                          'name': 'CONNECT',
+                          'password': 'sa',
+                          'port': 19091,
+                          'service': 'mem:test',
+                          'username': 'sa'}, ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        # Connect with IPV6
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect sa/sa@jdbc:h2tcp:tcp://[FE80::5689:98FF:FE14]:19091/mem:test")
+        self.assertTrue(isFinished)
+        self.assertEqual({'driver': 'jdbc',
+                          'driverSchema': 'h2tcp',
+                          'driverType': 'tcp',
+                          'host': '[FE80::5689:98FF:FE14]',
                           'name': 'CONNECT',
                           'password': 'sa',
                           'port': 19091,
@@ -326,7 +360,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-    def test_SQLAnalyze_USEAPI(self):
+    def test_SQLAnalyze_USE(self):
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_use api")
         self.assertTrue(isFinished)
@@ -334,7 +368,6 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-    def test_SQLAnalyze_USESQL(self):
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_use sql")
         self.assertTrue(isFinished)
@@ -342,7 +375,6 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-    def test_SQLAnalyze_USEXXX(self):
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_use XXX")
         self.assertTrue(isFinished)
@@ -740,6 +772,102 @@ class TestSynatx(unittest.TestCase):
              'jobName': 'ABCD',
              'name': 'JOB',
              'param': {'Key1': 'Value1', 'Key2': 'Value2'}}, ret_CommandSplitResult)
+
+    def test_SQLAnalyze_Compare(self):
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_COMPARE aa.txt bb.txt MASK NOCASE")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'compare',
+             'compareOptions': {'case': False, 'mask': True},
+             'name': 'COMPARE',
+             'referenceFile': 'bb.txt',
+             'targetFile': 'aa.txt'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_COMPARE MASKLINE \"aa bb\"=>\"cc bb\"")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'mask',
+             'compareOptions': {},
+             'name': 'COMPARE',
+             'source': '"aa bb"',
+             'target': '"cc bb"'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_COMPARE NOMASKLINE \"aa bb\"")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'nomask',
+             'compareOptions': {},
+             'name': 'COMPARE',
+             'source': '"aa bb"'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_COMPARE SKIPLINE \"aa*bb\"")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'skip',
+             'compareOptions': {},
+             'name': 'COMPARE',
+             'source': '"aa*bb"'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_COMPARE NOSKIPLINE \"aa*bb\"")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'noskip',
+             'compareOptions': {},
+             'name': 'COMPARE',
+             'source': '"aa*bb"'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_COMPARE RESET")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'reset',
+             'compareOptions': {},
+             'name': 'COMPARE'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_COMPARE SET MASK CASE IGBLANK NOTRIM")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'set',
+             'compareOptions': {'case': True, 'igblank': True, 'mask': True, 'trim': False},
+             'name': 'COMPARE'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_COMPARE SET OUTPUT CONSOLE")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'set', 'compareOptions': {'output': 'Console'}, 'name': 'COMPARE'},
+            ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_COMPARE SET OUTPUT DIFFFILE")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'set', 'compareOptions': {'output': 'DiffFile'}, 'name': 'COMPARE'},
+            ret_CommandSplitResult)
 
     def test_SQLExecuteSanity(self):
         scriptFile = "testsqlsanity.sql"

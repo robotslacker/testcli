@@ -51,7 +51,7 @@ connectDriverType
        ;
 
 connectHost:
-        (IPV4 | CONNECT_STRING)
+        (IPV4 | IPV6 | CONNECT_STRING)
         ;
 
 connectUser

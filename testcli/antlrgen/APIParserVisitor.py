@@ -194,5 +194,10 @@ class APIParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by APIParser#compare.
+    def visitCompare(self, ctx:APIParser.CompareContext):
+        return self.visitChildren(ctx)
+
+
 
 del APIParser

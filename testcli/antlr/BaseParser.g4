@@ -26,6 +26,7 @@ baseCommand:
       | echo
       | ssh
       | job
+      | compare
       ;
 
 // Exit
@@ -66,21 +67,21 @@ whenever:   WHENEVER WHENEVER_ERROR (WHENEVER_CONTINUE|(WHENEVER_EXIT WHENEVER_E
 //
 spool   : SPOOL String (SEMICOLON)? CRLF?;
 
-// 12: 回显指定的文件
+// 回显指定的文件
 echo
         :   ECHO_OPEN
             EchoBlock
             (CRLF | EOF)?
         ;
 
-// 17：内嵌脚本
+// 内嵌脚本
 script
         :   SCRIPT_OPEN
             ScriptBlock
             CRLF?
         ;
 
-// 16：SET 语句
+// SET 语句
 set     : SET (SET_AT)?(SET_EXPRESSION)* (SET_SEMICOLON)? CRLF?;
 
 // SSH 远程连接
@@ -113,3 +114,19 @@ job      :
              (JOB_CREATE JOB_EXPRESSION (JOB_EXPRESSION JOB_EQUAL JOB_EXPRESSION)*)
            )
            (JOB_SEMICOLON)? CRLF?;
+
+// 文本比对
+compare   :
+           COMPARE
+           (
+              (COMPARE_EXPRESSION COMPARE_EXPRESSION
+                (COMPARE_MASK|COMPARE_NOMASK|COMPARE_CASE|COMPARE_NOCASE|COMPARE_IGBLANK|COMPARE_NOIGBLANK|COMPARE_TRIM|COMPARE_NOTRIM)*)
+              | ((COMPARE_SKIPLINE|COMPARE_NOSKIPLINE) COMPARE_EXPRESSION)
+              | (COMPARE_MASKLINE COMPARE_EXPRESSION COMPARE_EQUAL COMPARE_EXPRESSION)
+              | (COMPARE_NOMASKLINE COMPARE_EXPRESSION)
+              | COMPARE_RESET
+              | (COMPARE_SET (COMPARE_MASK|COMPARE_NOMASK|COMPARE_CASE|COMPARE_NOCASE|COMPARE_IGBLANK|COMPARE_NOIGBLANK|COMPARE_TRIM|COMPARE_NOTRIM)+
+                )
+              | (COMPARE_SET COMPARE_OUTPUT (COMPARE_CONSOLE | COMPARE_DIFFFILE))
+           )
+           (COMPARE_SEMICOLON)? CRLF?;

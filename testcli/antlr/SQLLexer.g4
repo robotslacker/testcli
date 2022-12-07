@@ -85,6 +85,10 @@ IPV4
             : DIGIT+ '.' DIGIT+ '.' DIGIT+ '.' DIGIT+ 
             ;
 
+IPV6
+            : '[' (HEX | ':' | '.') + ']'
+            ;
+
 CONNECT_PORT
             : CONNECT_COLON DIGIT+
             ;

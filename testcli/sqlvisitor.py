@@ -648,6 +648,88 @@ class SQLVisitor(SQLParserVisitor):
         self.errorCode = errorCode
         self.errorMsg = errorMsg
 
+    def visitCompare(self, ctx: SQLParser.CompareContext):
+        parsedObject = {'name': 'COMPARE'}
+
+        # 重置比较选项
+        if ctx.COMPARE_RESET() is not None:
+            parsedObject.update({'action': "reset"})
+
+        # 比较选项
+        compareOptions = {}
+        if len(ctx.COMPARE_CASE()) != 0:
+            compareOptions.update({"case": True})
+        if len(ctx.COMPARE_NOCASE()) != 0:
+            compareOptions.update({"case": False})
+        if len(ctx.COMPARE_MASK()) != 0:
+            compareOptions.update({"mask": True})
+        if len(ctx.COMPARE_NOMASK()) != 0:
+            compareOptions.update({"mask": False})
+        if len(ctx.COMPARE_IGBLANK()) != 0:
+            compareOptions.update({"igblank": True})
+        if len(ctx.COMPARE_NOIGBLANK()) != 0:
+            compareOptions.update({"igblank": False})
+        if len(ctx.COMPARE_TRIM()) != 0:
+            compareOptions.update({"trim": True})
+        if len(ctx.COMPARE_NOTRIM()) != 0:
+            compareOptions.update({"trim": False})
+        if ctx.COMPARE_CONSOLE() is not None:
+            compareOptions.update({"output": "Console"})
+        if ctx.COMPARE_DIFFFILE() is not None:
+            compareOptions.update({"output": "DiffFile"})
+        parsedObject.update({'compareOptions': compareOptions})
+
+        # maskline命令
+        if ctx.COMPARE_MASKLINE() is not None:
+            parsedObject.update({'action': "mask"})
+            if ctx.COMPARE_EXPRESSION() is not None:
+                parsedObject.update({'source': str(ctx.COMPARE_EXPRESSION()[0].getText())})
+                if len(ctx.COMPARE_EXPRESSION()) > 1:
+                    parsedObject.update({'target': str(ctx.COMPARE_EXPRESSION()[1].getText())})
+        if ctx.COMPARE_NOMASKLINE() is not None:
+            parsedObject.update({'action': "nomask"})
+            if ctx.COMPARE_EXPRESSION() is not None:
+                parsedObject.update({'source': str(ctx.COMPARE_EXPRESSION()[0].getText())})
+
+        # skipline命令
+        if ctx.COMPARE_SKIPLINE() is not None:
+            parsedObject.update({'action': "skip"})
+            if ctx.COMPARE_EXPRESSION() is not None:
+                parsedObject.update({'source': str(ctx.COMPARE_EXPRESSION()[0].getText())})
+        if ctx.COMPARE_NOSKIPLINE() is not None:
+            parsedObject.update({'action': "noskip"})
+            if ctx.COMPARE_EXPRESSION() is not None:
+                parsedObject.update({'source': str(ctx.COMPARE_EXPRESSION()[0].getText())})
+
+        # SET
+        if ctx.COMPARE_SET() is not None:
+            parsedObject.update({'action': "set"})
+
+        # 非特殊设置选项，即默认的Compare命令
+        if ctx.COMPARE_SET() is None and \
+                ctx.COMPARE_SKIPLINE() is None and \
+                ctx.COMPARE_NOSKIPLINE() is None and \
+                ctx.COMPARE_MASKLINE() is None and \
+                ctx.COMPARE_NOMASKLINE() is None and \
+                ctx.COMPARE_RESET() is None and \
+                ctx.COMPARE_EXPRESSION() is not None:
+            parsedObject.update({'action': "compare"})
+            parsedObject.update({'targetFile': str(ctx.COMPARE_EXPRESSION()[0].getText())})
+            if len(ctx.COMPARE_EXPRESSION()) > 1:
+                parsedObject.update({'referenceFile': str(ctx.COMPARE_EXPRESSION()[1].getText())})
+
+        # 处理错误信息
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = 1
+            errorMsg = ctx.exception.message
+            self.isFinished = False
+
+        self.parsedObject = parsedObject
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
+
     def visitStart(self, ctx: SQLParser.StartContext):
         parsedObject = {'name': 'START'}
 

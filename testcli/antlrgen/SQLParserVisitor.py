@@ -269,5 +269,10 @@ class SQLParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by SQLParser#compare.
+    def visitCompare(self, ctx:SQLParser.CompareContext):
+        return self.visitChildren(ctx)
+
+
 
 del SQLParser

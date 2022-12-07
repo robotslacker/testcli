@@ -67,6 +67,9 @@ SSH                 : '_SSH' ->pushMode(SshMode);
 // 执行并行任务的控制
 JOB                 : '_JOB' ->pushMode(JobMode);
 
+// 比对文件的一致性
+COMPARE             : '_COMPARE' ->pushMode(CompareMode);
+
 INT                 : DIGIT+ ;
 DECIMAL             : DIGIT+ '.' DIGIT+ ;
 String              : (OBS_TEXT | UNRESERVED | SUBDELIMS | PCTENCODED | DoubleQuoteString | SingleQuoteString)+;
@@ -198,3 +201,28 @@ JOB_TO              : 'TO';
 JOB_EXPRESSION      :
     (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' )+;
 
+mode CompareMode;
+COMPARE_SPACE       : [ \t]+ -> channel (HIDDEN);
+COMPARE_SEMICOLON   : ';';
+COMPARE_EQUAL       : '=>';
+COMPARE_CRLF        : CRLF -> popMode;
+COMPARE_SET         : 'SET';
+COMPARE_UNSET       : 'UNSET';
+COMPARE_MASK        : 'MASK';
+COMPARE_NOMASK      : 'NOMASK';
+COMPARE_MASKLINE    : 'MASKLINE';
+COMPARE_NOMASKLINE  : 'NOMASKLINE';
+COMPARE_CASE        : 'CASE';
+COMPARE_NOCASE      : 'NOCASE';
+COMPARE_IGBLANK     : 'IGBLANK';
+COMPARE_NOIGBLANK   : 'NOIGBLANK';
+COMPARE_TRIM        : 'TRIM';
+COMPARE_NOTRIM      : 'NOTRIM';
+COMPARE_OUTPUT      : 'OUTPUT';
+COMPARE_CONSOLE     : 'CONSOLE';
+COMPARE_DIFFFILE    : 'DIFFFILE';
+COMPARE_SKIPLINE    : 'SKIPLINE';
+COMPARE_NOSKIPLINE  : 'NOSKIPLINE';
+COMPARE_RESET       : 'RESET';
+COMPARE_EXPRESSION  :
+    (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' )+;
