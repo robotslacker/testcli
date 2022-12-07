@@ -677,6 +677,10 @@ class SQLVisitor(SQLParserVisitor):
             compareOptions.update({"output": "Console"})
         if ctx.COMPARE_DIFFFILE() is not None:
             compareOptions.update({"output": "DiffFile"})
+        if ctx.COMPARE_LCS() is not None:
+            compareOptions.update({"algorithm": "lcs"})
+        if ctx.COMPARE_MYERS() is not None:
+            compareOptions.update({"algorithm": "myers"})
         parsedObject.update({'compareOptions': compareOptions})
 
         # maskline命令

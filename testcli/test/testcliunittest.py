@@ -869,6 +869,24 @@ class TestSynatx(unittest.TestCase):
             {'action': 'set', 'compareOptions': {'output': 'DiffFile'}, 'name': 'COMPARE'},
             ret_CommandSplitResult)
 
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_COMPARE SET ALGORITHM LCS")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'set', 'compareOptions': {'algorithm': 'lcs'}, 'name': 'COMPARE'},
+            ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_COMPARE SET ALGORITHM MYERS")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'set', 'compareOptions': {'algorithm': 'myers'}, 'name': 'COMPARE'},
+            ret_CommandSplitResult)
+
     def test_SQLExecuteSanity(self):
         scriptFile = "testsqlsanity.sql"
 
