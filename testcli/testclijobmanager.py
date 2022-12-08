@@ -10,8 +10,8 @@ import traceback
 import configparser
 import jpype
 import socket
-from .testcliexception import TestCliException
-from .sqlclijdbc import connect as jdbcconnect
+from testcli.testcliexception import TestCliException
+from testcli.sqlclijdbc import connect as jdbcconnect
 
 
 # 并发作业处理

@@ -5,9 +5,9 @@ import traceback
 import click
 import pytest
 
-from .__init__ import __version__
-from .testcli import TestCli
-from .testcliexception import TestCliException
+from testcli.__init__ import __version__
+from testcli.testcli import TestCli
+from testcli.testcliexception import TestCliException
 
 # 定义全局变量，程序的返回值，默认是0
 appExitValue = 0

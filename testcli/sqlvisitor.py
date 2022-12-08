@@ -622,7 +622,10 @@ class SQLVisitor(SQLParserVisitor):
             commands = []
             for expression in ctx.SSH_EXPRESSION():
                 commands.append(str(expression.getText()))
-            parsedObject.update({"command": " ".join(commands)})
+            commond = str(" ".join(commands)).strip()
+            if commond.startswith('"') and commond.endswith('"'):
+                commond = commond[1:-1]
+            parsedObject.update({"command": commond})
         if ctx.SSH_CONNECT() is not None:
             parsedObject.update({"action": "connect"})
             parsedObject.update({"host": str(ctx.SSH_EXPRESSION()[0].getText())})
@@ -673,14 +676,22 @@ class SQLVisitor(SQLParserVisitor):
             compareOptions.update({"trim": True})
         if len(ctx.COMPARE_NOTRIM()) != 0:
             compareOptions.update({"trim": False})
-        if ctx.COMPARE_CONSOLE() is not None:
-            compareOptions.update({"output": "Console"})
-        if ctx.COMPARE_DIFFFILE() is not None:
-            compareOptions.update({"output": "DiffFile"})
+        output = []
+        if len(ctx.COMPARE_CONSOLE()) !=0:
+            output.append("console")
+        if len(ctx.COMPARE_DIFFFILE()) != 0:
+            output.append("diffFile")
+        if len(output) != 0:
+            compareOptions.update({"output": output})
         if ctx.COMPARE_LCS() is not None:
             compareOptions.update({"algorithm": "lcs"})
         if ctx.COMPARE_MYERS() is not None:
             compareOptions.update({"algorithm": "myers"})
+        if ctx.COMPARE_ENCODING() is not None:
+            if ctx.COMPARE_WORK() is not None:
+                compareOptions.update({"workEncoding": (ctx.COMPARE_EXPRESSION()[0].getText())})
+            if ctx.COMPARE_REFERENCE() is not None:
+                compareOptions.update({"refEncoding": (ctx.COMPARE_EXPRESSION()[0].getText())})
         parsedObject.update({'compareOptions': compareOptions})
 
         # maskline命令

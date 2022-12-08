@@ -2,9 +2,9 @@
 import copy
 import os
 import re
-from .sqlparse import SQLFormatWithPrefix
-from .apiparse import APIRequestObjectFormatWithPrefix
-from .commands.assertExpression import evalExpression
+from testcli.sqlparse import SQLFormatWithPrefix
+from testcli.apiparse import APIRequestObjectFormatWithPrefix
+from testcli.commands.assertExpression import evalExpression
 
 
 def rewriteSQLStatement(cls, statement: str, commandScriptFile: str):

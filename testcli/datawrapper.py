@@ -9,7 +9,7 @@ from hdfs.util import HdfsError
 import traceback
 from glob import glob
 import fs
-from .testcliexception import TestCliException
+from testcli.testcliexception import TestCliException
 
 
 # 返回随机的Boolean类型

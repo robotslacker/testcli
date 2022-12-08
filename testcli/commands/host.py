@@ -10,7 +10,6 @@ def executeLocalCommand(cls, command: str):
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags = subprocess.CREATE_NEW_CONSOLE | subprocess.STARTF_USESHOWWINDOW
         startupinfo.wShowWindow = subprocess.SW_HIDE
-        print("Will execute [" + str(command) + "]")
         p = subprocess.Popen(command,
                              shell=True,
                              startupinfo=startupinfo,

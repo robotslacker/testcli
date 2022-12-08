@@ -13,7 +13,7 @@ class SshContext:
         self.user = ""
         self.pwd = None
         self.key = None
-        self.sshHandler = None
+        self.sshTransport = None
         self.sftpHandler = None
 
     def setHost(self, host: str):
@@ -31,8 +31,8 @@ class SshContext:
     def setKey(self, key):
         self.key = key
 
-    def setSshHandler(self, sshHandler):
-        self.sshHandler = sshHandler
+    def setSshTransport(self, sshTransport):
+        self.sshTransport = sshTransport
 
     def setSftpHandler(self, sftpHandler):
         self.sftpHandler = sftpHandler
@@ -52,8 +52,8 @@ class SshContext:
     def getKey(self):
         return self.key
 
-    def getSshHandler(self):
-        return self.sshHandler
+    def getSshTransport(self):
+        return self.sshTransport
 
     def getSftpHandler(self):
         return self.sftpHandler
@@ -86,7 +86,8 @@ def executeSshRequest(cls, requestObject):
         sshHandler = paramiko.SSHClient()
         sshHandler.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         sshHandler._transport = transport
-        sshContext.setSshHandler(sshHandler)
+        sshContext.setSshTransport(sshHandler._transport)
+
         sftpHandler = paramiko.SFTPClient.from_transport(transport)
         sshContext.setSftpHandler(sftpHandler)
 
@@ -121,19 +122,66 @@ def executeSshRequest(cls, requestObject):
         command = requestObject["command"]
         # 执行命令
         sshContext = sshSession[sshCurrentSessionName]
-        if sshContext.getSshHandler() is not None:
-            sshHandler = sshContext.getSshHandler()
-            stdin, stdout, stderr = sshHandler.exec_command(command)
-            stdout.channel.set_combine_stderr(True)
-            stdin.close()
-            consoleOutput = str(stdout.read().decode('UTF-8')).strip()
+        if sshContext.getSshTransport() is not None:
+            sshTransport = sshContext.getSshTransport()
+            # 打开SSH访问
+            channel = sshTransport.open_session()
+            channel.set_combine_stderr(True)
+            # 执行远程的命令
+            channel.exec_command(command)
+            consoleOutputBytes = bytes()
+            while True:
+                if channel.exit_status_ready():
+                    # 程序已经运行结束
+                    break
+                else:
+                    # 记录收到的屏幕信息
+                    while True:
+                        if channel.recv_ready():
+                            readByte = channel.recv(1)
+                            if readByte == bytes('\n', 'ascii'):
+                                yield {
+                                    "type": "result",
+                                    "title": None,
+                                    "rows": None,
+                                    "headers": None,
+                                    "columnTypes": None,
+                                    "status": consoleOutputBytes.decode(encoding='utf-8')
+                                }
+                                consoleOutputBytes = bytes()
+                            else:
+                                consoleOutputBytes = consoleOutputBytes + readByte
+                        else:
+                            break
+            # 可能包含再最后一批的消息里头
+            while True:
+                if channel.recv_ready():
+                    readByte = channel.recv(1)
+                    if readByte == bytes('\n', 'ascii'):
+                        yield {
+                            "type": "result",
+                            "title": None,
+                            "rows": None,
+                            "headers": None,
+                            "columnTypes": None,
+                            "status": consoleOutputBytes.decode(encoding='utf-8')
+                        }
+                        consoleOutputBytes = bytes()
+                    else:
+                        consoleOutputBytes = consoleOutputBytes + readByte
+                else:
+                    break
+            # 获得命令的返回状态
+            ret = channel.recv_exit_status()
+            # 关闭SSH访问
+            channel.close()
             yield {
                 "type": "result",
                 "title": None,
                 "rows": None,
                 "headers": None,
                 "columnTypes": None,
-                "status": consoleOutput
+                "status": "< Command finished with [" + str(ret) + "]"
             }
         else:
             yield {

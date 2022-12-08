@@ -10,16 +10,16 @@ def sessionManage(cls, action: str, sessionName: str = None):
     #   2:   Password
     #   3:   URL
     if action.strip().lower() == 'show':
-        m_Result = []
+        result = []
         for m_Session_Name, m_Connection in cls.db_saved_conn.items():
             if m_Connection[0] is None:
-                m_Result.append(['None', str(m_Session_Name), str(m_Connection[1]), '******', str(m_Connection[3])])
+                result.append(['None', str(m_Session_Name), str(m_Connection[1]), '******', str(m_Connection[3])])
             else:
-                m_Result.append(['Connection', str(m_Session_Name), str(m_Connection[1]),
+                result.append(['Connection', str(m_Session_Name), str(m_Connection[1]),
                                  '******', str(m_Connection[3])])
         if cls.db_conn is not None:
-            m_Result.append(['Current', str(cls.db_sessionName), str(cls.db_username), '******', str(cls.db_url)])
-        if len(m_Result) == 0:
+            result.append(['Current', str(cls.db_sessionName), str(cls.db_username), '******', str(cls.db_url)])
+        if len(result) == 0:
             yield {
                 "type": "result",
                 "title": None,
@@ -32,10 +32,10 @@ def sessionManage(cls, action: str, sessionName: str = None):
             yield {
                 "type": "result",
                 "title": "Saved Sessions:",
-                "rows": m_Result,
+                "rows": result,
                 "headers": ["Session", "Sesssion Name", "User Name", "Password", "URL"],
                 "columnTypes": None,
-                "status": "Total " + str(len(m_Result)) + " saved sesssions."
+                "status": "Total " + str(len(result)) + " saved sesssions."
             }
         return
 

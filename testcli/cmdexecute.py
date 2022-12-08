@@ -12,39 +12,40 @@ import binascii
 import decimal
 import traceback
 import urllib3
-from .sqlclijdbc import SQLCliJDBCException
-from .sqlclijdbc import SQLCliJDBCLargeObject
-from .sqlclijdbc import SQLCliJDBCTimeOutException
-from .sqlparse import SQLAnalyze
-from .apiparse import APIAnalyze
-from .sqlparse import SQLFormatWithPrefix
-from .apiparse import APIRequestStringFormatWithPrefix
+from testcli.sqlclijdbc import SQLCliJDBCException
+from testcli.sqlclijdbc import SQLCliJDBCLargeObject
+from testcli.sqlclijdbc import SQLCliJDBCTimeOutException
+from testcli.sqlparse import SQLAnalyze
+from testcli.apiparse import APIAnalyze
+from testcli.sqlparse import SQLFormatWithPrefix
+from testcli.apiparse import APIRequestStringFormatWithPrefix
 
-from .commands.load import loadPlugin
-from .commands.load import loadDriver
-from .commands.load import loadMap
-from .commands.exit import exitApplication
-from .commands.session import sessionManage
-from .commands.assertExpression import assertExpression
-from .commands.assertExpression import evalExpression
-from .commands.embeddScript import executeEmbeddScript
-from .commands.connectdb import connectDb, disconnectDb
-from .commands.start import executeFile
-from .commands.host import executeLocalCommand
-from .commands.spool import spool
-from .commands.echo import echo_input
-from .commands.setOptions import setOptions
-from .commands.cliSleep import cliSleep
-from .commands.userNameSpace import userNameSpace
-from .commands.whenever import setWheneverAction
-from .commands.ssh import executeSshRequest
+from testcli.commands.load import loadPlugin
+from testcli.commands.load import loadDriver
+from testcli.commands.load import loadMap
+from testcli.commands.exit import exitApplication
+from testcli.commands.session import sessionManage
+from testcli.commands.assertExpression import assertExpression
+from testcli.commands.assertExpression import evalExpression
+from testcli.commands.embeddScript import executeEmbeddScript
+from testcli.commands.connectdb import connectDb, disconnectDb
+from testcli.commands.start import executeFile
+from testcli.commands.host import executeLocalCommand
+from testcli.commands.spool import spool
+from testcli.commands.echo import echo_input
+from testcli.commands.setOptions import setOptions
+from testcli.commands.cliSleep import cliSleep
+from testcli.commands.userNameSpace import userNameSpace
+from testcli.commands.whenever import setWheneverAction
+from testcli.commands.ssh import executeSshRequest
+from testcli.commands.compare import executeCompareRequest
 
-from .common import rewriteSQLStatement
-from .common import rewriteAPIStatement
-from .common import parseSQLHints
-from .common import parseAPIHints
-from .testcliexception import TestCliException
-from .globalvar import lastCommandResult
+from testcli.common import rewriteSQLStatement
+from testcli.common import rewriteAPIStatement
+from testcli.common import parseSQLHints
+from testcli.common import parseAPIHints
+from testcli.testcliexception import TestCliException
+from testcli.globalvar import lastCommandResult
 
 
 class CmdExecute(object):
@@ -1240,6 +1241,11 @@ class CmdExecute(object):
                         requestObject=parseObject,
                 ):
                     yield result
+            elif parseObject["name"] in ["COMPARE"]:
+                for result in executeCompareRequest(
+                        requestObject=parseObject,
+                ):
+                    yield result
             elif parseObject["name"] in ["UNKNOWN"]:
                 yield {"type": "error",
                        "message": "TESTCLI_0000:  " + parseObject["reason"]}
@@ -1269,7 +1275,7 @@ class CmdExecute(object):
                     "command": json.dumps(obj=parseObject, sort_keys=True, ensure_ascii=False),
                     "commandStatus": commandStatus,
                     "errorMessage": errorMessage,
-                    "scenario" : self.scenario
+                    "scenario": self.scenario
                 }
 
             # 开始执行下一个语句

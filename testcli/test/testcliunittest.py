@@ -7,7 +7,7 @@ import jpype
 import tempfile
 from testcli.sqlparse import SQLAnalyze
 from testcli.apiparse import APIAnalyze
-from testcli.compare import POSIXCompare
+from testcli.commands.compare import POSIXCompare
 from testcli.sqlclijdbc import connect as jdbcconnect
 from testcli.test.testmockserver import startServer
 from testcli.test.testmockserver import stopServer
@@ -842,6 +842,16 @@ class TestSynatx(unittest.TestCase):
              'name': 'COMPARE'}, ret_CommandSplitResult)
 
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_COMPARE SET")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'set',
+             'compareOptions': {},
+             'name': 'COMPARE'}, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_COMPARE SET MASK CASE IGBLANK NOTRIM")
         self.assertEqual(None, ret_errorMsg)
         self.assertEqual(0, ret_errorCode)
@@ -857,7 +867,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertTrue(isFinished)
         self.assertEqual(
-            {'action': 'set', 'compareOptions': {'output': 'Console'}, 'name': 'COMPARE'},
+            {'action': 'set', 'compareOptions': {'output': ['console']}, 'name': 'COMPARE'},
             ret_CommandSplitResult)
 
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
@@ -866,7 +876,16 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertTrue(isFinished)
         self.assertEqual(
-            {'action': 'set', 'compareOptions': {'output': 'DiffFile'}, 'name': 'COMPARE'},
+            {'action': 'set', 'compareOptions': {'output': ['diffFile']}, 'name': 'COMPARE'},
+            ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_COMPARE SET OUTPUT CONSOLE DIFFFILE")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'set', 'compareOptions': {'output': ['console', 'diffFile']}, 'name': 'COMPARE'},
             ret_CommandSplitResult)
 
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
@@ -885,6 +904,26 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(isFinished)
         self.assertEqual(
             {'action': 'set', 'compareOptions': {'algorithm': 'myers'}, 'name': 'COMPARE'},
+            ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_COMPARE SET WORK ENCODING UTF-8")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'set',
+             'compareOptions': {'workEncoding': 'UTF-8'},
+             'name': 'COMPARE'},
+            ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_COMPARE SET REFERENCE ENCODING GBK")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'set', 'compareOptions': {'refEncoding': 'GBK'}, 'name': 'COMPARE'},
             ret_CommandSplitResult)
 
     def test_SQLExecuteSanity(self):
@@ -1374,6 +1413,43 @@ class TestSynatx(unittest.TestCase):
                 if line.startswith("-") or line.startswith("+"):
                     print(line)
         self.assertTrue(compareResult)
+
+    def test_compare(self):
+        scriptFile = "testcompare.sql"
+
+        scriptBaseFile = os.path.splitext(scriptFile)[0]
+        fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), scriptFile))
+        fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), scriptBaseFile + ".ref"))
+        fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
+
+        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        from testcli.testcli import TestCli
+        testcli = TestCli(
+            logfilename=fullLogFile,
+            HeadlessMode=True,
+            nologo=True,
+            script=fullScriptFile
+        )
+        retValue = testcli.run_cli()
+        self.assertEqual(0, retValue)
+
+        # 对文件进行比对，判断返回结果是否吻合
+        compareHandler = POSIXCompare()
+        compareResult, compareReport = compareHandler.compare_text_files(
+            file1=fullLogFile,
+            file2=fullRefFile,
+            CompareIgnoreTailOrHeadBlank=True
+        )
+        if not compareResult:
+            for line in compareReport:
+                if line.startswith("-") or line.startswith("+"):
+                    print(line)
+        self.assertTrue(compareResult)
+
+        # 删除指定的dif文件
+        fullDiffFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "testcomparework.dif"))
+        self.assertTrue(os.path.exists(fullDiffFile))
+        os.remove(fullDiffFile)
 
 
 if __name__ == '__main__':

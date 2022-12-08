@@ -2,9 +2,9 @@
 from antlr4 import InputStream
 from antlr4 import CommonTokenStream
 from antlr4.error.ErrorListener import ErrorListener
-from .antlrgen.APILexer import APILexer
-from .antlrgen.APIParser import APIParser
-from .apivisitor import APIVisitor
+from testcli.antlrgen.APILexer import APILexer
+from testcli.antlrgen.APIParser import APIParser
+from testcli.apivisitor import APIVisitor
 
 
 class APIClientErrorListener(ErrorListener):

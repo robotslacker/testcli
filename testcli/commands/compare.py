@@ -1,7 +1,24 @@
 # -*- coding: utf-8 -*-
+import copy
+import time
 import os
 import re
 from collections import namedtuple
+
+# 默认的比较选项
+compareDefaultOption = {
+    "algorithm": "myers",     # Compare比较算法，有LCS和MYERS
+    "output": "console",      # Compare结果输出的位置，默认为输出到控制台
+    "mask": False,            # 比较中是否按照正则表达式的方式去比较
+    "case": False,            # 比较中是否大小写敏感
+    "igblank": False,         # 比较中是否忽略空格
+    "trim": False,            # 比较中是否忽略行前行尾的空格
+    "workEncoding": "utf-8",  # 工作文件的比对字符集
+    "refEncoding": "utf-8"    # 参考文件的比对字符集
+}
+compareOption = copy.copy(compareDefaultOption)
+compareMaskLines = {}        # 比对中进行掩码的内容信息
+compareSkipLines = []        # 比对中需要忽略的信息
 
 
 class DiffException(Exception):
@@ -236,9 +253,9 @@ class POSIXCompare:
                            CompareRefEncoding='UTF-8',
                            compareAlgorithm='MYERS'):
         if not os.path.isfile(file1):
-            raise DiffException('ERROR: %s is not a file' % file1)
+            raise DiffException('ERROR: File %s does not exist!' % file1)
         if not os.path.isfile(file2):
-            raise DiffException('ERROR: %s is not a file' % file2)
+            raise DiffException('ERROR: File %s does not exist!' % file2)
 
         # 将比较文件加载到数组
         fileRaw = open(file1, mode='r', encoding=CompareWorkEncoding)
@@ -324,96 +341,87 @@ class POSIXCompare:
         if maskLines is not None:
             m_nPos = 0
             while m_nPos < len(refFileContent):
-                for pattern in maskLines:
-                    m_SQLMask = pattern.split("=>")
-                    if len(m_SQLMask) == 2:
-                        m_SQLMaskPattern = m_SQLMask[0]
-                        m_SQLMaskTarget = m_SQLMask[1]
-                        if re.search(m_SQLMaskPattern, refFileContent[m_nPos], re.IGNORECASE) is not None:
-                            refFileContent[m_nPos] = \
-                                re.sub(m_SQLMaskPattern, m_SQLMaskTarget, refFileContent[m_nPos], flags=re.IGNORECASE)
-                    else:
-                        print("LogMask Hint Error, missed =>: [" + pattern + "]")
+                for m_SQLMaskPattern, m_SQLMaskTarget in maskLines.items():
+                    if re.search(m_SQLMaskPattern, refFileContent[m_nPos], re.IGNORECASE) is not None:
+                        refFileContent[m_nPos] = \
+                            re.sub(m_SQLMaskPattern, m_SQLMaskTarget, refFileContent[m_nPos], flags=re.IGNORECASE)
                 m_nPos = m_nPos + 1
             m_nPos = 0
             while m_nPos < len(workFileContent):
-                for pattern in maskLines:
-                    m_SQLMask = pattern.split("=>")
-                    if len(m_SQLMask) == 2:
-                        m_SQLMaskPattern = m_SQLMask[0]
-                        m_SQLMaskTarget = m_SQLMask[1]
-                        if re.search(m_SQLMaskPattern, workFileContent[m_nPos], re.IGNORECASE) is not None:
-                            workFileContent[m_nPos] = \
-                                re.sub(m_SQLMaskPattern, m_SQLMaskTarget, workFileContent[m_nPos], flags=re.IGNORECASE)
-                    else:
-                        print("LogMask Hint Error, missed =>: [" + pattern + "]")
+                for m_SQLMaskPattern, m_SQLMaskTarget in maskLines.items():
+                    if re.search(m_SQLMaskPattern, workFileContent[m_nPos], re.IGNORECASE) is not None:
+                        workFileContent[m_nPos] = \
+                            re.sub(m_SQLMaskPattern, m_SQLMaskTarget, workFileContent[m_nPos], flags=re.IGNORECASE)
                 m_nPos = m_nPos + 1
 
         # 输出两个信息
         # 1：  Compare的结果是否存在dif，True/False
         # 2:   Compare的Dif列表. 注意：LCS算法是一个翻转的列表. MYERS算法里头是一个正序列表
         if compareAlgorithm == "MYERS":
-            (m_CompareResult, m_CompareResultList) = self.compareMyers(workFileContent, refFileContent, lineno1,
-                                                                       lineno2,
-                                                                       p_compare_maskEnabled=CompareWithMask,
-                                                                       p_compare_ignoreCase=CompareIgnoreCase)
+            (compareResult, compareResultList) = \
+                self.compareMyers(workFileContent, refFileContent,
+                                  lineno1, lineno2,
+                                  p_compare_maskEnabled=CompareWithMask,
+                                  p_compare_ignoreCase=CompareIgnoreCase)
         else:
-            (m_CompareResult, m_CompareResultList) = self.compareLCS(workFileContent, refFileContent, lineno1, lineno2,
-                                                                     p_compare_maskEnabled=CompareWithMask,
-                                                                     p_compare_ignoreCase=CompareIgnoreCase)
+            (compareResult, compareResultList) = \
+                self.compareLCS(workFileContent, refFileContent,
+                                lineno1, lineno2,
+                                p_compare_maskEnabled=CompareWithMask,
+                                p_compare_ignoreCase=CompareIgnoreCase)
             # 翻转数组
-            m_CompareResultList = m_CompareResultList[::-1]
+            compareResultList = compareResultList[::-1]
         # 随后从数组中补充进入被Skip掉的内容
-        m_nWorkLastPos = 0  # 上次Work文件已经遍历到的位置
-        m_nRefLastPos = 0  # 上次Ref文件已经遍历到的位置
-        m_NewCompareResultList = []
+        workLastPos = 0  # 上次Work文件已经遍历到的位置
+        refLastPos = 0  # 上次Ref文件已经遍历到的位置
+        newCompareResultList = []
         # 从列表中反向开始遍历， Step=-1
-        for row in m_CompareResultList:
+        for row in compareResultList:
             if row.startswith('+'):
                 # 当前日志没有，Reference Log中有的
                 # 需要注意的是，Ref文件中被跳过的行不会补充进入dif文件
-                m_LineNo = int(row[1:7])
-                m_AppendLine = "+{:>{}} ".format(m_LineNo, 6) + refFileRawContent[m_LineNo - 1]
+                lineno = int(row[1:7])
+                m_AppendLine = "+{:>{}} ".format(lineno, 6) + refFileRawContent[lineno - 1]
                 if m_AppendLine.endswith("\n"):
                     m_AppendLine = m_AppendLine[:-1]
-                m_NewCompareResultList.append(m_AppendLine)
-                m_nRefLastPos = m_LineNo
+                newCompareResultList.append(m_AppendLine)
+                refLastPos = lineno
                 continue
             elif row.startswith('-'):
                 # 当前日志有，但是Reference里头没有的
-                m_LineNo = int(row[1:7])
+                lineno = int(row[1:7])
                 # 补充填写那些已经被忽略规则略掉的内容，只填写LOG文件中的对应信息
-                if m_LineNo > (m_nWorkLastPos + 1):
+                if lineno > (workLastPos + 1):
                     # 当前日志中存在，但是比较的过程中被Skip掉的内容，要首先补充进来
-                    for m_nPos in range(m_nWorkLastPos + 1, m_LineNo):
+                    for m_nPos in range(workLastPos + 1, lineno):
                         m_AppendLine = "S{:>{}} ".format(m_nPos, 6) + fileRawContent[m_nPos - 1]
                         if m_AppendLine.endswith("\n"):
                             m_AppendLine = m_AppendLine[:-1]
-                        m_NewCompareResultList.append(m_AppendLine)
-                m_AppendLine = "-{:>{}} ".format(m_LineNo, 6) + fileRawContent[m_LineNo - 1]
+                        newCompareResultList.append(m_AppendLine)
+                m_AppendLine = "-{:>{}} ".format(lineno, 6) + fileRawContent[lineno - 1]
                 if m_AppendLine.endswith("\n"):
                     m_AppendLine = m_AppendLine[:-1]
-                m_NewCompareResultList.append(m_AppendLine)
-                m_nWorkLastPos = m_LineNo
+                newCompareResultList.append(m_AppendLine)
+                workLastPos = lineno
                 continue
             elif row.startswith(' '):
                 # 两边都有的
-                m_LineNo = int(row[0:7])
+                lineno = int(row[0:7])
                 # 补充填写那些已经被忽略规则略掉的内容，只填写LOG文件中的对应信息
-                if m_LineNo > (m_nWorkLastPos + 1):
+                if lineno > (workLastPos + 1):
                     # 当前日志中存在，但是比较的过程中被Skip掉的内容，要首先补充进来
-                    for m_nPos in range(m_nWorkLastPos + 1, m_LineNo):
+                    for m_nPos in range(workLastPos + 1, lineno):
                         m_AppendLine = "S{:>{}} ".format(m_nPos, 6) + fileRawContent[m_nPos - 1]
                         if m_AppendLine.endswith("\n"):
                             m_AppendLine = m_AppendLine[:-1]
-                        m_NewCompareResultList.append(m_AppendLine)
+                        newCompareResultList.append(m_AppendLine)
                 # 完全一样的内容
-                m_AppendLine = " {:>{}} ".format(m_LineNo, 6) + fileRawContent[m_LineNo - 1]
+                m_AppendLine = " {:>{}} ".format(lineno, 6) + fileRawContent[lineno - 1]
                 if m_AppendLine.endswith("\n"):
                     m_AppendLine = m_AppendLine[:-1]
-                m_NewCompareResultList.append(m_AppendLine)
-                m_nWorkLastPos = m_LineNo
-                m_nRefLastPos = m_nRefLastPos + 1
+                newCompareResultList.append(m_AppendLine)
+                workLastPos = lineno
+                refLastPos = refLastPos + 1
                 continue
             else:
                 # 关闭打开的文件
@@ -436,4 +444,206 @@ class POSIXCompare:
             workFile.close()
         if refFile:
             refFile.close()
-        return m_CompareResult, m_NewCompareResultList
+        return compareResult, newCompareResultList
+
+
+def executeCompareRequest(requestObject):
+    global compareOption
+    global compareDefaultOption
+    global compareMaskLines
+    global compareSkipLines
+
+    action = str(requestObject["action"])
+    if action == "set":
+        if len(requestObject["compareOptions"]) == 0:
+            # 如果Compare Set后面没有跟任何参数，则将当前Compare的配置打印出来
+            currentCompareSettings = []
+            for key, value in compareOption.items():
+                currentCompareSettings.append(
+                    [str(key), str(value), str(compareDefaultOption[key])])
+            yield {
+                "type": "result",
+                "title": "Current compare settings:",
+                "rows": currentCompareSettings,
+                "headers": ["Option", "Current value", "Default value"],
+                "columnTypes": None,
+                "status": None
+            }
+            currentSkipSettings = []
+            for skipline in compareSkipLines:
+                currentSkipSettings.append([skipline])
+            if len(currentSkipSettings) != 0:
+                yield {
+                    "type": "result",
+                    "title": "Skiplines:",
+                    "rows": currentSkipSettings,
+                    "headers": ["SkipPattern"],
+                    "columnTypes": None,
+                    "status": None
+                }
+            currentMaskSettings = []
+            for key, value in compareMaskLines.items():
+                currentMaskSettings.append([str(key), str(value)])
+            if len(currentMaskSettings) != 0:
+                yield {
+                    "type": "result",
+                    "title": "Masklines:",
+                    "rows": currentMaskSettings,
+                    "headers": ["SourcePattern", "TargetPattern"],
+                    "columnTypes": None,
+                    "status": None
+                }
+        else:  # compareOptions不为空，即命令中指定了选项
+            # 设置Compare的选项
+            for key, value in requestObject["compareOptions"].items():
+                if key in compareOption:
+                    compareOption[key] = value
+                else:
+                    yield {
+                        "type": "error",
+                        "message": "unknown compare option [" + str(key) + "]"
+                    }
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": None
+            }
+
+    if action == "reset":
+        compareOption = copy.copy(compareDefaultOption)
+        compareMaskLines = {}
+        compareSkipLines = []
+        yield {
+            "type": "result",
+            "title": None,
+            "rows": None,
+            "headers": None,
+            "columnTypes": None,
+            "status": None
+        }
+
+    if action == "skip":
+        source = str(requestObject["source"])
+        if source not in compareSkipLines:
+            compareSkipLines.append(source)
+        yield {
+            "type": "result",
+            "title": None,
+            "rows": None,
+            "headers": None,
+            "columnTypes": None,
+            "status": None
+        }
+
+    if action == "noskip":
+        source = str(requestObject["source"])
+        if source in compareSkipLines:
+            compareSkipLines.remove(source)
+        yield {
+            "type": "result",
+            "title": None,
+            "rows": None,
+            "headers": None,
+            "columnTypes": None,
+            "status": None
+        }
+
+    if action == "mask":
+        source = str(requestObject["source"])
+        target = str(requestObject["target"])
+        if source not in compareMaskLines.keys():
+            compareMaskLines[source] = target
+        yield {
+            "type": "result",
+            "title": None,
+            "rows": None,
+            "headers": None,
+            "columnTypes": None,
+            "status": None
+        }
+
+    if action == "nomask":
+        source = str(requestObject["source"])
+        if source in compareMaskLines.keys():
+            del compareMaskLines[source]
+        yield {
+            "type": "result",
+            "title": None,
+            "rows": None,
+            "headers": None,
+            "columnTypes": None,
+            "status": None
+        }
+
+    if action == "compare":
+        # 设置当前命令的比较选项，不一定和默认或者基础设置的选项相同
+        currentCompareOption = copy.copy(compareOption)
+        for key, value in requestObject["compareOptions"].items():
+            if key in currentCompareOption:
+                currentCompareOption[key] = value
+        targetFile = str(requestObject["targetFile"])
+        referenceFile = str(requestObject["referenceFile"])
+
+        compareHandler = POSIXCompare()
+        try:
+            compareResult, compareReport = \
+                compareHandler.compare_text_files(
+                    file1=targetFile,
+                    file2=referenceFile,
+                    CompareWithMask=currentCompareOption["mask"],
+                    CompareIgnoreCase=not currentCompareOption["case"],
+                    CompareIgnoreTailOrHeadBlank=not currentCompareOption["trim"],
+                    compareAlgorithm=currentCompareOption["algorithm"],
+                    ignoreEmptyLine=currentCompareOption["igblank"],
+                    skipLines=compareSkipLines,
+                    maskLines=compareMaskLines,
+                    CompareWorkEncoding=currentCompareOption["workEncoding"],
+                    CompareRefEncoding=currentCompareOption["refEncoding"],
+                )
+            if compareResult:
+                yield {
+                    "type": "result",
+                    "title": None,
+                    "rows": None,
+                    "headers": None,
+                    "columnTypes": None,
+                    "status": "Compare successful."
+                }
+            else:
+                compareOutput = []
+                if "console" in compareOption["output"]:
+                    # 如果要求输出到控制台，则显示比对结果到控制台上
+                    for line in compareReport:
+                        if line.startswith("-") or line.startswith("+"):
+                            tag = line[0]
+                            workLineno = ""
+                            refLineno = ""
+                            if tag == "-":
+                                workLineno = line[1:7]
+                            if tag == "+":
+                                refLineno = line[1:7]
+                            compareOutput.append([tag, workLineno, refLineno, line[8:]])
+                if "diffFile" in compareOption["output"]:
+                    # 如果要求输出到文件，则将比对结果写入文件中
+                    baseTargetFile = os.path.splitext(targetFile)[0]
+                    diffFile = os.path.join(os.path.dirname(os.path.abspath(targetFile)), baseTargetFile + ".dif")
+                    fp = open(file=diffFile, mode="w")
+                    for line in compareReport:
+                        fp.write(line + "\n")
+                    fp.close()
+                yield {
+                    "type": "result",
+                    "title": None,
+                    "rows": compareOutput,
+                    "headers": ["#", "work line#", "ref line#", "content"],
+                    "columnTypes": None,
+                    "status": "Compare failed."
+                }
+        except DiffException as de:
+            yield {
+                "type": "error",
+                "message": str(de.message)
+            }
