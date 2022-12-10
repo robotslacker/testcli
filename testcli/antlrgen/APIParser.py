@@ -10,7 +10,7 @@ else:
 
 def serializedATN():
     return [
-        4,1,177,486,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,
+        4,1,178,487,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,
         7,6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,
         13,2,14,7,14,2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,2,
         20,7,20,2,21,7,21,2,22,7,22,2,23,7,23,2,24,7,24,2,25,7,25,2,26,7,
@@ -42,20 +42,20 @@ def serializedATN():
         8,35,1,35,1,35,4,35,343,8,35,11,35,12,35,344,1,35,1,35,1,35,1,35,
         1,35,1,35,1,35,1,35,1,35,1,35,1,35,1,35,1,35,1,35,1,35,1,35,1,35,
         1,35,1,35,1,35,1,35,1,35,1,35,1,35,1,35,1,35,1,35,1,35,1,35,1,35,
-        1,35,1,35,1,35,1,35,3,35,381,8,35,3,35,383,8,35,1,35,3,35,386,8,
-        35,1,35,3,35,389,8,35,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,
-        36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,
-        36,1,36,1,36,1,36,1,36,4,36,417,8,36,11,36,12,36,418,1,36,1,36,1,
-        36,1,36,1,36,5,36,426,8,36,10,36,12,36,429,9,36,3,36,431,8,36,1,
-        36,3,36,434,8,36,1,36,3,36,437,8,36,1,37,1,37,1,37,1,37,5,37,443,
-        8,37,10,37,12,37,446,9,37,1,37,1,37,1,37,1,37,1,37,1,37,1,37,1,37,
-        1,37,1,37,1,37,5,37,459,8,37,10,37,12,37,462,9,37,1,37,1,37,1,37,
-        4,37,467,8,37,11,37,12,37,468,1,37,1,37,1,37,1,37,1,37,1,37,1,37,
-        3,37,478,8,37,1,37,3,37,481,8,37,1,37,3,37,484,8,37,1,37,0,0,38,
+        1,35,1,35,1,35,1,35,1,35,3,35,382,8,35,3,35,384,8,35,1,35,3,35,387,
+        8,35,1,35,3,35,390,8,35,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,
+        1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,
+        1,36,1,36,1,36,1,36,1,36,4,36,418,8,36,11,36,12,36,419,1,36,1,36,
+        1,36,1,36,1,36,5,36,427,8,36,10,36,12,36,430,9,36,3,36,432,8,36,
+        1,36,3,36,435,8,36,1,36,3,36,438,8,36,1,37,1,37,1,37,1,37,5,37,444,
+        8,37,10,37,12,37,447,9,37,1,37,1,37,1,37,1,37,1,37,1,37,1,37,1,37,
+        1,37,1,37,1,37,5,37,460,8,37,10,37,12,37,463,9,37,1,37,1,37,1,37,
+        4,37,468,8,37,11,37,12,37,469,1,37,1,37,1,37,1,37,1,37,1,37,1,37,
+        3,37,479,8,37,1,37,3,37,482,8,37,1,37,3,37,485,8,37,1,37,0,0,38,
         0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,
         46,48,50,52,54,56,58,60,62,64,66,68,70,72,74,0,10,1,1,45,45,2,0,
-        5,5,40,40,1,0,99,100,1,1,5,5,1,0,145,146,2,0,155,156,159,164,1,0,
-        168,169,1,0,166,167,1,0,175,176,1,0,173,174,561,0,76,1,0,0,0,2,82,
+        5,5,40,40,1,0,99,100,1,1,5,5,1,0,146,147,2,0,156,157,160,165,1,0,
+        169,170,1,0,167,168,1,0,176,177,1,0,174,175,562,0,76,1,0,0,0,2,82,
         1,0,0,0,4,84,1,0,0,0,6,94,1,0,0,0,8,99,1,0,0,0,10,102,1,0,0,0,12,
         104,1,0,0,0,14,109,1,0,0,0,16,112,1,0,0,0,18,116,1,0,0,0,20,118,
         1,0,0,0,22,123,1,0,0,0,24,128,1,0,0,0,26,134,1,0,0,0,28,138,1,0,
@@ -63,8 +63,8 @@ def serializedATN():
         38,174,1,0,0,0,40,184,1,0,0,0,42,194,1,0,0,0,44,202,1,0,0,0,46,210,
         1,0,0,0,48,222,1,0,0,0,50,235,1,0,0,0,52,243,1,0,0,0,54,246,1,0,
         0,0,56,261,1,0,0,0,58,269,1,0,0,0,60,276,1,0,0,0,62,289,1,0,0,0,
-        64,297,1,0,0,0,66,302,1,0,0,0,68,307,1,0,0,0,70,323,1,0,0,0,72,390,
-        1,0,0,0,74,438,1,0,0,0,76,77,3,2,1,0,77,78,5,0,0,1,78,1,1,0,0,0,
+        64,297,1,0,0,0,66,302,1,0,0,0,68,307,1,0,0,0,70,323,1,0,0,0,72,391,
+        1,0,0,0,74,439,1,0,0,0,76,77,3,2,1,0,77,78,5,0,0,1,78,1,1,0,0,0,
         79,83,3,36,18,0,80,83,3,4,2,0,81,83,5,0,0,1,82,79,1,0,0,0,82,80,
         1,0,0,0,82,81,1,0,0,0,83,3,1,0,0,0,84,88,5,1,0,0,85,87,5,5,0,0,86,
         85,1,0,0,0,87,90,1,0,0,0,88,86,1,0,0,0,88,89,1,0,0,0,89,91,1,0,0,
@@ -142,66 +142,66 @@ def serializedATN():
         0,312,311,1,0,0,0,313,316,1,0,0,0,314,312,1,0,0,0,314,315,1,0,0,
         0,315,318,1,0,0,0,316,314,1,0,0,0,317,319,5,96,0,0,318,317,1,0,0,
         0,318,319,1,0,0,0,319,321,1,0,0,0,320,322,5,5,0,0,321,320,1,0,0,
-        0,321,322,1,0,0,0,322,69,1,0,0,0,323,382,5,35,0,0,324,325,5,104,
-        0,0,325,326,5,128,0,0,326,327,5,105,0,0,327,328,5,106,0,0,328,329,
-        5,128,0,0,329,330,5,107,0,0,330,383,5,128,0,0,331,332,5,104,0,0,
-        332,333,5,128,0,0,333,334,5,105,0,0,334,335,5,106,0,0,335,338,5,
-        128,0,0,336,337,5,108,0,0,337,339,5,128,0,0,338,336,1,0,0,0,338,
-        339,1,0,0,0,339,383,1,0,0,0,340,342,5,109,0,0,341,343,5,128,0,0,
+        0,321,322,1,0,0,0,322,69,1,0,0,0,323,383,5,35,0,0,324,325,5,104,
+        0,0,325,326,5,129,0,0,326,327,5,105,0,0,327,328,5,106,0,0,328,329,
+        5,129,0,0,329,330,5,107,0,0,330,384,5,129,0,0,331,332,5,104,0,0,
+        332,333,5,129,0,0,333,334,5,105,0,0,334,335,5,106,0,0,335,338,5,
+        129,0,0,336,337,5,108,0,0,337,339,5,129,0,0,338,336,1,0,0,0,338,
+        339,1,0,0,0,339,384,1,0,0,0,340,342,5,109,0,0,341,343,5,129,0,0,
         342,341,1,0,0,0,343,344,1,0,0,0,344,342,1,0,0,0,344,345,1,0,0,0,
-        345,383,1,0,0,0,346,383,5,110,0,0,347,348,5,111,0,0,348,383,5,128,
-        0,0,349,350,5,112,0,0,350,383,5,128,0,0,351,380,5,113,0,0,352,353,
-        5,114,0,0,353,354,5,128,0,0,354,381,5,128,0,0,355,381,5,115,0,0,
-        356,357,5,116,0,0,357,381,5,128,0,0,358,359,5,117,0,0,359,360,5,
-        128,0,0,360,361,5,38,0,0,361,381,5,38,0,0,362,363,5,118,0,0,363,
-        381,5,128,0,0,364,365,5,119,0,0,365,366,5,128,0,0,366,381,5,128,
-        0,0,367,368,5,120,0,0,368,369,5,128,0,0,369,381,5,128,0,0,370,371,
-        5,121,0,0,371,381,5,128,0,0,372,373,5,122,0,0,373,374,5,128,0,0,
-        374,381,5,128,0,0,375,376,5,123,0,0,376,381,5,128,0,0,377,378,5,
-        124,0,0,378,379,5,128,0,0,379,381,5,38,0,0,380,352,1,0,0,0,380,355,
-        1,0,0,0,380,356,1,0,0,0,380,358,1,0,0,0,380,362,1,0,0,0,380,364,
-        1,0,0,0,380,367,1,0,0,0,380,370,1,0,0,0,380,372,1,0,0,0,380,375,
-        1,0,0,0,380,377,1,0,0,0,381,383,1,0,0,0,382,324,1,0,0,0,382,331,
-        1,0,0,0,382,340,1,0,0,0,382,346,1,0,0,0,382,347,1,0,0,0,382,349,
-        1,0,0,0,382,351,1,0,0,0,383,385,1,0,0,0,384,386,5,126,0,0,385,384,
-        1,0,0,0,385,386,1,0,0,0,386,388,1,0,0,0,387,389,5,5,0,0,388,387,
-        1,0,0,0,388,389,1,0,0,0,389,71,1,0,0,0,390,430,5,36,0,0,391,392,
-        5,144,0,0,392,431,7,4,0,0,393,394,5,137,0,0,394,431,5,148,0,0,395,
-        396,5,134,0,0,396,431,5,148,0,0,397,398,5,139,0,0,398,431,5,148,
-        0,0,399,400,5,138,0,0,400,431,5,148,0,0,401,402,5,140,0,0,402,431,
-        5,148,0,0,403,404,5,136,0,0,404,431,5,148,0,0,405,406,5,142,0,0,
-        406,431,5,143,0,0,407,408,5,141,0,0,408,409,5,143,0,0,409,410,5,
-        147,0,0,410,431,5,148,0,0,411,412,5,135,0,0,412,416,5,148,0,0,413,
-        414,5,148,0,0,414,415,5,131,0,0,415,417,5,148,0,0,416,413,1,0,0,
-        0,417,418,1,0,0,0,418,416,1,0,0,0,418,419,1,0,0,0,419,431,1,0,0,
-        0,420,421,5,133,0,0,421,427,5,148,0,0,422,423,5,148,0,0,423,424,
-        5,131,0,0,424,426,5,148,0,0,425,422,1,0,0,0,426,429,1,0,0,0,427,
-        425,1,0,0,0,427,428,1,0,0,0,428,431,1,0,0,0,429,427,1,0,0,0,430,
-        391,1,0,0,0,430,393,1,0,0,0,430,395,1,0,0,0,430,397,1,0,0,0,430,
-        399,1,0,0,0,430,401,1,0,0,0,430,403,1,0,0,0,430,405,1,0,0,0,430,
-        407,1,0,0,0,430,411,1,0,0,0,430,420,1,0,0,0,431,433,1,0,0,0,432,
-        434,5,130,0,0,433,432,1,0,0,0,433,434,1,0,0,0,434,436,1,0,0,0,435,
-        437,5,5,0,0,436,435,1,0,0,0,436,437,1,0,0,0,437,73,1,0,0,0,438,477,
-        5,37,0,0,439,440,5,177,0,0,440,444,5,177,0,0,441,443,7,5,0,0,442,
-        441,1,0,0,0,443,446,1,0,0,0,444,442,1,0,0,0,444,445,1,0,0,0,445,
-        478,1,0,0,0,446,444,1,0,0,0,447,448,7,6,0,0,448,478,5,177,0,0,449,
-        450,5,157,0,0,450,451,5,177,0,0,451,452,5,151,0,0,452,478,5,177,
-        0,0,453,454,5,158,0,0,454,478,5,177,0,0,455,478,5,170,0,0,456,460,
-        5,153,0,0,457,459,7,5,0,0,458,457,1,0,0,0,459,462,1,0,0,0,460,458,
-        1,0,0,0,460,461,1,0,0,0,461,478,1,0,0,0,462,460,1,0,0,0,463,464,
-        5,153,0,0,464,466,5,165,0,0,465,467,7,7,0,0,466,465,1,0,0,0,467,
-        468,1,0,0,0,468,466,1,0,0,0,468,469,1,0,0,0,469,478,1,0,0,0,470,
-        471,5,153,0,0,471,472,5,171,0,0,472,478,7,8,0,0,473,474,5,153,0,
-        0,474,475,7,9,0,0,475,476,5,172,0,0,476,478,5,177,0,0,477,439,1,
-        0,0,0,477,447,1,0,0,0,477,449,1,0,0,0,477,453,1,0,0,0,477,455,1,
-        0,0,0,477,456,1,0,0,0,477,463,1,0,0,0,477,470,1,0,0,0,477,473,1,
-        0,0,0,478,480,1,0,0,0,479,481,5,150,0,0,480,479,1,0,0,0,480,481,
-        1,0,0,0,481,483,1,0,0,0,482,484,5,5,0,0,483,482,1,0,0,0,483,484,
-        1,0,0,0,484,75,1,0,0,0,64,82,88,97,109,123,125,130,142,144,151,172,
-        176,179,182,186,189,192,197,200,205,208,214,217,220,227,230,233,
-        238,241,253,256,259,264,267,271,274,281,284,287,292,295,300,305,
-        309,314,318,321,338,344,380,382,385,388,418,427,430,433,436,444,
-        460,468,477,480,483
+        345,384,1,0,0,0,346,384,5,110,0,0,347,348,5,111,0,0,348,384,5,129,
+        0,0,349,350,5,112,0,0,350,384,5,129,0,0,351,381,5,114,0,0,352,353,
+        5,115,0,0,353,354,5,129,0,0,354,382,5,113,0,0,355,382,5,116,0,0,
+        356,357,5,117,0,0,357,382,5,129,0,0,358,359,5,118,0,0,359,360,5,
+        129,0,0,360,361,5,113,0,0,361,382,5,113,0,0,362,363,5,119,0,0,363,
+        364,5,129,0,0,364,382,5,113,0,0,365,366,5,120,0,0,366,367,5,129,
+        0,0,367,382,5,129,0,0,368,369,5,121,0,0,369,370,5,129,0,0,370,382,
+        5,129,0,0,371,372,5,122,0,0,372,382,5,129,0,0,373,374,5,123,0,0,
+        374,375,5,129,0,0,375,382,5,129,0,0,376,377,5,124,0,0,377,382,5,
+        129,0,0,378,379,5,125,0,0,379,380,5,129,0,0,380,382,5,113,0,0,381,
+        352,1,0,0,0,381,355,1,0,0,0,381,356,1,0,0,0,381,358,1,0,0,0,381,
+        362,1,0,0,0,381,365,1,0,0,0,381,368,1,0,0,0,381,371,1,0,0,0,381,
+        373,1,0,0,0,381,376,1,0,0,0,381,378,1,0,0,0,382,384,1,0,0,0,383,
+        324,1,0,0,0,383,331,1,0,0,0,383,340,1,0,0,0,383,346,1,0,0,0,383,
+        347,1,0,0,0,383,349,1,0,0,0,383,351,1,0,0,0,384,386,1,0,0,0,385,
+        387,5,127,0,0,386,385,1,0,0,0,386,387,1,0,0,0,387,389,1,0,0,0,388,
+        390,5,5,0,0,389,388,1,0,0,0,389,390,1,0,0,0,390,71,1,0,0,0,391,431,
+        5,36,0,0,392,393,5,145,0,0,393,432,7,4,0,0,394,395,5,138,0,0,395,
+        432,5,149,0,0,396,397,5,135,0,0,397,432,5,149,0,0,398,399,5,140,
+        0,0,399,432,5,149,0,0,400,401,5,139,0,0,401,432,5,149,0,0,402,403,
+        5,141,0,0,403,432,5,149,0,0,404,405,5,137,0,0,405,432,5,149,0,0,
+        406,407,5,143,0,0,407,432,5,144,0,0,408,409,5,142,0,0,409,410,5,
+        144,0,0,410,411,5,148,0,0,411,432,5,149,0,0,412,413,5,136,0,0,413,
+        417,5,149,0,0,414,415,5,149,0,0,415,416,5,132,0,0,416,418,5,149,
+        0,0,417,414,1,0,0,0,418,419,1,0,0,0,419,417,1,0,0,0,419,420,1,0,
+        0,0,420,432,1,0,0,0,421,422,5,134,0,0,422,428,5,149,0,0,423,424,
+        5,149,0,0,424,425,5,132,0,0,425,427,5,149,0,0,426,423,1,0,0,0,427,
+        430,1,0,0,0,428,426,1,0,0,0,428,429,1,0,0,0,429,432,1,0,0,0,430,
+        428,1,0,0,0,431,392,1,0,0,0,431,394,1,0,0,0,431,396,1,0,0,0,431,
+        398,1,0,0,0,431,400,1,0,0,0,431,402,1,0,0,0,431,404,1,0,0,0,431,
+        406,1,0,0,0,431,408,1,0,0,0,431,412,1,0,0,0,431,421,1,0,0,0,432,
+        434,1,0,0,0,433,435,5,131,0,0,434,433,1,0,0,0,434,435,1,0,0,0,435,
+        437,1,0,0,0,436,438,5,5,0,0,437,436,1,0,0,0,437,438,1,0,0,0,438,
+        73,1,0,0,0,439,478,5,37,0,0,440,441,5,178,0,0,441,445,5,178,0,0,
+        442,444,7,5,0,0,443,442,1,0,0,0,444,447,1,0,0,0,445,443,1,0,0,0,
+        445,446,1,0,0,0,446,479,1,0,0,0,447,445,1,0,0,0,448,449,7,6,0,0,
+        449,479,5,178,0,0,450,451,5,158,0,0,451,452,5,178,0,0,452,453,5,
+        152,0,0,453,479,5,178,0,0,454,455,5,159,0,0,455,479,5,178,0,0,456,
+        479,5,171,0,0,457,461,5,154,0,0,458,460,7,5,0,0,459,458,1,0,0,0,
+        460,463,1,0,0,0,461,459,1,0,0,0,461,462,1,0,0,0,462,479,1,0,0,0,
+        463,461,1,0,0,0,464,465,5,154,0,0,465,467,5,166,0,0,466,468,7,7,
+        0,0,467,466,1,0,0,0,468,469,1,0,0,0,469,467,1,0,0,0,469,470,1,0,
+        0,0,470,479,1,0,0,0,471,472,5,154,0,0,472,473,5,172,0,0,473,479,
+        7,8,0,0,474,475,5,154,0,0,475,476,7,9,0,0,476,477,5,173,0,0,477,
+        479,5,178,0,0,478,440,1,0,0,0,478,448,1,0,0,0,478,450,1,0,0,0,478,
+        454,1,0,0,0,478,456,1,0,0,0,478,457,1,0,0,0,478,464,1,0,0,0,478,
+        471,1,0,0,0,478,474,1,0,0,0,479,481,1,0,0,0,480,482,5,151,0,0,481,
+        480,1,0,0,0,481,482,1,0,0,0,482,484,1,0,0,0,483,485,5,5,0,0,484,
+        483,1,0,0,0,484,485,1,0,0,0,485,75,1,0,0,0,64,82,88,97,109,123,125,
+        130,142,144,151,172,176,179,182,186,189,192,197,200,205,208,214,
+        217,220,227,230,233,238,241,253,256,259,264,267,271,274,281,284,
+        287,292,295,300,305,309,314,318,321,338,344,381,383,386,389,419,
+        428,431,434,437,445,461,469,478,481,484
     ]
 
 class APIParser ( Parser ):
@@ -238,20 +238,21 @@ class APIParser ( Parser ):
                      "<INVALID>", "'API'", "'SQL'", "<INVALID>", "<INVALID>", 
                      "<INVALID>", "'CONNECT'", "'WITH'", "'USER'", "'KEYFILE'", 
                      "'PASSWORD'", "'EXECUTE'", "'DISCONNECT'", "'SAVE'", 
-                     "'RESTORE'", "'SFTP'", "'CHMOD'", "'GETCWD'", "'CHDIR'", 
-                     "'CHOWN'", "'MKDIR'", "'GET'", "'PUT'", "'REMOVE'", 
-                     "'RENAME'", "'LISTDIR'", "'TRUNCATE'", "<INVALID>", 
+                     "'RESTORE'", "<INVALID>", "'SFTP'", "'CHMOD'", "'GETCWD'", 
+                     "'CHDIR'", "'CHOWN'", "'MKDIR'", "'GET'", "'PUT'", 
+                     "'REMOVE'", "'RENAME'", "'LISTDIR'", "'TRUNCATE'", 
                      "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
-                     "<INVALID>", "'='", "<INVALID>", "'CREATE'", "'SHOW'", 
-                     "<INVALID>", "'START'", "'WAIT'", "'SHUTDOWN'", "'ABORT'", 
-                     "'TIMER'", "'REGISTER'", "'DEREGISTER'", "'WORKER'", 
-                     "'JOBMANAGER'", "'ON'", "'OFF'", "'TO'", "<INVALID>", 
-                     "<INVALID>", "<INVALID>", "'=>'", "<INVALID>", "<INVALID>", 
-                     "'UNSET'", "'MASK'", "'NOMASK'", "'MASKLINE'", "'NOMASKLINE'", 
-                     "'CASE'", "'NOCASE'", "'IGBLANK'", "'NOIGBLANK'", "'TRIM'", 
-                     "'NOTRIM'", "'OUTPUT'", "'CONSOLE'", "'DIFFFILE'", 
-                     "'SKIPLINE'", "'NOSKIPLINE'", "'RESET'", "'ALGORITHM'", 
-                     "'ENCODING'", "'WORK'", "'REFERENCE'", "'LCS'", "'MYERS'" ]
+                     "<INVALID>", "<INVALID>", "'='", "<INVALID>", "'CREATE'", 
+                     "'SHOW'", "<INVALID>", "'START'", "'WAIT'", "'SHUTDOWN'", 
+                     "'ABORT'", "'TIMER'", "'REGISTER'", "'DEREGISTER'", 
+                     "'WORKER'", "'JOBMANAGER'", "'ON'", "'OFF'", "'TO'", 
+                     "<INVALID>", "<INVALID>", "<INVALID>", "'=>'", "<INVALID>", 
+                     "<INVALID>", "'UNSET'", "'MASK'", "'NOMASK'", "'MASKLINE'", 
+                     "'NOMASKLINE'", "'CASE'", "'NOCASE'", "'IGBLANK'", 
+                     "'NOIGBLANK'", "'TRIM'", "'NOTRIM'", "'OUTPUT'", "'CONSOLE'", 
+                     "'DIFFFILE'", "'SKIPLINE'", "'NOSKIPLINE'", "'RESET'", 
+                     "'ALGORITHM'", "'ENCODING'", "'WORK'", "'REFERENCE'", 
+                     "'LCS'", "'MYERS'" ]
 
     symbolicNames = [ "<INVALID>", "HTTP_OPEN", "SCRIPT_OPEN", "COMMENT1", 
                       "COMMENT2", "CRLF", "COMMA", "SEMICOLON", "COLON", 
@@ -280,24 +281,25 @@ class APIParser ( Parser ):
                       "SET_CRLF", "USE_API", "USE_SQL", "USE_SPACE", "USE_SEMICOLON", 
                       "USE_CRLF", "SSH_CONNECT", "SSH_WITH", "SSH_USER", 
                       "SSH_KEYFILE", "SSH_PASSWORD", "SSH_EXECUTE", "SSH_DISCONNECT", 
-                      "SSH_SAVE", "SSH_RESTORE", "SFTP", "SFTP_CHMOD", "SFTP_GETCWD", 
-                      "SFTP_CHDIR", "SFTP_CHOWN", "SFTP_MKDIR", "SFTP_GET", 
-                      "SFTP_PUT", "SFTP_REMOVE", "SFTP_RENAME", "SFTP_LISTDIR", 
-                      "SFTP_TRUNCATE", "SSH_SPACE", "SSH_SEMICOLON", "SSH_CRLF", 
-                      "SSH_EXPRESSION", "JOB_SPACE", "JOB_SEMICOLON", "JOB_EQUAL", 
-                      "JOB_CRLF", "JOB_CREATE", "JOB_SHOW", "JOB_SET", "JOB_START", 
-                      "JOB_WAIT", "JOB_SHUTDOWN", "JOB_ABORT", "JOB_TIMER", 
-                      "JOB_REGISTER", "JOB_DEREGISTER", "JOB_WORKER", "JOB_MANGER", 
-                      "JOB_ON", "JOB_OFF", "JOB_TO", "JOB_EXPRESSION", "COMPARE_SPACE", 
-                      "COMPARE_SEMICOLON", "COMPARE_EQUAL", "COMPARE_CRLF", 
-                      "COMPARE_SET", "COMPARE_UNSET", "COMPARE_MASK", "COMPARE_NOMASK", 
-                      "COMPARE_MASKLINE", "COMPARE_NOMASKLINE", "COMPARE_CASE", 
-                      "COMPARE_NOCASE", "COMPARE_IGBLANK", "COMPARE_NOIGBLANK", 
-                      "COMPARE_TRIM", "COMPARE_NOTRIM", "COMPARE_OUTPUT", 
-                      "COMPARE_CONSOLE", "COMPARE_DIFFFILE", "COMPARE_SKIPLINE", 
-                      "COMPARE_NOSKIPLINE", "COMPARE_RESET", "COMPARE_ALGORITHM", 
-                      "COMPARE_ENCODING", "COMPARE_WORK", "COMPARE_REFERENCE", 
-                      "COMPARE_LCS", "COMPARE_MYERS", "COMPARE_EXPRESSION" ]
+                      "SSH_SAVE", "SSH_RESTORE", "SSH_INT", "SFTP", "SFTP_CHMOD", 
+                      "SFTP_GETCWD", "SFTP_CHDIR", "SFTP_CHOWN", "SFTP_MKDIR", 
+                      "SFTP_GET", "SFTP_PUT", "SFTP_REMOVE", "SFTP_RENAME", 
+                      "SFTP_LISTDIR", "SFTP_TRUNCATE", "SSH_SPACE", "SSH_SEMICOLON", 
+                      "SSH_CRLF", "SSH_EXPRESSION", "JOB_SPACE", "JOB_SEMICOLON", 
+                      "JOB_EQUAL", "JOB_CRLF", "JOB_CREATE", "JOB_SHOW", 
+                      "JOB_SET", "JOB_START", "JOB_WAIT", "JOB_SHUTDOWN", 
+                      "JOB_ABORT", "JOB_TIMER", "JOB_REGISTER", "JOB_DEREGISTER", 
+                      "JOB_WORKER", "JOB_MANGER", "JOB_ON", "JOB_OFF", "JOB_TO", 
+                      "JOB_EXPRESSION", "COMPARE_SPACE", "COMPARE_SEMICOLON", 
+                      "COMPARE_EQUAL", "COMPARE_CRLF", "COMPARE_SET", "COMPARE_UNSET", 
+                      "COMPARE_MASK", "COMPARE_NOMASK", "COMPARE_MASKLINE", 
+                      "COMPARE_NOMASKLINE", "COMPARE_CASE", "COMPARE_NOCASE", 
+                      "COMPARE_IGBLANK", "COMPARE_NOIGBLANK", "COMPARE_TRIM", 
+                      "COMPARE_NOTRIM", "COMPARE_OUTPUT", "COMPARE_CONSOLE", 
+                      "COMPARE_DIFFFILE", "COMPARE_SKIPLINE", "COMPARE_NOSKIPLINE", 
+                      "COMPARE_RESET", "COMPARE_ALGORITHM", "COMPARE_ENCODING", 
+                      "COMPARE_WORK", "COMPARE_REFERENCE", "COMPARE_LCS", 
+                      "COMPARE_MYERS", "COMPARE_EXPRESSION" ]
 
     RULE_prog = 0
     RULE_command = 1
@@ -461,71 +463,72 @@ class APIParser ( Parser ):
     SSH_DISCONNECT=110
     SSH_SAVE=111
     SSH_RESTORE=112
-    SFTP=113
-    SFTP_CHMOD=114
-    SFTP_GETCWD=115
-    SFTP_CHDIR=116
-    SFTP_CHOWN=117
-    SFTP_MKDIR=118
-    SFTP_GET=119
-    SFTP_PUT=120
-    SFTP_REMOVE=121
-    SFTP_RENAME=122
-    SFTP_LISTDIR=123
-    SFTP_TRUNCATE=124
-    SSH_SPACE=125
-    SSH_SEMICOLON=126
-    SSH_CRLF=127
-    SSH_EXPRESSION=128
-    JOB_SPACE=129
-    JOB_SEMICOLON=130
-    JOB_EQUAL=131
-    JOB_CRLF=132
-    JOB_CREATE=133
-    JOB_SHOW=134
-    JOB_SET=135
-    JOB_START=136
-    JOB_WAIT=137
-    JOB_SHUTDOWN=138
-    JOB_ABORT=139
-    JOB_TIMER=140
-    JOB_REGISTER=141
-    JOB_DEREGISTER=142
-    JOB_WORKER=143
-    JOB_MANGER=144
-    JOB_ON=145
-    JOB_OFF=146
-    JOB_TO=147
-    JOB_EXPRESSION=148
-    COMPARE_SPACE=149
-    COMPARE_SEMICOLON=150
-    COMPARE_EQUAL=151
-    COMPARE_CRLF=152
-    COMPARE_SET=153
-    COMPARE_UNSET=154
-    COMPARE_MASK=155
-    COMPARE_NOMASK=156
-    COMPARE_MASKLINE=157
-    COMPARE_NOMASKLINE=158
-    COMPARE_CASE=159
-    COMPARE_NOCASE=160
-    COMPARE_IGBLANK=161
-    COMPARE_NOIGBLANK=162
-    COMPARE_TRIM=163
-    COMPARE_NOTRIM=164
-    COMPARE_OUTPUT=165
-    COMPARE_CONSOLE=166
-    COMPARE_DIFFFILE=167
-    COMPARE_SKIPLINE=168
-    COMPARE_NOSKIPLINE=169
-    COMPARE_RESET=170
-    COMPARE_ALGORITHM=171
-    COMPARE_ENCODING=172
-    COMPARE_WORK=173
-    COMPARE_REFERENCE=174
-    COMPARE_LCS=175
-    COMPARE_MYERS=176
-    COMPARE_EXPRESSION=177
+    SSH_INT=113
+    SFTP=114
+    SFTP_CHMOD=115
+    SFTP_GETCWD=116
+    SFTP_CHDIR=117
+    SFTP_CHOWN=118
+    SFTP_MKDIR=119
+    SFTP_GET=120
+    SFTP_PUT=121
+    SFTP_REMOVE=122
+    SFTP_RENAME=123
+    SFTP_LISTDIR=124
+    SFTP_TRUNCATE=125
+    SSH_SPACE=126
+    SSH_SEMICOLON=127
+    SSH_CRLF=128
+    SSH_EXPRESSION=129
+    JOB_SPACE=130
+    JOB_SEMICOLON=131
+    JOB_EQUAL=132
+    JOB_CRLF=133
+    JOB_CREATE=134
+    JOB_SHOW=135
+    JOB_SET=136
+    JOB_START=137
+    JOB_WAIT=138
+    JOB_SHUTDOWN=139
+    JOB_ABORT=140
+    JOB_TIMER=141
+    JOB_REGISTER=142
+    JOB_DEREGISTER=143
+    JOB_WORKER=144
+    JOB_MANGER=145
+    JOB_ON=146
+    JOB_OFF=147
+    JOB_TO=148
+    JOB_EXPRESSION=149
+    COMPARE_SPACE=150
+    COMPARE_SEMICOLON=151
+    COMPARE_EQUAL=152
+    COMPARE_CRLF=153
+    COMPARE_SET=154
+    COMPARE_UNSET=155
+    COMPARE_MASK=156
+    COMPARE_NOMASK=157
+    COMPARE_MASKLINE=158
+    COMPARE_NOMASKLINE=159
+    COMPARE_CASE=160
+    COMPARE_NOCASE=161
+    COMPARE_IGBLANK=162
+    COMPARE_NOIGBLANK=163
+    COMPARE_TRIM=164
+    COMPARE_NOTRIM=165
+    COMPARE_OUTPUT=166
+    COMPARE_CONSOLE=167
+    COMPARE_DIFFFILE=168
+    COMPARE_SKIPLINE=169
+    COMPARE_NOSKIPLINE=170
+    COMPARE_RESET=171
+    COMPARE_ALGORITHM=172
+    COMPARE_ENCODING=173
+    COMPARE_WORK=174
+    COMPARE_REFERENCE=175
+    COMPARE_LCS=176
+    COMPARE_MYERS=177
+    COMPARE_EXPRESSION=178
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
@@ -2924,6 +2927,12 @@ class APIParser ( Parser ):
         def SFTP_CHMOD(self):
             return self.getToken(APIParser.SFTP_CHMOD, 0)
 
+        def SSH_INT(self, i:int=None):
+            if i is None:
+                return self.getTokens(APIParser.SSH_INT)
+            else:
+                return self.getToken(APIParser.SSH_INT, i)
+
         def SFTP_GETCWD(self):
             return self.getToken(APIParser.SFTP_GETCWD, 0)
 
@@ -2932,12 +2941,6 @@ class APIParser ( Parser ):
 
         def SFTP_CHOWN(self):
             return self.getToken(APIParser.SFTP_CHOWN, 0)
-
-        def INT(self, i:int=None):
-            if i is None:
-                return self.getTokens(APIParser.INT)
-            else:
-                return self.getToken(APIParser.INT, i)
 
         def SFTP_MKDIR(self):
             return self.getToken(APIParser.SFTP_MKDIR, 0)
@@ -2981,7 +2984,7 @@ class APIParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 323
             self.match(APIParser.SSH)
-            self.state = 382
+            self.state = 383
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,50,self._ctx)
             if la_ == 1:
@@ -3036,7 +3039,7 @@ class APIParser ( Parser ):
                     self.state = 344 
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if not (_la==128):
+                    if not (_la==129):
                         break
 
                 pass
@@ -3063,86 +3066,88 @@ class APIParser ( Parser ):
             elif la_ == 7:
                 self.state = 351
                 self.match(APIParser.SFTP)
-                self.state = 380
+                self.state = 381
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
-                if token in [114]:
+                if token in [115]:
                     self.state = 352
                     self.match(APIParser.SFTP_CHMOD)
                     self.state = 353
                     self.match(APIParser.SSH_EXPRESSION)
                     self.state = 354
-                    self.match(APIParser.SSH_EXPRESSION)
+                    self.match(APIParser.SSH_INT)
                     pass
-                elif token in [115]:
+                elif token in [116]:
                     self.state = 355
                     self.match(APIParser.SFTP_GETCWD)
                     pass
-                elif token in [116]:
+                elif token in [117]:
                     self.state = 356
                     self.match(APIParser.SFTP_CHDIR)
                     self.state = 357
                     self.match(APIParser.SSH_EXPRESSION)
                     pass
-                elif token in [117]:
+                elif token in [118]:
                     self.state = 358
                     self.match(APIParser.SFTP_CHOWN)
                     self.state = 359
                     self.match(APIParser.SSH_EXPRESSION)
                     self.state = 360
-                    self.match(APIParser.INT)
+                    self.match(APIParser.SSH_INT)
                     self.state = 361
-                    self.match(APIParser.INT)
+                    self.match(APIParser.SSH_INT)
                     pass
-                elif token in [118]:
+                elif token in [119]:
                     self.state = 362
                     self.match(APIParser.SFTP_MKDIR)
                     self.state = 363
                     self.match(APIParser.SSH_EXPRESSION)
-                    pass
-                elif token in [119]:
                     self.state = 364
-                    self.match(APIParser.SFTP_GET)
-                    self.state = 365
-                    self.match(APIParser.SSH_EXPRESSION)
-                    self.state = 366
-                    self.match(APIParser.SSH_EXPRESSION)
+                    self.match(APIParser.SSH_INT)
                     pass
                 elif token in [120]:
-                    self.state = 367
-                    self.match(APIParser.SFTP_PUT)
-                    self.state = 368
+                    self.state = 365
+                    self.match(APIParser.SFTP_GET)
+                    self.state = 366
                     self.match(APIParser.SSH_EXPRESSION)
-                    self.state = 369
+                    self.state = 367
                     self.match(APIParser.SSH_EXPRESSION)
                     pass
                 elif token in [121]:
+                    self.state = 368
+                    self.match(APIParser.SFTP_PUT)
+                    self.state = 369
+                    self.match(APIParser.SSH_EXPRESSION)
                     self.state = 370
-                    self.match(APIParser.SFTP_REMOVE)
-                    self.state = 371
                     self.match(APIParser.SSH_EXPRESSION)
                     pass
                 elif token in [122]:
+                    self.state = 371
+                    self.match(APIParser.SFTP_REMOVE)
                     self.state = 372
-                    self.match(APIParser.SFTP_RENAME)
-                    self.state = 373
-                    self.match(APIParser.SSH_EXPRESSION)
-                    self.state = 374
                     self.match(APIParser.SSH_EXPRESSION)
                     pass
                 elif token in [123]:
+                    self.state = 373
+                    self.match(APIParser.SFTP_RENAME)
+                    self.state = 374
+                    self.match(APIParser.SSH_EXPRESSION)
                     self.state = 375
-                    self.match(APIParser.SFTP_LISTDIR)
-                    self.state = 376
                     self.match(APIParser.SSH_EXPRESSION)
                     pass
                 elif token in [124]:
+                    self.state = 376
+                    self.match(APIParser.SFTP_LISTDIR)
                     self.state = 377
-                    self.match(APIParser.SFTP_TRUNCATE)
-                    self.state = 378
                     self.match(APIParser.SSH_EXPRESSION)
+                    pass
+                elif token in [125]:
+                    self.state = 378
+                    self.match(APIParser.SFTP_TRUNCATE)
                     self.state = 379
-                    self.match(APIParser.INT)
+                    self.match(APIParser.SSH_EXPRESSION)
+                    self.state = 380
+                    self.match(APIParser.SSH_INT)
                     pass
                 else:
                     raise NoViableAltException(self)
@@ -3150,19 +3155,19 @@ class APIParser ( Parser ):
                 pass
 
 
-            self.state = 385
+            self.state = 386
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==126:
-                self.state = 384
+            if _la==127:
+                self.state = 385
                 self.match(APIParser.SSH_SEMICOLON)
 
 
-            self.state = 388
+            self.state = 389
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==5:
-                self.state = 387
+                self.state = 388
                 self.match(APIParser.CRLF)
 
 
@@ -3267,112 +3272,112 @@ class APIParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 390
+            self.state = 391
             self.match(APIParser.JOB)
-            self.state = 430
+            self.state = 431
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [144]:
-                self.state = 391
-                self.match(APIParser.JOB_MANGER)
+            if token in [145]:
                 self.state = 392
+                self.match(APIParser.JOB_MANGER)
+                self.state = 393
                 _la = self._input.LA(1)
-                if not(_la==145 or _la==146):
+                if not(_la==146 or _la==147):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
                     self.consume()
                 pass
-            elif token in [137]:
-                self.state = 393
-                self.match(APIParser.JOB_WAIT)
-                self.state = 394
-                self.match(APIParser.JOB_EXPRESSION)
-                pass
-            elif token in [134]:
-                self.state = 395
-                self.match(APIParser.JOB_SHOW)
-                self.state = 396
-                self.match(APIParser.JOB_EXPRESSION)
-                pass
-            elif token in [139]:
-                self.state = 397
-                self.match(APIParser.JOB_ABORT)
-                self.state = 398
-                self.match(APIParser.JOB_EXPRESSION)
-                pass
             elif token in [138]:
-                self.state = 399
-                self.match(APIParser.JOB_SHUTDOWN)
-                self.state = 400
-                self.match(APIParser.JOB_EXPRESSION)
-                pass
-            elif token in [140]:
-                self.state = 401
-                self.match(APIParser.JOB_TIMER)
-                self.state = 402
-                self.match(APIParser.JOB_EXPRESSION)
-                pass
-            elif token in [136]:
-                self.state = 403
-                self.match(APIParser.JOB_START)
-                self.state = 404
-                self.match(APIParser.JOB_EXPRESSION)
-                pass
-            elif token in [142]:
-                self.state = 405
-                self.match(APIParser.JOB_DEREGISTER)
-                self.state = 406
-                self.match(APIParser.JOB_WORKER)
-                pass
-            elif token in [141]:
-                self.state = 407
-                self.match(APIParser.JOB_REGISTER)
-                self.state = 408
-                self.match(APIParser.JOB_WORKER)
-                self.state = 409
-                self.match(APIParser.JOB_TO)
-                self.state = 410
+                self.state = 394
+                self.match(APIParser.JOB_WAIT)
+                self.state = 395
                 self.match(APIParser.JOB_EXPRESSION)
                 pass
             elif token in [135]:
-                self.state = 411
-                self.match(APIParser.JOB_SET)
-                self.state = 412
+                self.state = 396
+                self.match(APIParser.JOB_SHOW)
+                self.state = 397
                 self.match(APIParser.JOB_EXPRESSION)
-                self.state = 416 
+                pass
+            elif token in [140]:
+                self.state = 398
+                self.match(APIParser.JOB_ABORT)
+                self.state = 399
+                self.match(APIParser.JOB_EXPRESSION)
+                pass
+            elif token in [139]:
+                self.state = 400
+                self.match(APIParser.JOB_SHUTDOWN)
+                self.state = 401
+                self.match(APIParser.JOB_EXPRESSION)
+                pass
+            elif token in [141]:
+                self.state = 402
+                self.match(APIParser.JOB_TIMER)
+                self.state = 403
+                self.match(APIParser.JOB_EXPRESSION)
+                pass
+            elif token in [137]:
+                self.state = 404
+                self.match(APIParser.JOB_START)
+                self.state = 405
+                self.match(APIParser.JOB_EXPRESSION)
+                pass
+            elif token in [143]:
+                self.state = 406
+                self.match(APIParser.JOB_DEREGISTER)
+                self.state = 407
+                self.match(APIParser.JOB_WORKER)
+                pass
+            elif token in [142]:
+                self.state = 408
+                self.match(APIParser.JOB_REGISTER)
+                self.state = 409
+                self.match(APIParser.JOB_WORKER)
+                self.state = 410
+                self.match(APIParser.JOB_TO)
+                self.state = 411
+                self.match(APIParser.JOB_EXPRESSION)
+                pass
+            elif token in [136]:
+                self.state = 412
+                self.match(APIParser.JOB_SET)
+                self.state = 413
+                self.match(APIParser.JOB_EXPRESSION)
+                self.state = 417 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 while True:
-                    self.state = 413
-                    self.match(APIParser.JOB_EXPRESSION)
                     self.state = 414
-                    self.match(APIParser.JOB_EQUAL)
-                    self.state = 415
                     self.match(APIParser.JOB_EXPRESSION)
-                    self.state = 418 
+                    self.state = 415
+                    self.match(APIParser.JOB_EQUAL)
+                    self.state = 416
+                    self.match(APIParser.JOB_EXPRESSION)
+                    self.state = 419 
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if not (_la==148):
+                    if not (_la==149):
                         break
 
                 pass
-            elif token in [133]:
-                self.state = 420
-                self.match(APIParser.JOB_CREATE)
+            elif token in [134]:
                 self.state = 421
+                self.match(APIParser.JOB_CREATE)
+                self.state = 422
                 self.match(APIParser.JOB_EXPRESSION)
-                self.state = 427
+                self.state = 428
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                while _la==148:
-                    self.state = 422
-                    self.match(APIParser.JOB_EXPRESSION)
+                while _la==149:
                     self.state = 423
-                    self.match(APIParser.JOB_EQUAL)
-                    self.state = 424
                     self.match(APIParser.JOB_EXPRESSION)
-                    self.state = 429
+                    self.state = 424
+                    self.match(APIParser.JOB_EQUAL)
+                    self.state = 425
+                    self.match(APIParser.JOB_EXPRESSION)
+                    self.state = 430
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
 
@@ -3380,19 +3385,19 @@ class APIParser ( Parser ):
             else:
                 raise NoViableAltException(self)
 
-            self.state = 433
+            self.state = 434
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==130:
-                self.state = 432
+            if _la==131:
+                self.state = 433
                 self.match(APIParser.JOB_SEMICOLON)
 
 
-            self.state = 436
+            self.state = 437
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==5:
-                self.state = 435
+                self.state = 436
                 self.match(APIParser.CRLF)
 
 
@@ -3548,120 +3553,120 @@ class APIParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 438
+            self.state = 439
             self.match(APIParser.COMPARE)
-            self.state = 477
+            self.state = 478
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,61,self._ctx)
             if la_ == 1:
-                self.state = 439
-                self.match(APIParser.COMPARE_EXPRESSION)
                 self.state = 440
                 self.match(APIParser.COMPARE_EXPRESSION)
-                self.state = 444
+                self.state = 441
+                self.match(APIParser.COMPARE_EXPRESSION)
+                self.state = 445
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                while (((_la - 155)) & ~0x3f) == 0 and ((1 << (_la - 155)) & 1011) != 0:
-                    self.state = 441
+                while (((_la - 156)) & ~0x3f) == 0 and ((1 << (_la - 156)) & 1011) != 0:
+                    self.state = 442
                     _la = self._input.LA(1)
-                    if not((((_la - 155)) & ~0x3f) == 0 and ((1 << (_la - 155)) & 1011) != 0):
+                    if not((((_la - 156)) & ~0x3f) == 0 and ((1 << (_la - 156)) & 1011) != 0):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
                         self.consume()
-                    self.state = 446
+                    self.state = 447
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
 
                 pass
 
             elif la_ == 2:
-                self.state = 447
+                self.state = 448
                 _la = self._input.LA(1)
-                if not(_la==168 or _la==169):
+                if not(_la==169 or _la==170):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
                     self.consume()
-                self.state = 448
+                self.state = 449
                 self.match(APIParser.COMPARE_EXPRESSION)
                 pass
 
             elif la_ == 3:
-                self.state = 449
-                self.match(APIParser.COMPARE_MASKLINE)
                 self.state = 450
-                self.match(APIParser.COMPARE_EXPRESSION)
+                self.match(APIParser.COMPARE_MASKLINE)
                 self.state = 451
-                self.match(APIParser.COMPARE_EQUAL)
+                self.match(APIParser.COMPARE_EXPRESSION)
                 self.state = 452
+                self.match(APIParser.COMPARE_EQUAL)
+                self.state = 453
                 self.match(APIParser.COMPARE_EXPRESSION)
                 pass
 
             elif la_ == 4:
-                self.state = 453
-                self.match(APIParser.COMPARE_NOMASKLINE)
                 self.state = 454
+                self.match(APIParser.COMPARE_NOMASKLINE)
+                self.state = 455
                 self.match(APIParser.COMPARE_EXPRESSION)
                 pass
 
             elif la_ == 5:
-                self.state = 455
+                self.state = 456
                 self.match(APIParser.COMPARE_RESET)
                 pass
 
             elif la_ == 6:
-                self.state = 456
+                self.state = 457
                 self.match(APIParser.COMPARE_SET)
-                self.state = 460
+                self.state = 461
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                while (((_la - 155)) & ~0x3f) == 0 and ((1 << (_la - 155)) & 1011) != 0:
-                    self.state = 457
+                while (((_la - 156)) & ~0x3f) == 0 and ((1 << (_la - 156)) & 1011) != 0:
+                    self.state = 458
                     _la = self._input.LA(1)
-                    if not((((_la - 155)) & ~0x3f) == 0 and ((1 << (_la - 155)) & 1011) != 0):
+                    if not((((_la - 156)) & ~0x3f) == 0 and ((1 << (_la - 156)) & 1011) != 0):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
                         self.consume()
-                    self.state = 462
+                    self.state = 463
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
 
                 pass
 
             elif la_ == 7:
-                self.state = 463
-                self.match(APIParser.COMPARE_SET)
                 self.state = 464
+                self.match(APIParser.COMPARE_SET)
+                self.state = 465
                 self.match(APIParser.COMPARE_OUTPUT)
-                self.state = 466 
+                self.state = 467 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 while True:
-                    self.state = 465
+                    self.state = 466
                     _la = self._input.LA(1)
-                    if not(_la==166 or _la==167):
+                    if not(_la==167 or _la==168):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
                         self.consume()
-                    self.state = 468 
+                    self.state = 469 
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if not (_la==166 or _la==167):
+                    if not (_la==167 or _la==168):
                         break
 
                 pass
 
             elif la_ == 8:
-                self.state = 470
-                self.match(APIParser.COMPARE_SET)
                 self.state = 471
-                self.match(APIParser.COMPARE_ALGORITHM)
+                self.match(APIParser.COMPARE_SET)
                 self.state = 472
+                self.match(APIParser.COMPARE_ALGORITHM)
+                self.state = 473
                 _la = self._input.LA(1)
-                if not(_la==175 or _la==176):
+                if not(_la==176 or _la==177):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -3669,35 +3674,35 @@ class APIParser ( Parser ):
                 pass
 
             elif la_ == 9:
-                self.state = 473
-                self.match(APIParser.COMPARE_SET)
                 self.state = 474
+                self.match(APIParser.COMPARE_SET)
+                self.state = 475
                 _la = self._input.LA(1)
-                if not(_la==173 or _la==174):
+                if not(_la==174 or _la==175):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
                     self.consume()
-                self.state = 475
-                self.match(APIParser.COMPARE_ENCODING)
                 self.state = 476
+                self.match(APIParser.COMPARE_ENCODING)
+                self.state = 477
                 self.match(APIParser.COMPARE_EXPRESSION)
                 pass
 
 
-            self.state = 480
+            self.state = 481
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==150:
-                self.state = 479
+            if _la==151:
+                self.state = 480
                 self.match(APIParser.COMPARE_SEMICOLON)
 
 
-            self.state = 483
+            self.state = 484
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==5:
-                self.state = 482
+                self.state = 483
                 self.match(APIParser.CRLF)
 
 

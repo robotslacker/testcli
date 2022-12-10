@@ -639,6 +639,54 @@ class SQLVisitor(SQLParserVisitor):
                     keyFileName = keyFileName[1:-1]
                 parsedObject.update({"keyFile": keyFileName})
 
+        # 处理SFTP命令
+        if ctx.SFTP_CHMOD() is not None:
+            parsedObject.update({"action": "sftp_chmod"})
+            fileName = str(ctx.SSH_EXPRESSION()[0].getText())
+            fileMod = str(ctx.SSH_INT()[0].getText())
+            parsedObject.update({"fileName": fileName})
+            parsedObject.update({"fileMod": fileMod})
+        if ctx.SFTP_GETCWD() is not None:
+            parsedObject.update({"action": "sftp_cwd"})
+        if ctx.SFTP_CHDIR() is not None:
+            parsedObject.update({"action": "sftp_chdir"})
+            parsedObject.update({"dir": str(ctx.SSH_EXPRESSION()[0].getText())})
+        if ctx.SFTP_MKDIR() is not None:
+            parsedObject.update({"action": "sftp_mkdir"})
+            parsedObject.update({"dir": str(ctx.SSH_EXPRESSION()[0].getText())})
+            parsedObject.update({"dirMod": str(ctx.SSH_INT()[0].getText())})
+        if ctx.SFTP_CHOWN() is not None:
+            parsedObject.update({"action": "sftp_chown"})
+            fileName = str(ctx.SSH_EXPRESSION()[0].getText())
+            uid = int(ctx.SSH_INT()[0].getText())
+            gid = int(ctx.SSH_INT()[1].getText())
+            parsedObject.update({"fileName": fileName})
+            parsedObject.update({"uid": uid})
+            parsedObject.update({"gid": gid})
+        if ctx.SFTP_GET() is not None:
+            parsedObject.update({"action": "sftp_get"})
+            parsedObject.update({"remoteFile": str(ctx.SSH_EXPRESSION()[0].getText())})
+            parsedObject.update({"localFile": str(ctx.SSH_EXPRESSION()[1].getText())})
+        if ctx.SFTP_PUT() is not None:
+            parsedObject.update({"action": "sftp_put"})
+            parsedObject.update({"localFile": str(ctx.SSH_EXPRESSION()[0].getText())})
+            parsedObject.update({"remoteFile": str(ctx.SSH_EXPRESSION()[1].getText())})
+        if ctx.SFTP_REMOVE() is not None:
+            parsedObject.update({"action": "sftp_remove"})
+            parsedObject.update({"file": str(ctx.SSH_EXPRESSION()[0].getText())})
+        if ctx.SFTP_RENAME() is not None:
+            parsedObject.update({"action": "sftp_rename"})
+            parsedObject.update({"oldFile": str(ctx.SSH_EXPRESSION()[0].getText())})
+            parsedObject.update({"newFile": str(ctx.SSH_EXPRESSION()[1].getText())})
+        if ctx.SFTP_LISTDIR() is not None:
+            parsedObject.update({"action": "sftp_listdir"})
+            parsedObject.update({"dir": str(ctx.SSH_EXPRESSION()[0].getText())})
+        if ctx.SFTP_TRUNCATE() is not None:
+            parsedObject.update({"action": "sftp_truncate"})
+            parsedObject.update({"file": str(ctx.SSH_EXPRESSION()[0].getText())})
+            fileSize = int(ctx.SSH_INT()[0].getText())
+            parsedObject.update({"fileSize": fileSize})
+
         # 处理错误信息
         errorCode = 0
         errorMsg = None

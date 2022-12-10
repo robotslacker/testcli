@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import time
+
 import paramiko
 import io
 
@@ -63,158 +65,376 @@ def executeSshRequest(cls, requestObject):
     global sshSession
     global sshCurrentSessionName
 
-    if requestObject["action"] == "connect":
-        sshContext = SshContext()
-        sshContext.setHost(host=requestObject["host"])
-        sshContext.setUser(user=requestObject["user"])
-        if "password" in requestObject:
-            sshContext.setPassword(password=requestObject["password"])
-        if "keyFile" in requestObject:
-            keyFileName = requestObject["keyFile"]
-            keyFile = open(file=keyFileName, mode='r')
-            keyStr = keyFile.read()
-            keyFile = io.StringIO(keyStr)
-            privateKey = paramiko.RSAKey.from_private_key(keyFile)
-            sshContext.setKey(privateKey)
-        func = getattr(paramiko, 'Transport')
-        transport = func((sshContext.getHost(), sshContext.getPort()))
-        transport.connect(
-            username=sshContext.getUser(),
-            password=sshContext.getPassword(),
-            pkey=sshContext.getKey()
-        )
-        sshHandler = paramiko.SSHClient()
-        sshHandler.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        sshHandler._transport = transport
-        sshContext.setSshTransport(sshHandler._transport)
+    try:
+        if requestObject["action"] == "connect":
+            sshContext = SshContext()
+            sshContext.setHost(host=requestObject["host"])
+            sshContext.setUser(user=requestObject["user"])
+            if "password" in requestObject:
+                sshContext.setPassword(password=requestObject["password"])
+            if "keyFile" in requestObject:
+                keyFileName = requestObject["keyFile"]
+                keyFile = open(file=keyFileName, mode='r')
+                keyStr = keyFile.read()
+                keyFile = io.StringIO(keyStr)
+                privateKey = paramiko.RSAKey.from_private_key(keyFile)
+                sshContext.setKey(privateKey)
+            func = getattr(paramiko, 'Transport')
+            transport = func((sshContext.getHost(), sshContext.getPort()))
+            transport.connect(
+                username=sshContext.getUser(),
+                password=sshContext.getPassword(),
+                pkey=sshContext.getKey()
+            )
+            sshHandler = paramiko.SSHClient()
+            sshHandler.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            sshHandler._transport = transport
+            sshContext.setSshTransport(sshHandler._transport)
 
-        sftpHandler = paramiko.SFTPClient.from_transport(transport)
-        sshContext.setSftpHandler(sftpHandler)
+            sftpHandler = sshHandler.open_sftp()
+            # 如果不适用chdir，则第一次getcwd永远返回的都是None
+            sftpHandler.chdir(".")
+            sshContext.setSftpHandler(sftpHandler)
 
-        # 备份当前会话的基本信息
-        sshSession[sshCurrentSessionName] = sshContext
+            # 备份当前会话的基本信息
+            sshSession[sshCurrentSessionName] = sshContext
 
-        yield {
-            "type": "result",
-            "title": None,
-            "rows": None,
-            "headers": None,
-            "columnTypes": None,
-            "status": "SSH connected"
-        }
-        return
-    if requestObject["action"] == "disconnect":
-        sshConect = sshSession[sshCurrentSessionName]
-        if sshConect.getSshHandler() is not None:
-            sshConect.getSshHandler().close()
-        if sshConect.getSftpHandler() is not None:
-            sshConect.getSftpHandler().close()
-        yield {
-            "type": "result",
-            "title": None,
-            "rows": None,
-            "headers": None,
-            "columnTypes": None,
-            "status": "SSH disconnected"
-        }
-        return
-    if requestObject["action"] == "execute":
-        command = requestObject["command"]
-        # 执行命令
-        sshContext = sshSession[sshCurrentSessionName]
-        if sshContext.getSshTransport() is not None:
-            sshTransport = sshContext.getSshTransport()
-            # 打开SSH访问
-            channel = sshTransport.open_session()
-            channel.set_combine_stderr(True)
-            # 执行远程的命令
-            channel.exec_command(command)
-            consoleOutputBytes = bytes()
-            while True:
-                if channel.exit_status_ready():
-                    # 程序已经运行结束
-                    break
-                else:
-                    # 记录收到的屏幕信息
-                    while True:
-                        if channel.recv_ready():
-                            readByte = channel.recv(1)
-                            if readByte == bytes('\n', 'ascii'):
-                                yield {
-                                    "type": "result",
-                                    "title": None,
-                                    "rows": None,
-                                    "headers": None,
-                                    "columnTypes": None,
-                                    "status": consoleOutputBytes.decode(encoding='utf-8')
-                                }
-                                consoleOutputBytes = bytes()
-                            else:
-                                consoleOutputBytes = consoleOutputBytes + readByte
-                        else:
-                            break
-            # 可能包含再最后一批的消息里头
-            while True:
-                if channel.recv_ready():
-                    readByte = channel.recv(1)
-                    if readByte == bytes('\n', 'ascii'):
-                        yield {
-                            "type": "result",
-                            "title": None,
-                            "rows": None,
-                            "headers": None,
-                            "columnTypes": None,
-                            "status": consoleOutputBytes.decode(encoding='utf-8')
-                        }
-                        consoleOutputBytes = bytes()
-                    else:
-                        consoleOutputBytes = consoleOutputBytes + readByte
-                else:
-                    break
-            # 获得命令的返回状态
-            ret = channel.recv_exit_status()
-            # 关闭SSH访问
-            channel.close()
             yield {
                 "type": "result",
                 "title": None,
                 "rows": None,
                 "headers": None,
                 "columnTypes": None,
-                "status": "< Command finished with [" + str(ret) + "]"
-            }
-        else:
-            yield {
-                "type": "result",
-                "title": None,
-                "rows": None,
-                "headers": None,
-                "columnTypes": None,
-                "status": "SSH not connected."
+                "status": "SSH connected"
             }
             return
-    if requestObject["action"] == "save":
-        sessionName = str(requestObject["sessionName"])
-        # 备份当前会话的基本信息
-        sshContext = sshSession[sshCurrentSessionName]
-        sshSession[sessionName] = sshContext
+        if requestObject["action"] == "disconnect":
+            sshConect = sshSession[sshCurrentSessionName]
+            if sshConect.getSshHandler() is not None:
+                sshConect.getSshHandler().close()
+            if sshConect.getSftpHandler() is not None:
+                sshConect.getSftpHandler().close()
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": "SSH disconnected"
+            }
+            return
+        if requestObject["action"] == "execute":
+            command = requestObject["command"]
+            # 执行命令
+            if sshCurrentSessionName not in sshSession.keys():
+                yield {
+                    "type": "error",
+                    "message": "SSH not connected."
+                }
+                return
+            sshContext = sshSession[sshCurrentSessionName]
+            if sshContext.getSshTransport() is not None:
+                sshTransport = sshContext.getSshTransport()
+                # 打开SSH访问
+                channel = sshTransport.open_session()
+                channel.set_combine_stderr(True)
+                # 执行远程的命令
+                channel.exec_command(command)
+                consoleOutputBytes = bytes()
+                while True:
+                    if channel.exit_status_ready():
+                        # 程序已经运行结束
+                        break
+                    else:
+                        # 记录收到的屏幕信息
+                        while True:
+                            if channel.recv_ready():
+                                readByte = channel.recv(1)
+                                if readByte == bytes('\n', 'ascii'):
+                                    yield {
+                                        "type": "result",
+                                        "title": None,
+                                        "rows": None,
+                                        "headers": None,
+                                        "columnTypes": None,
+                                        "status": consoleOutputBytes.decode(encoding='utf-8')
+                                    }
+                                    consoleOutputBytes = bytes()
+                                else:
+                                    consoleOutputBytes = consoleOutputBytes + readByte
+                            else:
+                                break
+                # 要等待最后完成
+                while not channel.eof_received:
+                    time.sleep(0.1)
+
+                # 可能包含再最后一批的消息里头
+                while True:
+                    if channel.recv_ready():
+                        readByte = channel.recv(1)
+                        if readByte == bytes('\n', 'ascii'):
+                            yield {
+                                "type": "result",
+                                "title": None,
+                                "rows": None,
+                                "headers": None,
+                                "columnTypes": None,
+                                "status": consoleOutputBytes.decode(encoding='utf-8')
+                            }
+                            consoleOutputBytes = bytes()
+                        else:
+                            consoleOutputBytes = consoleOutputBytes + readByte
+                    else:
+                        break
+                # 获得命令的返回状态
+                ret = channel.recv_exit_status()
+                # 关闭SSH访问
+                channel.close()
+                yield {
+                    "type": "result",
+                    "title": None,
+                    "rows": None,
+                    "headers": None,
+                    "columnTypes": None,
+                    "status": "< Command finished with [" + str(ret) + "]"
+                }
+            else:
+                yield {
+                    "type": "result",
+                    "title": None,
+                    "rows": None,
+                    "headers": None,
+                    "columnTypes": None,
+                    "status": "SSH not connected."
+                }
+                return
+        if requestObject["action"] == "save":
+            sessionName = str(requestObject["sessionName"])
+            # 备份当前会话的基本信息
+            sshContext = sshSession[sshCurrentSessionName]
+            sshSession[sessionName] = sshContext
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": "SSH session saved."
+            }
+            return
+        if requestObject["action"] == "restore":
+            sshCurrentSessionName = str(requestObject["sessionName"])
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": "SSH session restored."
+            }
+            return
+
+        if requestObject["action"] == "sftp_cwd":
+            sshContext = sshSession[sshCurrentSessionName]
+            sftpHandler = sshContext.getSftpHandler()
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": str(sftpHandler.getcwd())
+            }
+            return
+        if requestObject["action"] == "sftp_chmod":
+            sshContext = sshSession[sshCurrentSessionName]
+            sftpHandler = sshContext.getSftpHandler()
+            # chmod的参数为8进制整数，所以这里要转换一下
+            sftpHandler.chmod(path=requestObject["fileName"], mode=int(requestObject["fileMod"], 8))
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": None
+            }
+            return
+        if requestObject["action"] == "sftp_chdir":
+            sshContext = sshSession[sshCurrentSessionName]
+            sftpHandler = sshContext.getSftpHandler()
+            sftpHandler.chdir(path=requestObject["dir"])
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": None
+            }
+            return
+        if requestObject["action"] == "sftp_chown":
+            sshContext = sshSession[sshCurrentSessionName]
+            sftpHandler = sshContext.getSftpHandler()
+            sftpHandler.chown(path=requestObject["fileName"], uid=requestObject["uid"], gid=requestObject["gid"])
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": None
+            }
+            return
+        if requestObject["action"] == "sftp_mkdir":
+            sshContext = sshSession[sshCurrentSessionName]
+            sftpHandler = sshContext.getSftpHandler()
+            # mkdir的mode的参数为8进制整数，所以这里要转换一下
+            try:
+                sftpHandler.mkdir(path=requestObject["dir"], mode=int(requestObject["dirMod"], 8))
+            except OSError as oe:
+                yield {
+                    "type": "error",
+                    "message": "mkdir failed. OSError (" + str(oe) + ")"
+                }
+                return
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": None
+            }
+            return
+        if requestObject["action"] == "sftp_put":
+            sshContext = sshSession[sshCurrentSessionName]
+            sftpHandler = sshContext.getSftpHandler()
+            try:
+                sftpHandler.put(localpath=requestObject["localFile"],
+                                remotepath=requestObject["remoteFile"])
+            except OSError as oe:
+                yield {
+                    "type": "error",
+                    "message": "upload failed. OSError(" + str(oe) + ")"
+                }
+                return
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": None
+            }
+            return
+        if requestObject["action"] == "sftp_get":
+            sshContext = sshSession[sshCurrentSessionName]
+            sftpHandler = sshContext.getSftpHandler()
+            try:
+                sftpHandler.get(localpath=requestObject["localFile"],
+                                remotepath=requestObject["remoteFile"])
+            except OSError as oe:
+                yield {
+                    "type": "error",
+                    "message": "download failed. OSError(" + str(oe.filename) + ")"
+                }
+                return
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": None
+            }
+            return
+        if requestObject["action"] == "sftp_remove":
+            sshContext = sshSession[sshCurrentSessionName]
+            sftpHandler = sshContext.getSftpHandler()
+            try:
+                sftpHandler.remove(path=requestObject["file"])
+            except OSError as oe:
+                yield {
+                    "type": "error",
+                    "message": "remove failed. OSError(" + str(oe.filename) + ")"
+                }
+                return
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": None
+            }
+            return
+        if requestObject["action"] == "sftp_rename":
+            sshContext = sshSession[sshCurrentSessionName]
+            sftpHandler = sshContext.getSftpHandler()
+            try:
+                sftpHandler.rename(oldpath=requestObject["oldFile"], newpath=requestObject["newFile"])
+            except OSError as oe:
+                yield {
+                    "type": "error",
+                    "message": "rename failed. OSError(" + str(oe.filename) + ")"
+                }
+                return
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": None
+            }
+            return
+        if requestObject["action"] == "sftp_listdir":
+            sshContext = sshSession[sshCurrentSessionName]
+            sftpHandler = sshContext.getSftpHandler()
+            try:
+                diritems = sftpHandler.listdir(path=requestObject["dir"])
+                result = []
+                for diritem in diritems:
+                    result.append([diritem, ])
+                yield {
+                    "type": "result",
+                    "title": None,
+                    "rows": result,
+                    "headers": ["fileName",],
+                    "columnTypes": None,
+                    "status": None
+                }
+            except OSError as oe:
+                yield {
+                    "type": "error",
+                    "message": "listdir failed. OSError(" + str(oe.filename) + ")"
+                }
+                return
+            return
+        if requestObject["action"] == "sftp_truncate":
+            sshContext = sshSession[sshCurrentSessionName]
+            sftpHandler = sshContext.getSftpHandler()
+            try:
+                sftpHandler.truncate(path=requestObject["file"], size=requestObject["fileSize"])
+                yield {
+                    "type": "result",
+                    "title": None,
+                    "rows": None,
+                    "headers": None,
+                    "columnTypes": None,
+                    "status": None
+                }
+            except OSError as oe:
+                yield {
+                    "type": "error",
+                    "message": "truncate failed. OSError(" + str(oe.filename) + ")"
+                }
+                return
+            return
+
+    except paramiko.ssh_exception.AuthenticationException as ex:
         yield {
-            "type": "result",
-            "title": None,
-            "rows": None,
-            "headers": None,
-            "columnTypes": None,
-            "status": "SSH session saved."
+            "type": "error",
+            "message": "AuthenticationException failed."
         }
-        return
-    if requestObject["action"] == "restore":
-        sshCurrentSessionName = str(requestObject["sessionName"])
-        yield {
-            "type": "result",
-            "title": None,
-            "rows": None,
-            "headers": None,
-            "columnTypes": None,
-            "status": "SSH session restored."
-        }
-        return

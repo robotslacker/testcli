@@ -10,7 +10,7 @@ else:
 
 def serializedATN():
     return [
-        4,1,213,618,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,
+        4,1,214,619,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,
         7,6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,
         13,2,14,7,14,2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,2,
         20,7,20,2,21,7,21,2,22,7,22,2,23,7,23,2,24,7,24,2,25,7,25,2,26,7,
@@ -53,22 +53,22 @@ def serializedATN():
         50,1,50,1,50,4,50,475,8,50,11,50,12,50,476,1,50,1,50,1,50,1,50,1,
         50,1,50,1,50,1,50,1,50,1,50,1,50,1,50,1,50,1,50,1,50,1,50,1,50,1,
         50,1,50,1,50,1,50,1,50,1,50,1,50,1,50,1,50,1,50,1,50,1,50,1,50,1,
-        50,1,50,1,50,1,50,3,50,513,8,50,3,50,515,8,50,1,50,3,50,518,8,50,
-        1,50,3,50,521,8,50,1,51,1,51,1,51,1,51,1,51,1,51,1,51,1,51,1,51,
+        50,1,50,1,50,1,50,1,50,3,50,514,8,50,3,50,516,8,50,1,50,3,50,519,
+        8,50,1,50,3,50,522,8,50,1,51,1,51,1,51,1,51,1,51,1,51,1,51,1,51,
         1,51,1,51,1,51,1,51,1,51,1,51,1,51,1,51,1,51,1,51,1,51,1,51,1,51,
-        1,51,1,51,1,51,1,51,4,51,549,8,51,11,51,12,51,550,1,51,1,51,1,51,
-        1,51,1,51,5,51,558,8,51,10,51,12,51,561,9,51,3,51,563,8,51,1,51,
-        3,51,566,8,51,1,51,3,51,569,8,51,1,52,1,52,1,52,1,52,5,52,575,8,
-        52,10,52,12,52,578,9,52,1,52,1,52,1,52,1,52,1,52,1,52,1,52,1,52,
-        1,52,1,52,1,52,5,52,591,8,52,10,52,12,52,594,9,52,1,52,1,52,1,52,
-        4,52,599,8,52,11,52,12,52,600,1,52,1,52,1,52,1,52,1,52,1,52,1,52,
-        3,52,610,8,52,1,52,3,52,613,8,52,1,52,3,52,616,8,52,1,52,0,0,53,
+        1,51,1,51,1,51,1,51,1,51,4,51,550,8,51,11,51,12,51,551,1,51,1,51,
+        1,51,1,51,1,51,5,51,559,8,51,10,51,12,51,562,9,51,3,51,564,8,51,
+        1,51,3,51,567,8,51,1,51,3,51,570,8,51,1,52,1,52,1,52,1,52,5,52,576,
+        8,52,10,52,12,52,579,9,52,1,52,1,52,1,52,1,52,1,52,1,52,1,52,1,52,
+        1,52,1,52,1,52,5,52,592,8,52,10,52,12,52,595,9,52,1,52,1,52,1,52,
+        4,52,600,8,52,11,52,12,52,601,1,52,1,52,1,52,1,52,1,52,1,52,1,52,
+        3,52,611,8,52,1,52,3,52,614,8,52,1,52,3,52,617,8,52,1,52,0,0,53,
         0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,
         46,48,50,52,54,56,58,60,62,64,66,68,70,72,74,76,78,80,82,84,86,88,
         90,92,94,96,98,100,102,104,0,14,1,0,56,57,2,0,65,66,68,68,1,0,75,
         79,3,0,20,20,22,30,53,53,1,0,14,15,1,0,11,12,1,0,135,136,1,1,17,
-        17,1,0,181,182,2,0,191,192,195,200,1,0,204,205,1,0,202,203,1,0,211,
-        212,1,0,209,210,709,0,106,1,0,0,0,2,115,1,0,0,0,4,119,1,0,0,0,6,
+        17,1,0,182,183,2,0,192,193,196,201,1,0,205,206,1,0,203,204,1,0,212,
+        213,1,0,210,211,710,0,106,1,0,0,0,2,115,1,0,0,0,4,119,1,0,0,0,6,
         121,1,0,0,0,8,125,1,0,0,0,10,153,1,0,0,0,12,158,1,0,0,0,14,160,1,
         0,0,0,16,162,1,0,0,0,18,164,1,0,0,0,20,166,1,0,0,0,22,168,1,0,0,
         0,24,170,1,0,0,0,26,172,1,0,0,0,28,177,1,0,0,0,30,179,1,0,0,0,32,
@@ -80,7 +80,7 @@ def serializedATN():
         0,0,76,342,1,0,0,0,78,354,1,0,0,0,80,367,1,0,0,0,82,375,1,0,0,0,
         84,378,1,0,0,0,86,393,1,0,0,0,88,401,1,0,0,0,90,408,1,0,0,0,92,421,
         1,0,0,0,94,429,1,0,0,0,96,434,1,0,0,0,98,439,1,0,0,0,100,455,1,0,
-        0,0,102,522,1,0,0,0,104,570,1,0,0,0,106,107,3,2,1,0,107,108,5,0,
+        0,0,102,523,1,0,0,0,104,571,1,0,0,0,106,107,3,2,1,0,107,108,5,0,
         0,1,108,1,1,0,0,0,109,116,3,66,33,0,110,116,3,38,19,0,111,116,3,
         40,20,0,112,116,3,4,2,0,113,116,3,44,22,0,114,116,5,0,0,1,115,109,
         1,0,0,0,115,110,1,0,0,0,115,111,1,0,0,0,115,112,1,0,0,0,115,113,
@@ -193,68 +193,68 @@ def serializedATN():
         0,0,0,443,445,5,131,0,0,444,443,1,0,0,0,445,448,1,0,0,0,446,444,
         1,0,0,0,446,447,1,0,0,0,447,450,1,0,0,0,448,446,1,0,0,0,449,451,
         5,132,0,0,450,449,1,0,0,0,450,451,1,0,0,0,451,453,1,0,0,0,452,454,
-        5,17,0,0,453,452,1,0,0,0,453,454,1,0,0,0,454,99,1,0,0,0,455,514,
-        5,48,0,0,456,457,5,140,0,0,457,458,5,164,0,0,458,459,5,141,0,0,459,
-        460,5,142,0,0,460,461,5,164,0,0,461,462,5,143,0,0,462,515,5,164,
-        0,0,463,464,5,140,0,0,464,465,5,164,0,0,465,466,5,141,0,0,466,467,
-        5,142,0,0,467,470,5,164,0,0,468,469,5,144,0,0,469,471,5,164,0,0,
-        470,468,1,0,0,0,470,471,1,0,0,0,471,515,1,0,0,0,472,474,5,145,0,
-        0,473,475,5,164,0,0,474,473,1,0,0,0,475,476,1,0,0,0,476,474,1,0,
-        0,0,476,477,1,0,0,0,477,515,1,0,0,0,478,515,5,146,0,0,479,480,5,
-        147,0,0,480,515,5,164,0,0,481,482,5,148,0,0,482,515,5,164,0,0,483,
-        512,5,149,0,0,484,485,5,150,0,0,485,486,5,164,0,0,486,513,5,164,
-        0,0,487,513,5,151,0,0,488,489,5,152,0,0,489,513,5,164,0,0,490,491,
-        5,153,0,0,491,492,5,164,0,0,492,493,5,51,0,0,493,513,5,51,0,0,494,
-        495,5,154,0,0,495,513,5,164,0,0,496,497,5,155,0,0,497,498,5,164,
-        0,0,498,513,5,164,0,0,499,500,5,156,0,0,500,501,5,164,0,0,501,513,
-        5,164,0,0,502,503,5,157,0,0,503,513,5,164,0,0,504,505,5,158,0,0,
-        505,506,5,164,0,0,506,513,5,164,0,0,507,508,5,159,0,0,508,513,5,
-        164,0,0,509,510,5,160,0,0,510,511,5,164,0,0,511,513,5,51,0,0,512,
-        484,1,0,0,0,512,487,1,0,0,0,512,488,1,0,0,0,512,490,1,0,0,0,512,
-        494,1,0,0,0,512,496,1,0,0,0,512,499,1,0,0,0,512,502,1,0,0,0,512,
-        504,1,0,0,0,512,507,1,0,0,0,512,509,1,0,0,0,513,515,1,0,0,0,514,
-        456,1,0,0,0,514,463,1,0,0,0,514,472,1,0,0,0,514,478,1,0,0,0,514,
-        479,1,0,0,0,514,481,1,0,0,0,514,483,1,0,0,0,515,517,1,0,0,0,516,
-        518,5,162,0,0,517,516,1,0,0,0,517,518,1,0,0,0,518,520,1,0,0,0,519,
-        521,5,17,0,0,520,519,1,0,0,0,520,521,1,0,0,0,521,101,1,0,0,0,522,
-        562,5,49,0,0,523,524,5,180,0,0,524,563,7,8,0,0,525,526,5,173,0,0,
-        526,563,5,184,0,0,527,528,5,170,0,0,528,563,5,184,0,0,529,530,5,
-        175,0,0,530,563,5,184,0,0,531,532,5,174,0,0,532,563,5,184,0,0,533,
-        534,5,176,0,0,534,563,5,184,0,0,535,536,5,172,0,0,536,563,5,184,
-        0,0,537,538,5,178,0,0,538,563,5,179,0,0,539,540,5,177,0,0,540,541,
-        5,179,0,0,541,542,5,183,0,0,542,563,5,184,0,0,543,544,5,171,0,0,
-        544,548,5,184,0,0,545,546,5,184,0,0,546,547,5,167,0,0,547,549,5,
-        184,0,0,548,545,1,0,0,0,549,550,1,0,0,0,550,548,1,0,0,0,550,551,
-        1,0,0,0,551,563,1,0,0,0,552,553,5,169,0,0,553,559,5,184,0,0,554,
-        555,5,184,0,0,555,556,5,167,0,0,556,558,5,184,0,0,557,554,1,0,0,
-        0,558,561,1,0,0,0,559,557,1,0,0,0,559,560,1,0,0,0,560,563,1,0,0,
-        0,561,559,1,0,0,0,562,523,1,0,0,0,562,525,1,0,0,0,562,527,1,0,0,
-        0,562,529,1,0,0,0,562,531,1,0,0,0,562,533,1,0,0,0,562,535,1,0,0,
-        0,562,537,1,0,0,0,562,539,1,0,0,0,562,543,1,0,0,0,562,552,1,0,0,
-        0,563,565,1,0,0,0,564,566,5,166,0,0,565,564,1,0,0,0,565,566,1,0,
-        0,0,566,568,1,0,0,0,567,569,5,17,0,0,568,567,1,0,0,0,568,569,1,0,
-        0,0,569,103,1,0,0,0,570,609,5,50,0,0,571,572,5,213,0,0,572,576,5,
-        213,0,0,573,575,7,9,0,0,574,573,1,0,0,0,575,578,1,0,0,0,576,574,
-        1,0,0,0,576,577,1,0,0,0,577,610,1,0,0,0,578,576,1,0,0,0,579,580,
-        7,10,0,0,580,610,5,213,0,0,581,582,5,193,0,0,582,583,5,213,0,0,583,
-        584,5,187,0,0,584,610,5,213,0,0,585,586,5,194,0,0,586,610,5,213,
-        0,0,587,610,5,206,0,0,588,592,5,189,0,0,589,591,7,9,0,0,590,589,
-        1,0,0,0,591,594,1,0,0,0,592,590,1,0,0,0,592,593,1,0,0,0,593,610,
-        1,0,0,0,594,592,1,0,0,0,595,596,5,189,0,0,596,598,5,201,0,0,597,
-        599,7,11,0,0,598,597,1,0,0,0,599,600,1,0,0,0,600,598,1,0,0,0,600,
-        601,1,0,0,0,601,610,1,0,0,0,602,603,5,189,0,0,603,604,5,207,0,0,
-        604,610,7,12,0,0,605,606,5,189,0,0,606,607,7,13,0,0,607,608,5,208,
-        0,0,608,610,5,213,0,0,609,571,1,0,0,0,609,579,1,0,0,0,609,581,1,
-        0,0,0,609,585,1,0,0,0,609,587,1,0,0,0,609,588,1,0,0,0,609,595,1,
-        0,0,0,609,602,1,0,0,0,609,605,1,0,0,0,610,612,1,0,0,0,611,613,5,
-        186,0,0,612,611,1,0,0,0,612,613,1,0,0,0,613,615,1,0,0,0,614,616,
-        5,17,0,0,615,614,1,0,0,0,615,616,1,0,0,0,616,105,1,0,0,0,83,115,
-        119,128,137,142,147,151,156,175,192,194,199,201,205,210,213,218,
-        231,236,241,246,251,256,261,266,270,273,278,283,304,308,311,314,
-        318,321,324,329,332,337,340,346,349,352,359,362,365,370,373,385,
-        388,391,396,399,403,406,413,416,419,424,427,432,437,441,446,450,
-        453,470,476,512,514,517,520,550,559,562,565,568,576,592,600,609,
-        612,615
+        5,17,0,0,453,452,1,0,0,0,453,454,1,0,0,0,454,99,1,0,0,0,455,515,
+        5,48,0,0,456,457,5,140,0,0,457,458,5,165,0,0,458,459,5,141,0,0,459,
+        460,5,142,0,0,460,461,5,165,0,0,461,462,5,143,0,0,462,516,5,165,
+        0,0,463,464,5,140,0,0,464,465,5,165,0,0,465,466,5,141,0,0,466,467,
+        5,142,0,0,467,470,5,165,0,0,468,469,5,144,0,0,469,471,5,165,0,0,
+        470,468,1,0,0,0,470,471,1,0,0,0,471,516,1,0,0,0,472,474,5,145,0,
+        0,473,475,5,165,0,0,474,473,1,0,0,0,475,476,1,0,0,0,476,474,1,0,
+        0,0,476,477,1,0,0,0,477,516,1,0,0,0,478,516,5,146,0,0,479,480,5,
+        147,0,0,480,516,5,165,0,0,481,482,5,148,0,0,482,516,5,165,0,0,483,
+        513,5,150,0,0,484,485,5,151,0,0,485,486,5,165,0,0,486,514,5,149,
+        0,0,487,514,5,152,0,0,488,489,5,153,0,0,489,514,5,165,0,0,490,491,
+        5,154,0,0,491,492,5,165,0,0,492,493,5,149,0,0,493,514,5,149,0,0,
+        494,495,5,155,0,0,495,496,5,165,0,0,496,514,5,149,0,0,497,498,5,
+        156,0,0,498,499,5,165,0,0,499,514,5,165,0,0,500,501,5,157,0,0,501,
+        502,5,165,0,0,502,514,5,165,0,0,503,504,5,158,0,0,504,514,5,165,
+        0,0,505,506,5,159,0,0,506,507,5,165,0,0,507,514,5,165,0,0,508,509,
+        5,160,0,0,509,514,5,165,0,0,510,511,5,161,0,0,511,512,5,165,0,0,
+        512,514,5,149,0,0,513,484,1,0,0,0,513,487,1,0,0,0,513,488,1,0,0,
+        0,513,490,1,0,0,0,513,494,1,0,0,0,513,497,1,0,0,0,513,500,1,0,0,
+        0,513,503,1,0,0,0,513,505,1,0,0,0,513,508,1,0,0,0,513,510,1,0,0,
+        0,514,516,1,0,0,0,515,456,1,0,0,0,515,463,1,0,0,0,515,472,1,0,0,
+        0,515,478,1,0,0,0,515,479,1,0,0,0,515,481,1,0,0,0,515,483,1,0,0,
+        0,516,518,1,0,0,0,517,519,5,163,0,0,518,517,1,0,0,0,518,519,1,0,
+        0,0,519,521,1,0,0,0,520,522,5,17,0,0,521,520,1,0,0,0,521,522,1,0,
+        0,0,522,101,1,0,0,0,523,563,5,49,0,0,524,525,5,181,0,0,525,564,7,
+        8,0,0,526,527,5,174,0,0,527,564,5,185,0,0,528,529,5,171,0,0,529,
+        564,5,185,0,0,530,531,5,176,0,0,531,564,5,185,0,0,532,533,5,175,
+        0,0,533,564,5,185,0,0,534,535,5,177,0,0,535,564,5,185,0,0,536,537,
+        5,173,0,0,537,564,5,185,0,0,538,539,5,179,0,0,539,564,5,180,0,0,
+        540,541,5,178,0,0,541,542,5,180,0,0,542,543,5,184,0,0,543,564,5,
+        185,0,0,544,545,5,172,0,0,545,549,5,185,0,0,546,547,5,185,0,0,547,
+        548,5,168,0,0,548,550,5,185,0,0,549,546,1,0,0,0,550,551,1,0,0,0,
+        551,549,1,0,0,0,551,552,1,0,0,0,552,564,1,0,0,0,553,554,5,170,0,
+        0,554,560,5,185,0,0,555,556,5,185,0,0,556,557,5,168,0,0,557,559,
+        5,185,0,0,558,555,1,0,0,0,559,562,1,0,0,0,560,558,1,0,0,0,560,561,
+        1,0,0,0,561,564,1,0,0,0,562,560,1,0,0,0,563,524,1,0,0,0,563,526,
+        1,0,0,0,563,528,1,0,0,0,563,530,1,0,0,0,563,532,1,0,0,0,563,534,
+        1,0,0,0,563,536,1,0,0,0,563,538,1,0,0,0,563,540,1,0,0,0,563,544,
+        1,0,0,0,563,553,1,0,0,0,564,566,1,0,0,0,565,567,5,167,0,0,566,565,
+        1,0,0,0,566,567,1,0,0,0,567,569,1,0,0,0,568,570,5,17,0,0,569,568,
+        1,0,0,0,569,570,1,0,0,0,570,103,1,0,0,0,571,610,5,50,0,0,572,573,
+        5,214,0,0,573,577,5,214,0,0,574,576,7,9,0,0,575,574,1,0,0,0,576,
+        579,1,0,0,0,577,575,1,0,0,0,577,578,1,0,0,0,578,611,1,0,0,0,579,
+        577,1,0,0,0,580,581,7,10,0,0,581,611,5,214,0,0,582,583,5,194,0,0,
+        583,584,5,214,0,0,584,585,5,188,0,0,585,611,5,214,0,0,586,587,5,
+        195,0,0,587,611,5,214,0,0,588,611,5,207,0,0,589,593,5,190,0,0,590,
+        592,7,9,0,0,591,590,1,0,0,0,592,595,1,0,0,0,593,591,1,0,0,0,593,
+        594,1,0,0,0,594,611,1,0,0,0,595,593,1,0,0,0,596,597,5,190,0,0,597,
+        599,5,202,0,0,598,600,7,11,0,0,599,598,1,0,0,0,600,601,1,0,0,0,601,
+        599,1,0,0,0,601,602,1,0,0,0,602,611,1,0,0,0,603,604,5,190,0,0,604,
+        605,5,208,0,0,605,611,7,12,0,0,606,607,5,190,0,0,607,608,7,13,0,
+        0,608,609,5,209,0,0,609,611,5,214,0,0,610,572,1,0,0,0,610,580,1,
+        0,0,0,610,582,1,0,0,0,610,586,1,0,0,0,610,588,1,0,0,0,610,589,1,
+        0,0,0,610,596,1,0,0,0,610,603,1,0,0,0,610,606,1,0,0,0,611,613,1,
+        0,0,0,612,614,5,187,0,0,613,612,1,0,0,0,613,614,1,0,0,0,614,616,
+        1,0,0,0,615,617,5,17,0,0,616,615,1,0,0,0,616,617,1,0,0,0,617,105,
+        1,0,0,0,83,115,119,128,137,142,147,151,156,175,192,194,199,201,205,
+        210,213,218,231,236,241,246,251,256,261,266,270,273,278,283,304,
+        308,311,314,318,321,324,329,332,337,340,346,349,352,359,362,365,
+        370,373,385,388,391,396,399,403,406,413,416,419,424,427,432,437,
+        441,446,450,453,470,476,513,515,518,521,551,560,563,566,569,577,
+        593,601,610,613,616
     ]
 
 class SQLParser ( Parser ):
@@ -299,9 +299,9 @@ class SQLParser ( Parser ):
                      "<INVALID>", "<INVALID>", "'API'", "'SQL'", "<INVALID>", 
                      "<INVALID>", "<INVALID>", "'CONNECT'", "'WITH'", "'USER'", 
                      "'KEYFILE'", "'PASSWORD'", "'EXECUTE'", "'DISCONNECT'", 
-                     "<INVALID>", "<INVALID>", "'SFTP'", "'CHMOD'", "'GETCWD'", 
-                     "'CHDIR'", "'CHOWN'", "'MKDIR'", "'GET'", "'PUT'", 
-                     "'REMOVE'", "'RENAME'", "'LISTDIR'", "'TRUNCATE'", 
+                     "<INVALID>", "<INVALID>", "<INVALID>", "'SFTP'", "'CHMOD'", 
+                     "'GETCWD'", "'CHDIR'", "'CHOWN'", "'MKDIR'", "'GET'", 
+                     "'PUT'", "'REMOVE'", "'RENAME'", "'LISTDIR'", "'TRUNCATE'", 
                      "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                      "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                      "<INVALID>", "<INVALID>", "<INVALID>", "'START'", "'WAIT'", 
@@ -350,25 +350,25 @@ class SQLParser ( Parser ):
                       "SET_AT", "SET_CRLF", "USE_API", "USE_SQL", "USE_SPACE", 
                       "USE_SEMICOLON", "USE_CRLF", "SSH_CONNECT", "SSH_WITH", 
                       "SSH_USER", "SSH_KEYFILE", "SSH_PASSWORD", "SSH_EXECUTE", 
-                      "SSH_DISCONNECT", "SSH_SAVE", "SSH_RESTORE", "SFTP", 
-                      "SFTP_CHMOD", "SFTP_GETCWD", "SFTP_CHDIR", "SFTP_CHOWN", 
-                      "SFTP_MKDIR", "SFTP_GET", "SFTP_PUT", "SFTP_REMOVE", 
-                      "SFTP_RENAME", "SFTP_LISTDIR", "SFTP_TRUNCATE", "SSH_SPACE", 
-                      "SSH_SEMICOLON", "SSH_CRLF", "SSH_EXPRESSION", "JOB_SPACE", 
-                      "JOB_SEMICOLON", "JOB_EQUAL", "JOB_CRLF", "JOB_CREATE", 
-                      "JOB_SHOW", "JOB_SET", "JOB_START", "JOB_WAIT", "JOB_SHUTDOWN", 
-                      "JOB_ABORT", "JOB_TIMER", "JOB_REGISTER", "JOB_DEREGISTER", 
-                      "JOB_WORKER", "JOB_MANGER", "JOB_ON", "JOB_OFF", "JOB_TO", 
-                      "JOB_EXPRESSION", "COMPARE_SPACE", "COMPARE_SEMICOLON", 
-                      "COMPARE_EQUAL", "COMPARE_CRLF", "COMPARE_SET", "COMPARE_UNSET", 
-                      "COMPARE_MASK", "COMPARE_NOMASK", "COMPARE_MASKLINE", 
-                      "COMPARE_NOMASKLINE", "COMPARE_CASE", "COMPARE_NOCASE", 
-                      "COMPARE_IGBLANK", "COMPARE_NOIGBLANK", "COMPARE_TRIM", 
-                      "COMPARE_NOTRIM", "COMPARE_OUTPUT", "COMPARE_CONSOLE", 
-                      "COMPARE_DIFFFILE", "COMPARE_SKIPLINE", "COMPARE_NOSKIPLINE", 
-                      "COMPARE_RESET", "COMPARE_ALGORITHM", "COMPARE_ENCODING", 
-                      "COMPARE_WORK", "COMPARE_REFERENCE", "COMPARE_LCS", 
-                      "COMPARE_MYERS", "COMPARE_EXPRESSION" ]
+                      "SSH_DISCONNECT", "SSH_SAVE", "SSH_RESTORE", "SSH_INT", 
+                      "SFTP", "SFTP_CHMOD", "SFTP_GETCWD", "SFTP_CHDIR", 
+                      "SFTP_CHOWN", "SFTP_MKDIR", "SFTP_GET", "SFTP_PUT", 
+                      "SFTP_REMOVE", "SFTP_RENAME", "SFTP_LISTDIR", "SFTP_TRUNCATE", 
+                      "SSH_SPACE", "SSH_SEMICOLON", "SSH_CRLF", "SSH_EXPRESSION", 
+                      "JOB_SPACE", "JOB_SEMICOLON", "JOB_EQUAL", "JOB_CRLF", 
+                      "JOB_CREATE", "JOB_SHOW", "JOB_SET", "JOB_START", 
+                      "JOB_WAIT", "JOB_SHUTDOWN", "JOB_ABORT", "JOB_TIMER", 
+                      "JOB_REGISTER", "JOB_DEREGISTER", "JOB_WORKER", "JOB_MANGER", 
+                      "JOB_ON", "JOB_OFF", "JOB_TO", "JOB_EXPRESSION", "COMPARE_SPACE", 
+                      "COMPARE_SEMICOLON", "COMPARE_EQUAL", "COMPARE_CRLF", 
+                      "COMPARE_SET", "COMPARE_UNSET", "COMPARE_MASK", "COMPARE_NOMASK", 
+                      "COMPARE_MASKLINE", "COMPARE_NOMASKLINE", "COMPARE_CASE", 
+                      "COMPARE_NOCASE", "COMPARE_IGBLANK", "COMPARE_NOIGBLANK", 
+                      "COMPARE_TRIM", "COMPARE_NOTRIM", "COMPARE_OUTPUT", 
+                      "COMPARE_CONSOLE", "COMPARE_DIFFFILE", "COMPARE_SKIPLINE", 
+                      "COMPARE_NOSKIPLINE", "COMPARE_RESET", "COMPARE_ALGORITHM", 
+                      "COMPARE_ENCODING", "COMPARE_WORK", "COMPARE_REFERENCE", 
+                      "COMPARE_LCS", "COMPARE_MYERS", "COMPARE_EXPRESSION" ]
 
     RULE_prog = 0
     RULE_command = 1
@@ -586,71 +586,72 @@ class SQLParser ( Parser ):
     SSH_DISCONNECT=146
     SSH_SAVE=147
     SSH_RESTORE=148
-    SFTP=149
-    SFTP_CHMOD=150
-    SFTP_GETCWD=151
-    SFTP_CHDIR=152
-    SFTP_CHOWN=153
-    SFTP_MKDIR=154
-    SFTP_GET=155
-    SFTP_PUT=156
-    SFTP_REMOVE=157
-    SFTP_RENAME=158
-    SFTP_LISTDIR=159
-    SFTP_TRUNCATE=160
-    SSH_SPACE=161
-    SSH_SEMICOLON=162
-    SSH_CRLF=163
-    SSH_EXPRESSION=164
-    JOB_SPACE=165
-    JOB_SEMICOLON=166
-    JOB_EQUAL=167
-    JOB_CRLF=168
-    JOB_CREATE=169
-    JOB_SHOW=170
-    JOB_SET=171
-    JOB_START=172
-    JOB_WAIT=173
-    JOB_SHUTDOWN=174
-    JOB_ABORT=175
-    JOB_TIMER=176
-    JOB_REGISTER=177
-    JOB_DEREGISTER=178
-    JOB_WORKER=179
-    JOB_MANGER=180
-    JOB_ON=181
-    JOB_OFF=182
-    JOB_TO=183
-    JOB_EXPRESSION=184
-    COMPARE_SPACE=185
-    COMPARE_SEMICOLON=186
-    COMPARE_EQUAL=187
-    COMPARE_CRLF=188
-    COMPARE_SET=189
-    COMPARE_UNSET=190
-    COMPARE_MASK=191
-    COMPARE_NOMASK=192
-    COMPARE_MASKLINE=193
-    COMPARE_NOMASKLINE=194
-    COMPARE_CASE=195
-    COMPARE_NOCASE=196
-    COMPARE_IGBLANK=197
-    COMPARE_NOIGBLANK=198
-    COMPARE_TRIM=199
-    COMPARE_NOTRIM=200
-    COMPARE_OUTPUT=201
-    COMPARE_CONSOLE=202
-    COMPARE_DIFFFILE=203
-    COMPARE_SKIPLINE=204
-    COMPARE_NOSKIPLINE=205
-    COMPARE_RESET=206
-    COMPARE_ALGORITHM=207
-    COMPARE_ENCODING=208
-    COMPARE_WORK=209
-    COMPARE_REFERENCE=210
-    COMPARE_LCS=211
-    COMPARE_MYERS=212
-    COMPARE_EXPRESSION=213
+    SSH_INT=149
+    SFTP=150
+    SFTP_CHMOD=151
+    SFTP_GETCWD=152
+    SFTP_CHDIR=153
+    SFTP_CHOWN=154
+    SFTP_MKDIR=155
+    SFTP_GET=156
+    SFTP_PUT=157
+    SFTP_REMOVE=158
+    SFTP_RENAME=159
+    SFTP_LISTDIR=160
+    SFTP_TRUNCATE=161
+    SSH_SPACE=162
+    SSH_SEMICOLON=163
+    SSH_CRLF=164
+    SSH_EXPRESSION=165
+    JOB_SPACE=166
+    JOB_SEMICOLON=167
+    JOB_EQUAL=168
+    JOB_CRLF=169
+    JOB_CREATE=170
+    JOB_SHOW=171
+    JOB_SET=172
+    JOB_START=173
+    JOB_WAIT=174
+    JOB_SHUTDOWN=175
+    JOB_ABORT=176
+    JOB_TIMER=177
+    JOB_REGISTER=178
+    JOB_DEREGISTER=179
+    JOB_WORKER=180
+    JOB_MANGER=181
+    JOB_ON=182
+    JOB_OFF=183
+    JOB_TO=184
+    JOB_EXPRESSION=185
+    COMPARE_SPACE=186
+    COMPARE_SEMICOLON=187
+    COMPARE_EQUAL=188
+    COMPARE_CRLF=189
+    COMPARE_SET=190
+    COMPARE_UNSET=191
+    COMPARE_MASK=192
+    COMPARE_NOMASK=193
+    COMPARE_MASKLINE=194
+    COMPARE_NOMASKLINE=195
+    COMPARE_CASE=196
+    COMPARE_NOCASE=197
+    COMPARE_IGBLANK=198
+    COMPARE_NOIGBLANK=199
+    COMPARE_TRIM=200
+    COMPARE_NOTRIM=201
+    COMPARE_OUTPUT=202
+    COMPARE_CONSOLE=203
+    COMPARE_DIFFFILE=204
+    COMPARE_SKIPLINE=205
+    COMPARE_NOSKIPLINE=206
+    COMPARE_RESET=207
+    COMPARE_ALGORITHM=208
+    COMPARE_ENCODING=209
+    COMPARE_WORK=210
+    COMPARE_REFERENCE=211
+    COMPARE_LCS=212
+    COMPARE_MYERS=213
+    COMPARE_EXPRESSION=214
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
@@ -4138,6 +4139,12 @@ class SQLParser ( Parser ):
         def SFTP_CHMOD(self):
             return self.getToken(SQLParser.SFTP_CHMOD, 0)
 
+        def SSH_INT(self, i:int=None):
+            if i is None:
+                return self.getTokens(SQLParser.SSH_INT)
+            else:
+                return self.getToken(SQLParser.SSH_INT, i)
+
         def SFTP_GETCWD(self):
             return self.getToken(SQLParser.SFTP_GETCWD, 0)
 
@@ -4146,12 +4153,6 @@ class SQLParser ( Parser ):
 
         def SFTP_CHOWN(self):
             return self.getToken(SQLParser.SFTP_CHOWN, 0)
-
-        def INT(self, i:int=None):
-            if i is None:
-                return self.getTokens(SQLParser.INT)
-            else:
-                return self.getToken(SQLParser.INT, i)
 
         def SFTP_MKDIR(self):
             return self.getToken(SQLParser.SFTP_MKDIR, 0)
@@ -4195,7 +4196,7 @@ class SQLParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 455
             self.match(SQLParser.SSH)
-            self.state = 514
+            self.state = 515
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,69,self._ctx)
             if la_ == 1:
@@ -4250,7 +4251,7 @@ class SQLParser ( Parser ):
                     self.state = 476 
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if not (_la==164):
+                    if not (_la==165):
                         break
 
                 pass
@@ -4277,86 +4278,88 @@ class SQLParser ( Parser ):
             elif la_ == 7:
                 self.state = 483
                 self.match(SQLParser.SFTP)
-                self.state = 512
+                self.state = 513
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
-                if token in [150]:
+                if token in [151]:
                     self.state = 484
                     self.match(SQLParser.SFTP_CHMOD)
                     self.state = 485
                     self.match(SQLParser.SSH_EXPRESSION)
                     self.state = 486
-                    self.match(SQLParser.SSH_EXPRESSION)
+                    self.match(SQLParser.SSH_INT)
                     pass
-                elif token in [151]:
+                elif token in [152]:
                     self.state = 487
                     self.match(SQLParser.SFTP_GETCWD)
                     pass
-                elif token in [152]:
+                elif token in [153]:
                     self.state = 488
                     self.match(SQLParser.SFTP_CHDIR)
                     self.state = 489
                     self.match(SQLParser.SSH_EXPRESSION)
                     pass
-                elif token in [153]:
+                elif token in [154]:
                     self.state = 490
                     self.match(SQLParser.SFTP_CHOWN)
                     self.state = 491
                     self.match(SQLParser.SSH_EXPRESSION)
                     self.state = 492
-                    self.match(SQLParser.INT)
+                    self.match(SQLParser.SSH_INT)
                     self.state = 493
-                    self.match(SQLParser.INT)
+                    self.match(SQLParser.SSH_INT)
                     pass
-                elif token in [154]:
+                elif token in [155]:
                     self.state = 494
                     self.match(SQLParser.SFTP_MKDIR)
                     self.state = 495
                     self.match(SQLParser.SSH_EXPRESSION)
-                    pass
-                elif token in [155]:
                     self.state = 496
-                    self.match(SQLParser.SFTP_GET)
-                    self.state = 497
-                    self.match(SQLParser.SSH_EXPRESSION)
-                    self.state = 498
-                    self.match(SQLParser.SSH_EXPRESSION)
+                    self.match(SQLParser.SSH_INT)
                     pass
                 elif token in [156]:
-                    self.state = 499
-                    self.match(SQLParser.SFTP_PUT)
-                    self.state = 500
+                    self.state = 497
+                    self.match(SQLParser.SFTP_GET)
+                    self.state = 498
                     self.match(SQLParser.SSH_EXPRESSION)
-                    self.state = 501
+                    self.state = 499
                     self.match(SQLParser.SSH_EXPRESSION)
                     pass
                 elif token in [157]:
+                    self.state = 500
+                    self.match(SQLParser.SFTP_PUT)
+                    self.state = 501
+                    self.match(SQLParser.SSH_EXPRESSION)
                     self.state = 502
-                    self.match(SQLParser.SFTP_REMOVE)
-                    self.state = 503
                     self.match(SQLParser.SSH_EXPRESSION)
                     pass
                 elif token in [158]:
+                    self.state = 503
+                    self.match(SQLParser.SFTP_REMOVE)
                     self.state = 504
-                    self.match(SQLParser.SFTP_RENAME)
-                    self.state = 505
-                    self.match(SQLParser.SSH_EXPRESSION)
-                    self.state = 506
                     self.match(SQLParser.SSH_EXPRESSION)
                     pass
                 elif token in [159]:
+                    self.state = 505
+                    self.match(SQLParser.SFTP_RENAME)
+                    self.state = 506
+                    self.match(SQLParser.SSH_EXPRESSION)
                     self.state = 507
-                    self.match(SQLParser.SFTP_LISTDIR)
-                    self.state = 508
                     self.match(SQLParser.SSH_EXPRESSION)
                     pass
                 elif token in [160]:
+                    self.state = 508
+                    self.match(SQLParser.SFTP_LISTDIR)
                     self.state = 509
-                    self.match(SQLParser.SFTP_TRUNCATE)
-                    self.state = 510
                     self.match(SQLParser.SSH_EXPRESSION)
+                    pass
+                elif token in [161]:
+                    self.state = 510
+                    self.match(SQLParser.SFTP_TRUNCATE)
                     self.state = 511
-                    self.match(SQLParser.INT)
+                    self.match(SQLParser.SSH_EXPRESSION)
+                    self.state = 512
+                    self.match(SQLParser.SSH_INT)
                     pass
                 else:
                     raise NoViableAltException(self)
@@ -4364,19 +4367,19 @@ class SQLParser ( Parser ):
                 pass
 
 
-            self.state = 517
+            self.state = 518
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==162:
-                self.state = 516
+            if _la==163:
+                self.state = 517
                 self.match(SQLParser.SSH_SEMICOLON)
 
 
-            self.state = 520
+            self.state = 521
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==17:
-                self.state = 519
+                self.state = 520
                 self.match(SQLParser.CRLF)
 
 
@@ -4481,112 +4484,112 @@ class SQLParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 522
+            self.state = 523
             self.match(SQLParser.JOB)
-            self.state = 562
+            self.state = 563
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [180]:
-                self.state = 523
-                self.match(SQLParser.JOB_MANGER)
+            if token in [181]:
                 self.state = 524
+                self.match(SQLParser.JOB_MANGER)
+                self.state = 525
                 _la = self._input.LA(1)
-                if not(_la==181 or _la==182):
+                if not(_la==182 or _la==183):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
                     self.consume()
                 pass
-            elif token in [173]:
-                self.state = 525
-                self.match(SQLParser.JOB_WAIT)
-                self.state = 526
-                self.match(SQLParser.JOB_EXPRESSION)
-                pass
-            elif token in [170]:
-                self.state = 527
-                self.match(SQLParser.JOB_SHOW)
-                self.state = 528
-                self.match(SQLParser.JOB_EXPRESSION)
-                pass
-            elif token in [175]:
-                self.state = 529
-                self.match(SQLParser.JOB_ABORT)
-                self.state = 530
-                self.match(SQLParser.JOB_EXPRESSION)
-                pass
             elif token in [174]:
-                self.state = 531
-                self.match(SQLParser.JOB_SHUTDOWN)
-                self.state = 532
-                self.match(SQLParser.JOB_EXPRESSION)
-                pass
-            elif token in [176]:
-                self.state = 533
-                self.match(SQLParser.JOB_TIMER)
-                self.state = 534
-                self.match(SQLParser.JOB_EXPRESSION)
-                pass
-            elif token in [172]:
-                self.state = 535
-                self.match(SQLParser.JOB_START)
-                self.state = 536
-                self.match(SQLParser.JOB_EXPRESSION)
-                pass
-            elif token in [178]:
-                self.state = 537
-                self.match(SQLParser.JOB_DEREGISTER)
-                self.state = 538
-                self.match(SQLParser.JOB_WORKER)
-                pass
-            elif token in [177]:
-                self.state = 539
-                self.match(SQLParser.JOB_REGISTER)
-                self.state = 540
-                self.match(SQLParser.JOB_WORKER)
-                self.state = 541
-                self.match(SQLParser.JOB_TO)
-                self.state = 542
+                self.state = 526
+                self.match(SQLParser.JOB_WAIT)
+                self.state = 527
                 self.match(SQLParser.JOB_EXPRESSION)
                 pass
             elif token in [171]:
-                self.state = 543
-                self.match(SQLParser.JOB_SET)
-                self.state = 544
+                self.state = 528
+                self.match(SQLParser.JOB_SHOW)
+                self.state = 529
                 self.match(SQLParser.JOB_EXPRESSION)
-                self.state = 548 
+                pass
+            elif token in [176]:
+                self.state = 530
+                self.match(SQLParser.JOB_ABORT)
+                self.state = 531
+                self.match(SQLParser.JOB_EXPRESSION)
+                pass
+            elif token in [175]:
+                self.state = 532
+                self.match(SQLParser.JOB_SHUTDOWN)
+                self.state = 533
+                self.match(SQLParser.JOB_EXPRESSION)
+                pass
+            elif token in [177]:
+                self.state = 534
+                self.match(SQLParser.JOB_TIMER)
+                self.state = 535
+                self.match(SQLParser.JOB_EXPRESSION)
+                pass
+            elif token in [173]:
+                self.state = 536
+                self.match(SQLParser.JOB_START)
+                self.state = 537
+                self.match(SQLParser.JOB_EXPRESSION)
+                pass
+            elif token in [179]:
+                self.state = 538
+                self.match(SQLParser.JOB_DEREGISTER)
+                self.state = 539
+                self.match(SQLParser.JOB_WORKER)
+                pass
+            elif token in [178]:
+                self.state = 540
+                self.match(SQLParser.JOB_REGISTER)
+                self.state = 541
+                self.match(SQLParser.JOB_WORKER)
+                self.state = 542
+                self.match(SQLParser.JOB_TO)
+                self.state = 543
+                self.match(SQLParser.JOB_EXPRESSION)
+                pass
+            elif token in [172]:
+                self.state = 544
+                self.match(SQLParser.JOB_SET)
+                self.state = 545
+                self.match(SQLParser.JOB_EXPRESSION)
+                self.state = 549 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 while True:
-                    self.state = 545
-                    self.match(SQLParser.JOB_EXPRESSION)
                     self.state = 546
-                    self.match(SQLParser.JOB_EQUAL)
-                    self.state = 547
                     self.match(SQLParser.JOB_EXPRESSION)
-                    self.state = 550 
+                    self.state = 547
+                    self.match(SQLParser.JOB_EQUAL)
+                    self.state = 548
+                    self.match(SQLParser.JOB_EXPRESSION)
+                    self.state = 551 
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if not (_la==184):
+                    if not (_la==185):
                         break
 
                 pass
-            elif token in [169]:
-                self.state = 552
-                self.match(SQLParser.JOB_CREATE)
+            elif token in [170]:
                 self.state = 553
+                self.match(SQLParser.JOB_CREATE)
+                self.state = 554
                 self.match(SQLParser.JOB_EXPRESSION)
-                self.state = 559
+                self.state = 560
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                while _la==184:
-                    self.state = 554
-                    self.match(SQLParser.JOB_EXPRESSION)
+                while _la==185:
                     self.state = 555
-                    self.match(SQLParser.JOB_EQUAL)
-                    self.state = 556
                     self.match(SQLParser.JOB_EXPRESSION)
-                    self.state = 561
+                    self.state = 556
+                    self.match(SQLParser.JOB_EQUAL)
+                    self.state = 557
+                    self.match(SQLParser.JOB_EXPRESSION)
+                    self.state = 562
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
 
@@ -4594,19 +4597,19 @@ class SQLParser ( Parser ):
             else:
                 raise NoViableAltException(self)
 
-            self.state = 565
+            self.state = 566
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==166:
-                self.state = 564
+            if _la==167:
+                self.state = 565
                 self.match(SQLParser.JOB_SEMICOLON)
 
 
-            self.state = 568
+            self.state = 569
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==17:
-                self.state = 567
+                self.state = 568
                 self.match(SQLParser.CRLF)
 
 
@@ -4762,120 +4765,120 @@ class SQLParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 570
+            self.state = 571
             self.match(SQLParser.COMPARE)
-            self.state = 609
+            self.state = 610
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,80,self._ctx)
             if la_ == 1:
-                self.state = 571
-                self.match(SQLParser.COMPARE_EXPRESSION)
                 self.state = 572
                 self.match(SQLParser.COMPARE_EXPRESSION)
-                self.state = 576
+                self.state = 573
+                self.match(SQLParser.COMPARE_EXPRESSION)
+                self.state = 577
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                while (((_la - 191)) & ~0x3f) == 0 and ((1 << (_la - 191)) & 1011) != 0:
-                    self.state = 573
+                while (((_la - 192)) & ~0x3f) == 0 and ((1 << (_la - 192)) & 1011) != 0:
+                    self.state = 574
                     _la = self._input.LA(1)
-                    if not((((_la - 191)) & ~0x3f) == 0 and ((1 << (_la - 191)) & 1011) != 0):
+                    if not((((_la - 192)) & ~0x3f) == 0 and ((1 << (_la - 192)) & 1011) != 0):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
                         self.consume()
-                    self.state = 578
+                    self.state = 579
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
 
                 pass
 
             elif la_ == 2:
-                self.state = 579
+                self.state = 580
                 _la = self._input.LA(1)
-                if not(_la==204 or _la==205):
+                if not(_la==205 or _la==206):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
                     self.consume()
-                self.state = 580
+                self.state = 581
                 self.match(SQLParser.COMPARE_EXPRESSION)
                 pass
 
             elif la_ == 3:
-                self.state = 581
-                self.match(SQLParser.COMPARE_MASKLINE)
                 self.state = 582
-                self.match(SQLParser.COMPARE_EXPRESSION)
+                self.match(SQLParser.COMPARE_MASKLINE)
                 self.state = 583
-                self.match(SQLParser.COMPARE_EQUAL)
+                self.match(SQLParser.COMPARE_EXPRESSION)
                 self.state = 584
+                self.match(SQLParser.COMPARE_EQUAL)
+                self.state = 585
                 self.match(SQLParser.COMPARE_EXPRESSION)
                 pass
 
             elif la_ == 4:
-                self.state = 585
-                self.match(SQLParser.COMPARE_NOMASKLINE)
                 self.state = 586
+                self.match(SQLParser.COMPARE_NOMASKLINE)
+                self.state = 587
                 self.match(SQLParser.COMPARE_EXPRESSION)
                 pass
 
             elif la_ == 5:
-                self.state = 587
+                self.state = 588
                 self.match(SQLParser.COMPARE_RESET)
                 pass
 
             elif la_ == 6:
-                self.state = 588
+                self.state = 589
                 self.match(SQLParser.COMPARE_SET)
-                self.state = 592
+                self.state = 593
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                while (((_la - 191)) & ~0x3f) == 0 and ((1 << (_la - 191)) & 1011) != 0:
-                    self.state = 589
+                while (((_la - 192)) & ~0x3f) == 0 and ((1 << (_la - 192)) & 1011) != 0:
+                    self.state = 590
                     _la = self._input.LA(1)
-                    if not((((_la - 191)) & ~0x3f) == 0 and ((1 << (_la - 191)) & 1011) != 0):
+                    if not((((_la - 192)) & ~0x3f) == 0 and ((1 << (_la - 192)) & 1011) != 0):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
                         self.consume()
-                    self.state = 594
+                    self.state = 595
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
 
                 pass
 
             elif la_ == 7:
-                self.state = 595
-                self.match(SQLParser.COMPARE_SET)
                 self.state = 596
+                self.match(SQLParser.COMPARE_SET)
+                self.state = 597
                 self.match(SQLParser.COMPARE_OUTPUT)
-                self.state = 598 
+                self.state = 599 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 while True:
-                    self.state = 597
+                    self.state = 598
                     _la = self._input.LA(1)
-                    if not(_la==202 or _la==203):
+                    if not(_la==203 or _la==204):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
                         self.consume()
-                    self.state = 600 
+                    self.state = 601 
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if not (_la==202 or _la==203):
+                    if not (_la==203 or _la==204):
                         break
 
                 pass
 
             elif la_ == 8:
-                self.state = 602
-                self.match(SQLParser.COMPARE_SET)
                 self.state = 603
-                self.match(SQLParser.COMPARE_ALGORITHM)
+                self.match(SQLParser.COMPARE_SET)
                 self.state = 604
+                self.match(SQLParser.COMPARE_ALGORITHM)
+                self.state = 605
                 _la = self._input.LA(1)
-                if not(_la==211 or _la==212):
+                if not(_la==212 or _la==213):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -4883,35 +4886,35 @@ class SQLParser ( Parser ):
                 pass
 
             elif la_ == 9:
-                self.state = 605
-                self.match(SQLParser.COMPARE_SET)
                 self.state = 606
+                self.match(SQLParser.COMPARE_SET)
+                self.state = 607
                 _la = self._input.LA(1)
-                if not(_la==209 or _la==210):
+                if not(_la==210 or _la==211):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
                     self.consume()
-                self.state = 607
-                self.match(SQLParser.COMPARE_ENCODING)
                 self.state = 608
+                self.match(SQLParser.COMPARE_ENCODING)
+                self.state = 609
                 self.match(SQLParser.COMPARE_EXPRESSION)
                 pass
 
 
-            self.state = 612
+            self.state = 613
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==186:
-                self.state = 611
+            if _la==187:
+                self.state = 612
                 self.match(SQLParser.COMPARE_SEMICOLON)
 
 
-            self.state = 615
+            self.state = 616
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==17:
-                self.state = 614
+                self.state = 615
                 self.match(SQLParser.CRLF)
 
 

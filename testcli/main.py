@@ -14,20 +14,21 @@ appExitValue = 0
 
 
 @click.command()
-@click.option("--version", is_flag=True, help="Output TestCli version.")
-@click.option("--logon", type=str, help="logon user name and password. user/pass",)
-@click.option("--logfile", type=str, help="Log every query and its results to a file.",)
+@click.option("--version", is_flag=True, help="Show TestCli version.")
+@click.option("--logon", type=str, help="SQL logon user name and password. user/pass",)
+@click.option("--logfile", type=str, help="Log every command and its results to file.",)
 @click.option("--execute", type=str, help="Execute command script.")
 @click.option("--commandmap", type=str, help="Command mapping file.")
 @click.option("--nologo", is_flag=True, help="Execute with no-logo mode.")
-@click.option("--xlog", type=str, help="Command extended log.")
-@click.option("--syncdriver", is_flag=True, help="Download jdbc jar from file server.")
+@click.option("--xlog", type=str, help="Save command extended log.")
+@click.option("--syncdriver", is_flag=True, help="Download java jar from file server.")
 @click.option("--clientcharset", type=str, help="Set client charset. Default is UTF-8.")
 @click.option("--resultcharset", type=str, help="Set result charset. Default is same to clientCharset.")
-@click.option("--profile", type=str, help="Init profile.")
+@click.option("--profile", type=str, help="Startup profile.")
 @click.option("--scripttimeout", type=int, help="Script Timeout(Seconds).")
-@click.option("--namespace", type=str, help="Command name space.")
-@click.option("--selftest", is_flag=True, help="Run self test.")
+@click.option("--namespace", type=str, help="Command default name space(SQL|API). Default is SQL")
+@click.option("--selftest", is_flag=True, help="Run self test and exit.")
+@click.option("--readme", is_flag=True, help="Show README Doc and exit.")
 def cli(
         version,
         logon,
@@ -42,7 +43,8 @@ def cli(
         profile,
         scripttimeout,
         namespace,
-        selftest
+        selftest,
+        readme
 ):
     if version:
         print("Version:", __version__)
@@ -62,6 +64,17 @@ def cli(
     if selftest:
         testpath = os.path.abspath(os.path.join(os.path.dirname(__file__), "test", "testcliunittest.py"))
         pytest.main([testpath, ])
+        return
+
+    # 显示出手册
+    if readme:
+        from rich.console import Console
+        from rich.markdown import Markdown
+        console = Console()
+        readmeFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "README.md"))
+        with open(readmeFile, encoding="UTF-8") as readme:
+            markdown = Markdown(readme.read())
+            console.print(markdown)
         return
 
     # 程序脚本超时时间设置

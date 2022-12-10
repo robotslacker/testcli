@@ -172,6 +172,7 @@ SSH_EXECUTE         : 'EXECUTE';
 SSH_DISCONNECT      : 'DISCONNECT';
 SSH_SAVE            : 'SAVE';
 SSH_RESTORE         : 'RESTORE';
+SSH_INT             : INT;
 SFTP                : 'SFTP';
 SFTP_CHMOD          : 'CHMOD';
 SFTP_GETCWD         : 'GETCWD';

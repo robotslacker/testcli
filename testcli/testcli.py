@@ -5,7 +5,7 @@ import traceback
 import re
 import time
 from xml.sax import saxutils
-
+import sqlite3
 import setproctitle
 import click
 import configparser
@@ -98,10 +98,9 @@ class TestCli(object):
         self.prompt_app = None                          # PromptKit控制台
         self.echofilename = None                        # 当前回显文件的文件名称
         self.Version = __version__                      # 当前程序版本
-        self.xlogFile = None                         # xlog文件名
-        self.xlogFileHandle = None                   # xlog文件句柄
-        self.PerfFileLocker = None                      # 进程锁, 用来在输出perf文件的时候控制并发写文件
-        self.xlogfilename = None                        # xlog文件名
+        self.xlogFile = None                            # xlog文件名
+        self.xlogFileHandle = None                      # xlog文件句柄
+        self.xlogFileLocker = None                      # 进程锁, 用来在输出perf文件的时候控制并发写文件
         self.breakWithError = breakWithError            # 是否在遇到错误的时候退出
         self.breakErrorCode = breakErrorCode            # 遇到错误的退出代码
         
@@ -340,6 +339,10 @@ class TestCli(object):
             self.MetaHandler.ShutdownServer()
             self.MetaHandler = None
 
+        # 关闭xlog的文件句柄
+        if self.xlogFileHandle is not None:
+            self.xlogFileHandle.close()
+
     # 执行特殊的命令
     @staticmethod
     def execute_internal_command(cls, arg, **_):
@@ -570,7 +573,7 @@ class TestCli(object):
                         else:
                             self.echo(p_result["message"])
                     elif p_result["type"] == "statistics":
-                        self.Log_Statistics(p_result)
+                        self.writeExtendLog(p_result)
                     else:
                         raise TestCliException("internal error. unknown sql type error. " + str(p_result["type"]))
                 else:
@@ -1106,7 +1109,7 @@ class TestCli(object):
 
         return output
 
-    def Log_Statistics(self, commandResult):
+    def writeExtendLog(self, commandResult):
         # 开始时间         StartedTime
         # 消耗时间         elapsed
         # SQL的前20个字母  SQLPrefix
@@ -1119,48 +1122,72 @@ class TestCli(object):
             return
 
         # 初始化文件加锁机制
-        if self.PerfFileLocker is None:
-            self.PerfFileLocker = Lock()
+        if self.xlogFileLocker is None:
+            self.xlogFileLocker = Lock()
 
         # 多进程，多线程写入，考虑锁冲突
         try:
-            self.PerfFileLocker.acquire()
-            if not os.path.exists(self.xlogFile):
-                # 如果文件不存在，创建文件，并写入文件头信息
-                self.xlogFileHandle = open(self.xlogFile, "a", encoding="utf-8")
-                self.xlogFileHandle.write("Script\tStarted\telapsed\tRawCommand\tCommand\t"
-                                          "CommandStatus\tErrorMessage\tWorkerName\t"
-                                          "Suite\tCase\tScenario\n")
-                self.xlogFileHandle.close()
+            self.xlogFileLocker.acquire()
+            if self.xlogFileHandle is None:
+                # 如果文件已经存在，则删除当前文件
+                if os.path.exists(self.xlogFile):
+                    os.remove(self.xlogFile)
+                # 创建文件，并写入文件头信息
+                self.xlogFileHandle = sqlite3.connect(self.xlogFile)
+                cursor = self.xlogFileHandle.cursor()
+                cursor.execute("Create Table TestCli_Xlog "
+                               "("
+                               "  Script          TEXT,"
+                               "  Started         DATETIME,"
+                               "  Elapsed         NUMERIC,"
+                               "  RawCommand      TEXT,"
+                               "  Command         TEXT,"
+                               "  CommandStatus   INTEGER,"
+                               "  ErrorMessage    TEXT,"
+                               "  WorkerName      TEXT,"
+                               "  SuiteName       TEXT,"
+                               "  CaseName        TEXT,"
+                               "  Scenario        TEXT"
+                               ")"
+                               "")
+                cursor.close()
 
             # 对于多线程运行，这里的thread_name格式为JOB_NAME#副本数-完成次数
             # 对于单线程运行，这里的thread_name格式为固定的MAIN
             threadName = str(commandResult["thread_name"])
 
-            # 打开Perf文件
-            self.xlogFileHandle = open(self.xlogFile, "a", encoding="utf-8")
             # 写入内容信息
             if self.commandScript is None:
                 script = "Console"
             else:
                 script = str(os.path.basename(self.commandScript))
-            self.xlogFileHandle.write(
-                script + "\t" +
-                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(commandResult["startedTime"])) + "\t" +
-                "%8.2f" % commandResult["elapsed"] + "\t" +
-                str(commandResult["rawCommand"]).replace("\n", " ").replace("\t", "    ") + "\t" +
-                str(commandResult["command"]).replace("\n", " ").replace("\t", "    ") + "\t" +
-                str(commandResult["commandStatus"]) + "\t" +
-                str(commandResult["errorMessage"]).replace("\n", " ").replace("\t", "    ") + "\t" +
-                str(threadName) + "\t" +
-                str(self.suitename) + "\t" +
-                str(self.casename) + "\t" +
-                str(commandResult["scenario"]) +
-                "\n"
+
+            # 打开xLog文件
+            if self.xlogFileHandle is not None:
+                self.xlogFileHandle = sqlite3.connect(self.xlogFile)
+            cursor = self.xlogFileHandle.cursor()
+            data = (
+                script,
+                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(commandResult["startedTime"])),
+                "%8.2f" % commandResult["elapsed"],
+                str(commandResult["rawCommand"]),
+                str(commandResult["command"]),
+                str(commandResult["commandStatus"]),
+                str(commandResult["errorMessage"]),
+                str(threadName),
+                str(self.suitename),
+                str(self.casename),
+                str(commandResult["scenario"])
             )
-            self.xlogFileHandle.flush()
-            self.xlogFileHandle.close()
+            cursor.execute(
+                "Insert Into TestCli_Xlog(Script,Started,Elapsed,RawCommand,"
+                "Command,CommandStatus,ErrorMessage,WorkerName,SuiteName,CaseName,Scenario) "
+                "Values(?,?,?,?, ?,?,?,?,?,?,?)",
+                data
+            )
+            cursor.close()
+            self.xlogFileHandle.commit()
         except Exception as ex:
-            print("Internal error:: perf file [" + str(self.xlogFile) + "] write not complete. " + repr(ex))
+            print("Internal error:: xlog file [" + str(self.xlogFile) + "] write not complete. " + repr(ex))
         finally:
-            self.PerfFileLocker.release()
+            self.xlogFileLocker.release()

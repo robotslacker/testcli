@@ -3,6 +3,7 @@ import os
 import re
 import codecs
 import time
+import traceback
 from testcli.globalvar import localEmbeddScriptScope
 
 
@@ -83,6 +84,9 @@ def executeFile(cls, scriptFile, argv):
                     ):
                 yield executeResult
     except IOError as e:
+        if "TESTCLI_DEBUG" in os.environ:
+            print('traceback.print_exc():\n%s' % traceback.print_exc())
+            print('traceback.format_exc():\n%s' % traceback.format_exc())
         yield {
             "type": "result",
             "title": None,
