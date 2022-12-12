@@ -165,14 +165,19 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("_load driver oracle 'd:\\temp\\aa.txt' ")
+            = SQLAnalyze("_load jdbcdriver name=oracle "
+                         "class=oracle.jdbc.driver.OracleDriver file='d:\\temp\\aa.txt' "
+                         "url='jdbc:oracle:thin:@${host}:${port}/${service}' "
+                         "props='aaa,bbb'")
         self.assertTrue(isFinished)
         self.assertEqual(
-            {
-                'driverName': 'oracle',
-                'driverFile': "d:\\temp\\aa.txt",
-                'name': 'LOAD',
-                'option': 'DRIVER'
+            {'driverClass': 'oracle.jdbc.driver.OracleDriver',
+             'driverFile': 'd:\\temp\\aa.txt',
+             'driverName': 'oracle',
+             'driverProps': 'aaa,bbb',
+             'driverURL': 'jdbc:oracle:thin:@${host}:${port}/${service}',
+             'name': 'LOAD',
+             'option': 'JDBCDRIVER'
              },
             ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)

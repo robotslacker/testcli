@@ -105,8 +105,17 @@ ASSERT_EXPRESSION   : ASSERT_OPEN .*? ASSERT_CLOSE -> popMode;
 
 mode LoadMode;
 LOAD_SPACE          : [ \t]+ -> channel (HIDDEN);
-LOAD_OPTION         : 'PLUGIN' | 'MAP' | 'DRIVER';
-LOAD_EXPRESSION     : String;
+LOAD_EQUAL          : '=';
+LOAD_PLUGIN         : 'PLUGIN';
+LOAD_MAP            : 'MAP';
+LOAD_JDBCDRIVER     : 'JDBCDRIVER';
+LOAD_JDBCFILE       : 'FILE';
+LOAD_JDBCCLASS      : 'CLASS';
+LOAD_JDBCNAME       : 'NAME';
+LOAD_JDBCPROP       : 'PROPS';
+LOAD_JDBCURL        : 'URL';
+LOAD_EXPRESSION     :
+    (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' )+;
 LOAD_CRLF           : CRLF -> popMode;
 
 mode StartMode;

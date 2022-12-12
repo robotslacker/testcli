@@ -923,46 +923,56 @@ class SQLVisitor(SQLParserVisitor):
         parsedObject = {'name': 'LOAD'}
 
         # 加载的选项
-        option = str(ctx.LOAD_OPTION().getText()).strip().upper()
-        parsedObject.update({"option": option})
-
-        # 加载的内容
-        if ctx.LOAD_EXPRESSION() is not None:
-            if option.upper() == "DRIVER":
-                driverName = None
-                driverFile = None
-                if len(ctx.LOAD_EXPRESSION()) >= 1:
-                    driverName = str((ctx.LOAD_EXPRESSION()[0].getText())).strip()
-                    if driverName.startswith('"') and driverName.endswith('"'):
-                        driverName = driverName[1:-1]
-                    if driverName.startswith("'") and driverName.endswith("'"):
-                        driverName = driverName[1:-1]
-                if len(ctx.LOAD_EXPRESSION()) >= 2:
-                    driverFile = str((ctx.LOAD_EXPRESSION()[1].getText())).strip()
-                    if driverFile.startswith('"') and driverFile.endswith('"'):
-                        driverFile = driverFile[1:-1]
-                    if driverFile.startswith("'") and driverFile.endswith("'"):
-                        driverFile = driverFile[1:-1]
-                parsedObject.update(
-                    {
-                        "driverName": driverName,
-                        "driverFile": driverFile,
-                     }
-                )
-            if option.upper() == "PLUGIN":
-                pluginFile = str((ctx.LOAD_EXPRESSION()[0].getText())).strip()
-                if pluginFile.startswith('"') and pluginFile.endswith('"'):
-                    pluginFile = pluginFile[1:-1]
-                if pluginFile.startswith("'") and pluginFile.endswith("'"):
-                    pluginFile = pluginFile[1:-1]
-                parsedObject.update({"pluginFile": pluginFile})
-            if option.upper() == "MAP":
-                mapFile = str((ctx.LOAD_EXPRESSION()[0].getText())).strip()
-                if mapFile.startswith('"') and mapFile.endswith('"'):
-                    mapFile = mapFile[1:-1]
-                if mapFile.startswith("'") and mapFile.endswith("'"):
-                    mapFile = mapFile[1:-1]
-                parsedObject.update({"mapFile": mapFile})
+        if ctx.LOAD_PLUGIN() is not None:
+            parsedObject.update({"option": "PLUGIN"})
+            pluginFile = str((ctx.LOAD_EXPRESSION()[0].getText())).strip()
+            pluginFile = pluginFile.strip('"').strip("'")
+            parsedObject.update({"pluginFile": pluginFile})
+        if ctx.LOAD_MAP() is not None:
+            parsedObject.update({"option": "MAP"})
+            mapFile = str((ctx.LOAD_EXPRESSION()[0].getText())).strip()
+            mapFile = mapFile.strip('"').strip("'")
+            parsedObject.update({"mapFile": mapFile})
+        if ctx.LOAD_JDBCDRIVER() is not None:
+            parsedObject.update({"option": "JDBCDRIVER"})
+        if len(ctx.LOAD_JDBCCLASS()) != 0:
+            optionCtx = ctx.LOAD_JDBCCLASS()[0]
+            start, _ = optionCtx.getSourceInterval()
+            for token in ctx.parser._input.tokens[start+1:]:
+                if str(token.text) != '=':
+                    parsedObject.update({"driverClass": str(token.text)})
+                    break
+        if len(ctx.LOAD_JDBCURL()) != 0:
+            optionCtx = ctx.LOAD_JDBCURL()[0]
+            start, _ = optionCtx.getSourceInterval()
+            for token in ctx.parser._input.tokens[start+1:]:
+                if str(token.text) != '=':
+                    jdbcurl = str(token.text).strip('"').strip("'")
+                    parsedObject.update({"driverURL": str(jdbcurl)})
+                    break
+        if len(ctx.LOAD_JDBCFILE()) != 0:
+            optionCtx = ctx.LOAD_JDBCFILE()[0]
+            start, _ = optionCtx.getSourceInterval()
+            for token in ctx.parser._input.tokens[start+1:]:
+                if str(token.text) != '=':
+                    driverFile = str(token.text).strip('"').strip("'")
+                    parsedObject.update({"driverFile": driverFile})
+                    break
+        if len(ctx.LOAD_JDBCNAME()) != 0:
+            optionCtx = ctx.LOAD_JDBCNAME()[0]
+            start, _ = optionCtx.getSourceInterval()
+            for token in ctx.parser._input.tokens[start+1:]:
+                if str(token.text) != '=':
+                    parsedObject.update({"driverName": str(token.text)})
+                    break
+        if len(ctx.LOAD_JDBCPROP()) != 0:
+            optionCtx = ctx.LOAD_JDBCPROP()[0]
+            start, _ = optionCtx.getSourceInterval()
+            for token in ctx.parser._input.tokens[start+1:]:
+                if str(token.text) != '=':
+                    driverProps = str(token.text).strip('"').strip("'")
+                    parsedObject.update({"driverProps": driverProps})
+                    break
 
         # 获取错误代码
         errorCode = 0

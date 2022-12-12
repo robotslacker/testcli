@@ -4,7 +4,7 @@ import time
 
 # 退出当前应用程序
 def exitApplication(cls, exitValue):
-    if cls.script is not None:
+    if cls.commandScript is not None:
         # 运行在脚本模式下，会一直等待所有子进程退出后，再退出本程序
         while True:
             if not cls.JobHandler.isAllJobClosed():

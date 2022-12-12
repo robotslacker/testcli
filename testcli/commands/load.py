@@ -85,64 +85,70 @@ def loadPlugin(cls, pluginFile: str):
 
 # 加载数据库驱动
 # 标准的默认驱动程序并不需要使用这个函数，这个函数是用来覆盖标准默认驱动程序的加载信息
-def loadDriver(cls, driverName: str, driverFile: str):
+def loadJDBCDriver(cls,
+                   driverName: str, driverClass: str,
+                   driverFile: str, driverURL: str,
+                   driverProps: str):
     if driverName is None:  # 显示当前的Driver配置
         m_Result = []
         for row in cls.db_connectionConf:
             m_Result.append([row["Database"], row["ClassName"], row["FullName"],
-                             row["JDBCURL"], row["ODBCURL"], row["JDBCProp"]])
+                             row["JDBCURL"], row["JDBCProp"]])
         yield {
             "type": "result",
             "title": "Current Drivers: ",
             "rows": m_Result,
-            "headers": ["Database", "ClassName", "FileName", "JDBCURL", "ODBCURL", "JDBCProp"],
+            "headers": ["Database", "ClassName", "FileName", "JDBCURL", "JDBCProp"],
             "columnTypes": None,
             "status": "Driver loaded."
         }
         return
 
-    # 只有一个参数，打印当前Database的Driver情况
-    if driverFile is None:
-        m_Result = []
-        for row in cls.db_connectionConf:
-            if row["Database"] == driverName:
-                m_Result.append([row["Database"], row["ClassName"], row["FullName"],
-                                 row["JDBCURL"], row["ODBCURL"], row["JDBCProp"]])
-                break
-        yield {
-            "type": "result",
-            "title": "Current Drivers: ",
-            "rows": m_Result,
-            "headers": ["Database", "ClassName", "FileName", "JDBCURL", "ODBCURL", "JDBCProp"],
-            "columnTypes": None,
-            "status": "Driver loaded."
-        }
-        return
-    else:
-        if cls.script is None:
-            driverFile = os.path.join(sys.path[0], driverFile)
-        else:
-            driverFile = os.path.abspath(os.path.join(os.path.dirname(cls.script), driverFile))
-        if not os.path.isfile(driverFile):
-            raise TestCliException("Driver not loaded. file [" + driverFile + "] does not exist!")
-        found = False
-        for nPos in range(0, len(cls.db_connectionConf)):
-            if cls.db_connectionConf[nPos]["Database"].upper() == driverName.strip().upper():
-                m_Config = cls.db_connectionConf[nPos]
-                m_Config["FullName"] = [driverFile, ]
-                found = True
-                cls.db_connectionConf[nPos] = m_Config
-        if not found:
-            raise TestCliException("Driver not loaded. Please config it in configfile first.")
-        yield {
-            "type": "result",
-            "title": None,
-            "rows": None,
-            "headers": None,
-            "columnTypes": None,
-            "status": "Driver [" + driverName + "] loaded."
-        }
-        return
+    # 如果给定的一个全路径，则使用全路径文件, 否则按照相对路径查找
+    driverFileFullPathList = []
+    if driverFile is not None:
+        driverFileList = driverFile.split(',')
+        for driverFile in driverFileList:
+            driverFile = driverFile.strip().strip('"').strip("'")
+            if not os.path.exists(driverFile):
+                raise TestCliException("Driver not loaded. "
+                                       "file [" + str(os.path.abspath(driverFile)) + "] does not exist!")
+            else:
+                driverFileFullPathList.append(os.path.abspath(driverFile))
+
+    # 查看指定的驱动是否存在，如果存在，则替换，不存在，则新增
+    found = False
+    for nPos in range(0, len(cls.db_connectionConf)):
+        if cls.db_connectionConf[nPos]["Database"].upper() == driverName.strip().upper():
+            m_Config = cls.db_connectionConf[nPos]
+            if len(driverFileFullPathList) != 0:
+                m_Config["FullName"] = driverFileFullPathList
+            if driverClass is not None:
+                m_Config["ClassName"] = driverClass
+            if driverURL is not None:
+                m_Config["JDBCURL"] = driverURL
+            if driverProps is not None:
+                m_Config["JDBCProp"] = driverProps
+            found = True
+            cls.db_connectionConf[nPos] = m_Config
+    if not found:
+        cls.db_connectionConf.append(
+            {
+                "ClassName": driverClass,
+                "FullName": driverFileFullPathList,
+                "JDBCURL": driverURL,
+                "JDBCProp": driverProps,
+                "Database": driverName
+            }
+        )
+    yield {
+        "type": "result",
+        "title": None,
+        "rows": None,
+        "headers": None,
+        "columnTypes": None,
+        "status": "Driver [" + driverName + "] loaded."
+    }
 
 
 # 加载数命令行映射

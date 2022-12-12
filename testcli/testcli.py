@@ -48,7 +48,6 @@ class TestCli(object):
     # SQLCli的初始化参数
     logon = None
     logfilename = None
-    script = None
     commandMap = None
     nologo = None
 
@@ -234,17 +233,11 @@ class TestCli(object):
                 m_DriverName = None
                 m_JarFullFileName = []
                 m_JDBCURL = None
-                m_ODBCURL = None
                 m_JDBCProp = None
                 m_jar_filename = None
                 m_DatabaseType = row[0].strip()
                 for m_driversection in str(row[1]).split(','):
                     m_driversection = m_driversection.strip()
-                    if m_ODBCURL is None:
-                        try:
-                            m_ODBCURL = self.AppOptions.get(m_driversection, "odbcurl")
-                        except (configparser.NoSectionError, configparser.NoOptionError):
-                            m_ODBCURL = None
                     if m_DriverName is None:
                         try:
                             m_DriverName = self.AppOptions.get(m_driversection, "driver")
@@ -279,8 +272,7 @@ class TestCli(object):
                              "FullName": m_JarFullFileName,
                              "JDBCURL": m_JDBCURL,
                              "JDBCProp": m_JDBCProp,
-                             "Database": m_DatabaseType,
-                             "ODBCURL": m_ODBCURL}
+                             "Database": m_DatabaseType}
                 self.db_connectionConf.append(jarConfig)
 
         # 设置Meta连接时候需要用到的JarList1

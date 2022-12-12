@@ -21,7 +21,7 @@ from testcli.sqlparse import SQLFormatWithPrefix
 from testcli.apiparse import APIRequestStringFormatWithPrefix
 
 from testcli.commands.load import loadPlugin
-from testcli.commands.load import loadDriver
+from testcli.commands.load import loadJDBCDriver
 from testcli.commands.load import loadMap
 from testcli.commands.exit import exitApplication
 from testcli.commands.session import sessionManage
@@ -1125,11 +1125,29 @@ class CmdExecute(object):
                             pluginFile=parseObject["pluginFile"]
                     ):
                         yield commandResult
-                elif parseObject["option"] == "DRIVER":
-                    for commandResult in loadDriver(
+                elif parseObject["option"] == "JDBCDRIVER":
+                    driverName = None
+                    driverClass = None
+                    driverFile = None
+                    driverURL = None
+                    driverProps = None
+                    if "driverName" in parseObject:
+                        driverName = parseObject["driverName"]
+                    if "driverClass" in parseObject:
+                        driverClass = parseObject["driverClass"]
+                    if "driverFile" in parseObject:
+                        driverFile = parseObject["driverFile"]
+                    if "driverURL" in parseObject:
+                        driverURL = parseObject["driverURL"]
+                    if "driverProps" in parseObject:
+                        driverProps = parseObject["driverProps"]
+                    for commandResult in loadJDBCDriver(
                             cls=self.cliHandler,
-                            driverName=parseObject["driverName"],
-                            driverFile=parseObject["driverFile"]
+                            driverName=driverName,
+                            driverClass=driverClass,
+                            driverFile=driverFile,
+                            driverURL=driverURL,
+                            driverProps=driverProps
                     ):
                         yield commandResult
                 elif parseObject["option"] == "MAP":

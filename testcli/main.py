@@ -71,7 +71,7 @@ def cli(
         from rich.console import Console
         from rich.markdown import Markdown
         console = Console()
-        readmeFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "README.md"))
+        readmeFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "README.md"))
         with open(readmeFile, encoding="UTF-8") as readme:
             markdown = Markdown(readme.read())
             console.print(markdown)

@@ -44,7 +44,21 @@ sleep   : SLEEP INT SEMICOLON? CRLF?;
 start   : START (START_EXPRESSION)+ SEMICOLON? CRLF?;
 
 // 加载数据库驱动，映射文件，插件等
-load    : LOAD LOAD_OPTION (LOAD_EXPRESSION)+ SEMICOLON? CRLF?;
+load    :
+        LOAD
+        (
+          (LOAD_PLUGIN LOAD_EXPRESSION) |
+          (LOAD_MAP LOAD_EXPRESSION) |
+          (LOAD_JDBCDRIVER
+            (
+              (LOAD_JDBCCLASS LOAD_EQUAL LOAD_EXPRESSION) |
+              (LOAD_JDBCFILE LOAD_EQUAL LOAD_EXPRESSION) |
+              (LOAD_JDBCNAME LOAD_EQUAL LOAD_EXPRESSION) |
+              (LOAD_JDBCPROP LOAD_EQUAL LOAD_EXPRESSION) |
+              (LOAD_JDBCURL LOAD_EQUAL LOAD_EXPRESSION)
+            )*
+          )
+        ) SEMICOLON? CRLF?;
 
 // ASSERT判断
 assert  : ASSERT ASSERT_EXPRESSION (SEMICOLON)? CRLF?;
