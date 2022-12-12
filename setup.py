@@ -30,7 +30,7 @@ def open_file(filename):
         return rf.read()
 
 
-readme = open_file("README.md")
+readme = open_file("testcli/README.md")
 
 setup(
     name='robotslacker-testcli',
@@ -42,7 +42,9 @@ setup(
     platforms='any',
     install_requires=['JPype1', 'setproctitle', 'urllib3',
                       'click', 'prompt_toolkit',  'paramiko', 'antlr4-python3-runtime',
-                      "pytest"
+                      'hdfs', 'fs',
+                      "rich",
+                      "pytest", 'fastapi', 'uvicorn',
                       ],
 
     author='RobotSlacker',
@@ -56,6 +58,7 @@ setup(
         'conf/*ini', 'profile/*',
         'antlrgen/*', 'commands/*',
         'test/*',
+        'README.md'
     ]},
     python_requires='>=3.6',
     entry_points={
