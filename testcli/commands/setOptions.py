@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-from testcli.testcliexception import TestCliException
+from ..testcliexception import TestCliException
 
 
 # 设置一些选项

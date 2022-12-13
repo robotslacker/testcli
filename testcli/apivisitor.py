@@ -2,9 +2,9 @@
 from antlr4.Token import Token
 import re
 
-from testcli.antlrgen.APIParser import APIParser
-from testcli.antlrgen.APIParserVisitor import APIParserVisitor
-from testcli.antlrgen.APILexer import APILexer
+from .antlrgen.APIParser import APIParser
+from .antlrgen.APIParserVisitor import APIParserVisitor
+from .antlrgen.APILexer import APILexer
 
 
 class APIVisitor(APIParserVisitor):

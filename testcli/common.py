@@ -2,9 +2,9 @@
 import copy
 import os
 import re
-from testcli.sqlparse import SQLFormatWithPrefix
-from testcli.apiparse import APIRequestObjectFormatWithPrefix
-from testcli.commands.assertExpression import evalExpression
+from .sqlparse import SQLFormatWithPrefix
+from .apiparse import APIRequestObjectFormatWithPrefix
+from .commands.assertExpression import evalExpression
 
 
 def rewriteSQLStatement(cls, statement: str, commandScriptFile: str):
@@ -38,7 +38,7 @@ def rewriteSQLStatement(cls, statement: str, commandScriptFile: str):
             varName = str(match_obj.group(1)).strip()
             # 尝试本地变量
             try:
-                evalResult = evalExpression(cls.cliHandler, varName)
+                evalResult = evalExpression(cls, varName)
                 statement = statement.replace(searchResult, str(evalResult))
             except NameError:
                 # 非环境变量

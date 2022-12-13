@@ -30,7 +30,7 @@ def open_file(filename):
         return rf.read()
 
 
-readme = open_file("testcli/README.md")
+readme = open_file("testcli/docs/UserGuide.md")
 
 setup(
     name='robotslacker-testcli',
@@ -58,7 +58,7 @@ setup(
         'conf/*ini', 'profile/*',
         'antlrgen/*', 'commands/*',
         'test/*',
-        'README.md'
+        'UserGuide.md'
     ]},
     python_requires='>=3.6',
     entry_points={

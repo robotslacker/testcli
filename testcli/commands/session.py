@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from testcli.testcliexception import TestCliException
+from ..testcliexception import TestCliException
 
 
 # 数据库会话管理

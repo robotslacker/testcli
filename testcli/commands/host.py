@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import subprocess
-from testcli.testcliexception import TestCliException
+from ..testcliexception import TestCliException
 
 
 # 执行主机的操作命令

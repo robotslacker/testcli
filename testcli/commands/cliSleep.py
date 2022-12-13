@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import time
-from testcli.sqlclijdbc import SQLCliJDBCTimeOutException
+from ..sqlclijdbc import SQLCliJDBCTimeOutException
 
 
 # 休息一段时间

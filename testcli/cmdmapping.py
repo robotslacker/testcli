@@ -2,8 +2,8 @@
 import re
 import os
 import shlex
-from testcli.datawrapper import random_ascii_letters_and_digits
-from testcli.testcliexception import TestCliException
+from .datawrapper import random_ascii_letters_and_digits
+from .testcliexception import TestCliException
 
 
 class CmdMapping(object):

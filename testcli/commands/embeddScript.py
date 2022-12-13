@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from testcli.globalvar import globalEmbeddScriptScope
-from testcli.globalvar import localEmbeddScriptScope
-from testcli.globalvar import lastCommandResult
+from ..globalvar import globalEmbeddScriptScope
+from ..globalvar import localEmbeddScriptScope
+from ..globalvar import lastCommandResult
 
 
 # 执行Python脚本

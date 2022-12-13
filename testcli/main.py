@@ -5,9 +5,9 @@ import traceback
 import click
 import pytest
 
-from testcli.__init__ import __version__
-from testcli.testcli import TestCli
-from testcli.testcliexception import TestCliException
+from .__init__ import __version__
+from .testcli import TestCli
+from .testcliexception import TestCliException
 
 # 定义全局变量，程序的返回值，默认是0
 appExitValue = 0
@@ -71,7 +71,7 @@ def cli(
         from rich.console import Console
         from rich.markdown import Markdown
         console = Console()
-        readmeFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "README.md"))
+        readmeFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "docs/UserGuide.md"))
         with open(readmeFile, encoding="UTF-8") as readme:
             markdown = Markdown(readme.read())
             console.print(markdown)

@@ -1,3 +1,5 @@
 # 帮助文档
 
-## [帮助说明](./testcli/README.md)
+## [使用手册](testcli/docs/UserGuide.md)
+## [程序员说明](testcli/docs/Developer.md)
+

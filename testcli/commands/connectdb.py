@@ -3,10 +3,10 @@ import time
 import os
 import traceback
 import jpype
-from testcli.sqlclijdbc import connect as jdbcconnect
-from testcli.sqlclijdbc import SQLCliJDBCTimeOutException
-from testcli.sqlclijdbc import SQLCliJDBCException
-from testcli.testcliexception import TestCliException
+from ..sqlclijdbc import connect as jdbcconnect
+from ..sqlclijdbc import SQLCliJDBCTimeOutException
+from ..sqlclijdbc import SQLCliJDBCException
+from ..testcliexception import TestCliException
 
 
 # 连接数据库

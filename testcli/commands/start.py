@@ -4,7 +4,7 @@ import re
 import codecs
 import time
 import traceback
-from testcli.globalvar import localEmbeddScriptScope
+from ..globalvar import localEmbeddScriptScope
 
 
 # 从文件中执行SQL

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-from testcli.testcliexception import TestCliException
+from ..testcliexception import TestCliException
 
 
 # 将当前及随后的输出打印到指定的文件中

@@ -22,17 +22,17 @@ from prompt_toolkit.history import FileHistory
 from prompt_toolkit.shortcuts import PromptSession
 from prompt_toolkit.formatted_text import HTML
 
-from testcli.cmdexecute import CmdExecute
-from testcli.cmdmapping import CmdMapping
-from testcli.hdfswrapper import HDFSWrapper
-from testcli.testcliexception import TestCliException
-from testcli.testclijobmanager import TestCliMeta
-from testcli.testclijobmanager import JOBManager
-from testcli.datawrapper import DataWrapper
-from testcli.testoption import TestOptions
-from testcli.__init__ import __version__
-from testcli.sqlparse import SQLAnalyze
-from testcli.apiparse import APIAnalyze
+from .cmdexecute import CmdExecute
+from .cmdmapping import CmdMapping
+from .hdfswrapper import HDFSWrapper
+from .testcliexception import TestCliException
+from .testclijobmanager import TestCliMeta
+from .testclijobmanager import JOBManager
+from .datawrapper import DataWrapper
+from .testoption import TestOptions
+from .__init__ import __version__
+from .sqlparse import SQLAnalyze
+from .apiparse import APIAnalyze
 
 OFLAG_LOGFILE = 1
 OFLAG_LOGGER = 2

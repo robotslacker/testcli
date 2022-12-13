@@ -2,9 +2,8 @@
 import importlib.util
 import os
 import re
-import sys
-from testcli.testcliexception import TestCliException
-from testcli.commands.embeddScript import localEmbeddScriptScope
+from ..testcliexception import TestCliException
+from ..commands.embeddScript import localEmbeddScriptScope
 
 pluginModule = {}
 pluginFunction = {}

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import copy
-import time
 import os
 import re
 from collections import namedtuple

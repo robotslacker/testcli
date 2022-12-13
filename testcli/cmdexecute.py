@@ -12,40 +12,40 @@ import binascii
 import decimal
 import traceback
 import urllib3
-from testcli.sqlclijdbc import SQLCliJDBCException
-from testcli.sqlclijdbc import SQLCliJDBCLargeObject
-from testcli.sqlclijdbc import SQLCliJDBCTimeOutException
-from testcli.sqlparse import SQLAnalyze
-from testcli.apiparse import APIAnalyze
-from testcli.sqlparse import SQLFormatWithPrefix
-from testcli.apiparse import APIRequestStringFormatWithPrefix
+from .sqlclijdbc import SQLCliJDBCException
+from .sqlclijdbc import SQLCliJDBCLargeObject
+from .sqlclijdbc import SQLCliJDBCTimeOutException
+from .sqlparse import SQLAnalyze
+from .apiparse import APIAnalyze
+from .sqlparse import SQLFormatWithPrefix
+from .apiparse import APIRequestStringFormatWithPrefix
 
-from testcli.commands.load import loadPlugin
-from testcli.commands.load import loadJDBCDriver
-from testcli.commands.load import loadMap
-from testcli.commands.exit import exitApplication
-from testcli.commands.session import sessionManage
-from testcli.commands.assertExpression import assertExpression
-from testcli.commands.assertExpression import evalExpression
-from testcli.commands.embeddScript import executeEmbeddScript
-from testcli.commands.connectdb import connectDb, disconnectDb
-from testcli.commands.start import executeFile
-from testcli.commands.host import executeLocalCommand
-from testcli.commands.spool import spool
-from testcli.commands.echo import echo_input
-from testcli.commands.setOptions import setOptions
-from testcli.commands.cliSleep import cliSleep
-from testcli.commands.userNameSpace import userNameSpace
-from testcli.commands.whenever import setWheneverAction
-from testcli.commands.ssh import executeSshRequest
-from testcli.commands.compare import executeCompareRequest
+from .commands.load import loadPlugin
+from .commands.load import loadJDBCDriver
+from .commands.load import loadMap
+from .commands.exit import exitApplication
+from .commands.session import sessionManage
+from .commands.assertExpression import assertExpression
+from .commands.assertExpression import evalExpression
+from .commands.embeddScript import executeEmbeddScript
+from .commands.connectdb import connectDb, disconnectDb
+from .commands.start import executeFile
+from .commands.host import executeLocalCommand
+from .commands.spool import spool
+from .commands.echo import echo_input
+from .commands.setOptions import setOptions
+from .commands.cliSleep import cliSleep
+from .commands.userNameSpace import userNameSpace
+from .commands.whenever import setWheneverAction
+from .commands.ssh import executeSshRequest
+from .commands.compare import executeCompareRequest
 
-from testcli.common import rewriteSQLStatement
-from testcli.common import rewriteAPIStatement
-from testcli.common import parseSQLHints
-from testcli.common import parseAPIHints
-from testcli.testcliexception import TestCliException
-from testcli.globalvar import lastCommandResult
+from .common import rewriteSQLStatement
+from .common import rewriteAPIStatement
+from .common import parseSQLHints
+from .common import parseAPIHints
+from .testcliexception import TestCliException
+from .globalvar import lastCommandResult
 
 
 class CmdExecute(object):
@@ -715,7 +715,14 @@ class CmdExecute(object):
                         sqlErrorMessage = "\n".join(sqlMultiLineErrorMessage)
                 yield {"type": "error", "message": sqlErrorMessage}
 
-    def runStatement(self, statement: str, commandScriptFile: str, nameSpace: str):
+    def runStatement(self, statement: str,
+                     commandScriptFile: str = "Console",
+                     nameSpace: str = None):
+
+        # 如果没有提供nameSpace，则使用系统默认的nameSpace
+        if nameSpace is None:
+            nameSpace = self.testOptions.get("NAMESPACE")
+
         # Remove spaces and EOL
         statement = statement.strip()
         formattedCommand = None
@@ -727,9 +734,9 @@ class CmdExecute(object):
 
         # DEBUG模式下，打印当前计划要执行的语句
         if "TESTCLI_DEBUG" in os.environ:
-            if self.testOptions.get("NAMESPACE") == "SQL":
+            if nameSpace == "SQL":
                 print("[DEBUG] SQL Command=[" + str(statement) + "]")
-            elif self.testOptions.get("NAMESPACE") == "API":
+            elif nameSpace == "API":
                 print("[DEBUG] API Command=[" + str(statement) + "]")
 
         # 开始解析语句
@@ -737,7 +744,11 @@ class CmdExecute(object):
             ret_CommandSplitResults = []
             ret_CommandSplitResultsWithComments = []
             ret_CommandHints = []
+
+            # 解析前要保留用户的nameSpace，解析后要把这个内容还原
+            # 主要是考虑了执行脚本中，脚本内部含有的nameSpace切换不应该影响到外部的脚本
             defaultNameSpace = self.testOptions.get("NAMESPACE")
+
             # 将所有的语句分拆开，按照行，依次投喂给解析器，以获得被Antlr分拆后的运行结果
             currentStatement = None
             currentStatementWithComments = None

@@ -2,9 +2,9 @@
 from antlr4 import InputStream
 from antlr4 import CommonTokenStream
 from antlr4.error.ErrorListener import ErrorListener
-from testcli.antlrgen.SQLLexer import SQLLexer
-from testcli.antlrgen.SQLParser import SQLParser
-from testcli.sqlvisitor import SQLVisitor
+from .antlrgen.SQLLexer import SQLLexer
+from .antlrgen.SQLParser import SQLParser
+from .sqlvisitor import SQLVisitor
 
 
 class SQLClientErrorListener(ErrorListener):
