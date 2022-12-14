@@ -871,8 +871,9 @@ class CmdExecute(object):
                         if ret_CommandSplitResult["name"] == "CONNECT":
                             # 对于数据库连接命令，如果没有给出连接详细信息，并且指定了环境变量，附属环境变量到连接命令后
                             if "driver" not in ret_CommandSplitResult and "SQLCLI_CONNECTION_URL" in os.environ:
+                                connectionURL = str(os.environ["SQLCLI_CONNECTION_URL"]).strip('"').strip("'").strip()
                                 (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-                                    = SQLAnalyze(currentStatement + "@" + os.environ["SQLCLI_CONNECTION_URL"])
+                                    = SQLAnalyze(currentStatement + "@" + connectionURL)
                     # 语句已经结束, 记录语句解析的结果
                     # 解析后的语句
                     ret_CommandSplitResults.append(ret_CommandSplitResult)
