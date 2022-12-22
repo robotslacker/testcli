@@ -274,5 +274,10 @@ class SQLParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by SQLParser#data.
+    def visitData(self, ctx:SQLParser.DataContext):
+        return self.visitChildren(ctx)
+
+
 
 del SQLParser

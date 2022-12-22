@@ -725,7 +725,7 @@ class SQLVisitor(SQLParserVisitor):
         if len(ctx.COMPARE_NOTRIM()) != 0:
             compareOptions.update({"trim": False})
         output = []
-        if len(ctx.COMPARE_CONSOLE()) !=0:
+        if len(ctx.COMPARE_CONSOLE()) != 0:
             output.append("console")
         if len(ctx.COMPARE_DIFFFILE()) != 0:
             output.append("diffFile")
@@ -780,6 +780,48 @@ class SQLVisitor(SQLParserVisitor):
             parsedObject.update({'targetFile': str(ctx.COMPARE_EXPRESSION()[0].getText())})
             if len(ctx.COMPARE_EXPRESSION()) > 1:
                 parsedObject.update({'referenceFile': str(ctx.COMPARE_EXPRESSION()[1].getText())})
+
+        # 处理错误信息
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = 1
+            errorMsg = ctx.exception.message
+            self.isFinished = False
+
+        self.parsedObject = parsedObject
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
+
+    def visitData(self, ctx: SQLParser.DataContext):
+        parsedObject = {'name': 'DATA'}
+
+        if ctx.DATA_SET() is not None:
+            parsedObject.update({"action": "set"})
+            if ctx.DATA_SEEDFILE() is not None:
+                parsedObject.update({"option": "seedDir"})
+                if len(ctx.DATA_EXPRESSION()) != 0:
+                    parsedObject.update({"seedDir": str(ctx.DATA_EXPRESSION()[0].getText()).strip()})
+
+        if ctx.DATA_CONVERT() is not None:
+            parsedObject.update({"action": "convert"})
+            parsedObject.update({"sourceFileType": str(ctx.DATA_FILETYPE()[0].getText())})
+            parsedObject.update({"targetFileType": str(ctx.DATA_FILETYPE()[1].getText())})
+            parsedObject.update({"sourceFile": str(ctx.DATA_EXPRESSION()[0].getText())})
+            parsedObject.update({"targetFile": str(ctx.DATA_EXPRESSION()[1].getText())})
+
+        if ctx.DATA_CREATE() is not None:
+            parsedObject.update({"action": "create"})
+            parsedObject.update({"fileType": str(ctx.DATA_FILETYPE()[0].getText())})
+            parsedObject.update({"targetFile": str(ctx.DATA_EXPRESSION()[0].getText())})
+            if ctx.DATA_ROWS() is not None:
+                parsedObject.update({"rowCount": int(ctx.DATA_INT().getText())})
+            columnExpression = ""
+            for column in ctx.DATACOLUMN_EXPRESSION():
+                columnExpression = columnExpression + str(column.getText())
+            if ctx.DATA_ROWS() is not None:
+                columnExpression = columnExpression.replace("\n", "")
+            parsedObject.update({"columnExpression": str(columnExpression)})
 
         # 处理错误信息
         errorCode = 0
@@ -896,17 +938,10 @@ class SQLVisitor(SQLParserVisitor):
         parsedObject = {'name': 'HOST'}
 
         # 删除BLOCK 末尾的 ECHO OFF
-        if ctx.HOST_BLOCK() is not None:
-            script = str(ctx.HOST_BLOCK().getText())
-            if script.endswith('"""'):
-                script = script[3:-3].strip()
-                script = " & ".join(script.split('\n'))
-                parsedObject.update({'script': script})
-            else:
-                self.isFinished = False
-        else:
-            self.isFinished = False
-            parsedObject.update({'script': ""})
+        if ctx.HOST_EXPRESSION() is not None:
+            script = str(ctx.HOST_EXPRESSION().getText()).strip().strip('"').strip("'").strip("\n")
+            script = script.replace("\n", " & ")
+            parsedObject.update({'script': script})
 
         # 获取错误代码
         errorCode = 0

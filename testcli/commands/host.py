@@ -16,6 +16,15 @@ def executeLocalCommand(cls, command: str):
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
+        # 重设客户端字符集，以保证正确的现实输出
+        import win32console
+        # CP_UTF8 = 65001
+        if str(cls.testOptions.get("RESULT_ENCODING")).upper() == "UTF-8" \
+                and win32console.GetConsoleCP() != 65001:
+            win32console.SetConsoleCP(65001)
+        if str(cls.testOptions.get("RESULT_ENCODING")).upper() == "UTF-8" \
+                and win32console.GetConsoleOutputCP() != 65001:
+            win32console.SetConsoleOutputCP(65001)
     else:
         p = subprocess.Popen(command,
                              shell=True,

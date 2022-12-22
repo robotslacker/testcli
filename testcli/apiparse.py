@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import json
+from json import JSONDecodeError
+
 from antlr4 import InputStream
 from antlr4 import CommonTokenStream
 from antlr4.error.ErrorListener import ErrorListener
@@ -63,6 +66,27 @@ def APIRequestObjectFormatWithPrefix(headerPrefix, requestObject, outputPrefix):
     if "httpRequestTarget" in requestObject:
         formattedString = formattedString + outputPrefix + '   > ' + \
                           requestObject["httpMethod"] + " " + requestObject["httpRequestTarget"]
+    if "contents" in requestObject:
+        formattedString = formattedString + "\n" + outputPrefix + "   > "
+        for content in requestObject["contents"]:
+            if content == "\n":
+                formattedString = formattedString + "\n" + outputPrefix + "   > \n"
+                continue
+            try:
+                data = json.loads(content)
+                data = json.dumps(obj=data,
+                                  sort_keys=True,
+                                  indent=4,
+                                  separators=(',', ': '),
+                                  ensure_ascii=False
+                                  )
+                for output in data.split('\n'):
+                    formattedString = formattedString + "\n" + outputPrefix + '   > ' + output
+            except JSONDecodeError:
+                # 不是一个Json内容，直接打印好了
+                for output in content.split('\n'):
+                    formattedString = formattedString + outputPrefix + '   > ' + output
+
     return formattedString
 
 

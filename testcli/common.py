@@ -65,11 +65,20 @@ def rewriteAPIStatement(cls, requestObject: [], commandScriptFile: str):
 
     # 保留原脚本
     rawRequestObject = copy.copy(requestObject)
+    httpRequestTarget = rawRequestObject["httpRequestTarget"]
 
-    httpRequestTarget = requestObject["httpRequestTarget"]
+    if "contents" in rawRequestObject:
+        httpRequestContents = copy.copy(rawRequestObject["contents"])
+    else:
+        httpRequestContents = None
+    if "httpFields" in rawRequestObject:
+        httpRequestFields = copy.copy(rawRequestObject["httpFields"])
+    else:
+        httpRequestFields = None
     if cls.testOptions.get("TESTREWRITE").upper() == 'ON':
+        # 替换Mapping文件中Request的Header
         while True:
-            afterRewriteStatement = cls.mappingHandler.RewriteSQL(
+            afterRewriteStatement = cls.mappingHandler.RewriteCommand(
                 commandScriptFile, httpRequestTarget)
             if httpRequestTarget == afterRewriteStatement:
                 # 一直循环到没有任何东西可以被替换
@@ -77,14 +86,54 @@ def rewriteAPIStatement(cls, requestObject: [], commandScriptFile: str):
             else:
                 httpRequestTarget = afterRewriteStatement
 
+        # 替换Mapping文件中正文中的信息
+        if httpRequestContents is not None:
+            for nPos in range(0, len(httpRequestContents)):
+                while True:
+                    afterRewriteStatement = cls.mappingHandler.RewriteCommand(
+                        commandScriptFile, httpRequestContents[nPos])
+                    if httpRequestContents[nPos] == afterRewriteStatement:
+                        # 一直循环到没有任何东西可以被替换
+                        break
+                    else:
+                        httpRequestContents[nPos] = afterRewriteStatement
+
+        # 替换Mapping文件中Fields信息
+        if httpRequestFields is not None:
+            for key, value in httpRequestFields.items():
+                originFieldName = key
+                # 替换Fields中的Field字段
+                while True:
+                    afterRewriteStatement = cls.mappingHandler.RewriteCommand(commandScriptFile, key)
+                    if key == afterRewriteStatement:
+                        # 一直循环到没有任何东西可以被替换
+                        break
+                    else:
+                        key = afterRewriteStatement
+                # 替换Fields中的Value字段
+                while True:
+                    afterRewriteStatement = cls.mappingHandler.RewriteCommand(commandScriptFile, value)
+                    if value == afterRewriteStatement:
+                        # 一直循环到没有任何东西可以被替换
+                        break
+                    else:
+                        value = afterRewriteStatement
+                # 替换Key和Value的内容
+                if key != originFieldName:
+                    del httpRequestFields[originFieldName]
+                httpRequestFields[key] = value
+
+    # 根据环境信息替换Request的Header
     while True:
         # 替换脚本中的变量信息
         # 替换： 一： 系统的环境变量,即{{env}}
         # 替换： 二:  系统内嵌脚本中的变量{{eval}}
         match_obj = re.search(r"{{(.*?)}}", httpRequestTarget, re.IGNORECASE | re.DOTALL)
         if match_obj:
+            rawHttpRequestTarget = httpRequestTarget
             searchResult = str(match_obj.group(0))
             varName = str(match_obj.group(1)).strip()
+
             # 尝试本地变量
             try:
                 evalResult = evalExpression(cls, varName)
@@ -92,13 +141,108 @@ def rewriteAPIStatement(cls, requestObject: [], commandScriptFile: str):
             except NameError:
                 # 非环境变量
                 pass
+
             # 尝试环境变量
             if varName in os.environ:
                 httpRequestTarget = httpRequestTarget.replace(searchResult, os.environ[varName])
+
+            # 如果没有能够替换完成，也不会重复循环，直接标记为不认识的变量 #UNDEFINE_VAR#
+            if rawHttpRequestTarget == httpRequestTarget:
+                httpRequestTarget = httpRequestTarget.replace(searchResult, "#UNDEFINE_VAR#")
         else:
             # 没有任何可以替换的了
             break
+
+    # 根据环境信息替换Request的Contents
+    if httpRequestContents is not None:
+        for nPos in range(0, len(httpRequestContents)):
+            while True:
+                rawHttpRequestContent = httpRequestContents[nPos]
+                match_obj = re.search(r"{{(.*?)}}", httpRequestContents[nPos], re.IGNORECASE | re.DOTALL)
+                if match_obj:
+                    searchResult = str(match_obj.group(0))
+                    varName = str(match_obj.group(1)).strip()
+                    # 尝试本地变量
+                    try:
+                        evalResult = evalExpression(cls, varName)
+                        httpRequestContents[nPos] = httpRequestContents[nPos].replace(searchResult, str(evalResult))
+                    except NameError:
+                        # 非环境变量
+                        pass
+                    # 尝试环境变量
+                    if varName in os.environ:
+                        httpRequestContents[nPos] = httpRequestContents[nPos].replace(searchResult, os.environ[varName])
+
+                    # 如果没有能够替换完成，也不会重复循环，直接标记为不认识的变量 #UNDEFINE_VAR#
+                    if rawHttpRequestContent == httpRequestContents[nPos]:
+                        httpRequestContents[nPos] = httpRequestContents[nPos].replace(searchResult, "#UNDEFINE_VAR#")
+                else:
+                    # 没有任何可以替换的了
+                    break
+
+    # 根据环境信息替换Request的Fields
+    if httpRequestFields is not None:
+        for key, value in httpRequestFields.items():
+            # 替换Fields中的Field字段
+            originFieldName = key
+            while True:
+                rawFieldName = key
+                match_obj = re.search(r"{{(.*?)}}", key, re.IGNORECASE | re.DOTALL)
+                if match_obj:
+                    searchResult = str(match_obj.group(0))
+                    varName = str(match_obj.group(1)).strip()
+                    # 尝试本地变量
+                    try:
+                        evalResult = evalExpression(cls, varName)
+                        key = key.replace(searchResult, str(evalResult))
+                    except NameError:
+                        # 非环境变量
+                        pass
+                    # 尝试环境变量
+                    if varName in os.environ:
+                        key = key.replace(searchResult, os.environ[varName])
+
+                    # 如果没有能够替换完成，也不会重复循环，直接标记为不认识的变量 #UNDEFINE_VAR#
+                    if rawFieldName == key:
+                        key = key.replace(searchResult, "#UNDEFINE_VAR#")
+                else:
+                    # 没有任何可以替换的了
+                    break
+            # 替换Fields中的Value字段
+            while True:
+                rawFieldValue = value
+                match_obj = re.search(r"{{(.*?)}}", value, re.IGNORECASE | re.DOTALL)
+                if match_obj:
+                    searchResult = str(match_obj.group(0))
+                    varName = str(match_obj.group(1)).strip()
+                    # 尝试本地变量
+                    try:
+                        evalResult = evalExpression(cls, varName)
+                        value = value.replace(searchResult, str(evalResult))
+                    except NameError:
+                        # 非环境变量
+                        pass
+                    # 尝试环境变量
+                    if varName in os.environ:
+                        value = value.replace(searchResult, os.environ[varName])
+
+                    # 如果没有能够替换完成，也不会重复循环，直接标记为不认识的变量 #UNDEFINE_VAR#
+                    if rawFieldValue == value:
+                        value = value.replace(searchResult, "#UNDEFINE_VAR#")
+                else:
+                    # 没有任何可以替换的了
+                    break
+
+            # 替换Key和Value的内容
+            if key != originFieldName:
+                del httpRequestFields[originFieldName]
+            httpRequestFields[key] = value
+
     requestObject["httpRequestTarget"] = httpRequestTarget
+    if httpRequestContents is not None:
+        requestObject["contents"] = httpRequestContents
+    if httpRequestFields is not None:
+        requestObject["httpFields"] = httpRequestFields
 
     # 语句发生了变化
     if rawRequestObject != requestObject:

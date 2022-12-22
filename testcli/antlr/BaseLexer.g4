@@ -70,6 +70,9 @@ JOB                 : '_JOB' ->pushMode(JobMode);
 // 比对文件的一致性
 COMPARE             : '_COMPARE' ->pushMode(CompareMode);
 
+// 执行随机文件生成
+DATA                : '_DATA' ->pushMode(DataMode);
+
 INT                 : DIGIT+ ;
 DECIMAL             : DIGIT+ '.' DIGIT+ ;
 String              : (OBS_TEXT | UNRESERVED | SUBDELIMS | PCTENCODED | DoubleQuoteString | SingleQuoteString)+;
@@ -126,8 +129,9 @@ START_CRLF         : CRLF -> popMode;
 
 mode HostMode;
 HOST_SPACE         : [ \t]+ -> channel (HIDDEN);
-HOST_TAG           : '"""';
-HOST_BLOCK         :HOST_TAG '\n' .*? '\n' HOST_TAG -> popMode;
+HOST_EXPRESSION    :
+    (OBS_TEXT | UNRESERVED | SUBDELIMS | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' |' ')+;
+HOST_CRLF          : CRLF -> popMode;
 
 mode IfMode;
 IF_SPACE        : [ \t]+ -> channel (HIDDEN);
@@ -254,3 +258,27 @@ COMPARE_LCS         : 'LCS';
 COMPARE_MYERS       : 'MYERS';
 COMPARE_EXPRESSION  :
     (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' )+;
+
+mode DataMode;
+DATA_SPACE          : [ \t\n]+ -> channel (HIDDEN);
+DATA_SEMICOLON      : ';' -> popMode;
+DATA_SET            : 'SET';
+DATA_SEEDFILE       : 'SEEDFILE';
+DATA_DIR            : 'DIR';
+DATA_CREATE         : 'CREATE';
+DATA_FILE           : 'FILE';
+DATA_FILETYPE       : 'FS' | 'MEM';
+DATA_ROWS           : 'ROWS';
+DATA_INT            : INT;
+DATA_COMMA          : ',';
+DATACOLUMN_OPEN     : '[' -> pushMode(DataColumnMode);
+DATA_CONVERT        : 'CONVERT';
+DATA_FROM           : 'FROM';
+DATA_EXPRESSION     :
+    (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' | '{' | '}')+;
+
+mode DataColumnMode;
+DATACOLUMN_EXPRESSION     :
+    (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' | '{' | '}' | '(' | ')' | ',' | '\n')+;
+DATACOLUMN_SPACE    : [ \t\n]+ -> channel (HIDDEN);
+DATACOLUMN_CLOSE    : ']' -> popMode;

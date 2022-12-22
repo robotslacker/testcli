@@ -18,7 +18,14 @@ def executeEmbeddScript(cls, block: str):
     }
     localEmbeddScriptScope["sessionContext"] = sessionContext
     localEmbeddScriptScope["lastCommandResult"] = lastCommandResult
-    exec(block, globalEmbeddScriptScope, localEmbeddScriptScope)
+    try:
+        exec(block, globalEmbeddScriptScope, localEmbeddScriptScope)
+    except Exception as se:
+        yield {
+            "type": "error",
+            "message": repr(se),
+        }
+        return
 
     yield {
         "type": sessionContext["type"],
@@ -28,4 +35,3 @@ def executeEmbeddScript(cls, block: str):
         "columnTypes": sessionContext["columnTypes"],
         "status": sessionContext["status"],
     }
-

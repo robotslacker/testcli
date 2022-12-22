@@ -553,6 +553,19 @@ class TestSynatx(unittest.TestCase):
             },
             ret_CommandSplitResult)
 
+        script = 'ls dir1'
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_HOST " + script)
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {
+                'name': 'HOST',
+                'script': "ls dir1"
+            },
+            ret_CommandSplitResult)
+
     def test_SQLAnalyze_Loop(self):
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_LOOP END")
@@ -930,6 +943,56 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(isFinished)
         self.assertEqual(
             {'action': 'set', 'compareOptions': {'refEncoding': 'GBK'}, 'name': 'COMPARE'},
+            ret_CommandSplitResult)
+
+    def test_SQLAnalyze_Data(self):
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_DATA SET SEEDFILE DIR d:\\temp\\aa.txt")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'set',
+             'name': 'DATA',
+             'option': 'seedDir',
+             'seedDir': 'd:\\temp\\aa.txt'},
+            ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_DATA CONVERT FS FILE aa.txt FROM MEM FILE bb.dat")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {
+                'action': 'convert',
+                'name': 'DATA',
+                'sourceFile': 'aa.txt',
+                'sourceFileType': 'FS',
+                'targetFile': 'bb.dat',
+                'targetFileType': 'MEM'
+             },
+            ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze(
+            "_DATA CREATE FS FILE aa.txt \n" +
+            "[\n" +
+            "random_int(10), 'aaa'\n" +
+            "bb, ccd"
+            + "] rows 1000"
+        )
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'create',
+             'columnExpression': "random_int(10),'aaa'bb,ccd",
+             'fileType': 'FS',
+             'name': 'DATA',
+             'rowCount': 1000,
+             'targetFile': 'aa.txt'
+            },
             ret_CommandSplitResult)
 
     def test_SQLExecuteSanity(self):

@@ -369,6 +369,319 @@ class APIVisitor(APIParserVisitor):
         self.errorCode = errorCode
         self.errorMsg = errorMsg
 
+    def visitLoop(self, ctx: APIParser.LoopContext):
+        parsedObject = {'name': 'LOOP'}
+        if ctx.LOOP_END() is not None:
+            parsedObject.update({"rule": "END"})
+        elif ctx.LOOP_BREAK():
+            parsedObject.update({"rule": "BREAK"})
+        elif ctx.LOOP_CONTINUE():
+            parsedObject.update({"rule": "CONTINUE"})
+        elif ctx.LOOP_BEGIN():
+            parsedObject.update({"rule": "BEGIN"})
+        else:
+            parsedObject.update({"rule": "UNTIL"})
+        if ctx.LOOP_EXPRESSION() is not None:
+            expression = str(ctx.LOOP_EXPRESSION().getText())
+            if expression.startswith("{%"):
+                expression = expression[2:]
+            if expression.endswith("%}"):
+                expression = expression[:-2]
+            expression = expression.strip()
+            parsedObject.update({"UNTIL": expression})
+
+        # 处理错误信息
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = 1
+            errorMsg = ctx.exception.message
+            self.isFinished = False
+
+        self.parsedObject = parsedObject
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
+
+    def visitJob(self, ctx: APIParser.JobContext):
+        parsedObject = {'name': 'JOB'}
+
+        if ctx.JOB_MANGER() is not None:
+            if ctx.JOB_ON():
+                parsedObject.update({"action": "startJobmanager"})
+            if ctx.JOB_OFF():
+                parsedObject.update({"action": "stopJobmanager"})
+        elif ctx.JOB_SHOW() is not None:
+            jobName = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
+            parsedObject.update({"action": "show"})
+            parsedObject.update({"jobName": jobName})
+        elif ctx.JOB_WAIT() is not None:
+            jobName = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
+            parsedObject.update({"action": "wait"})
+            parsedObject.update({"jobName": jobName})
+        elif ctx.JOB_SHUTDOWN() is not None:
+            jobName = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
+            parsedObject.update({"action": "shutdown"})
+            parsedObject.update({"jobName": jobName})
+        elif ctx.JOB_ABORT() is not None:
+            jobName = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
+            parsedObject.update({"action": "abort"})
+            parsedObject.update({"jobName": jobName})
+        elif ctx.JOB_START() is not None:
+            jobName = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
+            parsedObject.update({"action": "start"})
+            parsedObject.update({"jobName": jobName})
+        elif ctx.JOB_TIMER() is not None:
+            timerPoint = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
+            parsedObject.update({"action": "timer"})
+            parsedObject.update({"timerPoint": timerPoint})
+        elif ctx.JOB_DEREGISTER() is not None:
+            parsedObject.update({"action": "deregister"})
+        elif ctx.JOB_REGISTER() is not None:
+            jobName = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
+            parsedObject.update({"action": "register"})
+            parsedObject.update({"jobName": jobName})
+        elif ctx.JOB_SET() is not None:
+            parsedObject.update({"action": "set"})
+            param = {}
+            paramKey = None
+            nPos = 0
+            for expression in ctx.JOB_EXPRESSION():
+                if nPos == 0:
+                    jobName = str(expression.getText()).strip()
+                    parsedObject.update({"jobName": jobName})
+                else:
+                    if paramKey is None:
+                        paramKey = str(expression.getText()).strip()
+                    else:
+                        paramValue = str(expression.getText()).strip()
+                        param[paramKey] = paramValue
+                        paramKey = None
+                nPos = nPos + 1
+            parsedObject.update({"param": param})
+        elif ctx.JOB_CREATE() is not None:
+            parsedObject.update({"action": "create"})
+            param = {}
+            paramKey = None
+            nPos = 0
+            for expression in ctx.JOB_EXPRESSION():
+                if nPos == 0:
+                    jobName = str(expression.getText()).strip()
+                    parsedObject.update({"jobName": jobName})
+                else:
+                    if paramKey is None:
+                        paramKey = str(expression.getText()).strip()
+                    else:
+                        paramValue = str(expression.getText()).strip()
+                        param[paramKey] = paramValue
+                        paramKey = None
+                nPos = nPos + 1
+            parsedObject.update({"param": param})
+
+        # 处理错误信息
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = 1
+            errorMsg = ctx.exception.message
+            self.isFinished = False
+
+        self.parsedObject = parsedObject
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
+
+    def visitSsh(self, ctx: APIParser.SshContext):
+        parsedObject = {'name': 'SSH'}
+
+        if ctx.SSH_SAVE() is not None:
+            parsedObject.update({"action": "save"})
+            if ctx.SSH_EXPRESSION() is not None:
+                parsedObject.update({"sessionName": str(ctx.SSH_EXPRESSION()[0].getText())})
+            else:
+                parsedObject.update({"sessionName": None})
+        if ctx.SSH_RESTORE() is not None:
+            parsedObject.update({"action": "restore"})
+            if ctx.SSH_EXPRESSION() is not None:
+                parsedObject.update({"sessionName": str(ctx.SSH_EXPRESSION()[0].getText())})
+            else:
+                parsedObject.update({"sessionName": None})
+        if ctx.SSH_DISCONNECT() is not None:
+            parsedObject.update({"action": "disconnect"})
+        if ctx.SSH_EXECUTE() is not None:
+            parsedObject.update({"action": "execute"})
+            commands = []
+            for expression in ctx.SSH_EXPRESSION():
+                commands.append(str(expression.getText()))
+            commond = str(" ".join(commands)).strip()
+            if commond.startswith('"') and commond.endswith('"'):
+                commond = commond[1:-1]
+            parsedObject.update({"command": commond})
+        if ctx.SSH_CONNECT() is not None:
+            parsedObject.update({"action": "connect"})
+            parsedObject.update({"host": str(ctx.SSH_EXPRESSION()[0].getText())})
+            if ctx.SSH_USER() is not None:
+                parsedObject.update({"user": str(ctx.SSH_EXPRESSION()[1].getText())})
+            if ctx.SSH_PASSWORD() is not None:
+                parsedObject.update({"password": str(ctx.SSH_EXPRESSION()[2].getText())})
+            if ctx.SSH_KEYFILE() is not None:
+                keyFileName = str(ctx.SSH_EXPRESSION()[2].getText())
+                if keyFileName.startswith('"') and keyFileName.endswith('"'):
+                    keyFileName = keyFileName[1:-1]
+                parsedObject.update({"keyFile": keyFileName})
+
+        # 处理SFTP命令
+        if ctx.SFTP_CHMOD() is not None:
+            parsedObject.update({"action": "sftp_chmod"})
+            fileName = str(ctx.SSH_EXPRESSION()[0].getText())
+            fileMod = str(ctx.SSH_INT()[0].getText())
+            parsedObject.update({"fileName": fileName})
+            parsedObject.update({"fileMod": fileMod})
+        if ctx.SFTP_GETCWD() is not None:
+            parsedObject.update({"action": "sftp_cwd"})
+        if ctx.SFTP_CHDIR() is not None:
+            parsedObject.update({"action": "sftp_chdir"})
+            parsedObject.update({"dir": str(ctx.SSH_EXPRESSION()[0].getText())})
+        if ctx.SFTP_MKDIR() is not None:
+            parsedObject.update({"action": "sftp_mkdir"})
+            parsedObject.update({"dir": str(ctx.SSH_EXPRESSION()[0].getText())})
+            parsedObject.update({"dirMod": str(ctx.SSH_INT()[0].getText())})
+        if ctx.SFTP_CHOWN() is not None:
+            parsedObject.update({"action": "sftp_chown"})
+            fileName = str(ctx.SSH_EXPRESSION()[0].getText())
+            uid = int(ctx.SSH_INT()[0].getText())
+            gid = int(ctx.SSH_INT()[1].getText())
+            parsedObject.update({"fileName": fileName})
+            parsedObject.update({"uid": uid})
+            parsedObject.update({"gid": gid})
+        if ctx.SFTP_GET() is not None:
+            parsedObject.update({"action": "sftp_get"})
+            parsedObject.update({"remoteFile": str(ctx.SSH_EXPRESSION()[0].getText())})
+            parsedObject.update({"localFile": str(ctx.SSH_EXPRESSION()[1].getText())})
+        if ctx.SFTP_PUT() is not None:
+            parsedObject.update({"action": "sftp_put"})
+            parsedObject.update({"localFile": str(ctx.SSH_EXPRESSION()[0].getText())})
+            parsedObject.update({"remoteFile": str(ctx.SSH_EXPRESSION()[1].getText())})
+        if ctx.SFTP_REMOVE() is not None:
+            parsedObject.update({"action": "sftp_remove"})
+            parsedObject.update({"file": str(ctx.SSH_EXPRESSION()[0].getText())})
+        if ctx.SFTP_RENAME() is not None:
+            parsedObject.update({"action": "sftp_rename"})
+            parsedObject.update({"oldFile": str(ctx.SSH_EXPRESSION()[0].getText())})
+            parsedObject.update({"newFile": str(ctx.SSH_EXPRESSION()[1].getText())})
+        if ctx.SFTP_LISTDIR() is not None:
+            parsedObject.update({"action": "sftp_listdir"})
+            parsedObject.update({"dir": str(ctx.SSH_EXPRESSION()[0].getText())})
+        if ctx.SFTP_TRUNCATE() is not None:
+            parsedObject.update({"action": "sftp_truncate"})
+            parsedObject.update({"file": str(ctx.SSH_EXPRESSION()[0].getText())})
+            fileSize = int(ctx.SSH_INT()[0].getText())
+            parsedObject.update({"fileSize": fileSize})
+
+        # 处理错误信息
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = 1
+            errorMsg = ctx.exception.message
+            self.isFinished = False
+
+        self.parsedObject = parsedObject
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
+
+    def visitCompare(self, ctx: APIParser.CompareContext):
+        parsedObject = {'name': 'COMPARE'}
+
+        # 重置比较选项
+        if ctx.COMPARE_RESET() is not None:
+            parsedObject.update({'action': "reset"})
+
+        # 比较选项
+        compareOptions = {}
+        if len(ctx.COMPARE_CASE()) != 0:
+            compareOptions.update({"case": True})
+        if len(ctx.COMPARE_NOCASE()) != 0:
+            compareOptions.update({"case": False})
+        if len(ctx.COMPARE_MASK()) != 0:
+            compareOptions.update({"mask": True})
+        if len(ctx.COMPARE_NOMASK()) != 0:
+            compareOptions.update({"mask": False})
+        if len(ctx.COMPARE_IGBLANK()) != 0:
+            compareOptions.update({"igblank": True})
+        if len(ctx.COMPARE_NOIGBLANK()) != 0:
+            compareOptions.update({"igblank": False})
+        if len(ctx.COMPARE_TRIM()) != 0:
+            compareOptions.update({"trim": True})
+        if len(ctx.COMPARE_NOTRIM()) != 0:
+            compareOptions.update({"trim": False})
+        output = []
+        if len(ctx.COMPARE_CONSOLE()) != 0:
+            output.append("console")
+        if len(ctx.COMPARE_DIFFFILE()) != 0:
+            output.append("diffFile")
+        if len(output) != 0:
+            compareOptions.update({"output": output})
+        if ctx.COMPARE_LCS() is not None:
+            compareOptions.update({"algorithm": "lcs"})
+        if ctx.COMPARE_MYERS() is not None:
+            compareOptions.update({"algorithm": "myers"})
+        if ctx.COMPARE_ENCODING() is not None:
+            if ctx.COMPARE_WORK() is not None:
+                compareOptions.update({"workEncoding": (ctx.COMPARE_EXPRESSION()[0].getText())})
+            if ctx.COMPARE_REFERENCE() is not None:
+                compareOptions.update({"refEncoding": (ctx.COMPARE_EXPRESSION()[0].getText())})
+        parsedObject.update({'compareOptions': compareOptions})
+
+        # maskline命令
+        if ctx.COMPARE_MASKLINE() is not None:
+            parsedObject.update({'action': "mask"})
+            if ctx.COMPARE_EXPRESSION() is not None:
+                parsedObject.update({'source': str(ctx.COMPARE_EXPRESSION()[0].getText())})
+                if len(ctx.COMPARE_EXPRESSION()) > 1:
+                    parsedObject.update({'target': str(ctx.COMPARE_EXPRESSION()[1].getText())})
+        if ctx.COMPARE_NOMASKLINE() is not None:
+            parsedObject.update({'action': "nomask"})
+            if ctx.COMPARE_EXPRESSION() is not None:
+                parsedObject.update({'source': str(ctx.COMPARE_EXPRESSION()[0].getText())})
+
+        # skipline命令
+        if ctx.COMPARE_SKIPLINE() is not None:
+            parsedObject.update({'action': "skip"})
+            if ctx.COMPARE_EXPRESSION() is not None:
+                parsedObject.update({'source': str(ctx.COMPARE_EXPRESSION()[0].getText())})
+        if ctx.COMPARE_NOSKIPLINE() is not None:
+            parsedObject.update({'action': "noskip"})
+            if ctx.COMPARE_EXPRESSION() is not None:
+                parsedObject.update({'source': str(ctx.COMPARE_EXPRESSION()[0].getText())})
+
+        # SET
+        if ctx.COMPARE_SET() is not None:
+            parsedObject.update({'action': "set"})
+
+        # 非特殊设置选项，即默认的Compare命令
+        if ctx.COMPARE_SET() is None and \
+                ctx.COMPARE_SKIPLINE() is None and \
+                ctx.COMPARE_NOSKIPLINE() is None and \
+                ctx.COMPARE_MASKLINE() is None and \
+                ctx.COMPARE_NOMASKLINE() is None and \
+                ctx.COMPARE_RESET() is None and \
+                ctx.COMPARE_EXPRESSION() is not None:
+            parsedObject.update({'action': "compare"})
+            parsedObject.update({'targetFile': str(ctx.COMPARE_EXPRESSION()[0].getText())})
+            if len(ctx.COMPARE_EXPRESSION()) > 1:
+                parsedObject.update({'referenceFile': str(ctx.COMPARE_EXPRESSION()[1].getText())})
+
+        # 处理错误信息
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = 1
+            errorMsg = ctx.exception.message
+            self.isFinished = False
+
+        self.parsedObject = parsedObject
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
+
     """
         Http消息节点
     """

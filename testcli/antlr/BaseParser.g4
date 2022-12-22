@@ -27,6 +27,7 @@ baseCommand:
       | ssh
       | job
       | compare
+      | data
       ;
 
 // Exit
@@ -64,7 +65,7 @@ load    :
 assert  : ASSERT ASSERT_EXPRESSION (SEMICOLON)? CRLF?;
 
 // 执行主机操作系统命令
-host    : HOST HOST_BLOCK;
+host    : HOST HOST_EXPRESSION (SEMICOLON)? CRLF?;
 
 // 循环处理操作
 loop    : LOOP
@@ -161,3 +162,17 @@ compare   :
               | (COMPARE_SET (COMPARE_WORK|COMPARE_REFERENCE) COMPARE_ENCODING COMPARE_EXPRESSION)
            )
            (COMPARE_SEMICOLON)? CRLF?;
+
+// 随机文件生成,用于fake测试数据
+data      :
+          DATA
+          (
+              (DATA_SET DATA_SEEDFILE DATA_DIR DATA_EXPRESSION) |
+              (DATA_CREATE DATA_FILETYPE DATA_FILE DATA_EXPRESSION
+               DATACOLUMN_OPEN
+               DATACOLUMN_EXPRESSION+
+               DATACOLUMN_CLOSE
+               (DATA_ROWS DATA_INT)?) |
+              (DATA_CONVERT DATA_FILETYPE DATA_FILE DATA_EXPRESSION DATA_FROM DATA_FILETYPE DATA_FILE DATA_EXPRESSION)
+          )
+          (DATA_SEMICOLON)? CRLF?;

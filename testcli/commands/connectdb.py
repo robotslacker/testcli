@@ -124,14 +124,18 @@ def connectDb(cls, connectProperties, timeout: int = -1):
 
             # 替换连接字符串中的变量信息
             # 连接字符串中可以出现的变量有：  ${host} ${port} ${service} ${driverType}
-            jdbcURL = jdbcURL.replace("${host}", connectProperties["host"])
-            jdbcURL = jdbcURL.replace("${port}", str(connectProperties["port"]))
+            if connectProperties["host"] is not None:
+                jdbcURL = jdbcURL.replace("${host}", connectProperties["host"])
+            if connectProperties["port"] is not None:
+                jdbcURL = jdbcURL.replace("${port}", str(connectProperties["port"]))
             if cls.db_port is None:
                 jdbcURL = jdbcURL.replace(":${port}", "")
             else:
                 jdbcURL = jdbcURL.replace("${port}", str(cls.db_port))
-            jdbcURL = jdbcURL.replace("${service}", connectProperties["service"])
-            jdbcURL = jdbcURL.replace("${driverType}", connectProperties["driverType"])
+            if connectProperties["service"] is not None:
+                jdbcURL = jdbcURL.replace("${service}", connectProperties["service"])
+            if connectProperties["driverType"] is not None:
+                jdbcURL = jdbcURL.replace("${driverType}", connectProperties["driverType"])
 
             # 构造连接参数
             jdbcConnProp = {}
@@ -202,21 +206,29 @@ def connectDb(cls, connectProperties, timeout: int = -1):
             print('traceback.print_exc():\n%s' % traceback.print_exc())
             print('traceback.format_exc():\n%s' % traceback.format_exc())
             print("db_sessionName = [" + str(cls.db_sessionName) + "]")
-            print("db_user = [" + connectProperties["username"] + "]")
-            print("db_pass = [" + connectProperties["password"] + "]")
-            print("db_driver = [" + connectProperties["driver"] + "]")
-            print("db_driverSchema = [" + connectProperties["driverSchema"] + "]")
-            print("db_driverType = [" + connectProperties["driverType"] + "]")
+            print("db_user = [" + str(connectProperties["username"]) + "]")
+            print("db_pass = [" + str(connectProperties["password"]) + "]")
+            print("db_driver = [" + str(connectProperties["driver"]) + "]")
+            print("db_driverSchema = [" + str(connectProperties["driverSchema"]) + "]")
+            print("db_driverType = [" + str(connectProperties["driverType"]) + "]")
             print("db_host = [" + connectProperties["host"] + "]")
             print("db_port = [" + str(connectProperties["port"]) + "]")
-            print("db_service = [" + connectProperties["service"] + "]")
+            print("db_service = [" + str(connectProperties["service"]) + "]")
             print("db_parameters = [" + str(connectProperties["parameters"]) + "]")
             print("db_url = [" + str(cls.db_url) + "]")
             print("jar_file = [" + str(cls.db_connectionConf) + "]")
         if str(e).find("SQLInvalidAuthorizationSpecException") != -1:
-            raise TestCliException(str(jpype.java.sql.SQLInvalidAuthorizationSpecException(e).getCause()))
+            yield {
+                "type": "error",
+                "message": str(jpype.java.sql.SQLInvalidAuthorizationSpecException(e).getCause())
+            }
+            return
         else:
-            raise TestCliException(str(e))
+            yield {
+                "type": "error",
+                "message": str(e)
+            }
+            return
     yield {
         "type": "result",
         "title": None,
