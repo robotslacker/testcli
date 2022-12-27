@@ -4,9 +4,12 @@ create table aaa (id int);
 insert into aaa values(10);
 select * from aaa;
 
-> {%  x = lastCommandResult %}
+> {%
+import copy
+x = copy.copy(lastCommandResult)
+%}
 _assert {%  x["errorCode"] == 0 %}
-_assert {%  lastCommandResult["rows"][0][0] == 10 %}
+_assert {%  x["rows"][0][0] == 10 %}
 
 _use api
 
@@ -23,5 +26,9 @@ Content-Type: application/json
 
 ###
 
-_assert {%  lastCommandResult["status"] == 200 %}
-_assert {%  str(lastCommandResult["data"]) == "{\'status\': \'OK\'}" %}
+> {%
+import copy
+x = copy.copy(lastCommandResult)
+%}
+_assert {%  x["status"] == 200 %}
+_assert {%  str(x["content"]) == "{\'status\': \'OK\'}" %}

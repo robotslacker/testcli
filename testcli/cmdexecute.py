@@ -40,6 +40,7 @@ from .commands.whenever import setWheneverAction
 from .commands.ssh import executeSshRequest
 from .commands.compare import executeCompareRequest
 
+from .common import rewriteHintStatement
 from .common import rewriteSQLStatement
 from .common import rewriteAPIStatement
 from .common import parseSQLHints
@@ -73,9 +74,6 @@ class CmdExecute(object):
 
         # Scenario名称，如果当前未指定，则重复上一个命令的Scenario信息
         self.scenario = ''
-
-        # Transaction信息
-        self.transaction = ""
 
         # 当前脚本的TimeOut设置
         self.sqlTimeOut = -1          # SQL执行的超时时间设置
@@ -802,6 +800,7 @@ class CmdExecute(object):
                         # 所有的提示信息
                         ret_CommandHints.append(currentHints)
                         # 清空语句的变量
+                        currentHints = []
                         currentStatement = None
                         currentStatementWithComments = None
                     continue
@@ -828,6 +827,7 @@ class CmdExecute(object):
                                 # 所有的提示信息
                                 ret_CommandHints.append(currentHints)
                                 # 清空语句的变量
+                                currentHints = []
                                 currentStatement = None
                                 currentStatementWithComments = None
                             continue
@@ -843,25 +843,22 @@ class CmdExecute(object):
                             # 所有的提示信息
                             ret_CommandHints.append(currentHints)
                             # 清空语句的变量
+                            currentHints = []
                             currentStatementWithComments = None
 
                     # 没有任何有效的语句，可能是空行或者完全的注释
                     # 对于注释中的Hint信息需要保留下来
-                    pattern = ""
-                    if self.testOptions.get("NAMESPACE") == "SQL":
-                        pattern = r"^(\s+)?--(\s+)?\[(\s+)?Hint(\s+)?\](.*)"
-                    elif self.testOptions.get("NAMESPACE") == "API":
-                        pattern = r"^(\s+)?//(\s+)?\[(\s+)?Hint(\s+)?\](.*)"
+                    pattern = r"^(\s+)?([-/][-/])(\s+)?\[(\s+)?Hint(\s+)?\](.*)"
                     matchObj = re.match(pattern, statementLine, re.IGNORECASE)
                     if matchObj:
-                        currentHints.append(matchObj.group(5).strip())
+                        currentHints.append(matchObj.group(6).strip())
                     # 解析后的语句
                     ret_CommandSplitResults.append(None)
                     # 解析前的语句
                     ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
                     # 对于非有效语句，Hint不在当前语句中体现，而是要等到下次有意义的语句进行处理
                     ret_CommandHints.append([])
-                    # 清空语句的变量
+                    # 清空除了Hint以外的其他语句变量
                     currentStatement = None
                     currentStatementWithComments = None
                     continue
@@ -885,6 +882,7 @@ class CmdExecute(object):
                     # 所有的提示信息
                     ret_CommandHints.append(currentHints)
                     # 清空语句的变量
+                    currentHints = []
                     currentStatement = None
                     currentStatementWithComments = None
                     continue
@@ -933,7 +931,7 @@ class CmdExecute(object):
                     pos = pos + 1
                     continue
 
-            # 返回SQL的解析信息
+            # 返回Command的解析信息
             if commandScriptFile != "Console":
                 # 如果是控制台显示，不再回显原命令，没有任何实际意义
                 yield {
@@ -990,6 +988,39 @@ class CmdExecute(object):
                 self.timeOutMode = None
                 self.timeout = -1
 
+            # 处理Hints信息
+            if self.testOptions.get("NAMESPACE") == "SQL":
+                commandHintList = parseSQLHints(list(ret_CommandHints[pos]))
+            elif self.testOptions.get("NAMESPACE") == "API":
+                commandHintList = parseAPIHints(list(ret_CommandHints[pos]))
+            else:
+                commandHintList = {}
+            for commandHintKey, commandHintValue in commandHintList.items():
+                # 根据语句中的变量或者其他定义信息来重写当前语句
+                if type(commandHintValue) == str:
+                    # 只针对字符串进行处理，暂时不对其他数据类型进行处理
+                    commandHintNewValue, rewrotedCommandHintValueList = rewriteHintStatement(
+                        cls=self.cliHandler,
+                        statement=commandHintValue,
+                        commandScriptFile=commandScriptFile
+                    )
+                    if len(rewrotedCommandHintValueList) != 0:
+                        commandHintList[commandHintKey] = commandHintNewValue
+                        yield {
+                            "type": "parse",
+                            "rawCommand": None,
+                            "formattedCommand": None,
+                            "rewrotedCommand":
+                                ["REWROTED Hint> " + str(commandHintKey) + ":" + str(commandHintNewValue), ],
+                            "script": commandScriptFile
+                        }
+            if "Scenario" in commandHintList:
+                scenarioName = str(commandHintList["Scenario"])
+                if scenarioName.strip().upper() == 'END':
+                    self.scenario = ""
+                else:
+                    self.scenario = scenarioName
+
             # 处理各种命令
             sqlKeyWords = ["SELECT", "DELETE", "UPDATE", "CREATE", "INSERT",
                            "DROP", "COMMIT", "ROLLBACK",
@@ -1029,11 +1060,20 @@ class CmdExecute(object):
                             cls=self.cliHandler,
                             connectProperties=parseObject
                     ):
+                        if commandResult["type"] == "result":
+                            lastCommandResult.clear()
+                            lastCommandResult["status"] = commandResult["status"]
+                            lastCommandResult["errorCode"] = 0
+                        if commandResult["type"] == "error":
+                            lastCommandResult["message"] = commandResult["message"]
+                            lastCommandResult["errorCode"] = 1
                         yield commandResult
                 else:
+                    lastCommandResult["message"] = "Not support connect command in non-sql namespace"
+                    lastCommandResult["errorCode"] = 1
                     yield {
                         "type": "error",
-                        "message": "affadsfsad",
+                        "message": "Not support connect command in non-sql namespace",
                         "script": commandScriptFile
                     }
             elif parseObject["name"] == "SET":
@@ -1077,9 +1117,6 @@ class CmdExecute(object):
                         "script": commandScriptFile
                     }
 
-                # 处理Hints信息
-                commandHintList = parseSQLHints(list(ret_CommandHints[pos]))
-
                 # 执行SQL语句
                 for result in self.executeSQLStatement(
                         sql=sqlCommand,
@@ -1088,12 +1125,12 @@ class CmdExecute(object):
                     if result["type"] == "result":
                         lastCommandResult["rows"] = result["rows"]
                         lastCommandResult["headers"] = result["headers"]
-                        lastCommandResult["message"] = result["status"]
+                        lastCommandResult["status"] = result["status"]
                         lastCommandResult["errorCode"] = 0
                     if result["type"] == "error":
                         lastCommandResult["rows"] = []
                         lastCommandResult["headers"] = []
-                        lastCommandResult["message"] = result["message"]
+                        lastCommandResult["status"] = result["message"]
                         lastCommandResult["errorCode"] = 1
                     yield result
             elif parseObject["name"] in ["USE"]:
@@ -1101,12 +1138,26 @@ class CmdExecute(object):
                         cls=self.cliHandler,
                         nameSpace=parseObject["nameSpace"]
                 ):
+                    if commandResult["type"] == "result":
+                        lastCommandResult.clear()
+                        lastCommandResult["status"] = commandResult["status"]
+                        lastCommandResult["errorCode"] = 0
+                    if commandResult["type"] == "error":
+                        lastCommandResult["status"] = commandResult["message"]
+                        lastCommandResult["errorCode"] = 1
                     yield commandResult
             elif parseObject["name"] in ["SLEEP"]:
                 for commandResult in cliSleep(
                         cls=self.cliHandler,
                         sleepTime=parseObject["sleepTime"]
                 ):
+                    if commandResult["type"] == "result":
+                        lastCommandResult.clear()
+                        lastCommandResult["status"] = commandResult["status"]
+                        lastCommandResult["errorCode"] = 0
+                    if commandResult["type"] == "error":
+                        lastCommandResult["status"] = commandResult["message"]
+                        lastCommandResult["errorCode"] = 1
                     yield commandResult
             elif parseObject["name"] in ["SPOOL"]:
                 for commandResult in spool(
@@ -1132,6 +1183,13 @@ class CmdExecute(object):
                         cls=self.cliHandler,
                         expression=parseObject["expression"]
                 ):
+                    if commandResult["type"] == "result":
+                        lastCommandResult.clear()
+                        lastCommandResult["status"] = commandResult["status"]
+                        lastCommandResult["errorCode"] = 0
+                    if commandResult["type"] == "error":
+                        lastCommandResult["status"] = commandResult["message"]
+                        lastCommandResult["errorCode"] = 1
                     yield commandResult
             elif parseObject["name"] in ["LOAD"]:
                 if parseObject["option"] == "PLUGIN":
@@ -1191,9 +1249,6 @@ class CmdExecute(object):
                         "script": commandScriptFile
                     }
 
-                # 处理Hints信息
-                commandHintList = parseAPIHints(list(ret_CommandHints[pos]))
-
                 # 执行HTTP请求
                 for result in self.executeAPIStatement(
                         apiRequest=parseObject,
@@ -1202,10 +1257,9 @@ class CmdExecute(object):
                     if result["type"] == "result":
                         lastCommandResult.clear()
                         data = json.loads(result["status"])
-                        lastCommandResult["data"] = data["content"]
+                        lastCommandResult["content"] = data["content"]
                         lastCommandResult["status"] = data["status"]
                         lastCommandResult["errorCode"] = 0
-
                     if result["type"] == "error":
                         lastCommandResult["message"] = result["message"]
                         lastCommandResult["errorCode"] = 1
@@ -1290,25 +1344,26 @@ class CmdExecute(object):
             endTime = time.time()
             lastCommandResult["elapsed"] = endTime - startTime
 
-            # 记录SQL日志信息
+            # 记录命令的日志信息
             if self.testOptions.get("SILENT").upper() == 'OFF':
                 if "status" in lastCommandResult:
                     commandStatus = lastCommandResult["status"]
                 else:
-                    commandStatus = 0
-                if "errorMessage" in lastCommandResult:
-                    errorMessage = lastCommandResult["errorMessage"]
+                    commandStatus = ""
+                if "errorCode" in lastCommandResult:
+                    commandErrorCode = lastCommandResult["errorCode"]
                 else:
-                    errorMessage = ""
+                    commandErrorCode = ""
                 yield {
                     "type": "statistics",
                     "startedTime": startTime,
                     "elapsed": endTime - startTime,
                     "thread_name": self.workerName,
                     "rawCommand": ret_CommandSplitResultsWithComments[pos],
+                    "commandType": parseObject["name"],
                     "command": json.dumps(obj=parseObject, sort_keys=True, ensure_ascii=False),
                     "commandStatus": commandStatus,
-                    "errorMessage": errorMessage,
+                    "errorCode": commandErrorCode,
                     "scenario": self.scenario
                 }
 

@@ -580,16 +580,19 @@ class TestCli(object):
                         nameSpace=self.nameSpace):
                 # 打印结果
                 show_result(result)
+
+                # 记录语句的统计信息
                 if result["type"] == "statistics":
                     if self.testOptions.get('TIMING').upper() == 'ON':
                         self.echo('Running time elapsed: %9.2f seconds' % result["elapsed"])
                     if self.testOptions.get('TIME').upper() == 'ON':
                         self.echo('Current clock time  :' + strftime("%Y-%m-%d %H:%M:%S", localtime()))
                 if result["type"] == "error":
-                    # 如果遇到了错误，且要求退出，则立刻退出
+                    # 如果遇到了错误，且设置了breakWithError，则立刻退出
                     if self.breakWithError:
                         self.exitValue = self.breakErrorCode
                         raise EOFError
+
             # 返回正确执行的消息
             return True
         except EOFError as e:
@@ -1133,13 +1136,14 @@ class TestCli(object):
                                "  Started         DATETIME,"
                                "  Elapsed         NUMERIC,"
                                "  RawCommand      TEXT,"
+                               "  CommandType     TEXT,"
                                "  Command         TEXT,"
-                               "  CommandStatus   INTEGER,"
-                               "  ErrorMessage    TEXT,"
+                               "  CommandStatus   TEXT,"
+                               "  ErrorCode       TEXT,"
                                "  WorkerName      TEXT,"
                                "  SuiteName       TEXT,"
                                "  CaseName        TEXT,"
-                               "  Scenario        TEXT"
+                               "  ScenarioName    TEXT"
                                ")"
                                "")
                 cursor.close()
@@ -1163,9 +1167,10 @@ class TestCli(object):
                 time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(commandResult["startedTime"])),
                 "%8.2f" % commandResult["elapsed"],
                 str(commandResult["rawCommand"]),
+                str(commandResult["commandType"]),
                 str(commandResult["command"]),
                 str(commandResult["commandStatus"]),
-                str(commandResult["errorMessage"]),
+                str(commandResult["errorCode"]),
                 str(threadName),
                 str(self.suitename),
                 str(self.casename),
@@ -1173,8 +1178,8 @@ class TestCli(object):
             )
             cursor.execute(
                 "Insert Into TestCli_Xlog(Script,Started,Elapsed,RawCommand,"
-                "Command,CommandStatus,ErrorMessage,WorkerName,SuiteName,CaseName,Scenario) "
-                "Values(?,?,?,?, ?,?,?,?,?,?,?)",
+                "CommandType,Command,CommandStatus,ErrorCode,WorkerName,SuiteName,CaseName,ScenarioName) "
+                "Values(?,?,?,?, ?,?,?,?,?,?,?,?)",
                 data
             )
             cursor.close()

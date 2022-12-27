@@ -4,7 +4,10 @@ create table aaa (id int);
 insert into aaa values(10);
 select * from aaa;
 
-> {% x=lastCommandResult %}
+> {%
+import copy
+x=copy.copy(lastCommandResult)
+%}
 
 _assert {% x["rows"][0][0]==10 %};
 

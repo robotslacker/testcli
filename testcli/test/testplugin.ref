@@ -16,7 +16,10 @@ SQL> select * from aaa;
 +--------+----+
 1 row selected.
 SQL>
-SQL> > {% x=lastCommandResult %}
+SQL> > {%
+   > import copy
+   > x=copy.copy(lastCommandResult)
+   > %}
 SQL>
 SQL> _assert {% x["rows"][0][0]==10 %};
 Assert successful.

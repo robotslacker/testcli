@@ -14,10 +14,13 @@ SQL> select * from aaa;
 +--------+----+
 1 row selected.
 SQL>
-SQL> > {%  x = lastCommandResult %}
+SQL> > {%
+   > import copy
+   > x = copy.copy(lastCommandResult)
+   > %}
 SQL> _assert {%  x["errorCode"] == 0 %}
 Assert successful.
-SQL> _assert {%  lastCommandResult["rows"][0][0] == 10 %}
+SQL> _assert {%  x["rows"][0][0] == 10 %}
 Assert successful.
 SQL>
 SQL> _use api
@@ -44,7 +47,11 @@ REWROTED    > GET http://127.0.0.1:8000/health
     "status": 200
 }
 API>
-API> _assert {%  lastCommandResult["status"] == 200 %}
+API> > {%
+   > import copy
+   > x = copy.copy(lastCommandResult)
+   > %}
+API> _assert {%  x["status"] == 200 %}
 Assert successful.
-API> _assert {%  str(lastCommandResult["data"]) == "{\'status\': \'OK\'}" %}
+API> _assert {%  str(x["content"]) == "{\'status\': \'OK\'}" %}
 Assert successful.

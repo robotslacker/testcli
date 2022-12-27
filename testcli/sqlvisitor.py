@@ -1108,15 +1108,34 @@ class SQLVisitor(SQLParserVisitor):
             block = ctx.ScriptBlock().getText()
             if str(block).endswith('%}'):
                 block = str(block[:-2])
-                if str(block).endswith('{%'):
-                    block = str(block[2:])
-                block = block.strip()
+                # 去掉第一个空行以及末尾不必要的空格
+                block = block.lstrip('\n')
+                block = block.rstrip()
+
+                # 如果脚本仅有一行，则前导空格没有意义，直接去掉
+                if len(block.split('\n')) == 1:
+                    block = block.strip()
+
+                # 替换所有的前导4字节空格（如果存在）
+                block = block.replace('\t', '    ')
+                minHeaderSpace = 99999
+                for line in block.split('\n'):
+                    if len(line) == 0:
+                        continue
+                    if minHeaderSpace > len(line) - len(line.lstrip()):
+                        minHeaderSpace = len(line) - len(line.lstrip())
+                # 如果脚本整体推进了4个空格，则认为没有推进（推进会让代码美观）
+                if minHeaderSpace == 4:
+                    newLines = []
+                    for line in block.split('\n'):
+                        newLines.append(line.lstrip('    '))
+                    block = "\n".join(newLines)
                 parsedObject.update({'block': block})
+
             else:
                 self.isFinished = False
         else:
             self.isFinished = False
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None

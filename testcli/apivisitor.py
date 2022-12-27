@@ -325,15 +325,34 @@ class APIVisitor(APIParserVisitor):
             block = ctx.ScriptBlock().getText()
             if str(block).endswith('%}'):
                 block = str(block[:-2])
-                if str(block).endswith('{%'):
-                    block = str(block[2:])
-                block = block.strip()
+                # 去掉第一个空行以及末尾不必要的空格
+                block = block.lstrip('\n')
+                block = block.rstrip()
+
+                # 如果脚本仅有一行，则前导空格没有意义，直接去掉
+                if len(block.split('\n')) == 1:
+                    block = block.strip()
+
+                # 替换所有的前导4字节空格（如果存在）
+                block = block.replace('\t', '    ')
+                minHeaderSpace = 99999
+                for line in block.split('\n'):
+                    if len(line) == 0:
+                        continue
+                    if minHeaderSpace > len(line) - len(line.lstrip()):
+                        minHeaderSpace = len(line) - len(line.lstrip())
+                # 如果脚本整体推进了4个空格，则认为没有推进（推进会让代码美观）
+                if minHeaderSpace == 4:
+                    newLines = []
+                    for line in block.split('\n'):
+                        newLines.append(line.lstrip('    '))
+                    block = "\n".join(newLines)
                 parsedObject.update({'block': block})
+
             else:
                 self.isFinished = False
         else:
             self.isFinished = False
-
         # 获取错误代码
         errorCode = 0
         errorMsg = None
@@ -357,6 +376,72 @@ class APIVisitor(APIParserVisitor):
             parsedObject.update({'expression': expression})
         else:
             parsedObject.update({'expression': ""})
+
+        # 获取错误代码
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = -1
+            errorMsg = ctx.exception.message
+
+        self.parsedObject = parsedObject
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
+
+    def visitLoad(self, ctx: APIParser.LoadContext):
+        parsedObject = {'name': 'LOAD'}
+
+        # 加载的选项
+        if ctx.LOAD_PLUGIN() is not None:
+            parsedObject.update({"option": "PLUGIN"})
+            pluginFile = str((ctx.LOAD_EXPRESSION()[0].getText())).strip()
+            pluginFile = pluginFile.strip('"').strip("'")
+            parsedObject.update({"pluginFile": pluginFile})
+        if ctx.LOAD_MAP() is not None:
+            parsedObject.update({"option": "MAP"})
+            mapFile = str((ctx.LOAD_EXPRESSION()[0].getText())).strip()
+            mapFile = mapFile.strip('"').strip("'")
+            parsedObject.update({"mapFile": mapFile})
+        if ctx.LOAD_JDBCDRIVER() is not None:
+            parsedObject.update({"option": "JDBCDRIVER"})
+        if len(ctx.LOAD_JDBCCLASS()) != 0:
+            optionCtx = ctx.LOAD_JDBCCLASS()[0]
+            start, _ = optionCtx.getSourceInterval()
+            for token in ctx.parser._input.tokens[start+1:]:
+                if str(token.text) != '=':
+                    parsedObject.update({"driverClass": str(token.text)})
+                    break
+        if len(ctx.LOAD_JDBCURL()) != 0:
+            optionCtx = ctx.LOAD_JDBCURL()[0]
+            start, _ = optionCtx.getSourceInterval()
+            for token in ctx.parser._input.tokens[start+1:]:
+                if str(token.text) != '=':
+                    jdbcurl = str(token.text).strip('"').strip("'")
+                    parsedObject.update({"driverURL": str(jdbcurl)})
+                    break
+        if len(ctx.LOAD_JDBCFILE()) != 0:
+            optionCtx = ctx.LOAD_JDBCFILE()[0]
+            start, _ = optionCtx.getSourceInterval()
+            for token in ctx.parser._input.tokens[start+1:]:
+                if str(token.text) != '=':
+                    driverFile = str(token.text).strip('"').strip("'")
+                    parsedObject.update({"driverFile": driverFile})
+                    break
+        if len(ctx.LOAD_JDBCNAME()) != 0:
+            optionCtx = ctx.LOAD_JDBCNAME()[0]
+            start, _ = optionCtx.getSourceInterval()
+            for token in ctx.parser._input.tokens[start+1:]:
+                if str(token.text) != '=':
+                    parsedObject.update({"driverName": str(token.text)})
+                    break
+        if len(ctx.LOAD_JDBCPROP()) != 0:
+            optionCtx = ctx.LOAD_JDBCPROP()[0]
+            start, _ = optionCtx.getSourceInterval()
+            for token in ctx.parser._input.tokens[start+1:]:
+                if str(token.text) != '=':
+                    driverProps = str(token.text).strip('"').strip("'")
+                    parsedObject.update({"driverProps": driverProps})
+                    break
 
         # 获取错误代码
         errorCode = 0

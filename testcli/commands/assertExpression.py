@@ -8,15 +8,21 @@ def assertExpression(cls, expression: str):
     try:
         ret = evalExpression(cls, expression)
         if type(ret) == bool:
-            yield {
-                "type": "result",
-                "title": "",
-                "rows": "",
-                "headers": "",
-                "columnTypes": "",
-                "status": "Assert " + ("successful." if ret else "fail.")
-            }
-    except (SyntaxError, NameError, AttributeError) as ae:
+            if ret:
+                yield {
+                    "type": "result",
+                    "title": "",
+                    "rows": "",
+                    "headers": "",
+                    "columnTypes": "",
+                    "status": "Assert successful."
+                }
+            else:
+                yield {
+                    "type": "error",
+                    "message": "Assert fail."
+                }
+    except Exception as ae:
         yield {
             "type": "error",
             "message": "Assert fail. SyntaxError =>[" + str(ae) + "]"

@@ -25,10 +25,12 @@ appExitValue = 0
 @click.option("--clientcharset", type=str, help="Set client charset. Default is UTF-8.")
 @click.option("--resultcharset", type=str, help="Set result charset. Default is same to clientCharset.")
 @click.option("--profile", type=str, help="Startup profile.")
-@click.option("--scripttimeout", type=int, help="Script Timeout(Seconds).")
+@click.option("--scripttimeout", type=int, help="Script timeout(seconds).")
 @click.option("--namespace", type=str, help="Command default name space(SQL|API). Default is SQL")
 @click.option("--selftest", is_flag=True, help="Run self test and exit.")
-@click.option("--readme", is_flag=True, help="Show README Doc and exit.")
+@click.option("--readme", is_flag=True, help="Show README doc and exit.")
+@click.option("--suitename", type=str, help="Test suite name.")
+@click.option("--casename", type=str, help="Test case name.")
 def cli(
         version,
         logon,
@@ -44,7 +46,9 @@ def cli(
         scripttimeout,
         namespace,
         selftest,
-        readme
+        readme,
+        suitename,
+        casename
 ):
     if version:
         print("Version:", __version__)
@@ -92,7 +96,9 @@ def cli(
         resultCharset=resultcharset,
         profile=profile,
         scripttimeout=scripttimeout,
-        namespace=namespace
+        namespace=namespace,
+        suitename=suitename,
+        casename=casename
     )
 
     # 运行主程序
