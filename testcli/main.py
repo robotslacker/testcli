@@ -21,6 +21,7 @@ appExitValue = 0
 @click.option("--commandmap", type=str, help="Command mapping file.")
 @click.option("--nologo", is_flag=True, help="Execute with no-logo mode.")
 @click.option("--xlog", type=str, help="Save command extended log.")
+@click.option("--xlogoverwrite", is_flag=True, help="Overwrite extended log if old file exists. Default is false")
 @click.option("--syncdriver", is_flag=True, help="Download java jar from file server.")
 @click.option("--clientcharset", type=str, help="Set client charset. Default is UTF-8.")
 @click.option("--resultcharset", type=str, help="Set result charset. Default is same to clientCharset.")
@@ -39,6 +40,7 @@ def cli(
         commandmap,
         nologo,
         xlog,
+        xlogoverwrite,
         syncdriver,
         clientcharset,
         resultcharset,
@@ -92,6 +94,7 @@ def cli(
         commandMap=commandmap,
         nologo=nologo,
         xlog=xlog,
+        xlogoverwrite=xlogoverwrite,
         clientCharset=clientcharset,
         resultCharset=resultcharset,
         profile=profile,

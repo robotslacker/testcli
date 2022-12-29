@@ -2,7 +2,6 @@
 import re
 import os
 import shlex
-from .datawrapper import random_ascii_letters_and_digits
 from .testcliexception import TestCliException
 
 
@@ -13,11 +12,6 @@ class CmdMapping(object):
     commandMappingList = {}
 
     def loadCommandMappings(self, commandScriptFileName, commandMappings):
-        # 如果不带任何参数，或者参数为空，则清空CommandMapping信息
-        if commandMappings is None:
-            self.commandMappingList = {}
-            return
-
         commandMappings = shlex.shlex(commandMappings)
         commandMappings.whitespace = ','
         commandMappings.quotes = "'"
@@ -55,13 +49,9 @@ class CmdMapping(object):
                     commandMappingFile + ".map")
             if commandMappingFullName is None or commandMappingBaseName is None:
                 # 压根没有找到这个文件
-                if "TESTCLI_DEBUG" in os.environ:
-                    print("TestCli-003::  Mapping file [" + commandMappingFile + "] not found.")
-                continue
+                raise TestCliException("Mapping file [" + commandMappingFile + "] not found.")
 
             # 加载配置文件
-            if "TESTCLI_DEBUG" in os.environ:
-                print("Loading ... [" + commandMappingFullName + "]")
             with open(commandMappingFullName, 'r') as f:
                 commandMappingContents = f.readlines()
 
@@ -82,122 +72,49 @@ class CmdMapping(object):
 
             # 分段加载配置文件
             m_inSection = False
-            m_szNamePattern = None
-            m_szMatchRules = []
+            filePattern = None
+            replaceRules = []
             m_szFileMatchRules = []
-            for m_szLine in commandMappingContents:
-                m_szLine = m_szLine.strip()
-                if not m_inSection and m_szLine.startswith("#.") and m_szLine.endswith(':'):
+            for configLine in commandMappingContents:
+                configLine = configLine.strip()
+                if not m_inSection and configLine.startswith("#.") and configLine.endswith(':'):
                     # 文件注释开始
                     m_inSection = True
-                    m_szNamePattern = m_szLine[2:-1]  # 去掉开始的的#.以前最后的:
-                    m_szMatchRules = []
+                    filePattern = configLine[2:-1].strip()  # 去掉开始的的#.以前最后的:
+                    replaceRules = []
                     continue
-                if m_inSection and m_szLine == "#.":
+                if m_inSection and configLine == "#.":
                     # 文件注释结束
-                    m_szFileMatchRules.append([m_szNamePattern, m_szMatchRules])
-                    m_szNamePattern = None
-                    m_szMatchRules = []
+                    m_szFileMatchRules.append(
+                        {
+                            "filePattern": filePattern,
+                            "replaceRules": replaceRules
+                        }
+                    )
+                    filePattern = None
+                    replaceRules = []
                     m_inSection = False
                     continue
                 if m_inSection:
                     # 文件配置段中的内容
-                    if m_szLine.find('=>') != -1:
-                        m_szMatchRule = [m_szLine[0:m_szLine.find('=>')].strip(),
-                                         m_szLine[m_szLine.find('=>') + 2:].strip()]
-                        m_szMatchRules.append(m_szMatchRule)
+                    replaceRuleConfig = configLine.split('=>')
+                    if len(replaceRuleConfig) == 2:
+                        replaceRuleSrc = replaceRuleConfig[0].strip()
+                        replaceRuleDst = replaceRuleConfig[1].strip()
+                        replaceRule = {replaceRuleSrc: replaceRuleDst}
+                        replaceRules.append(replaceRule)
+                    else:
+                        if "TESTCLI_DEBUG" in os.environ:
+                            raise TestCliException("Replace rule [" + configLine + "] has synatx error. ignore")
                     continue
 
             # 每个文件的配置都加载到MappingList中
             self.commandMappingList[commandMappingBaseName] = m_szFileMatchRules
 
-    @staticmethod
-    def ReplaceMacro_Env(p_arg):
-        m_EnvName = p_arg[0].replace("'", "").replace('"', "").strip()
-        if m_EnvName in os.environ:
-            return os.environ[m_EnvName]
-        else:
-            return ""
-
-    @staticmethod
-    def ReplaceMacro_Random(p_arg):
-        m_RandomType = p_arg[0].replace("'", "").replace('"', "").strip()
-        if m_RandomType.lower() == "random_ascii_letters_and_digits":
-            if str(p_arg[1]).isnumeric():
-                m_RandomLength = int(p_arg[1])
-                return random_ascii_letters_and_digits([m_RandomLength, ])
-            else:
-                return ""
-
-    def ReplaceCommand(self, command, key, value):
-        # 首先查找是否有匹配的内容，如果没有，直接返回
-        try:
-            m_SearchResult = re.search(key, command, re.DOTALL)
-        except re.error as ex:
-            raise TestCliException("[WARNING] Invalid regex pattern. [" + str(key) + "]  " + repr(ex))
-
-        if m_SearchResult is None:
-            return command
-        else:
-            # 记录匹配到的内容
-            m_SearchedKey = m_SearchResult.group()
-
-        # 将内容用{}来进行分割，以处理各种内置的函数，如env等
-        m_row_struct = re.split('[{}]', value)
-        if len(m_row_struct) == 1:
-            # 没有任何内置的函数， 直接替换掉结果就可以了
-            m_Value = value
-        else:
-            # 存在内置的函数，即数据中存在{}包括的内容
-            for m_nRowPos in range(0, len(m_row_struct)):
-                if re.search(r'env(.*)', m_row_struct[m_nRowPos], re.IGNORECASE):
-                    # 函数的参数处理，即函数的参数可能包含， 如 func(a,b)，将a，b作为数组记录
-                    m_function_struct = re.split(r'[(,)]', m_row_struct[m_nRowPos])
-                    # 特殊替换本地标识符:1， :1表示=>前面的内容
-                    for pos in range(1, len(m_function_struct)):
-                        if m_function_struct[pos] == ":1":
-                            m_function_struct[pos] = m_SearchedKey
-
-                    # 执行替换函数
-                    if len(m_function_struct) <= 1:
-                        raise TestCliException("[WARNING] Invalid env macro, use env(). "
-                                               "[" + str(key) + "=>" + str(value) + "]")
-                    else:
-                        m_row_struct[m_nRowPos] = self.ReplaceMacro_Env(m_function_struct[1:])
-
-                if re.search(r'random(.*)', m_row_struct[m_nRowPos], re.IGNORECASE):
-                    # 函数的参数处理，即函数的参数可能包含， 如 func(a,b)，将a，b作为数组记录
-                    m_function_struct = re.split(r'[(,)]', m_row_struct[m_nRowPos])
-                    # 特殊替换本地标识符:1， :1表示=>前面的内容
-                    for pos in range(1, len(m_function_struct)):
-                        if m_function_struct[pos] == ":1":
-                            m_function_struct[pos] = m_SearchedKey
-                    # 执行替换函数
-                    if len(m_function_struct) <= 1:
-                        raise TestCliException("[WARNING] Invalid random macro, use random(). "
-                                               "[" + str(key) + "=>" + str(value) + "]")
-                    else:
-                        m_row_struct[m_nRowPos] = self.ReplaceMacro_Random(m_function_struct[1:])
-
-            # 重新拼接字符串
-            m_Value = None
-            for m_nRowPos in range(0, len(m_row_struct)):
-                if m_Value is None:
-                    m_Value = m_row_struct[m_nRowPos]
-                else:
-                    m_Value = m_Value + str(m_row_struct[m_nRowPos])
-
-        try:
-            resultCommand = re.sub(key, m_Value, command, flags=re.DOTALL)
-        except re.error as ex:
-            raise TestCliException("[WARNING] Invalid regex pattern in ReplaceCommand. "
-                                   "[" + str(key) + "]:[" + m_Value + "]:[" + command + "]  " + repr(ex))
-        return resultCommand
-
-    def RewriteCommand(self, commandScriptFileName, command):
+    def RewriteWord(self, commandScriptFileName, word):
         # 检查是否存在command mapping文件
         if len(self.commandMappingList) == 0:
-            return command
+            return word
 
         # 获得绝对文件名
         if commandScriptFileName is not None:
@@ -208,19 +125,24 @@ class CmdMapping(object):
 
         # 检查文件名是否匹配
         # 如果一个字符串在多个匹配规则中出现，可能被多次匹配。后一次匹配的依据是前一次匹配的结果
-        newCommand = command
-        for mappingFiles in self.commandMappingList:                          # 所有的Command Mapping信息
-            mappingFileContents = self.commandMappingList[mappingFiles]    # 具体的一个Command Mapping文件
-            for mappingContents in mappingFileContents:                      # 具体的一个映射信息
+        for mappingFiles in self.commandMappingList.values():                   # 所有的Command Mapping信息
+            for mappingFile in mappingFiles:
                 try:
-                    if re.match(mappingContents[0], commandScriptFileName):     # 文件名匹配
-                        for (key, value) in mappingContents[1]:             # 内容遍历
-                            try:
-                                newCommand = self.ReplaceCommand(newCommand, key, value)
-                            except re.error:
-                                raise TestCliException("[WARNING] Invalid regex pattern in ReplaceCommand. ")
+                    if re.match(mappingFile["filePattern"], commandScriptFileName):     # 文件名匹配
+                        replaceRules = mappingFile["replaceRules"]
+                        for replaceRule in replaceRules:
+                            if word in replaceRule.keys():
+                                word = replaceRule[word]
+                            else:
+                                for matchKey, matchValue in replaceRule.items():
+                                    matchObj = re.match(pattern=matchKey, string=word)
+                                    if matchObj:
+                                        _, end = matchObj.span()
+                                        if end == len(str(word)):
+                                            # 正则必须全文匹配
+                                            word = matchValue
                 except re.error as ex:
-                    raise TestCliException("[WARNING] Invalid regex pattern in filename match. "
-                                           "[" + str(mappingContents[0]) + "]:[" + commandScriptFileName +
-                                           "]:[" + mappingFiles + "]  " + repr(ex))
-        return newCommand
+                    raise TestCliException("[WARNING] Invalid regex pattern in filePattern match. "
+                                           "[" + str(mappingFile["filePattern"]) +
+                                           "]:[" + commandScriptFileName + "]  " + repr(ex))
+        return word

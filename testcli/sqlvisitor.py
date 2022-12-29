@@ -1128,7 +1128,7 @@ class SQLVisitor(SQLParserVisitor):
                 if minHeaderSpace == 4:
                     newLines = []
                     for line in block.split('\n'):
-                        newLines.append(line.lstrip('    '))
+                        newLines.append(line[4:])
                     block = "\n".join(newLines)
                 parsedObject.update({'block': block})
 

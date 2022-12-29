@@ -16,8 +16,8 @@ def executeEmbeddScript(cls, block: str):
         "columnTypes": None,
         "status": None
     }
-    localEmbeddScriptScope["sessionContext"] = sessionContext
-    localEmbeddScriptScope["lastCommandResult"] = lastCommandResult
+    globalEmbeddScriptScope["sessionContext"] = sessionContext
+    globalEmbeddScriptScope["lastCommandResult"] = lastCommandResult
     try:
         exec(block, globalEmbeddScriptScope, localEmbeddScriptScope)
     except Exception as se:
@@ -27,11 +27,42 @@ def executeEmbeddScript(cls, block: str):
         }
         return
 
-    yield {
-        "type": sessionContext["type"],
-        "title": sessionContext["title"],
-        "rows": sessionContext["rows"],
-        "headers": sessionContext["headers"],
-        "columnTypes": sessionContext["columnTypes"],
-        "status": sessionContext["status"],
-    }
+    if sessionContext["type"] == "error":
+        if "message" in sessionContext:
+            errorMessage = sessionContext["message"]
+        else:
+            errorMessage = ""
+        yield {
+            "type": sessionContext["type"],
+            "message": errorMessage
+        }
+
+    if sessionContext["type"] == "result":
+        if "title" in sessionContext:
+            resultTitle = sessionContext["title"]
+        else:
+            resultTitle = None
+        if "rows" in sessionContext:
+            resultRows = sessionContext["rows"]
+        else:
+            resultRows = None
+        if "headers" in sessionContext:
+            resultHeaders = sessionContext["headers"]
+        else:
+            resultHeaders = None
+        if "columnTypes" in sessionContext:
+            resultColumnTypes = sessionContext["columnTypes"]
+        else:
+            resultColumnTypes = None
+        if "status" in sessionContext:
+            resultStatus = sessionContext["status"]
+        else:
+            resultStatus = None
+        yield {
+            "type": sessionContext["type"],
+            "title": resultTitle,
+            "rows": resultRows,
+            "headers": resultHeaders,
+            "columnTypes": resultColumnTypes,
+            "status": resultStatus,
+        }

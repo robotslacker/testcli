@@ -880,17 +880,17 @@ class JOBManager(object):
         from .main import TestCli
 
         # 运行子进程的时候，不需要启动JOBManager
-        m_SQLCli = TestCli(
+        sqlcliHandler = TestCli(
             script=p_args["script"],
             logon=p_args["logon"],
             logfilename=p_args["logfilename"],
             commandMap=p_args["commandMap"],
             nologo=p_args["nologo"],
-            HeadlessMode=True,
-            WorkerName=p_args["workername"],
+            headlessMode=True,
+            workerName=p_args["workername"],
             xlog=p_args["xlog"]
         )
-        m_SQLCli.run_cli()
+        sqlcliHandler.run_cli()
 
     # 后台守护线程，跟踪进程信息，启动或强制关闭进程
     def JOBManagerAgent(self):

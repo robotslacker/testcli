@@ -66,12 +66,14 @@ class TestCli(object):
             script=None,                            # 脚本文件名，None表示命令行模式
             commandMap=None,                        # SQL映射文件名，None表示不存在
             nologo=False,                           # 是否不打印登陆时的Logo信息，True的时候不打印
+            breakScenarioWithError=False,           # 遇到命令行错误，是否中断当前Scenario继续运行
             breakWithError=False,                   # 遇到命令行错误，是否中断脚本后续执行，立刻退出
             breakErrorCode=255,                     # 遇到命令行错误时候的退出代码
             xlog=None,                              # 扩展日志信息文件输出名，None表示不需要
+            xlogoverwrite=False,                    # 是否覆盖之前的扩展日志
             Console=sys.stdout,                     # 控制台输出，默认为sys.stdout,即标准输出
-            HeadlessMode=False,                     # 是否为无终端模式，无终端模式下，任何屏幕信息都不会被输出
-            WorkerName='MAIN',                      # 程序别名，可用来区分不同的应用程序,
+            headlessMode=False,                     # 是否为无终端模式，无终端模式下，任何屏幕信息都不会被输出
+            workerName='MAIN',                      # 程序别名，可用来区分不同的应用程序,
             logger=None,                            # 程序输出日志句柄
             clientCharset='UTF-8',                  # 客户端字符集，在读取SQL文件时，采纳这个字符集，默认为UTF-8
             resultCharset='UTF-8',                  # 输出字符集，在打印输出文件，日志的时候均采用这个字符集
@@ -102,7 +104,8 @@ class TestCli(object):
         self.xlogFileLocker = None                      # 进程锁, 用来在输出perf文件的时候控制并发写文件
         self.breakWithError = breakWithError            # 是否在遇到错误的时候退出
         self.breakErrorCode = breakErrorCode            # 遇到错误的退出代码
-        
+        self.breakScenarioWithError = breakScenarioWithError  # 遇到命令行错误是否立刻退出当前Scenario的继续运行
+
         # 数据库连接的各种参数
         # 每次连接后需要保存这些变量，下次可以直接重新连接，如果不填写相关信息，则默认上次连接信息
         self.db_conn = None                             # 当前应用的数据库连接句柄
@@ -125,20 +128,26 @@ class TestCli(object):
         if resultCharset is not None:                   # 客户端结果字符集
             self.testOptions.set("RESULT_ENCODING", resultCharset)
 
-        self.WorkerName = WorkerName                    # 当前进程名称. 如果有参数传递，以参数为准
+        # 当前进程名称. 如果有参数传递，以参数为准.  如果没有，用MAIN加进程ID来标记
+        if workerName == "MAIN":
+            self.workerName = "MAIN-" + str(os.getpid())
+        else:
+            self.workerName = workerName
         self.profile = []                               # 程序的初始化脚本文件
-        self.lastComment = None                       # 如果当前SQL之前的内容完全是注释，则注释带到这里
+        self.lastComment = None                         # 如果当前SQL之前的内容完全是注释，则注释带到这里
 
         # 传递各种参数
-        self.commandScript = script
+        self.commandScript = script                     # 初始化运行的脚本名称，即runCli的脚本名称
+        self.executeScript = script                     # 当前正在执行的脚本名称。 可能会由于start命令而发生切换
         self.commandMap = commandMap
         self.nologo = nologo
         self.logon = logon
         self.logfilename = logfilename
         self.Console = Console
-        self.HeadlessMode = HeadlessMode
+        self.headlessMode = headlessMode
         self.xlogFile = xlog
-        if HeadlessMode:
+        self.xlogOverwrite = xlogoverwrite
+        if headlessMode:
             self.Console = open(os.devnull, "w")
         self.logger = logger
         self.suitename = suitename
@@ -194,7 +203,7 @@ class TestCli(object):
         self.cmdExecuteHandler.cliHandler = self
         self.cmdExecuteHandler.script = script
         self.cmdExecuteHandler.testOptions = self.testOptions
-        self.cmdExecuteHandler.workerName = self.WorkerName
+        self.cmdExecuteHandler.workerName = self.workerName
         self.cmdExecuteHandler.cmdMappingHandler = self.cmdMappingHandler
 
         self.DataHandler.SQLOptions = self.testOptions
@@ -587,8 +596,9 @@ class TestCli(object):
                         self.echo('Running time elapsed: %9.2f seconds' % result["elapsed"])
                     if self.testOptions.get('TIME').upper() == 'ON':
                         self.echo('Current clock time  :' + strftime("%Y-%m-%d %H:%M:%S", localtime()))
+
+                # 如果遇到了错误，且设置了breakWithError，则立刻退出
                 if result["type"] == "error":
-                    # 如果遇到了错误，且设置了breakWithError，则立刻退出
                     if self.breakWithError:
                         self.exitValue = self.breakErrorCode
                         raise EOFError
@@ -1124,14 +1134,16 @@ class TestCli(object):
         try:
             self.xlogFileLocker.acquire()
             if self.xlogFileHandle is None:
-                # 如果文件已经存在，则删除当前文件
-                if os.path.exists(self.xlogFile):
-                    os.remove(self.xlogFile)
                 # 创建文件，并写入文件头信息
+                if self.xlogOverwrite:
+                    # 如果打开了覆盖模式，则删除之前的历史文件
+                    if os.path.exists(self.xlogFile):
+                        os.remove(self.xlogFile)
                 self.xlogFileHandle = sqlite3.connect(self.xlogFile)
                 cursor = self.xlogFileHandle.cursor()
-                cursor.execute("Create Table TestCli_Xlog "
+                cursor.execute("CREATE TABLE IF NOT EXISTS TestCli_Xlog "
                                "("
+                               "  Id              INTEGER PRIMARY KEY AUTOINCREMENT,"
                                "  Script          TEXT,"
                                "  Started         DATETIME,"
                                "  Elapsed         NUMERIC,"
@@ -1143,6 +1155,7 @@ class TestCli(object):
                                "  WorkerName      TEXT,"
                                "  SuiteName       TEXT,"
                                "  CaseName        TEXT,"
+                               "  ScenarioId      TEXT,"
                                "  ScenarioName    TEXT"
                                ")"
                                "")
@@ -1153,14 +1166,10 @@ class TestCli(object):
             threadName = str(commandResult["thread_name"])
 
             # 写入内容信息
-            if self.commandScript is None:
+            if self.executeScript is None:
                 script = "Console"
             else:
-                script = str(os.path.basename(self.commandScript))
-
-            # 打开xLog文件
-            if self.xlogFileHandle is not None:
-                self.xlogFileHandle = sqlite3.connect(self.xlogFile)
+                script = str(os.path.basename(self.executeScript))
             cursor = self.xlogFileHandle.cursor()
             data = (
                 script,
@@ -1174,12 +1183,14 @@ class TestCli(object):
                 str(threadName),
                 str(self.suitename),
                 str(self.casename),
-                str(commandResult["scenario"])
+                str(commandResult["scenarioId"]),
+                str(commandResult["scenarioName"])
             )
             cursor.execute(
                 "Insert Into TestCli_Xlog(Script,Started,Elapsed,RawCommand,"
-                "CommandType,Command,CommandStatus,ErrorCode,WorkerName,SuiteName,CaseName,ScenarioName) "
-                "Values(?,?,?,?, ?,?,?,?,?,?,?,?)",
+                "CommandType,Command,CommandStatus,ErrorCode,WorkerName,SuiteName,CaseName,"
+                "ScenarioId, ScenarioName) "
+                "Values(?,?,?,?, ?,?,?,?,?,?,?, ?,?)",
                 data
             )
             cursor.close()
@@ -1187,4 +1198,7 @@ class TestCli(object):
         except Exception as ex:
             print("Internal error:: xlog file [" + str(self.xlogFile) + "] write not complete. " + repr(ex))
         finally:
+            if self.xlogFileHandle:
+                self.xlogFileHandle.close()
+                self.xlogFileHandle = None
             self.xlogFileLocker.release()

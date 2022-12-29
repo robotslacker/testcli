@@ -1006,7 +1006,7 @@ class TestSynatx(unittest.TestCase):
         # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
-            HeadlessMode=True,
+            headlessMode=True,
             nologo=True,
             script=fullScriptFile
         )
@@ -1038,7 +1038,7 @@ class TestSynatx(unittest.TestCase):
         # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
-            HeadlessMode=True,
+            headlessMode=True,
             nologo=True,
             script=fullScriptFile
         )
@@ -1080,7 +1080,7 @@ class TestSynatx(unittest.TestCase):
         # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
-            HeadlessMode=True,
+            headlessMode=True,
             nologo=True,
             script=fullScriptFile
         )
@@ -1117,7 +1117,7 @@ class TestSynatx(unittest.TestCase):
         # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
-            HeadlessMode=True,
+            headlessMode=True,
             nologo=True,
             script=fullScriptFile
         )
@@ -1152,7 +1152,7 @@ class TestSynatx(unittest.TestCase):
         # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
-            HeadlessMode=True,
+            headlessMode=True,
             nologo=True,
             script=fullScriptFile
         )
@@ -1183,7 +1183,7 @@ class TestSynatx(unittest.TestCase):
         # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
-            HeadlessMode=True,
+            headlessMode=True,
             nologo=True,
             script=fullScriptFile
         )
@@ -1214,7 +1214,7 @@ class TestSynatx(unittest.TestCase):
         # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
-            HeadlessMode=True,
+            headlessMode=True,
             nologo=True,
             script=fullScriptFile
         )
@@ -1245,7 +1245,7 @@ class TestSynatx(unittest.TestCase):
         # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
-            HeadlessMode=True,
+            headlessMode=True,
             nologo=True,
             script=fullScriptFile
         )
@@ -1276,7 +1276,7 @@ class TestSynatx(unittest.TestCase):
         # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
-            HeadlessMode=True,
+            headlessMode=True,
             nologo=True,
             script=fullScriptFile
         )
@@ -1307,7 +1307,7 @@ class TestSynatx(unittest.TestCase):
         # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
-            HeadlessMode=True,
+            headlessMode=True,
             nologo=True,
             script=fullScriptFile
         )
@@ -1418,7 +1418,7 @@ class TestSynatx(unittest.TestCase):
         # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
-            HeadlessMode=True,
+            headlessMode=True,
             nologo=True,
             script=fullScriptFile
         )
@@ -1450,7 +1450,7 @@ class TestSynatx(unittest.TestCase):
         # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
-            HeadlessMode=True,
+            headlessMode=True,
             nologo=True,
             script=fullScriptFile
         )
@@ -1482,7 +1482,7 @@ class TestSynatx(unittest.TestCase):
         # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
-            HeadlessMode=True,
+            headlessMode=True,
             nologo=True,
             script=fullScriptFile
         )
@@ -1506,6 +1506,38 @@ class TestSynatx(unittest.TestCase):
         fullDiffFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "testcomparework.dif"))
         self.assertTrue(os.path.exists(fullDiffFile))
         os.remove(fullDiffFile)
+
+    def test_sqlmapping(self):
+        scriptFile = "testsqlmapping.sql"
+
+        scriptBaseFile = os.path.splitext(scriptFile)[0]
+        fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
+        fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
+        fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
+
+        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        testcli = TestCli(
+            logfilename=fullLogFile,
+            headlessMode=True,
+            nologo=True,
+            script=fullScriptFile
+        )
+        retValue = testcli.run_cli()
+        self.assertEqual(0, retValue)
+
+        # 对文件进行比对，判断返回结果是否吻合
+        compareHandler = POSIXCompare()
+
+        compareResult, compareReport = compareHandler.compare_text_files(
+            file1=fullLogFile,
+            file2=fullRefFile,
+            CompareIgnoreTailOrHeadBlank=True
+        )
+        if not compareResult:
+            for line in compareReport:
+                if line.startswith("-") or line.startswith("+"):
+                    print(line)
+        self.assertTrue(compareResult)
 
 
 if __name__ == '__main__':

@@ -198,7 +198,10 @@ def connectDb(cls, connectProperties, timeout: int = -1):
             # 保存连接句柄
             cls.cmdExecuteHandler.sqlConn = cls.db_conn
         else:
-            raise TestCliException("Current driver [" + str(connectProperties["driver"]) + "] is not supported.")
+            yield {
+                "type": "error",
+                "message": "Current driver [" + str(connectProperties["driver"]) + "] is not supported."
+            }
     except TestCliException as se:  # Connecting to a database fail.
         raise se
     except Exception as e:  # Connecting to a database fail.

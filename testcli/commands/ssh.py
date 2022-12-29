@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import time
-
 import paramiko
 import io
+import copy
+from ..common import rewiteStatement
 
 sshSession = {}
 sshCurrentSessionName = "NONAME"
@@ -61,7 +62,54 @@ class SshContext:
         return self.sftpHandler
 
 
-def executeSshRequest(cls, requestObject):
+def rewriteSshRequest(cls, requestObject, commandScriptFile: str):
+    """
+        重写SSH的请求信息
+    """
+
+    # 保留原脚本
+    rawRequestObject = copy.copy(requestObject)
+    rewrotedCommand = ""
+
+    if "host" in requestObject:
+        statement = requestObject["host"]
+        newStatement = rewiteStatement(cls=cls, statement=statement, commandScriptFile=commandScriptFile)
+        if statement != newStatement:
+            requestObject.update({"host": newStatement})
+    if "user" in requestObject:
+        statement = requestObject["user"]
+        newStatement = rewiteStatement(cls=cls, statement=statement, commandScriptFile=commandScriptFile)
+        if statement != newStatement:
+            requestObject.update({"user": newStatement})
+    if "password" in requestObject:
+        statement = requestObject["password"]
+        newStatement = rewiteStatement(cls=cls, statement=statement, commandScriptFile=commandScriptFile)
+        if statement != newStatement:
+            requestObject.update({"password": newStatement})
+    if "command" in requestObject:
+        statement = requestObject["command"]
+        newStatement = rewiteStatement(cls=cls, statement=statement, commandScriptFile=commandScriptFile)
+        if statement != newStatement:
+            requestObject.update({"command": newStatement})
+
+    # 语句发生了变化
+    if rawRequestObject != requestObject:
+        rewrotedCommand = "Your request has been change to :\nREWROTED CMD>"
+        # 记录被变量信息改写的命令
+        if requestObject["action"] == "connect":
+            rewrotedCommand = \
+                rewrotedCommand + "_SSH CONNECT " + requestObject["host"] + " WITH USER " + requestObject["user"]
+            if "password" in requestObject:
+                rewrotedCommand = rewrotedCommand + " PASSWORD " + requestObject["password"]
+            if "keyFile" in requestObject:
+                rewrotedCommand = rewrotedCommand + " KEYFILE " + requestObject["keyFile"]
+        if requestObject["action"] == "execute":
+            rewrotedCommand = \
+                rewrotedCommand + "_SSH EXECUTE " + requestObject["command"]
+    return requestObject, [rewrotedCommand, ]
+
+
+def executeSshRequest(requestObject):
     global sshSession
     global sshCurrentSessionName
 
@@ -401,7 +449,7 @@ def executeSshRequest(cls, requestObject):
                     "type": "result",
                     "title": None,
                     "rows": result,
-                    "headers": ["fileName",],
+                    "headers": ["fileName", ],
                     "columnTypes": None,
                     "status": None
                 }
@@ -433,8 +481,13 @@ def executeSshRequest(cls, requestObject):
                 return
             return
 
-    except paramiko.ssh_exception.AuthenticationException as ex:
+    except paramiko.ssh_exception.AuthenticationException:
         yield {
             "type": "error",
             "message": "AuthenticationException failed."
+        }
+    except Exception as ex:
+        yield {
+            "type": "error",
+            "message": "SSH Exception :" + repr(ex)
         }

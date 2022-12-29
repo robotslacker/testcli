@@ -7,6 +7,84 @@ from .apiparse import APIRequestObjectFormatWithPrefix
 from .commands.assertExpression import evalExpression
 
 
+def sortresult(result):
+    """
+        数组排序
+
+        不能用sorted函数，需要考虑None出现在列表中特定元素的问题
+        排序遵循空值最大原则
+    """
+    for i in range(len(result) - 1, 0, -1):
+        for j in range(i - 1, -1, -1):
+            bNeedExchange = False
+            for k in range(0, len(result[i])):
+                if len(result[i]) != len(result[j]):
+                    return
+                if result[i][k] is None and result[j][k] is None:
+                    # 两边都是空值
+                    continue
+                if result[i][k] is None and result[j][k] is not None:
+                    # 左边空值， 右侧不空， 按照左侧大值来考虑
+                    break
+                if result[j][k] is None and result[i][k] is not None:
+                    # 右侧空值， 左边不空， 按照右侧大值来考虑
+                    bNeedExchange = True
+                    break
+                if not isinstance(result[i][k], type(result[j][k])):
+                    if str(result[i][k]) < str(result[j][k]):
+                        bNeedExchange = True
+                        break
+                    if str(result[i][k]) > str(result[j][k]):
+                        break
+                else:
+                    if result[i][k] < result[j][k]:
+                        bNeedExchange = True
+                        break
+                    if result[i][k] > result[j][k]:
+                        break
+            if bNeedExchange:
+                result[j], result[i] = result[i], result[j]
+
+
+def rewiteStatement(cls, statement: str, commandScriptFile: str):
+    # 随后尝试被替换内容是否为当前应用变量，环境变量
+    while True:
+        # 替换脚本中的变量信息
+        # 替换： 一： 系统的环境变量,即{{env}}
+        # 替换： 二:  系统内嵌脚本中的变量{{eval}}
+        match_obj = re.search(r"{{(.*?)}}", statement, re.IGNORECASE | re.DOTALL)
+        if match_obj:
+            beforeRewriteStatement = statement
+            searchResult = str(match_obj.group(0))
+            varName = str(match_obj.group(1)).strip()
+
+            # 先尝试在MAPPING文件中进行查找替换
+            if cls.testOptions.get("TESTREWRITE").upper() == 'ON':
+                mappingResult = cls.cmdMappingHandler.RewriteWord(commandScriptFile, varName)
+                if varName != mappingResult:
+                    statement = statement.replace(searchResult, str(mappingResult))
+
+            # 尝试本地变量
+            try:
+                evalResult = evalExpression(cls, varName)
+                if varName != evalResult:
+                    statement = statement.replace(searchResult, str(evalResult))
+            except NameError:
+                # 非环境变量
+                pass
+            # 尝试环境变量
+            if varName in os.environ:
+                statement = statement.replace(searchResult, os.environ[varName])
+
+            if statement == beforeRewriteStatement:
+                # 循环替换再也没有发生变化
+                break
+        else:
+            # 没有任何可以替换的了
+            break
+    return statement
+
+
 def rewriteHintStatement(cls, statement: str, commandScriptFile: str):
     # 命令可能会被多次改写
     rewrotedCommandHistory = []
@@ -14,43 +92,9 @@ def rewriteHintStatement(cls, statement: str, commandScriptFile: str):
     # 保留原脚本
     rawStatement = statement
 
-    # 如果打开了回写，并且指定了输出文件，且SQL被改写过，输出改写后的SQL
-    if cls.testOptions.get("TESTREWRITE").upper() == 'ON':
-        while True:
-            beforeRewriteStatement = statement
-            afterRewriteStatement = cls.mappingHandler.RewriteSQL(commandScriptFile, beforeRewriteStatement)
-            if beforeRewriteStatement != afterRewriteStatement:  # 命令已经发生了改变
-                # 记录被改写的命令
-                rewrotedCommandHistory.append(
-                    SQLFormatWithPrefix("Your hint has been changed to:\n" + afterRewriteStatement, 'REWROTED '))
-                statement = afterRewriteStatement
-            else:
-                # 一直循环到没有任何东西可以被替换
-                break
+    # 开始替换
+    statement = rewiteStatement(cls=cls, statement=statement, commandScriptFile=commandScriptFile)
 
-    while True:
-        # 替换脚本中的变量信息
-        # 替换： 一： 系统的环境变量,即{{env}}
-        # 替换： 二:  系统内嵌脚本中的变量{{eval}}
-        match_obj = re.search(r"{{(.*?)}}", statement, re.IGNORECASE | re.DOTALL)
-        if match_obj:
-            searchResult = str(match_obj.group(0))
-            varName = str(match_obj.group(1)).strip()
-            # 尝试本地变量
-            try:
-                evalResult = evalExpression(cls, varName)
-                statement = statement.replace(searchResult, str(evalResult))
-            except NameError:
-                # 非环境变量
-                pass
-            # 尝试环境变量
-            if varName in os.environ:
-                statement = statement.replace(searchResult, os.environ[varName])
-        else:
-            # 没有任何可以替换的了
-            break
-
-    # 语句发生了变化
     if rawStatement != statement:
         # 记录被变量信息改写的命令
         rewrotedCommandHistory.append(statement)
@@ -65,41 +109,8 @@ def rewriteSQLStatement(cls, statement: str, commandScriptFile: str):
     # 保留原脚本
     rawStatement = statement
 
-    # 如果打开了回写，并且指定了输出文件，且SQL被改写过，输出改写后的SQL
-    if cls.testOptions.get("TESTREWRITE").upper() == 'ON':
-        while True:
-            beforeRewriteStatement = statement
-            afterRewriteStatement = cls.mappingHandler.RewriteSQL(commandScriptFile, beforeRewriteStatement)
-            if beforeRewriteStatement != afterRewriteStatement:  # 命令已经发生了改变
-                # 记录被改写的命令
-                rewrotedCommandHistory.append(
-                    SQLFormatWithPrefix("Your SQL has been changed to:\n" + afterRewriteStatement, 'REWROTED '))
-                statement = afterRewriteStatement
-            else:
-                # 一直循环到没有任何东西可以被替换
-                break
-
-    while True:
-        # 替换脚本中的变量信息
-        # 替换： 一： 系统的环境变量,即{{env}}
-        # 替换： 二:  系统内嵌脚本中的变量{{eval}}
-        match_obj = re.search(r"{{(.*?)}}", statement, re.IGNORECASE | re.DOTALL)
-        if match_obj:
-            searchResult = str(match_obj.group(0))
-            varName = str(match_obj.group(1)).strip()
-            # 尝试本地变量
-            try:
-                evalResult = evalExpression(cls, varName)
-                statement = statement.replace(searchResult, str(evalResult))
-            except NameError:
-                # 非环境变量
-                pass
-            # 尝试环境变量
-            if varName in os.environ:
-                statement = statement.replace(searchResult, os.environ[varName])
-        else:
-            # 没有任何可以替换的了
-            break
+    # 开始替换
+    statement = rewiteStatement(cls=cls, statement=statement, commandScriptFile=commandScriptFile)
 
     # 语句发生了变化
     if rawStatement != statement:
@@ -116,179 +127,52 @@ def rewriteAPIStatement(cls, requestObject: [], commandScriptFile: str):
 
     # 保留原脚本
     rawRequestObject = copy.copy(requestObject)
-    httpRequestTarget = rawRequestObject["httpRequestTarget"]
 
+    # 替换请求目标的信息
+    httpRequestTarget = rewiteStatement(
+        cls=cls,
+        statement=rawRequestObject["httpRequestTarget"],
+        commandScriptFile=commandScriptFile)
+
+    # 替换正文信息
     if "contents" in rawRequestObject:
         httpRequestContents = copy.copy(rawRequestObject["contents"])
-    else:
-        httpRequestContents = None
-    if "httpFields" in rawRequestObject:
-        httpRequestFields = copy.copy(rawRequestObject["httpFields"])
-    else:
-        httpRequestFields = None
-    if cls.testOptions.get("TESTREWRITE").upper() == 'ON':
-        # 替换Mapping文件中Request的Header
-        while True:
-            afterRewriteStatement = cls.mappingHandler.RewriteCommand(
-                commandScriptFile, httpRequestTarget)
-            if httpRequestTarget == afterRewriteStatement:
+        # 开始替换
+        for nPos in range(0, len(httpRequestContents)):
+            newHttpRequestContent = rewiteStatement(
+                cls=cls,
+                statement=httpRequestContents[nPos],
+                commandScriptFile=commandScriptFile)
+            if newHttpRequestContent == httpRequestContents[nPos]:
                 # 一直循环到没有任何东西可以被替换
                 break
             else:
-                httpRequestTarget = afterRewriteStatement
+                httpRequestContents[nPos] = newHttpRequestContent
+    else:
+        httpRequestContents = None
 
-        # 替换Mapping文件中正文中的信息
-        if httpRequestContents is not None:
-            for nPos in range(0, len(httpRequestContents)):
-                while True:
-                    afterRewriteStatement = cls.mappingHandler.RewriteCommand(
-                        commandScriptFile, httpRequestContents[nPos])
-                    if httpRequestContents[nPos] == afterRewriteStatement:
-                        # 一直循环到没有任何东西可以被替换
-                        break
-                    else:
-                        httpRequestContents[nPos] = afterRewriteStatement
-
-        # 替换Mapping文件中Fields信息
-        if httpRequestFields is not None:
-            for key, value in httpRequestFields.items():
-                originFieldName = key
-                # 替换Fields中的Field字段
-                while True:
-                    afterRewriteStatement = cls.mappingHandler.RewriteCommand(commandScriptFile, key)
-                    if key == afterRewriteStatement:
-                        # 一直循环到没有任何东西可以被替换
-                        break
-                    else:
-                        key = afterRewriteStatement
-                # 替换Fields中的Value字段
-                while True:
-                    afterRewriteStatement = cls.mappingHandler.RewriteCommand(commandScriptFile, value)
-                    if value == afterRewriteStatement:
-                        # 一直循环到没有任何东西可以被替换
-                        break
-                    else:
-                        value = afterRewriteStatement
-                # 替换Key和Value的内容
-                if key != originFieldName:
-                    del httpRequestFields[originFieldName]
-                httpRequestFields[key] = value
-
-    # 根据环境信息替换Request的Header
-    while True:
-        # 替换脚本中的变量信息
-        # 替换： 一： 系统的环境变量,即{{env}}
-        # 替换： 二:  系统内嵌脚本中的变量{{eval}}
-        match_obj = re.search(r"{{(.*?)}}", httpRequestTarget, re.IGNORECASE | re.DOTALL)
-        if match_obj:
-            rawHttpRequestTarget = httpRequestTarget
-            searchResult = str(match_obj.group(0))
-            varName = str(match_obj.group(1)).strip()
-
-            # 尝试本地变量
-            try:
-                evalResult = evalExpression(cls, varName)
-                httpRequestTarget = httpRequestTarget.replace(searchResult, str(evalResult))
-            except NameError:
-                # 非环境变量
-                pass
-
-            # 尝试环境变量
-            if varName in os.environ:
-                httpRequestTarget = httpRequestTarget.replace(searchResult, os.environ[varName])
-
-            # 如果没有能够替换完成，也不会重复循环，直接标记为不认识的变量 #UNDEFINE_VAR#
-            if rawHttpRequestTarget == httpRequestTarget:
-                httpRequestTarget = httpRequestTarget.replace(searchResult, "#UNDEFINE_VAR#")
-        else:
-            # 没有任何可以替换的了
-            break
-
-    # 根据环境信息替换Request的Contents
-    if httpRequestContents is not None:
-        for nPos in range(0, len(httpRequestContents)):
-            while True:
-                rawHttpRequestContent = httpRequestContents[nPos]
-                match_obj = re.search(r"{{(.*?)}}", httpRequestContents[nPos], re.IGNORECASE | re.DOTALL)
-                if match_obj:
-                    searchResult = str(match_obj.group(0))
-                    varName = str(match_obj.group(1)).strip()
-                    # 尝试本地变量
-                    try:
-                        evalResult = evalExpression(cls, varName)
-                        httpRequestContents[nPos] = httpRequestContents[nPos].replace(searchResult, str(evalResult))
-                    except NameError:
-                        # 非环境变量
-                        pass
-                    # 尝试环境变量
-                    if varName in os.environ:
-                        httpRequestContents[nPos] = httpRequestContents[nPos].replace(searchResult, os.environ[varName])
-
-                    # 如果没有能够替换完成，也不会重复循环，直接标记为不认识的变量 #UNDEFINE_VAR#
-                    if rawHttpRequestContent == httpRequestContents[nPos]:
-                        httpRequestContents[nPos] = httpRequestContents[nPos].replace(searchResult, "#UNDEFINE_VAR#")
-                else:
-                    # 没有任何可以替换的了
-                    break
-
-    # 根据环境信息替换Request的Fields
-    if httpRequestFields is not None:
+    # 替换请求字段
+    if "httpFields" in rawRequestObject:
+        httpRequestFields = copy.copy(rawRequestObject["httpFields"])
         for key, value in httpRequestFields.items():
-            # 替换Fields中的Field字段
             originFieldName = key
-            while True:
-                rawFieldName = key
-                match_obj = re.search(r"{{(.*?)}}", key, re.IGNORECASE | re.DOTALL)
-                if match_obj:
-                    searchResult = str(match_obj.group(0))
-                    varName = str(match_obj.group(1)).strip()
-                    # 尝试本地变量
-                    try:
-                        evalResult = evalExpression(cls, varName)
-                        key = key.replace(searchResult, str(evalResult))
-                    except NameError:
-                        # 非环境变量
-                        pass
-                    # 尝试环境变量
-                    if varName in os.environ:
-                        key = key.replace(searchResult, os.environ[varName])
-
-                    # 如果没有能够替换完成，也不会重复循环，直接标记为不认识的变量 #UNDEFINE_VAR#
-                    if rawFieldName == key:
-                        key = key.replace(searchResult, "#UNDEFINE_VAR#")
-                else:
-                    # 没有任何可以替换的了
-                    break
-            # 替换Fields中的Value字段
-            while True:
-                rawFieldValue = value
-                match_obj = re.search(r"{{(.*?)}}", value, re.IGNORECASE | re.DOTALL)
-                if match_obj:
-                    searchResult = str(match_obj.group(0))
-                    varName = str(match_obj.group(1)).strip()
-                    # 尝试本地变量
-                    try:
-                        evalResult = evalExpression(cls, varName)
-                        value = value.replace(searchResult, str(evalResult))
-                    except NameError:
-                        # 非环境变量
-                        pass
-                    # 尝试环境变量
-                    if varName in os.environ:
-                        value = value.replace(searchResult, os.environ[varName])
-
-                    # 如果没有能够替换完成，也不会重复循环，直接标记为不认识的变量 #UNDEFINE_VAR#
-                    if rawFieldValue == value:
-                        value = value.replace(searchResult, "#UNDEFINE_VAR#")
-                else:
-                    # 没有任何可以替换的了
-                    break
-
-            # 替换Key和Value的内容
-            if key != originFieldName:
+            key = rewiteStatement(
+                cls=cls,
+                statement=originFieldName,
+                commandScriptFile=commandScriptFile)
+            if originFieldName != key:
+                # 替换Fields中的Field字段
                 del httpRequestFields[originFieldName]
+            value = rewiteStatement(
+                cls=cls,
+                statement=value,
+                commandScriptFile=commandScriptFile)
+            # 替换Fields中的Value字段
             httpRequestFields[key] = value
+    else:
+        httpRequestFields = None
 
+    # 更新回原请求对象
     requestObject["httpRequestTarget"] = httpRequestTarget
     if httpRequestContents is not None:
         requestObject["contents"] = httpRequestContents
@@ -312,13 +196,21 @@ def parseSQLHints(commandHints: list):
 
     for commandHint in commandHints:
         # [Hint]  Scenario:XXXX   -- 相关SQL的Scenariox信息，仅仅作为日志信息供查看
-        match_obj = re.search(
+        match_obj = re.match(
             r"^Scenario:(.*)", commandHint, re.IGNORECASE | re.DOTALL)
         if match_obj:
-            senario = match_obj.group(1)
-            # 如果只有一个内容， 规则是:Scenario:ScenarioName
-            commandHintList["Scenario"] = senario
-            continue
+            senario = match_obj.group(1).strip()
+            if len(senario.split(':')) == 2:
+                # 如果包含两个内容， 规则是:Scenario:<ScenarioId>:<ScenarioName>
+                scenarioSplitList = senario.split(':')
+                commandHintList["ScenarioId"] = scenarioSplitList[0].strip()
+                commandHintList["ScenarioName"] = scenarioSplitList[1].strip()
+                continue
+            else:
+                # 如果只有一个内容， 规则是:Scenario:ScenarioName
+                commandHintList["ScenarioId"] = "N/A"
+                commandHintList["ScenarioName"] = senario
+                continue
 
         # [Hint]  order           -- TestCli将会把随后的SQL语句进行排序输出，原程序的输出顺序被忽略
         match_obj = re.search(r"^order", commandHint, re.IGNORECASE | re.DOTALL)
@@ -367,14 +259,22 @@ def parseAPIHints(commandHints: list):
     commandHintList = {}
 
     for commandHint in commandHints:
-        # [Hint]  Scenario:XXXX   -- 相关命令的Scenario信息
-        match_obj = re.search(
+        # [Hint]  Scenario:XXXX   -- 相关SQL的Scenariox信息，仅仅作为日志信息供查看
+        match_obj = re.match(
             r"^Scenario:(.*)", commandHint, re.IGNORECASE | re.DOTALL)
         if match_obj:
-            senario = match_obj.group(1)
-            # 如果只有一个内容， 规则是:Scenario:ScenarioName
-            commandHintList["Scenario"] = senario
-            continue
+            senario = match_obj.group(1).strip()
+            if len(senario.split(':')) == 2:
+                # 如果包含两个内容， 规则是:Scenario:<ScenarioId>:<ScenarioName>
+                scenarioSplitList = senario.split(':')
+                commandHintList["ScenarioId"] = scenarioSplitList[0].strip()
+                commandHintList["ScenarioName"] = scenarioSplitList[1].strip()
+                continue
+            else:
+                # 如果只有一个内容， 规则是:Scenario:ScenarioName
+                commandHintList["ScenarioId"] = "N/A"
+                commandHintList["ScenarioName"] = senario
+                continue
 
         # [Hint]  LogFilter      -- TestCli会过滤随后显示的输出信息，对于符合过滤条件的，将会被过滤
         match_obj = re.search(

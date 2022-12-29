@@ -1,0 +1,37 @@
+SQL> _connect /mem
+Database connected.
+SQL> _load map testsqlmapping
+Mapping file loaded.
+SQL>
+SQL> -- 在sqlmapping的作用下，这里的TABA应该被替换成TAB1
+SQL> create table {{TABA}}
+   > (
+   >     id  int
+   > );
+REWROTED SQL> Your SQL has been changed to:
+REWROTED    > create table TAB1
+REWROTED    > (
+REWROTED    >     id  int
+REWROTED    > )
+0 row affected.
+SQL>
+SQL> insert into {{TABA}} values(3);
+REWROTED SQL> Your SQL has been changed to:
+REWROTED    > insert into TAB1 values(3)
+1 row affected.
+SQL> insert into {{TABA}} values(4);
+REWROTED SQL> Your SQL has been changed to:
+REWROTED    > insert into TAB1 values(4)
+1 row affected.
+SQL>
+SQL> -- [Order]
+SQL> select * from {{TABA}};
+REWROTED SQL> Your SQL has been changed to:
+REWROTED    > select * from TAB1
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 |  3 |
+|      2 |  4 |
++--------+----+
+2 rows selected.

@@ -150,19 +150,25 @@ def loadJDBCDriver(cls,
     }
 
 
-# 加载数命令行映射
+# 加载命令行映射信息
 def loadMap(cls, mapFile: str):
-    cls.testOptions.set("TESTREWRITE", "ON")
-    cls.cmdMappingHandler.loadCommandMappings(
-        commandScriptFileName=cls.script,
-        commandMappings=mapFile
-    )
-    cls.commandMap = mapFile
-    yield {
-        "type": "result",
-        "title": None,
-        "rows": None,
-        "headers": None,
-        "columnTypes": None,
-        "status": 'Mapping file loaded.'
-    }
+    try:
+        cls.cmdMappingHandler.loadCommandMappings(
+            commandScriptFileName=cls.executeScript,
+            commandMappings=mapFile
+        )
+        cls.testOptions.set("TESTREWRITE", "ON")
+        cls.commandMap = mapFile
+        yield {
+            "type": "result",
+            "title": None,
+            "rows": None,
+            "headers": None,
+            "columnTypes": None,
+            "status": 'Mapping file loaded.'
+        }
+    except TestCliException as te:
+        yield {
+            "type": "error",
+            "message": te.message
+        }

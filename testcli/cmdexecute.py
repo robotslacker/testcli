@@ -38,6 +38,7 @@ from .commands.cliSleep import cliSleep
 from .commands.userNameSpace import userNameSpace
 from .commands.whenever import setWheneverAction
 from .commands.ssh import executeSshRequest
+from .commands.ssh import rewriteSshRequest
 from .commands.compare import executeCompareRequest
 
 from .common import rewriteHintStatement
@@ -45,6 +46,7 @@ from .common import rewriteSQLStatement
 from .common import rewriteAPIStatement
 from .common import parseSQLHints
 from .common import parseAPIHints
+from .common import sortresult
 from .testcliexception import TestCliException
 from .globalvar import lastCommandResult
 
@@ -73,7 +75,8 @@ class CmdExecute(object):
         self.mappingHandler = None
 
         # Scenario名称，如果当前未指定，则重复上一个命令的Scenario信息
-        self.scenario = ''
+        self.scenarioId = ''
+        self.scenarioName = ''
 
         # 当前脚本的TimeOut设置
         self.sqlTimeOut = -1          # SQL执行的超时时间设置
@@ -153,40 +156,6 @@ class CmdExecute(object):
             if "TESTCLI_DEBUG" in os.environ:
                 click.secho("[DEBUG] JQ Parse Error: " + repr(je))
             return "****"
-
-    @staticmethod
-    def sortresult(result):
-        # 无法使用系统默认的排序函数，这里空值总是置于最后
-        for i in range(len(result) - 1, 0, -1):
-            for j in range(i - 1, -1, -1):
-                bNeedExchange = False
-                for k in range(0, len(result[i])):
-                    if len(result[i]) != len(result[j]):
-                        return
-                    if result[i][k] is None and result[j][k] is None:
-                        # 两边都是空值
-                        continue
-                    if result[i][k] is None and result[j][k] is not None:
-                        # 左边空值， 右侧不空， 按照左侧大值来考虑
-                        break
-                    if result[j][k] is None and result[i][k] is not None:
-                        # 右侧空值， 左边不空， 按照右侧大值来考虑
-                        bNeedExchange = True
-                        break
-                    if not isinstance(result[i][k], type(result[j][k])):
-                        if str(result[i][k]) < str(result[j][k]):
-                            bNeedExchange = True
-                            break
-                        if str(result[i][k]) > str(result[j][k]):
-                            break
-                    else:
-                        if result[i][k] < result[j][k]:
-                            bNeedExchange = True
-                            break
-                        if result[i][k] > result[j][k]:
-                            break
-                if bNeedExchange:
-                    result[j], result[i] = result[i], result[j]
 
     def getcommandResult(self, cursor, rowcount):
         """
@@ -564,9 +533,7 @@ class CmdExecute(object):
                             print("[DEBUG] Apply Sort for this result 2.")
                         # 不能用sorted函数，需要考虑None出现在列表中特定元素的问题
                         # l =  [(-32767,), (32767,), (None,), (0,)]
-                        # l = sorted(l, key=lambda x: (x is None, x))
-                        # '<' not supported between instances of 'NoneType' and 'int'
-                        self.sortresult(result)
+                        sortresult(result)
 
                     # 如果Hint中存在LogFilter，则结果集中过滤指定的输出信息
                     if "LogFilter" in sqlHints.keys() and result is not None:
@@ -848,10 +815,19 @@ class CmdExecute(object):
 
                     # 没有任何有效的语句，可能是空行或者完全的注释
                     # 对于注释中的Hint信息需要保留下来
+                    # Hint的两种写法
+                    # 1.  -- [Hint]  hintsomething
+                    # 2.  -- [hitsomething]
                     pattern = r"^(\s+)?([-/][-/])(\s+)?\[(\s+)?Hint(\s+)?\](.*)"
                     matchObj = re.match(pattern, statementLine, re.IGNORECASE)
                     if matchObj:
                         currentHints.append(matchObj.group(6).strip())
+                    else:
+                        pattern = r"^(\s+)?([-/][-/])(\s+)?\[(.*)\].*"
+                        matchObj = re.match(pattern, statementLine, re.IGNORECASE)
+                        if matchObj:
+                            currentHints.append(matchObj.group(4).strip())
+
                     # 解析后的语句
                     ret_CommandSplitResults.append(None)
                     # 解析前的语句
@@ -913,13 +889,16 @@ class CmdExecute(object):
             # 如果是空语句，不需要执行，但可能是完全注释行
             # 也可能是一个解析错误的语句
             if ret_CommandSplitResults[pos] is None:
-                yield {
-                    "type": "parse",
-                    "rawCommand": ret_CommandSplitResults[pos],
-                    "formattedCommand": formattedCommand,
-                    "rewrotedCommand": [],
-                    "script": commandScriptFile
-                }
+                if self.loopMode and not self.loopCondition:
+                    pass
+                else:
+                    yield {
+                        "type": "parse",
+                        "rawCommand": ret_CommandSplitResults[pos],
+                        "formattedCommand": formattedCommand,
+                        "rewrotedCommand": [],
+                        "script": commandScriptFile
+                    }
                 pos = pos + 1
                 continue
             else:
@@ -1014,12 +993,15 @@ class CmdExecute(object):
                                 ["REWROTED Hint> " + str(commandHintKey) + ":" + str(commandHintNewValue), ],
                             "script": commandScriptFile
                         }
-            if "Scenario" in commandHintList:
-                scenarioName = str(commandHintList["Scenario"])
+            if "ScenarioName" in commandHintList:
+                scenarioName = str(commandHintList["ScenarioName"])
+                scenarioId = str(commandHintList["ScenarioId"])
                 if scenarioName.strip().upper() == 'END':
-                    self.scenario = ""
+                    self.scenarioName = ""
+                    self.scenarioId = ""
                 else:
-                    self.scenario = scenarioName
+                    self.scenarioName = scenarioName
+                    self.scenarioId = scenarioId
 
             # 处理各种命令
             sqlKeyWords = ["SELECT", "DELETE", "UPDATE", "CREATE", "INSERT",
@@ -1035,6 +1017,9 @@ class CmdExecute(object):
                 ):
                     yield commandResult
             elif parseObject["name"] == "START":
+                # 执行脚本前记录当前执行的脚本名称
+                savedExecuteScript = self.cliHandler.executeScript
+                self.cliHandler.executeScript = parseObject["script"]
                 # 执行脚本文件
                 for commandResult in executeFile(
                         cls=self.cliHandler,
@@ -1042,6 +1027,8 @@ class CmdExecute(object):
                         argv=parseObject["argv"],
                 ):
                     yield commandResult
+                # 执行脚本后还原当前执行脚本的名称
+                self.cliHandler.executeScript = savedExecuteScript
             elif parseObject["name"] in ["EXIT", "QUIT"]:
                 # 执行脚本文件
                 if "exitValue" in parseObject.keys():
@@ -1052,6 +1039,13 @@ class CmdExecute(object):
                         cls=self.cliHandler,
                         exitValue=exitValue
                 ):
+                    if commandResult["type"] == "result":
+                        lastCommandResult.clear()
+                        lastCommandResult["status"] = commandResult["status"]
+                        lastCommandResult["errorCode"] = 0
+                    if commandResult["type"] == "error":
+                        lastCommandResult["status"] = commandResult["message"]
+                        lastCommandResult["errorCode"] = 1
                     yield commandResult
             elif parseObject["name"] == "CONNECT":
                 # 执行CONNECT命令
@@ -1082,6 +1076,13 @@ class CmdExecute(object):
                         cls=self.cliHandler,
                         options=parseObject
                 ):
+                    if commandResult["type"] == "result":
+                        lastCommandResult.clear()
+                        lastCommandResult["status"] = commandResult["status"]
+                        lastCommandResult["errorCode"] = 0
+                    if commandResult["type"] == "error":
+                        lastCommandResult["status"] = commandResult["message"]
+                        lastCommandResult["errorCode"] = 1
                     yield commandResult
             elif parseObject["name"] == "DISCONNECT":
                 # 执行DISCONNECT命令
@@ -1089,6 +1090,13 @@ class CmdExecute(object):
                     for commandResult in disconnectDb(
                             cls=self.cliHandler
                     ):
+                        if commandResult["type"] == "result":
+                            lastCommandResult.clear()
+                            lastCommandResult["status"] = commandResult["status"]
+                            lastCommandResult["errorCode"] = 0
+                        if commandResult["type"] == "error":
+                            lastCommandResult["status"] = commandResult["message"]
+                            lastCommandResult["errorCode"] = 1
                         yield commandResult
                 else:
                     yield {
@@ -1164,6 +1172,13 @@ class CmdExecute(object):
                         cls=self.cliHandler,
                         fileName=parseObject["file"]
                 ):
+                    if commandResult["type"] == "result":
+                        lastCommandResult.clear()
+                        lastCommandResult["status"] = commandResult["status"]
+                        lastCommandResult["errorCode"] = 0
+                    if commandResult["type"] == "error":
+                        lastCommandResult["status"] = commandResult["message"]
+                        lastCommandResult["errorCode"] = 1
                     yield commandResult
             elif parseObject["name"] in ["SESSION"]:
                 for commandResult in sessionManage(
@@ -1171,12 +1186,26 @@ class CmdExecute(object):
                         action=parseObject["action"],
                         sessionName=parseObject["sessionName"]
                 ):
+                    if commandResult["type"] == "result":
+                        lastCommandResult.clear()
+                        lastCommandResult["status"] = commandResult["status"]
+                        lastCommandResult["errorCode"] = 0
+                    if commandResult["type"] == "error":
+                        lastCommandResult["status"] = commandResult["message"]
+                        lastCommandResult["errorCode"] = 1
                     yield commandResult
             elif parseObject["name"] in ["SCRIPT"]:
                 for commandResult in executeEmbeddScript(
                         cls=self.cliHandler,
                         block=parseObject["block"]
                 ):
+                    if commandResult["type"] == "result":
+                        lastCommandResult.clear()
+                        lastCommandResult["status"] = commandResult["status"]
+                        lastCommandResult["errorCode"] = 0
+                    if commandResult["type"] == "error":
+                        lastCommandResult["status"] = commandResult["message"]
+                        lastCommandResult["errorCode"] = 1
                     yield commandResult
             elif parseObject["name"] in ["ASSERT"]:
                 for commandResult in assertExpression(
@@ -1197,6 +1226,13 @@ class CmdExecute(object):
                             cls=self.cliHandler,
                             pluginFile=parseObject["pluginFile"]
                     ):
+                        if commandResult["type"] == "result":
+                            lastCommandResult.clear()
+                            lastCommandResult["status"] = commandResult["status"]
+                            lastCommandResult["errorCode"] = 0
+                        if commandResult["type"] == "error":
+                            lastCommandResult["status"] = commandResult["message"]
+                            lastCommandResult["errorCode"] = 1
                         yield commandResult
                 elif parseObject["option"] == "JDBCDRIVER":
                     driverName = None
@@ -1222,12 +1258,26 @@ class CmdExecute(object):
                             driverURL=driverURL,
                             driverProps=driverProps
                     ):
+                        if commandResult["type"] == "result":
+                            lastCommandResult.clear()
+                            lastCommandResult["status"] = commandResult["status"]
+                            lastCommandResult["errorCode"] = 0
+                        if commandResult["type"] == "error":
+                            lastCommandResult["status"] = commandResult["message"]
+                            lastCommandResult["errorCode"] = 1
                         yield commandResult
                 elif parseObject["option"] == "MAP":
                     for commandResult in loadMap(
                             cls=self.cliHandler,
                             mapFile=parseObject["mapFile"]
                     ):
+                        if commandResult["type"] == "result":
+                            lastCommandResult.clear()
+                            lastCommandResult["status"] = commandResult["status"]
+                            lastCommandResult["errorCode"] = 0
+                        if commandResult["type"] == "error":
+                            lastCommandResult["status"] = commandResult["message"]
+                            lastCommandResult["errorCode"] = 1
                         yield commandResult
             elif parseObject["name"] in ["HTTP"]:
                 if self.ifMode and not self.ifCondition:
@@ -1318,8 +1368,22 @@ class CmdExecute(object):
                 ):
                     yield result
             elif parseObject["name"] in ["SSH"]:
+                parseObject, rewrotedCommandList = rewriteSshRequest(
+                    cls=self.cliHandler,
+                    requestObject=parseObject,
+                    commandScriptFile=commandScriptFile
+                )
+                if len(rewrotedCommandList) != 0:
+                    # 如果命令被发生了改写，要打印改写记录
+                    yield {
+                        "type": "parse",
+                        "rawCommand": None,
+                        "formattedCommand": None,
+                        "rewrotedCommand": rewrotedCommandList,
+                        "script": commandScriptFile
+                    }
+
                 for result in executeSshRequest(
-                        cls=self.cliHandler,
                         requestObject=parseObject,
                 ):
                     yield result
@@ -1346,14 +1410,18 @@ class CmdExecute(object):
 
             # 记录命令的日志信息
             if self.testOptions.get("SILENT").upper() == 'OFF':
-                if "status" in lastCommandResult:
-                    commandStatus = lastCommandResult["status"]
-                else:
+                if parseObject["name"] == "START":
                     commandStatus = ""
-                if "errorCode" in lastCommandResult:
-                    commandErrorCode = lastCommandResult["errorCode"]
-                else:
                     commandErrorCode = ""
+                else:
+                    if "status" in lastCommandResult:
+                        commandStatus = lastCommandResult["status"]
+                    else:
+                        commandStatus = ""
+                    if "errorCode" in lastCommandResult:
+                        commandErrorCode = lastCommandResult["errorCode"]
+                    else:
+                        commandErrorCode = ""
                 yield {
                     "type": "statistics",
                     "startedTime": startTime,
@@ -1364,7 +1432,8 @@ class CmdExecute(object):
                     "command": json.dumps(obj=parseObject, sort_keys=True, ensure_ascii=False),
                     "commandStatus": commandStatus,
                     "errorCode": commandErrorCode,
-                    "scenario": self.scenario
+                    "scenarioId": self.scenarioId,
+                    "scenarioName": self.scenarioName
                 }
 
             # 开始执行下一个语句

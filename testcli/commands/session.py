@@ -15,8 +15,7 @@ def sessionManage(cls, action: str, sessionName: str = None):
             if m_Connection[0] is None:
                 result.append(['None', str(m_Session_Name), str(m_Connection[1]), '******', str(m_Connection[3])])
             else:
-                result.append(['Connection', str(m_Session_Name), str(m_Connection[1]),
-                                 '******', str(m_Connection[3])])
+                result.append(['Connection', str(m_Session_Name), str(m_Connection[1]), '******', str(m_Connection[3])])
         if cls.db_conn is not None:
             result.append(['Current', str(cls.db_sessionName), str(cls.db_username), '******', str(cls.db_url)])
         if len(result) == 0:

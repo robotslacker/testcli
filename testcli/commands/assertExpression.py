@@ -40,7 +40,7 @@ def evalExpression(cls, expression: str):
         "columnTypes": None,
         "status": None
     }
-    localEmbeddScriptScope["sessionContext"] = sessionContext
-    localEmbeddScriptScope["lastCommandResult"] = lastCommandResult
+    globalEmbeddScriptScope["sessionContext"] = sessionContext
+    globalEmbeddScriptScope["lastCommandResult"] = lastCommandResult
 
     return eval(expression, globalEmbeddScriptScope, localEmbeddScriptScope)
