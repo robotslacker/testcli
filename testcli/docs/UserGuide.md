@@ -125,12 +125,12 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
 安装后步骤-更新驱动程序配置：  
    * 根据你的需要， 放置自己的jar包到 <PYTHON_HONE>/../site-packages/testcli/jlib下
    * github上提供的仅仅是一些测试用的Jar包，请根据需要，自行添加实际需要的Jar包
-   * 如果自行了添加了jar包，修改testCli/conf/testcli.ini文件：  
+   * 如果自行了添加了jar包，修改testcli/conf/testcli.ini文件：  
    
 ***
 
 ### 第一次使用
-安装后直接在命令下执行TestCli命令即可。  
+安装后直接在命令下执行testcli命令即可。  
 如果你的<PYTHON_HOME>/scripts没有被添加到当前环境的$PATH中，你可能需要输入全路径名  
 ```
 (base) C:\>testcli
@@ -195,7 +195,7 @@ jdbcurl=jdbc:mysql://${host}:${port}/${service}
 * 数据库的具体配置应该在具体的配置项中  
   filename：      可选配置项，jar包具体的名字  
   driver:         可选配置项，数据库连接的主类  
-  jdbcurl:        可选配置项，jdbc连接字符串，其中${host}${port}${service}分别表示数据库连接主机，端口，数据库名称  
+  jdbcurl:        可选配置项，jdbc连接字符串，其中${host} ${port} ${service}分别表示数据库连接主机，端口，数据库名称  
   jdbcprop:       可选配置项，若该数据库连接需要相应的额外参数，则在此处配置
 
 ### 程序的命令行参数
@@ -509,7 +509,7 @@ Disconnected.
 
 ***
 
-# 只能看到这里了，以下的文档还没有来得及更新 ---
+# 以下内容尚未来得及更新，请等等哈
 
 
 ### 在TestCli里面查看当前支持的命令
@@ -735,7 +735,7 @@ SQL*Cli Release 0.0.31
 SQL> loadcommandMap map1
 Mapping file loaded.
 这里的map1表示一个重写配置文件，这里可以写多个配置文件的名字，比如loadcommandMap map1,map2,map3，多个文件名之间用逗号分隔
-
+```
 
 ### 执行数据库SQL语句
 在数据库连接成功后，我们就可以执行我们需要的SQL语句了，对于不同的SQL语句我们有不同的语法格式要求。  
@@ -1453,7 +1453,7 @@ Mapping file loaded.
 
 ```
 
-# 以上文件还没有更新哈
+# 以上文件还没有更新，请等等哈
 
 ***    
 
@@ -1663,7 +1663,7 @@ SQL> do some sql
 SQL> _JOB job timer slave_finished;
 ```
 
-#### 脚本中使用COMPARE命令来比较文件差异性
+### 脚本中使用COMPARE命令来比较文件差异性
 通常我们用比较的方式来比对一个执行结果和预期执行结果的差异性。来判断当前测试是否正确执行。
 ```
    _COMPARE <需要比对的文件名> <比对参考文件> {MASK | NOMASK | CASE | NOCASE | IGBLANK | NOIGBLANK | TRIM | NOTRIM}
@@ -1716,7 +1716,7 @@ SQL> _JOB job timer slave_finished;
 5. OUTPUT 将比对的结果输出到控制台或者一个DIFF文件中
    1. 也可以即输出到控制台，也输出到DIFF文件中。设置方法： _COMPARE SET OUTPUT CONSOLE DIFFFILE;
 
-#### 脚本中使用SSH命令来远程执行命令以及上传、下载文件
+### 脚本中使用SSH命令来远程执行命令以及上传、下载文件
 1. SSH命令主要用来远程执行命令，以及上传、下载文件
 ```
     _SSH CONNECT <远程主机名称/IP地址> WITH USER <远程主机用户名> KEYFILE <用户密钥文件位置>
@@ -1747,7 +1747,7 @@ SQL> _JOB job timer slave_finished;
       PUT 可以用正则表达式上传一系列文件
 ```
 
-#### 使用spool命令来将当前执行结果输出到文件中
+### 使用spool命令来将当前执行结果输出到文件中
 1. SPOOL主要用来把随后语句的执行结果记录到特定的文件中
     ```
         _SPOOL  <输出的文件名>
@@ -1788,7 +1788,7 @@ SQL> _JOB job timer slave_finished;
    3. 如果程序运行过程中没有提供logfile信息，且程序在命令行中运行，则spool结果文件目录就是用户所在的当前目录
 
 ***  
-#### 脚本中使用ECHO来生成简易的文件
+### 脚本中使用ECHO来生成简易的文件
 1. ECHO主要用来快速的生成一些小的脚本和文件。例如：
     ```
     _ECHO <输出的文件名>
@@ -1799,7 +1799,7 @@ SQL> _JOB job timer slave_finished;
     ```
 2. 这里文件内容的所有东西都将被直接输出到指定的文件中，包括换行符等信息
 
-#### 程序退出
+### 程序退出
 如果你执行一个脚本，则在以下三种情况下会退出
 1. 脚本执行失败。并且设置_WHENEVER ERROR EXIT <INT>的时候。退出的值将是这里的<INT>值
 2. 脚本执行结束。退出值为0
