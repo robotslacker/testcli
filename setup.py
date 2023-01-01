@@ -40,7 +40,7 @@ setup(
     keywords='test command sql api',
     long_description_content_type='text/markdown',
     platforms='any',
-    install_requires=['JPype1', 'setproctitle', 'urllib3',
+    install_requires=['JPype1', 'setproctitle', 'urllib3<1.27',
                       'click', 'prompt_toolkit',  'paramiko', 'antlr4-python3-runtime',
                       'hdfs', 'fs',
                       "rich",
@@ -58,7 +58,7 @@ setup(
         'conf/*ini', 'profile/*',
         'antlrgen/*', 'commands/*',
         'test/*',
-        'UserGuide.md'
+        'docs/UserGuide.md'
     ]},
     python_requires='>=3.6',
     entry_points={
