@@ -1,3 +1,4 @@
+SQL> _start testjobmanager.sql
 SQL> _job jobmanager on;
 Job manager started successful.
 SQL>
@@ -26,3 +27,5 @@ SQL> select * from testtab order by id;
 |      3 | 30 | slave2 |
 +--------+----+--------+
 3 rows selected.
+SQL> _exit
+Disconnected.

@@ -104,7 +104,11 @@ mode AssertMode;
 ASSERT_SPACE        : [ \t]+ -> channel (HIDDEN);
 ASSERT_OPEN         : '{%';
 ASSERT_CLOSE        : '%}';
-ASSERT_EXPRESSION   : ASSERT_OPEN .*? ASSERT_CLOSE -> popMode;
+ASSERT_CRLF         : CRLF -> popMode;
+ASSERT_EXPRESSION   : ASSERT_OPEN .*? ASSERT_CLOSE;
+ASSERT_NAME         : (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' )+;
+ASSERT_COMMA        : ',';
+ASSERT_SEMICOLON    : ';';
 
 mode LoadMode;
 LOAD_SPACE          : [ \t]+ -> channel (HIDDEN);

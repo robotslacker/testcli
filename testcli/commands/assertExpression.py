@@ -4,10 +4,20 @@ from ..globalvar import localEmbeddScriptScope
 from ..globalvar import lastCommandResult
 
 
-def assertExpression(cls, expression: str):
+def assertExpression(cls, expression: str, assertName: str):
     try:
         ret = evalExpression(cls, expression)
         if type(ret) == bool:
+            if ret:
+                if assertName is None:
+                    status = "Assert successful."
+                else:
+                    status = "Assert [" + assertName + "] successful."
+            else:
+                if assertName is None:
+                    status = "Assert fail."
+                else:
+                    status = "Assert [" + assertName + "] fail."
             if ret:
                 yield {
                     "type": "result",
@@ -15,12 +25,12 @@ def assertExpression(cls, expression: str):
                     "rows": "",
                     "headers": "",
                     "columnTypes": "",
-                    "status": "Assert successful."
+                    "status": status
                 }
             else:
                 yield {
                     "type": "error",
-                    "message": "Assert fail."
+                    "message": status
                 }
     except Exception as ae:
         yield {

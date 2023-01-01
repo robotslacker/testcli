@@ -21,7 +21,12 @@ def runServer():
     """
     This function to run configured uvicorn server.
     """
-    uvicorn.run(app=mockApp, host=appHost, port=appPort)
+    uvicorn.run(
+        app=mockApp,
+        host=appHost,
+        port=appPort,
+        log_level="critical"
+    )
 
 
 def startServer():

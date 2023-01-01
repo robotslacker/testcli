@@ -1,3 +1,4 @@
+SQL> _start testcompare.sql
 SQL> _use sql;
 Current NameSpace: SQL.
 SQL> _COMPARE SET;
@@ -86,3 +87,5 @@ SQL> _COMPARE testcomparework.txt testcompareref.txt MASK NOCASE;
 |      2 | + |            |      4    | France  |
 +--------+---+------------+-----------+---------+
 Compare failed.
+SQL> _exit
+Disconnected.

@@ -1,24 +1,47 @@
 # TestCli 快速说明
 
-TestCli 是一个主要用Python完成的，命令快速的测试工具。  
-设计目的：  
-    1： 满足数据库方面的相关功能测试、压力测试需要。  
-    2： 满足API方面的相关功能测试、压力测试需要。  
-    3： 能够作为一个日常小工具，进行数据库的日常操作。    
-    4： 能够根据需要快速、灵活的生成测试需要的随机数据。   
-    5： 能够操作Kafka消息队列。   
-    6： 能够操作HDFS上的文件。  
-    7： 完成基于执行结果比对的回归测试校验。
+TestCli 是一个主要用Python完成的，基于命令行下运行的，精致的测试工具。    
 
-程序可以通过JPype连接数据库的JDBC驱动。      
+### 概要
+#### 设计目的：  
+* 满足数据库方面的相关功能测试、压力测试需要。   
+* 满足API方面的相关功能测试、压力测试需要。
+* 能够作为一个日常小工具，进行数据库的日常操作，进行数据查询、更新等。      
+* 更多的为测试工作带来的便利功能，包括：
+  * 方便的用来生成随机数据文件的工具。 
+  * 使用提示（Hint）信息来过滤或者掩码输出结果。
+  * 使用TermOut，FeedBack，ECHO来控制显示输出的内容。
+  * 使用ECHO来生成一些临时性的测试文件
+  * 使用COMPARE来进行文件级别的内容比对，比对过程中支持了正则表达过滤，正则表达掩码
+  * 使用SSH来完成远程主机命令的操作，文件的上传和下载
+  * 使用ASSERT来判断运行的结果
+  * 使用JOBMANAGER来并行执行多个脚本，并提供了聚合点的完整支持
+  * 使用PLUGIN来加载完成的Python文件作为测试功能的扩展
+  * 支持在测试脚本中嵌入Python语法来完成一些常规难以完整的验证
+  * 支持对测试脚本中的变量信息进行宏替换，包括基于映射文件的替换，基于应用变量的替换，基于环境变量的替换
+  * 支持在程序中捕捉返回的上下文信息，利用前面执行的结果来影响后续的影响结果
+  * 支持在程序中使用LOOP，IF等循环、条件判断表达式，来完成复杂的测试逻辑
 
-TestCli 目前可以支持的数据库有：  
+#### 背景描述
+* TestCli的前身是SQLCli，另外一个类似项目。 TestCli是基于SQLCli进行改进，并废弃了SQLCli中一些不常用的功能。
+* TestCli利用了Prompt_Toolkit，这是一个Python的开源软件，基于Prompt_Toolkit，TestCli实现了命令行的输入、历史语句的记录、语句的翻页等。
+* TestCli利用了Antlr，将基本的语法内容用Antlr进行描述，并根据解析的结果进行执行。
+* 对于SQL部分，TestCli利用JDBC桥（JPype）作为依托，将所有用户输入的SQL转换为JDBC语句，并进行执行。
+* 早期的SQLCli，利用JayDeBeApi作为连接数据库的方法，但是很快废弃了JayDeBeApi，这是因为
+  * JayDeBeApi对于JDBC的支持并不完全标准，对于一些LOB类型，支持很差
+  * JayDeBeApi返回的数据类型不是原生的Python数据类型（而是Java类型），这给后续的处理带来困难
+  * JayDeBeApi并不是一个多线程应用，在多线程下，其加载JAVAVM的方式会带来错误
+* 早期的SQLCli，支持了ODBC的连接方式，并实现了一些简单的语句，但是由于并没有多少的实际使用场景，所以这部分功能在迁移到TestCli后被删除了
+ 
+#### TestCli 目前可以支持的数据库有：  
    * Oracle,MySQL,PostgreSQL,SQLServer,TeraData, Hive, H2等主流通用数据库  
    * 达梦，神通， 金仓， 南大通用，LinkoopDB, 快立方等众多国产数据库  
    * ClickHouse数据库      
-   * 其他符合标准JDBC规范的数据库  
+   * 其他符合标准JDBC规范的数据库
+   * 以上描述的支持是指在相关数据库上进行过基本的测试，但显然我们没法覆盖全部的测试点
    
-TestCli 目前支持的数据类型有：
+#### TestCli 数据类型映射：
+以下是数据库类型到TestCli中数据类型的映射关系（右面的数据类型均为Python的原生数据类型）：
 ```  
     CHAR                                  ====>     str
     VARCHAR                               ====>     str
@@ -50,24 +73,11 @@ TestCli 目前支持的数据类型有：
 ```
 ***
 
-### 谁需要使用这个工具
-
-需要通过SQL语句来查看、维护数据库的。  
-需要通过API语句来完成业务的。  
-需要进行各种数据库功能测试、压力测试的。  
-需要进行各种API功能测试、压力测试的。  
-需要用统一的方式来连接各种不同数据库的。  
-需要在一个测试程序内部组合使用数据库请求、API请求的。  
-
-
-### 为什么要设计这个工具
+### 这个工具不能做什么
 这个工具的存在目的不是为了替代各种数据库的命令行工具，如Oracle的SQLPlus，MYSQL的mysql等  
 这个工具的存在目的不是为了替代PostMan，JMeter等测试工具。  
 这个工具的存在目的是在尽可能地兼容这些命令行工具的同时提供测试工作需要的相关特性。    
-这些特性包括：  
-1：并发脚本的支持，通过在脚本中使用JOBManager，可以同时执行多个脚本，同时利用时间戳还可以同步脚本之前的行为。    
-2：一些internal的命令，可以完成数据库之外的相关操作。  
-
+选择了Python作为开发工具，工具本身部署的复杂性和对环境的依赖性决定了这个工具无法作为产品的功能之一交付给客户。  
 
 ***
 ### 安装
@@ -83,56 +93,68 @@ TestCli 目前支持的数据类型有：
      brew install gcc  
 
 依赖的第三方安装包：  
-   * 这些安装包会在robotslacker-TestCli安装的时候自动随带安装
+   * 这些安装包会在robotslacker-testcli安装的时候自动随带安装
    * click                    : Python的命令行参数处理
    * hdfs                     : HDFS类库，支持对HDFS文件操作
    * JPype1                   : Python的Java请求封装，用于完成JDBC请求调用  
    * paramiko                 : Python的SSH协议支持，用于完成远程主机操作  
    * prompt_toolkit           : 用于提供包括提示符功能的控制台终端的显示样式
    * setproctitle             : Python通过setproctitle来设置进程名称，从而在多进程并发时候给调试人员以帮助
-   * urllib3                  : HTTP客户端请求操作   
+   * urllib3                  : HTTP客户端请求操作
+   * antlr4-python3-runtime   : Antlr4运行时引用
 
-   * antlr4-python3-runtime   : 编译需要，用来编译生成Antlr4的Python文件
-
-利用PIP来安装：
+利用pip来安装：
 ```
    pip install -U robotslacker-testcli
 ```
 
 安装后步骤-更新驱动程序配置：  
    * 根据你的需要， 放置自己的jar包到 <PYTHON_HONE>/../site-packages/testcli/jlib下
-   * github上提供的仅仅是一些测试用的Jar包，如果你有自己的需要，可以用自己的文件覆盖上述下载的文件
-   * 根据需要修改testCli/conf/testCli.ini文件：  
-   * 默认情况下，这个文件不需要修改
-   * 如果你需要定义自己内网的驱动程序下载服务器，你需要修改这个文件
-   * 如果你需要定义自己的数据库驱动，你需要修改这个文件
+   * github上提供的仅仅是一些测试用的Jar包，请根据需要，自行添加实际需要的Jar包
+   * 如果自行了添加了jar包，修改testCli/conf/testcli.ini文件：  
    
 ***
 
 ### 第一次使用
 安装后直接在命令下执行TestCli命令即可。  
-如果你的<PYTHON_HOME>/Scripts没有被添加到当前环境的$PATH中，你可能需要输入全路径名  
+如果你的<PYTHON_HOME>/scripts没有被添加到当前环境的$PATH中，你可能需要输入全路径名  
 ```
-(base) >TestCli
-SQL*Cli Release 0.0.32
-SQL> 
+(base) C:\>testcli
+TestCli Release 0.0.7
+SQL>
 ```
 如果你这里看到了版本信息，那祝贺你，你的程序安装成功了
 
 ```
-(base) >TestCli
-SQL*Cli Release 0.0.32
-SQL> connect mem;
-SQL> Connected.
+(base) C:\>testcli
+TestCli Release 0.0.7
+SQL> _connect /mem
+Database connected.
+SQL>
 ```
-如果你下载了至少H2的驱动程序，执行这个命令将连接到内置的H2数据库中，如果你看到了Connected信息，那再一次祝贺你，你的程序基本工作正常。 
+如果你看到了Connected信息，那再一次祝贺你，你的程序基本工作正常。 
 
 ***
 
+### 程序的自检
+运行selftest可以在当前运行环境上快速检查程序是否存在问题  
+尽管这不是程序运行所必须的，但是仍然建议在部署应用之前运行该命令以帮助发现潜在的问题。  
+命令大概需要几分钟的时间，为了测试API业务，程序还会占用8000端口作为测试的需要。  
+```
+(base) D:\Work\testcli>testcli --selftest
+=========================== test session starts =======================
+platform win32 -- Python 3.9.7, pytest-7.2.0, pluggy-0.13.1 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+....
+================================== 52 passed in 37.25s ================
+```
+如果你看到了Passed信息，那再一次祝贺你，你的程序自检完全正常。你可以在当前环境下开展你的工作了。 
+
 ### 驱动程序的下载和配置
-TestCli是一个基于JDBC/ODBC的数据库工具，基于JDBC操作数据库的前提当前环境下有对应的数据库连接jar包，基于ODBC前提是安装了相关的ODBC驱动。  
+TestCli是一个基于JDBC的数据库工具，基于JDBC操作数据库的前提当前环境下有对应的数据库连接jar包。 
+
 #### 驱动程序的配置
-配置文件位于TestCli的安装目录下的conf目录中，配置文件名为:TestCli.conf  
+配置文件位于TestCli的安装目录下的conf目录中，配置文件名为:testcli.ini  
 配置例子:
 ```
 [driver]
@@ -142,19 +164,13 @@ mysql=mysql_driver
 
 [oracle_driver]
 filename=ojdbc8.jar
-downloadurl=http://xxxxxx/driver/ojdbc8.jar
-md5=1aa96cecf04433bc929fca57e417fd06
 driver=oracle.jdbc.driver.OracleDriver
 jdbcurl=jdbc:oracle:thin:@${host}:${port}/${service}
 
 [mysql_driver]
 filename=mysql-connector-java-8.0.20.jar
-downloadurl=http://xxxxx/driver/mysql-connector-java-8.0.20.jar
-md5=48d69b9a82cbe275af9e45cb80f6b15f
 driver=com.mysql.cj.jdbc.Driver
 jdbcurl=jdbc:mysql://${host}:${port}/${service}
-jdbcprop=socket_timeout:360000000
-odbcurl=DRIVER={driver_name};SERVER=${host};PORT=${port};DATABASE=${service};UID=${username};PWD=${password};
 ```
 
 如果数据库要新增其他数据库的连接，则应仿效上述配置例子。  
@@ -166,172 +182,303 @@ odbcurl=DRIVER={driver_name};SERVER=${host};PORT=${port};DATABASE=${service};UID
   filename：      可选配置项，jar包具体的名字  
   driver:         可选配置项，数据库连接的主类  
   jdbcurl:        可选配置项，jdbc连接字符串，其中${host}${port}${service}分别表示数据库连接主机，端口，数据库名称  
-  downloadurl：   可选配置项，若本地不存在该文件，则文件下载需要的路径  
-  md5:            可选配置项，文件下载校验MD5    
   jdbcprop:       可选配置项，若该数据库连接需要相应的额外参数，则在此处配置
-  odbcurl:        可选配置项，若该数据库连需要通过ODBC连接数据库，则在此处配置      
-  jdbcurl和odbcurl两个参数，至少要配置一个。若配置jdbcurl，则jdbc对应的filename,driver也需要配置  
-* 基于这个原则，最简化的运行配置应该为：  
-```
-[driver]
-oracle=oracle_driver
-mysql=mysql_driver
 
-[oracle_driver]
-filename=ojdbc8.jar
-driver=oracle.jdbc.driver.OracleDriver
-jdbcurl=jdbc:oracle:thin:@${host}:${port}/${service}
-
-[mysql_driver]
-filename=mysql-connector-java-8.0.20.jar
-driver=com.mysql.cj.jdbc.Driver
-jdbcurl=jdbc:mysql://${host}:${port}/${service}
-```
-#### 驱动程序的下载
-基于上述参数文件的正确配置，可以使用--syncdriver的方式从服务器上来更新数据库连接需要的jar包  
-例子：    
-```
-(base) C:\Work\linkoop\TestCli>TestCli --syncdriver
-Checking driver [oracle] ...
-File=[ojdbc8.jar], MD5=[1aa96cecf04433bc929fca57e417fd06]
-Driver [oracle_driver] is up-to-date.
-Checking driver [mysql] ...
-File=[mysql-connector-java-8.0.20.jar], MD5=[48d69b9a82cbe275af9e45cb80f6b15f]
-Driver [mysql_driver] is up-to-date.
-```
 ### 程序的命令行参数
 ```
-(base) TestCli --help
-Usage: TestCli [OPTIONS]
+(base) C:\>testcli --help
+Usage: testcli [OPTIONS]
 
 Options:
-  --version       Output TestCli's version.
-  --logon TEXT    logon user name and password. user/pass
-  --logfile TEXT  Log every query and its results to a file.
-  --execute TEXT  Execute SQL script.
-  --nologo        Execute with silent mode.
-  --xlog TEXT     SQL performance Log.
-  --syncdriver    Download jdbc jar from file server.
-  --clientcharset TEXT  Set client charset. Default is UTF-8.
-  --resultcharset TEXT  Set result charset. Default is same to clientcharset.
-  --help          Show this message and exit.
-```  
+  --version                Show TestCli version.
+  --logon TEXT             SQL logon user name and password. user/pass
+  --logfile TEXT           Log every command and its results to file.
+  --execute TEXT           Execute command script.
+  --commandmap TEXT        Command mapping file.
+  --nologo                 Execute with no-logo mode.
+  --xlog TEXT              Save command extended log.
+  --xlogoverwrite          Overwrite extended log if old file exists. Default is false
+  --clientcharset TEXT     Set client charset. Default is UTF-8.
+  --resultcharset TEXT     Set result charset. Default is same to clientCharset.
+  --profile TEXT           Startup profile.
+  --scripttimeout INTEGER  Script timeout(seconds).
+  --namespace TEXT         Command default name space(SQL|API). Default is depend on file suffix.
+  --selftest               Run self test and exit.
+  --readme                 Show README doc and exit.
+  --suitename TEXT         Test suite name.
+  --casename TEXT          Test case name.
+  --help                   Show this message and exit.  
+```
+
 --version 用来显示当前工具的版本号
 ```
-(base) TestCli --version
-Version: 0.0.32
+(base) C:\>testcli --version
+Version: 0.0.7
 ```
+
 --logon  用来输入连接数据的的用户名和口令
 ```
-(base) TestCli --logon user/pass
-Version: 0.0.32
-Driver loaded.
-Database connected.
+(base) C:\>testcli --logon admin/123456
+TestCli Release 0.0.7
+SQL> Database connected.
 SQL>
-如果用户、口令正确，且相关环境配置正常，你应该看到如上信息。
 
 user/pass : 数据库连接的用户名和口令  
-
 成功执行这个命令的前提是你已经在环境变量中设置了数据库连接的必要信息。  
-这里的必要信息包括：
-环境变量：  TestCli_CONNECTION_URL  
-参数格式：  jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名]  
+这里的必要信息是指：
+   环境变量：  TESTCLI_CONNECTION_URL
+   参数格式：  jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名]
 ```
---logfile   用来记录本次命令行操作的所有过程信息  
-这里的操作过程信息包含你随后在命令行里头的所有输出信息。  
-如果你在随后的命令行里头设置了SET ECHO ON，那么记录里头还包括了你所有执行的SQL语句原信息  
-文件输出的字符集将根据参数resultcharset中的设置来确定    
+
+--logfile   用来记录本次命令行操作的所有过程信息    
+
 ```
-(base) TestCli --logon user/pass --logfile test.log
-Version: 0.0.32
-Driver loaded.
+(base) C:\>testcli --logfile example.log
+TestCli Release 0.0.7
+SQL> _connect /mem
 Database connected.
-set echo on
-select * from test_tab;
-+----+----------+
-| ID | COL2     |
-+----+----------+
-| 1  | XYXYXYXY |
-| 1  | XYXYXYXY |
-+----+----------+
-SQL> exit
+SQL> create table aaa (id int);
+0 row affected.
+SQL> insert into aaa values(10);
+1 row affected.
+SQL> select * from aaa;
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 | 10 |
++--------+----+
+1 row selected.
+SQL> _exit
 Disconnected.
 
-(base) type test.log
-Driver loaded.
+(base) C:\>type example.log
+SQL> _connect /mem
 Database connected.
-SQL> select * from test_tab;
-
-+----+----------+
-| ID | COL2     |
-+----+----------+
-| 1  | XYXYXYXY |
-| 1  | XYXYXYXY |
-+----+----------+
-2 rows selected.
-SQL> exit
+SQL> create table aaa (id int);
+0 row affected.
+SQL> insert into aaa values(10);
+1 row affected.
+SQL> select * from aaa;
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 | 10 |
++--------+----+
+1 row selected.
+SQL> _exit
 Disconnected.
 ```
---execute 在TestCli启动后执行特定的SQL脚本  
-为了能够批处理一些SQL语句，我们通常将这批SQL语句保存在一个特定的文件中，这个文件的习惯后缀是.sql  
-通过execute参数，可以让TestCli来执行这个脚本，而不再需要我们一行一行的在控制台输入  
-脚本字符集将根据参数clientcharset中的设置来确定
+
+--execute 在TestCli启动后执行特定的脚本  
+通过execute参数，可以让testcli来执行这个脚本，而不再需要我们一行一行的在控制台输入  
+脚本的后缀将影响执行的默认命名空间。  
+
 ```
+(base) C:\>type example.sql
+_connect /mem
+create table aaa(id int);
+insert into aaa values(10);
+select * from aaa;
+
+(base) C:\>testcli --execute example.sql
+TestCli Release 0.0.7
+SQL> _connect /mem
+Database connected.
+SQL> create table aaa(id int);
+0 row affected.
+SQL> insert into aaa values(10);
+1 row affected.
+SQL> select * from aaa;
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 | 10 |
++--------+----+
+1 row selected.
+Disconnected.
+
 (base) type test.sql
 select * from test_tab;
 
-(base) TestCli --logon user/pass --execute test.sql
-Version: 0.0.32
-Driver loaded.
+注意： 即使你的脚本中不包含Exit/Quit语句，在TestCli执行完当前脚本后，他也会自动执行exit语句
+```
+
+--commandmap   在命令执行的时候，指定命令的映射文件信息  
+提供映射信息文件的目的是为了解决一个测试场景。  
+即：有的测试脚本需要反复多次的运行，其区别仅仅是部分参数信息的不同。  
+需要注意的是，映射文件仅仅是一种用来支撑上述测试场景的做法，实际上还可以使用变量方法，具体使用哪一种方法，要看测试的实际需要。
+
+```
+# aa.map以下是一个典型的映射文件, 这里我们将TAB映射为了TAB1
+(base) C:\> type testsqlmapping.map
+#..*:
+TABA=>TAB1
+#.
+
+# 再定义一个测试脚本
+(base) C:\> type testsqlmapping.sql
+_connect /mem
+create table {{TABA}}
+(
+    id  int
+);
+
+insert into {{TABA}} values(3);
+insert into {{TABA}} values(4);
+
+# 指定测试脚本，并明确指定映射文件
+(base) C:\> testcli --execute testsqlmapping.sql --commandmap testsqlmapping.map
+TestCli Release 0.0.7
+SQL> _connect /mem
 Database connected.
-set echo on
-select * from test_tab;
-+----+----------+
-| ID | COL2     |
-+----+----------+
-| 1  | XYXYXYXY |
-| 1  | XYXYXYXY |
-+----+----------+
-SQL> exit
+SQL> create table {{TABA}}
+   > (
+   >     id  int
+   > );
+REWROTED SQL> Your SQL has been changed to:
+REWROTED    > create table TAB1
+REWROTED    > (
+REWROTED    >     id  int
+REWROTED    > )
+0 row affected.
+SQL>
+SQL> insert into {{TABA}} values(3);
+REWROTED SQL> Your SQL has been changed to:
+REWROTED    > insert into TAB1 values(3)
+1 row affected.
+SQL> insert into {{TABA}} values(4);
+REWROTED SQL> Your SQL has been changed to:
+REWROTED    > insert into TAB1 values(4)
+1 row affected.
 Disconnected.
-注意： 即使你的SQL脚本中不包含Exit语句，在TestCli执行完当前脚本后，他也会自动执行exit语句
-如果SQL脚本中不包含数据库驱动加载或者数据库连接语句，请在执行这个命令前设置好相应的环境变量信息
+
+# 以上我们注意到，脚本中的{{TAB}}在实际运行中被替换成了TAB1
+# 类似的，如果我们定义testsqlmapping.map中，将TAB1改为TAB2. 我们就会收到TAB2的替换
+# 通过这种方法，我们可以通过定义一个测试脚本，多个MAP的方法来让测试脚本复用在不同的测试环境中
 ```
 --nologo    这是一个选项，用来控制TestCli是否会在连接的时候显示当前的程序版本
 ```
-(base) TestCli 
-SQL*Cli Release 0.0.32
+(base) testCli 
+TestCli Release 0.0.7
 SQL>   
 区别：
-(base) TestCli --nologo
+(base) testCli --nologo
 SQL>
 ```
---xlog  输出SQL运行日志  
-这里的运行日志不是指程序的logfile，而是用CSV文件记录的SQL日志，  
-这些日志将作为后续对SQL运行行为的一种分析  
+--xlog  输出测试运行的扩展日志，并指定扩展日志的文件名      
+这里说的日志不是指程序的logfile，而是用sqlite格式文件记录的测试日志    
+这些日志将作为后续对测试运行行为的一种分析    
 运行日志共包括如下信息：  
-1、Script       运行的脚本名称  
-2、StartedTime  SQL运行开始时间，格式是：%Y-%m-%d %H:%M:%S    
-3、elapsed      SQL运行的消耗时间，这里的单位是秒，精确两位小数        
-4、RAWCommand   原始的Command信息   
-4、Command      运行的命令，注意：这里可能和RAWCommand不同，不同的原因是命令可能会被重写规则改写    
-5、SQLStatus    SQL运行结果，0表示运行正常结束，1表示运行错误    
-6、ErrorMessage 错误日志，在SQLStatus为1的时候才有意义    
-7、Scenario     程序场景名称，这里的内容是通过在SQL文件中指定-- [Hint] Scenario:name的方式来标记的Scenario信息  
-说明：上述信息都有TAB分隔，其中字符信息用单引号包括，如下是一个例子：  
 ```
-Script  Started elapsed SQLPrefix       SQLStatus       ErrorMessage    Scenario
-sub_1.sql 2020-05-25 17:46:23       0.00        loaddriver localtest\linkoopdb-jdbc-2.3.      0             Scenario1
-sub_1.sql 2020-05-25 17:46:23       0.28        connect admin/123456  0             Scenario1
-sub_1.sql 2020-05-25 17:46:24       0.00        SET ECHO ON   0             Scenario1
-sub_1.sql 2020-05-25 17:46:24       0.00        SET TIMING ON 0             Scenario2
-sub_1.sql 2020-05-25 17:46:24       0.01        LOADCOMMANDMAP stresstest 0             Scenario2
-sub_1.sql 2020-05-25 17:46:24       0.92        ANALYZE TRUNCATE STATISTICS   0             Scenario3
-sub_1.sql 2020-05-25 17:46:25       0.02        SELECT count(SESSION_ID)  FROM INFORMATI      0             Scenario3
-sub_1.sql 2020-05-25 17:46:25       1.37        drop user testuser if exists cascade  0             Scenario3
-sub_1.sql 2020-05-25 17:46:26       0.54        CREATE USER testuser PASSWORD 123456        0             Scenario3
+     Id              INTERGER  整数，自增长序列
+     Script          TEXT      当前运行的测试脚本名称  
+     Started         DATETIME  当前语句执行时间
+     Elapsed         NUMERIC   当前语句执行耗时，秒为单位，最多精确两位小数
+     RawCommand      TEXT      当前语句的原始命令信息
+     CommandType     TEXT      当前命名类型，枚举的字符串类型，如LOAD，SSH，ASSERT等...
+     Command         TEXT      语句被Antlr解析后的解析结果，用JSON格式记录下来
+     CommandStatus   TEXT      语句的命令行状态输出。 注意，这里不是数据结果的输出，而是命令结果
+                               对于错误语句，可能得到的错误的详细信息
+                               对于正确语句，可能得到的语句影响的记录数量等
+     ErrorCode       TEXT      错误代码。如果错误，会填写正确的错误代码。如果不填写，或者填写为0，表示语句执行正常
+     WorkerName      TEXT      执行器名称，对于多线程执行，其中包含线程信息。对于单线程执行，其中包含进程PID信息
+     SuiteName       TEXT      测试套件名称。这个来源于外界的参数输入，只是作为记录被保存在这里
+     CaseName        TEXT      测试用例名称。这个来源于外界的参数输入，只是作为记录被保存在这里
+     ScenarioId      TEXT      测试场景ID，这个来源于测试脚本中的Hint定义，随后会详细介绍如何定义测试场景ID
+     ScenarioName    TEXT      测试场景名称，这个来源于测试脚本中的Hint定义，随后会详细介绍如何定义测试场景名称
 ```
+以下是实际的一行扩展日志效果：
+```
+     Id              =>  2
+     Script          =>  aa.api  
+     Started         =>  2022-12-28 22:33:27  
+     Elapsed         =>  1.09
+     RawCommand      =>  _connect /mem  
+     CommandType     =>  CONNECT 
+     Command         =>  {"driver": "jdbc", "driverSchema": "h2mem", "driverType": "mem", "host": "0.0.0.0" ...  
+     CommandStatus   =>  Database connected.
+     ErrorCode       =>  0
+     WorkerName      =>  MAIN-9709
+     SuiteName       =>  suite1
+     CaseName        =>  cas1
+     ScenarioId      =>  13279
+     ScenarioName    =>  测试数据库连接
+```
+--xlogoverwrite      控制如果扩展日志文件已经存在的方式下，是否会覆盖掉原有的扩展日志文件。默认是不覆盖，即追加模式
+
+--clientcharset      定义客户端的字符集，默认为UTF-8  
+客户端的字符集影响了脚本的字符集，命令行中输入信息的字符集  
+
+--resultcharset      定义了结果输出文件的字符集，包括日志文件，也包括SPOOL导出的文件，也包括ECHO生成的回显文件
+
+--profile            定义程序的启动文件，在程序启动之前会首先运行该文件，随后开始正式的执行测试脚本文件。  
+以下是一个在启动文件里头连接数据库，并随后在测试脚本中完成测试的例子。  
+```
+(base) C:\>type myprofile.sql
+_connect /mem
+
+(base) C:\>type testprofile.sql
+create table aaa (id int);
+insert into aaa values(10);
+select * from aaa;
+
+(base) C:\>testcli --execute testprofile.sql --profile myprofile.sql
+TestCli Release 0.0.7
+PROFILE SQL> _connect /mem
+PROFILE Database connected.
+SQL> create table aaa (id int);
+0 row affected.
+SQL> insert into aaa values(10);
+1 row affected.
+SQL> select * from aaa;
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 | 10 |
++--------+----+
+1 row selected.
+Disconnected.
+
+# 上述的例子中会首先执行myprofile.sql，随后才会执行testprofile.sql中的测试内容
+```
+--scripttimeout   控制脚本的最大超时时间，这里的计数单位是秒。默认为-1，即完全不控制。    
+以下是一个设置了scriptTimeout为3时候的执行例子，当达到3秒的限制后，脚本会立刻结束运行，不再继续下去。 
+```
+TestCli Release 0.0.7
+API> _use sql
+Current NameSpace: SQL.
+SQL> _sleep 5
+TestCli-000: Script Timeout (3) expired. Abort this Script.
+Disconnected.
+```
+需要注意的是：  
+1. Abort操作受限于编程语言的实现，只能尽力去释放资源，并不保证资源的完全释放完毕。
+2. 这里的超时时间并不是一个精确时间，对于一些快速的操作，如语句解析，打印输出等并没有被统计在运行耗时内，所以超时控制是一个相对准确的限制，不能作为绝对的时间依赖。  
+3. 除了在命令行上指定脚本的全局超时时间限制外，还可以在脚本中指定具体语句的执行时间显示。 具体的介绍将在后面部分描述。  
+
+--namespace    指定程序的默认命名空间，如果不指定，命名空间的默认依赖于文件后缀，具体的规则是：  
+1. 文件后缀为.sql， 则默认的命名空间为SQL
+2. 文件后缀为.api， 则默认的命名空间为API
+3. 其他文件后缀，默认的命名空间为SQL  
+命名空间的不同将影响语句的解析执行， 你也可以在脚本中进行命名空间的切换  
+
+--selftest      运行自测脚本并退出  
+这个选项仅仅用于测试当前环境下是否已经正确安装了本工具。  
+
+--readme        在控制台上显示本帮助文档并退出.  
+需要注意的是：不同的终端对于富文本字体的处置规则并不相同，所以不能苛求显示的完全正确性和美观性。  
+
+--suitename     指定测试套件的名称，这个通常用于记录在扩展日志，或者完成测试报告的时候协助统计分析测试结果使用
+
+--casename      指定测试用例的名称，这个通常用于记录在扩展日志，或者完成测试报告的时候协助统计分析测试结果使用  
+
+--help          显示本帮助信息并退出  
+
 ***
+
+
+
+
 ### 在TestCli里面查看当前支持的命令
 ```
 (base) TestCli 
@@ -364,7 +511,26 @@ SQL> help
 +--------------+-----------------------------------------------------+
 这里显示的是所有除了标准SQL语句外，可以被执行的各种命令开头。
 标准的SQL语句并没有在这里显示出来，你可以直接在控制行内或者脚本里头执行SQL脚本。
+
+
+
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ***
 ### 连接数据库
@@ -537,53 +703,6 @@ SQL> loadcommandMap map1
 Mapping file loaded.
 这里的map1表示一个重写配置文件，这里可以写多个配置文件的名字，比如loadcommandMap map1,map2,map3，多个文件名之间用逗号分隔
 
-重写文件的查找顺序：
-   1.  以map1为例子，如果map1是一个全路径或者基于当前目录的相对目录，则以全路径或相对目录为准。这时候参数应该带有后缀
-   2：  如果依据全路径没有找到，则会尝试在脚本所在的目录进行相对目录的查找。这时候参数不能够带后缀，查找的后缀文件名是.map
-   同时存在多个配置的情况下，配置会被叠加
-
-启用SQL重写的方法：
-   1.   在命令行里面，通过TestCli --commandMap map1的方式来执行重写文件的位置
-   2.   定义在系统环境变量TestCli_COMMANDMAPPING中指定。 如果定义了命令行参数，则系统环境变量不生效
-   3.   通过在SQL输入窗口，输入loadcommandMap的方式来指定
-
-重写文件的写法要求：
-   以下是一个重写文件的典型格式， 1，2，3，4，5 是文件的行号，不是真实内容：
-    1 #..*:                                      
-    2 ((?i)CREATE TABLE .*\))=>\1 engine xxxxx
-    3 WEBURL=>{ENV(ROOTURL)}
-    4 MYID=>{RANDOM('random_ascii_letters_and_digits',10)}
-    5 #.
-
-    行1：
-        这里定义的是参与匹配的文件名，以#.开头，以:结束，如果需要匹配全部文件，则可以在中间用.*来表示
-    行2：
-        这里定义的是一个正则替换规则, 在符合CREATE TABLE的语句后面增加engine xxxxx字样
-    行3：
-        这里定义的是一个正则替换规则, 用环境变量ROOTURL的值来替换文件中WEBURL字样
-    行4：
-        这里定义的是一个正则替换规则, 用一个最大长度位10，可能包含字母和数字的内容来替换文件中的MYID字样
-    行5：
-        文件定义终止符
-
-    每一个MAP文件里，可以循环反复多个这样的类似配置，每一个配置段都会生效
-
-重写SQL的日志显示：
-    被重写后的SQL在日志中有明确的标志信息，比如：
-        SQL> CREATE TABLE T_TEST(
-           > id int,
-           > name varchar(30),
-           > salary int
-           > );
-        REWROTED SQL> Your SQL has been changed to:
-        REWROTED    > CREATE TABLE T_TEST(
-        REWROTED    > id int,
-        REWROTED    > name varchar(30),
-        REWROTED    > salary int
-        REWROTED    > ) engine xxxx;
-     这里第一段是SQL文件中的原信息，带有REWROTED的信息是被改写后的信息
-
-```
 
 ### 执行数据库SQL语句
 在数据库连接成功后，我们就可以执行我们需要的SQL语句了，对于不同的SQL语句我们有不同的语法格式要求。  
@@ -1300,21 +1419,10 @@ Mapping file loaded.
     下载远程的HDFS文件到本地文件目录中
 
 ```
+
+# 以上文件还没有更新哈
+
 ***    
-### 退出
-你可以使用exit或者quit来退出命令行程序，或者在脚本中使用Exit来退出正在执行的脚本
-```
-    (_EXIT | _QUIT) [返回值]
-```
-
-注意： 如果当前有后台任务正在运行，EXIT并不能立刻完成。  
-1：控制台应用：EXIT将不会退出，而是会提示你需要等待后台进程完成工作  
-2：脚本应用：  EXIT不会直接退出，而是会等待后台进程完成工作后再退出  
-3：无论什么时候QUIT都会直接退出应用程序，如果当前存在正在执行的后台作业，后台作业将被放弃  
-4：返回值将会被带回到操作系统中，由于不同操作系统的限制，请尽量不要使用负数作为返回值  
-5：返回值可以缺省，缺省不设置的时候，返回值为0  
-
-***
 
 ### 加载数据库驱动
 TestCli会默认加载所有配置在conf/TestCli.ini中的JDBC驱动  
@@ -1664,13 +1772,8 @@ SQL> _JOB job timer slave_finished;
 2. 脚本执行结束。退出值为0
 3. 脚本中包含了_EXIT <INT>或者_QUIT <INT>语句。退出的值将是这里的<INT>值, 如果不填写，将为0
 
-如果你在命令行中执行，则只有下面情况下会退出
-1. 输入了_EXIT <INT>或者_QUIT <INT>语句。退出的值将是这里的<INT>值, 如果不填写，将为0
-
-如果当前有后台程序(通过JOBManager启动的)运行：  
-1： 控制台应用：_EXIT将不会直接退出，而是会提示你需要等待后台进程完成工作  
-2： 脚本中应用：_EXIT将不会直接退出，而是会等待后台进程完成工作后再退出
-3： 控制台应用：_QUIT将会直接退出，无论是否有后台进程在工作  
-4： 脚本中应用：_QUIT将会直接退出，无论是否有后台进程在工作
-
-***
+使用exit或者quit来退出命令行程序，或者在脚本中使用该语句
+```
+    (_EXIT | _QUIT) [返回值]
+    # 退出的值将是这里的<INT>值, 如果不填写，将为0
+```

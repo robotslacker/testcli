@@ -1,1 +1,4 @@
+SQL> _start testsqlsleep.sql
 SQL> _sleep 1
+SQL> _exit
+Disconnected.

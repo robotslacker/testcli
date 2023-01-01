@@ -1160,6 +1160,11 @@ class SQLVisitor(SQLParserVisitor):
         else:
             parsedObject.update({'expression': ""})
 
+        if ctx.ASSERT_NAME() is not None:
+            parsedObject.update({'assertName': str(ctx.ASSERT_NAME().getText()).strip()})
+        else:
+            parsedObject.update({'assertName': None})
+
         # 获取错误代码
         errorCode = 0
         errorMsg = None

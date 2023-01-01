@@ -1,3 +1,4 @@
+SQL> _start testsqlsanity.sql
 SQL> _connect /mem
 Database connected.
 SQL> create table aaa (id int);
@@ -37,3 +38,4 @@ SQL> _Assert {% 1==2 %};
 Assert fail.
 SQL>
 SQL> _exit 3
+Disconnected with [3].

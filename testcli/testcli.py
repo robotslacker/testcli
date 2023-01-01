@@ -9,14 +9,11 @@ import sqlite3
 import setproctitle
 import click
 import configparser
-import hashlib
 import unicodedata
 import itertools
 import urllib3
-import shutil
 from multiprocessing import Lock
 from time import strftime, localtime
-from urllib.error import URLError
 
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.shortcuts import PromptSession
@@ -300,12 +297,19 @@ class TestCli(object):
 
         # 处理传递的映射文件, 首先加载参数的部分，如果环境变量里头有设置，则环境变量部分会叠加参数部分
         self.testOptions.set("TESTREWRITE", "OFF")
-        if self.commandMap is not None:  # 如果传递的参数，有Mapping，以参数为准，先加载参数中的Mapping文件
+        if self.commandMap is not None:
+            # 如果传递的参数，有Mapping，以参数为准，先加载参数中的Mapping文件
             self.cmdMappingHandler.loadCommandMappings(self.commandScript, self.commandMap)
             self.testOptions.set("TESTREWRITE", "ON")
-        if "SQLCLI_COMMANDMAPPING" in os.environ:  # 如果没有参数，则以环境变量中的信息为准
+        if "SQLCLI_COMMANDMAPPING" in os.environ:
+            # 如果没有参数，则以环境变量中的信息为准
             if len(os.environ["SQLCLI_COMMANDMAPPING"].strip()) > 0:
                 self.cmdMappingHandler.loadCommandMappings(self.commandScript, os.environ["SQLCLI_COMMANDMAPPING"])
+                self.testOptions.set("TESTREWRITE", "ON")
+        if "TESTCLI_COMMANDMAPPING" in os.environ:
+            # 如果没有参数，则以环境变量中的信息为准
+            if len(os.environ["TESTCLI_COMMANDMAPPING"].strip()) > 0:
+                self.cmdMappingHandler.loadCommandMappings(self.commandScript, os.environ["TESTCLI_COMMANDMAPPING"])
                 self.testOptions.set("TESTREWRITE", "ON")
 
         # 给Page做准备，PAGE显示的默认换页方式.
@@ -314,7 +318,10 @@ class TestCli(object):
 
         # 如果参数要求不显示版本，则不再显示版本
         if not self.nologo:
-            self.echo("TestCli Release " + __version__)
+            self.echo(
+                s="TestCli Release " + __version__,
+                Flags=OFLAG_LOGGER | OFLAG_CONSOLE | OFLAG_SPOOL | OFLAG_ECHO,
+            )
 
         # 处理初始化启动文件，如果需要的话，在处理的过程中不打印任何日志信息
         if len(self.profile) != 0:
@@ -520,7 +527,7 @@ class TestCli(object):
                                 if p_result["rawCommand"]["name"] == "SPOOL":
                                     if p_result["rawCommand"]["file"].strip().upper() == "OFF":
                                         m_EchoFlag = m_EchoFlag & ~OFLAG_SPOOL
-                            if p_result["script"] is None:
+                            if p_result["script"] == "Console":
                                 # 控制台应用，不再打印SQL语句到控制台（因为用户已经输入了)
                                 m_EchoFlag = m_EchoFlag & ~OFLAG_CONSOLE
                             if p_result["formattedCommand"] is not None:
@@ -621,66 +628,6 @@ class TestCli(object):
             self.echo(repr(e), err=True, fg="red")
             return False
 
-    # 下载程序所需要的各种Jar包
-    def syncdriver(self):
-        # 加载程序的配置文件
-        self.AppOptions = configparser.ConfigParser()
-        m_conf_filename = os.path.join(os.path.dirname(__file__), "conf", "testcli.ini")
-        if os.path.exists(m_conf_filename):
-            self.AppOptions.read(m_conf_filename)
-
-        # 下载运行需要的各种Jar包
-        for row in self.AppOptions.items("driver"):
-            print("Checking driver [" + row[0] + "] ... ")
-            for m_driversection in str(row[1]).split(','):
-                m_driversection = m_driversection.strip()
-                try:
-                    m_driver_filename = self.AppOptions.get(m_driversection, "filename")
-                    m_driver_downloadurl = self.AppOptions.get(m_driversection, "downloadurl")
-                    m_driver_filemd5 = self.AppOptions.get(m_driversection, "md5")
-
-                    m_LocalJarFile = os.path.join(os.path.dirname(__file__), "jlib", m_driver_filename)
-                    m_LocalJarPath = os.path.join(os.path.dirname(__file__), "jlib")
-                    if not os.path.isdir(m_LocalJarPath):
-                        os.makedirs(m_LocalJarPath)
-
-                    if os.path.exists(m_LocalJarFile):
-                        with open(m_LocalJarFile, 'rb') as fp:
-                            data = fp.read()
-                        file_md5 = hashlib.md5(data).hexdigest()
-                        if "TESTCLI_DEBUG" in os.environ:
-                            print("File=[" + m_driver_filename + "], MD5=[" + file_md5 + "]")
-                    else:
-                        if "TESTCLI_DEBUG" in os.environ:
-                            print("File=[" + m_driver_filename + "] does not exist!")
-                        file_md5 = ""
-                    if file_md5 != m_driver_filemd5.strip():
-                        print("Driver [" + m_driversection + "], need upgrade ...")
-                        # 重新下载新的文件到本地
-                        try:
-                            http = urllib3.PoolManager()
-                            with http.request('GET', m_driver_downloadurl, preload_content=False) as r, \
-                                    open(m_LocalJarFile, 'wb') as out_file:
-                                shutil.copyfileobj(r, out_file)
-                        except URLError:
-                            print('traceback.print_exc():\n%s' % traceback.print_exc())
-                            print('traceback.format_exc():\n%s' % traceback.format_exc())
-                            print("")
-                            print("Driver [" + m_driversection + "] download failed.")
-                            continue
-                        with open(m_LocalJarFile, 'rb') as fp:
-                            data = fp.read()
-                        file_md5 = hashlib.md5(data).hexdigest()
-                        if file_md5 != m_driver_filemd5.strip():
-                            print("Driver [" + m_driversection + "] consistent check failed. "
-                                                                 "Remote MD5=[" + str(file_md5) + "]")
-                        else:
-                            print("Driver [" + m_driversection + "] is up-to-date.")
-                    else:
-                        print("Driver [" + m_driversection + "] is up-to-date.")
-                except (configparser.NoSectionError, configparser.NoOptionError):
-                    print("Bad driver config [" + m_driversection + "], Skip it ...")
-
     # 主程序
     def run_cli(self):
         # 如果运行在脚本方式下，不再调用PromptSession
@@ -714,17 +661,17 @@ class TestCli(object):
                 os.environ.pop(s)
 
         try:
+            # 如果用户指定了用户名，口令，尝试直接进行数据库连接
+            if self.logon:
+                if not self.DoCommand("_connect " + str(self.logon)):
+                    raise EOFError
+
             # 开始依次处理控制台送来的语句
             if not self.commandScript:
                 while True:
                     # 循环从控制台读取命令
                     if not self.DoCommand():
                         raise EOFError
-
-            # 如果用户指定了用户名，口令，尝试直接进行数据库连接
-            if self.logon:
-                if not self.DoCommand("_connect " + str(self.logon)):
-                    raise EOFError
 
             # 如果传递的参数中有脚本文件，先执行脚本文件, 执行完成后自动退出
             try:
@@ -736,13 +683,13 @@ class TestCli(object):
                     # 如果脚本不是当前目录，需要切换到脚本目录下
                     # 如果脚本是当前目录，切换到空目录会报错，所以不能切换
                     os.chdir(scriptDir)
-                self.DoCommand('_start ' + scriptBase)
+                self.DoCommand(text='_start ' + scriptBase)
                 if scriptDir.strip() != "":
                     # 如果发生了脚本切换，则执行脚本后要返回切换前的目录
                     os.chdir(currentPwd)
             except TestCliException:
                 raise EOFError
-            self.DoCommand('_exit')
+            self.DoCommand(text='_exit')
         except (TestCliException, EOFError):
             pass
 
@@ -855,15 +802,15 @@ class TestCli(object):
 
     def format_output_csv(self, headers, columnTypes, cur):
         # 将屏幕输出按照CSV格式进行输出
-        m_csv_delimiter = self.testOptions.get("CSV_DELIMITER")
-        m_csv_quotechar = self.testOptions.get("CSV_QUOTECHAR")
+        m_csv_delimiter = self.testOptions.get("OUTPUT_CSV_DELIMITER")
+        m_csv_quotechar = self.testOptions.get("OUTPUT_CSV_QUOTECHAR")
         if m_csv_delimiter.find("\\t") != -1:
             m_csv_delimiter = m_csv_delimiter.replace("\\t", '\t')
         if m_csv_delimiter.find("\\s") != -1:
             m_csv_delimiter = m_csv_delimiter.replace("\\s", ' ')
 
         # 打印字段名称
-        if self.testOptions.get("CSV_HEADER") == "ON":
+        if self.testOptions.get("OUTPUT_CSV_HEADER") == "ON":
             m_row = ""
             for pos in range(0, len(headers)):
                 m_row = m_row + str(headers[pos])

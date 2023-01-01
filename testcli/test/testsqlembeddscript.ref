@@ -1,3 +1,4 @@
+SQL> _start testsqlembeddscript.sql
 SQL> _connect /mem
 Database connected.
 SQL> create table aaa (id int);
@@ -9,8 +10,6 @@ SQL> > {%
    > dbConn = sessionContext["dbConn"]
    > stmt = dbConn.createStatement()
    > rs = stmt.executeQuery("select id from aaa")
-   > while rs.next():
-   >     print("id=" + rs.getString(1))
    > sessionContext["status"] = "x=" + str(x)
    > %}
 x=1
@@ -28,7 +27,6 @@ SQL> > {%
    > dbConn = sessionContext["dbConn"]
    > stmt = dbConn.createStatement()
    > stmt.execute("update aaa set id=30")
-   > print("x="+str(x))
    > sessionContext["status"] = "x=" + str(x)
    > %}
 x=4
@@ -39,3 +37,5 @@ SQL> select * from aaa;
 |      1 | 30 |
 +--------+----+
 1 row selected.
+SQL> _exit
+Disconnected.

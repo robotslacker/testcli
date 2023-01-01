@@ -1,3 +1,4 @@
+SQL> _start testlastcommandresult.sql
 SQL> _use sql
 Current NameSpace: SQL.
 SQL> _connect /mem
@@ -55,3 +56,5 @@ API> _assert {%  x["status"] == 200 %}
 Assert successful.
 API> _assert {%  str(x["content"]) == "{\'status\': \'OK\'}" %}
 Assert successful.
+API> _exit
+Disconnected.

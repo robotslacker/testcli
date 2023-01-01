@@ -101,7 +101,7 @@ BODY_CRLF
       : '\n' ->type(CRLF)
       ;
 
-// 进入 MultipartBoundary处理 FIXME 应该不
+// 进入 MultipartBoundary处理
 HttpMultipartBoundaryEnd
       : ('--' String '--' CRLF)
       ;

@@ -1,3 +1,4 @@
+SQL> _start testplugin.sql
 SQL> _load plugin testplugin.py;
 Plugin module [cc] loaded successful.
 Plugin function [fun] loaded successful.
@@ -34,3 +35,5 @@ SQL> > {%
    > sessionContext["status"] = xx.welcome("Boy.")
    > %}
 thx Boy.
+SQL> _exit
+Disconnected.

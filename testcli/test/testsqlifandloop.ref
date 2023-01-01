@@ -1,3 +1,4 @@
+SQL> _start testsqlifandloop.sql
 SQL> _connect /mem
 Database connected.
 SQL> _if {% 3==2 %}
@@ -59,3 +60,5 @@ SQL> select * from aaa;
 |      1 | 13 |
 +--------+----+
 1 row selected.
+SQL> _exit
+Disconnected.

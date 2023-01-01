@@ -1,3 +1,4 @@
+SQL> _start testsqlmapping.sql
 SQL> _connect /mem
 Database connected.
 SQL> _load map testsqlmapping
@@ -35,3 +36,5 @@ REWROTED    > select * from TAB1
 |      2 |  4 |
 +--------+----+
 2 rows selected.
+SQL> _exit
+Disconnected.

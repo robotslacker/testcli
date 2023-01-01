@@ -28,18 +28,6 @@ class TestOptions(object):
                                     "Value": "OFF",
                                     "Comments": '',
                                     "Hidden": False})
-        self.testOptionList.append({"Name": "CSV_HEADER",
-                                    "Value": "OFF",
-                                    "Comments": 'ON|OFF',
-                                    "Hidden": False})
-        self.testOptionList.append({"Name": "CSV_DELIMITER",
-                                    "Value": ",",
-                                    "Comments": '',
-                                    "Hidden": False})
-        self.testOptionList.append({"Name": "CSV_QUOTECHAR",
-                                    "Value": "",
-                                    "Comments": '',
-                                    "Hidden": False})
         self.testOptionList.append({"Name": "FEEDBACK",
                                     "Value": "ON",
                                     "Comments": 'ON|OFF',
@@ -104,6 +92,18 @@ class TestOptions(object):
                                     "Comments": 'TAB|CSV|LEGACY',
                                     "Hidden": False
                                     })
+        self.testOptionList.append({"Name": "OUTPUT_CSV_HEADER",
+                                    "Value": "OFF",
+                                    "Comments": 'ON|OFF',
+                                    "Hidden": False})
+        self.testOptionList.append({"Name": "OUTPUT_CSV_DELIMITER",
+                                    "Value": ",",
+                                    "Comments": '',
+                                    "Hidden": False})
+        self.testOptionList.append({"Name": "OUTPUT_CSV_QUOTECHAR",
+                                    "Value": "",
+                                    "Comments": '',
+                                    "Hidden": False})
 
         self.testOptionList.append({"Name": "CONN_RETRY_TIMES",
                                     "Value": "1",

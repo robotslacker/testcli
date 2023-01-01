@@ -1,3 +1,4 @@
+SQL> _start testsqlwithurl.sql
 SQL> _connect sa/sa
 Database connected.
 SQL> select 1 from dual;
@@ -7,3 +8,5 @@ SQL> select 1 from dual;
 |      1 | 1 |
 +--------+---+
 1 row selected.
+SQL> _exit
+Disconnected.

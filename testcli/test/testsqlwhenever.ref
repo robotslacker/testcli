@@ -1,3 +1,4 @@
+SQL> _start testsqlwhenever.sql
 SQL> _connect /mem;
 Database connected.
 SQL> _whenever error continue;
@@ -30,3 +31,4 @@ SQL> select 1+2 from dual;
 SQL> select a from aaa;
 Table "AAA" not found; SQL statement:
 select a from aaa [42102-200]
+Disconnected with [3].

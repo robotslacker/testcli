@@ -22,12 +22,11 @@ appExitValue = 0
 @click.option("--nologo", is_flag=True, help="Execute with no-logo mode.")
 @click.option("--xlog", type=str, help="Save command extended log.")
 @click.option("--xlogoverwrite", is_flag=True, help="Overwrite extended log if old file exists. Default is false")
-@click.option("--syncdriver", is_flag=True, help="Download java jar from file server.")
 @click.option("--clientcharset", type=str, help="Set client charset. Default is UTF-8.")
 @click.option("--resultcharset", type=str, help="Set result charset. Default is same to clientCharset.")
 @click.option("--profile", type=str, help="Startup profile.")
 @click.option("--scripttimeout", type=int, help="Script timeout(seconds).")
-@click.option("--namespace", type=str, help="Command default name space(SQL|API). Default is SQL")
+@click.option("--namespace", type=str, help="Command default name space(SQL|API). Default is depend on file suffix.")
 @click.option("--selftest", is_flag=True, help="Run self test and exit.")
 @click.option("--readme", is_flag=True, help="Show README doc and exit.")
 @click.option("--suitename", type=str, help="Test suite name.")
@@ -41,7 +40,6 @@ def cli(
         nologo,
         xlog,
         xlogoverwrite,
-        syncdriver,
         clientcharset,
         resultcharset,
         profile,
@@ -56,20 +54,15 @@ def cli(
         print("Version:", __version__)
         return
 
-    # 从服务器下下载程序需要的各种jar包
-    if syncdriver:
-        testcli = TestCli(
-            logfilename=logfile,
-            logon=logon,
-            nologo=nologo
-        )
-        testcli.syncdriver()
-        return
-
     # 程序自检
     if selftest:
         testpath = os.path.abspath(os.path.join(os.path.dirname(__file__), "test", "testcliunittest.py"))
-        pytest.main([testpath, ])
+        pytest.main(
+            args=[
+                "-vs",
+                testpath,
+            ],
+        )
         return
 
     # 显示出手册

@@ -1,3 +1,4 @@
+API> _start testapiget.api
 API> _use api
 Current NameSpace: API.
 API>
@@ -30,3 +31,5 @@ REWROTED    >
     },
     "status": 200
 }
+API> _exit
+Disconnected.

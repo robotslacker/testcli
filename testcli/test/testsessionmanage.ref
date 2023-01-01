@@ -1,3 +1,4 @@
+SQL> _start testsessionmanage.sql
 SQL> _connect /mem
 Database connected.
 SQL> _session show;
@@ -91,3 +92,5 @@ SQL> select * from aaa;
 |      1 | 20 |
 +--------+----+
 1 row selected.
+SQL> _exit
+Disconnected.

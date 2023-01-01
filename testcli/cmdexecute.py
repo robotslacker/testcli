@@ -846,10 +846,17 @@ class CmdExecute(object):
                         # 对于SQL的CONNECT命令做特殊处理
                         if ret_CommandSplitResult["name"] == "CONNECT":
                             # 对于数据库连接命令，如果没有给出连接详细信息，并且指定了环境变量，附属环境变量到连接命令后
-                            if "driver" not in ret_CommandSplitResult and "SQLCLI_CONNECTION_URL" in os.environ:
-                                connectionURL = str(os.environ["SQLCLI_CONNECTION_URL"]).strip('"').strip("'").strip()
-                                (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-                                    = SQLAnalyze(currentStatement + "@" + connectionURL)
+                            if "driver" not in ret_CommandSplitResult:
+                                connectionURL = None
+                                if "SQLCLI_CONNECTION_URL" in os.environ:
+                                    connectionURL = \
+                                        str(os.environ["SQLCLI_CONNECTION_URL"]).strip('"').strip("'").strip()
+                                elif "TESTCLI_CONNECTION_URL" in os.environ:
+                                    connectionURL = \
+                                        str(os.environ["TESTCLI_CONNECTION_URL"]).strip('"').strip("'").strip()
+                                if connectionURL is not None:
+                                    (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+                                        = SQLAnalyze(currentStatement + "@" + connectionURL)
                     # 语句已经结束, 记录语句解析的结果
                     # 解析后的语句
                     ret_CommandSplitResults.append(ret_CommandSplitResult)
@@ -879,6 +886,18 @@ class CmdExecute(object):
 
             # 记录命令开始时间
             startTime = time.time()
+            try:
+                self.sqlTimeOut = int(self.testOptions.get("SQL_TIMEOUT"))
+            except ValueError:
+                self.sqlTimeOut = -1
+            try:
+                self.apiTimeOut = int(self.testOptions.get("API_TIMEOUT"))
+            except ValueError:
+                self.apiTimeOut = -1
+            try:
+                self.scriptTimeOut = int(self.testOptions.get("SCRIPT_TIMEOUT"))
+            except ValueError:
+                self.scriptTimeOut = -1
 
             # 首先打印原有语句
             if self.testOptions.get("NAMESPACE") == "SQL":
@@ -911,15 +930,13 @@ class CmdExecute(object):
                     continue
 
             # 返回Command的解析信息
-            if commandScriptFile != "Console":
-                # 如果是控制台显示，不再回显原命令，没有任何实际意义
-                yield {
-                    "type": "parse",
-                    "rawCommand": ret_CommandSplitResults[pos],
-                    "formattedCommand": formattedCommand,
-                    "rewrotedCommand": [],
-                    "script": commandScriptFile
-                }
+            yield {
+                "type": "parse",
+                "rawCommand": ret_CommandSplitResults[pos],
+                "formattedCommand": formattedCommand,
+                "rewrotedCommand": [],
+                "script": commandScriptFile
+            }
 
             # 处理超时时间问题
             if self.scriptTimeOut > 0:
@@ -1210,7 +1227,8 @@ class CmdExecute(object):
             elif parseObject["name"] in ["ASSERT"]:
                 for commandResult in assertExpression(
                         cls=self.cliHandler,
-                        expression=parseObject["expression"]
+                        expression=parseObject["expression"],
+                        assertName=parseObject["assertName"]
                 ):
                     if commandResult["type"] == "result":
                         lastCommandResult.clear()

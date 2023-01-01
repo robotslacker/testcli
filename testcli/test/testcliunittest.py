@@ -247,7 +247,7 @@ class TestSynatx(unittest.TestCase):
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_Assert {% assert expresssion %}")
         self.assertTrue(isFinished)
-        self.assertEqual({'name': 'ASSERT', 'expression': ' assert expresssion '}, ret_CommandSplitResult)
+        self.assertEqual({'assertName': None, 'name': 'ASSERT', 'expression': ' assert expresssion '}, ret_CommandSplitResult)
         self.assertEqual(None, ret_errorMsg)
         self.assertEqual(0, ret_errorCode)
 
@@ -986,13 +986,14 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertTrue(isFinished)
         self.assertEqual(
-            {'action': 'create',
-             'columnExpression': "random_int(10),'aaa'bb,ccd",
-             'fileType': 'FS',
-             'name': 'DATA',
-             'rowCount': 1000,
-             'targetFile': 'aa.txt'
-            },
+            {
+                'action': 'create',
+                'columnExpression': "random_int(10),'aaa'bb,ccd",
+                'fileType': 'FS',
+                'name': 'DATA',
+                'rowCount': 1000,
+                'targetFile': 'aa.txt'
+             },
             ret_CommandSplitResult)
 
     def test_SQLExecuteSanity(self):
@@ -1007,7 +1008,6 @@ class TestSynatx(unittest.TestCase):
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
-            nologo=True,
             script=fullScriptFile
         )
         retValue = testcli.run_cli()
@@ -1039,7 +1039,6 @@ class TestSynatx(unittest.TestCase):
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
-            nologo=True,
             script=fullScriptFile
         )
         retValue = testcli.run_cli()
@@ -1081,7 +1080,6 @@ class TestSynatx(unittest.TestCase):
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
-            nologo=True,
             script=fullScriptFile
         )
         retValue = testcli.run_cli()
@@ -1118,7 +1116,6 @@ class TestSynatx(unittest.TestCase):
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
-            nologo=True,
             script=fullScriptFile
         )
         retValue = testcli.run_cli()
@@ -1153,7 +1150,6 @@ class TestSynatx(unittest.TestCase):
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
-            nologo=True,
             script=fullScriptFile
         )
         retValue = testcli.run_cli()
@@ -1184,7 +1180,6 @@ class TestSynatx(unittest.TestCase):
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
-            nologo=True,
             script=fullScriptFile
         )
         retValue = testcli.run_cli()
@@ -1215,7 +1210,6 @@ class TestSynatx(unittest.TestCase):
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
-            nologo=True,
             script=fullScriptFile
         )
         retValue = testcli.run_cli()
@@ -1246,7 +1240,6 @@ class TestSynatx(unittest.TestCase):
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
-            nologo=True,
             script=fullScriptFile
         )
         retValue = testcli.run_cli()
@@ -1277,7 +1270,6 @@ class TestSynatx(unittest.TestCase):
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
-            nologo=True,
             script=fullScriptFile
         )
         retValue = testcli.run_cli()
@@ -1308,7 +1300,6 @@ class TestSynatx(unittest.TestCase):
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
-            nologo=True,
             script=fullScriptFile
         )
         retValue = testcli.run_cli()
@@ -1419,7 +1410,6 @@ class TestSynatx(unittest.TestCase):
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
-            nologo=True,
             script=fullScriptFile
         )
         retValue = testcli.run_cli()
@@ -1451,7 +1441,6 @@ class TestSynatx(unittest.TestCase):
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
-            nologo=True,
             script=fullScriptFile
         )
         retValue = testcli.run_cli()
@@ -1483,7 +1472,6 @@ class TestSynatx(unittest.TestCase):
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
-            nologo=True,
             script=fullScriptFile
         )
         retValue = testcli.run_cli()
@@ -1519,7 +1507,6 @@ class TestSynatx(unittest.TestCase):
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
-            nologo=True,
             script=fullScriptFile
         )
         retValue = testcli.run_cli()
