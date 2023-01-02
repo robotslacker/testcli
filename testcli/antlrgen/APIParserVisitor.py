@@ -204,5 +204,10 @@ class APIParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by APIParser#help.
+    def visitHelp(self, ctx:APIParser.HelpContext):
+        return self.visitChildren(ctx)
+
+
 
 del APIParser

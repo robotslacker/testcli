@@ -279,5 +279,10 @@ class SQLParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by SQLParser#help.
+    def visitHelp(self, ctx:SQLParser.HelpContext):
+        return self.visitChildren(ctx)
+
+
 
 del SQLParser

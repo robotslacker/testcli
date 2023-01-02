@@ -1406,3 +1406,21 @@ class SQLVisitor(SQLParserVisitor):
         self.parsedObject = parsedObject
         self.errorCode = errorCode
         self.errorMsg = errorMsg
+
+    def visitHelp(self, ctx: SQLParser.HelpContext):
+        parsedObject = {'name': 'HELP'}
+
+        parsedObject.update({'topic': ""})
+        if ctx.HELP_LOAD() is not None:
+            parsedObject.update({'topic': "LOAD"})
+
+        # 获取错误代码
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = -1
+            errorMsg = ctx.exception.message
+
+        self.parsedObject = parsedObject
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg

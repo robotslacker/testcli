@@ -5,27 +5,32 @@ SQL> _load map testsqlmapping
 Mapping file loaded.
 SQL>
 SQL> -- 在sqlmapping的作用下，这里的TABA应该被替换成TAB1
-SQL> create table {{TABA}}
-   > (
-   >     id  int
-   > );
+SQL> create table {{TABA}} ( id  int);
 REWROTED SQL> Your SQL has been changed to:
-REWROTED    > create table TAB1
-REWROTED    > (
-REWROTED    >     id  int
-REWROTED    > )
+REWROTED    > create table TAB1 ( id  int)
+0 row affected.
+SQL> create table {{TABB}} ( id  int);
+REWROTED SQL> Your SQL has been changed to:
+REWROTED    > create table TAB2 ( id  int)
+0 row affected.
+SQL> create table {{M123}} ( id  int);
+REWROTED SQL> Your SQL has been changed to:
+REWROTED    > create table N123 ( id  int)
 0 row affected.
 SQL>
 SQL> insert into {{TABA}} values(3);
 REWROTED SQL> Your SQL has been changed to:
 REWROTED    > insert into TAB1 values(3)
 1 row affected.
-SQL> insert into {{TABA}} values(4);
+SQL> insert into {{TABB}} values(4);
 REWROTED SQL> Your SQL has been changed to:
-REWROTED    > insert into TAB1 values(4)
+REWROTED    > insert into TAB2 values(4)
+1 row affected.
+SQL> insert into {{M123}} values(5);
+REWROTED SQL> Your SQL has been changed to:
+REWROTED    > insert into N123 values(5)
 1 row affected.
 SQL>
-SQL> -- [Order]
 SQL> select * from {{TABA}};
 REWROTED SQL> Your SQL has been changed to:
 REWROTED    > select * from TAB1
@@ -33,8 +38,25 @@ REWROTED    > select * from TAB1
 |   ##   | ID |
 +--------+----+
 |      1 |  3 |
-|      2 |  4 |
 +--------+----+
-2 rows selected.
+1 row selected.
+SQL> select * from {{TABB}};
+REWROTED SQL> Your SQL has been changed to:
+REWROTED    > select * from TAB2
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 |  4 |
++--------+----+
+1 row selected.
+SQL> select * from {{M123}};
+REWROTED SQL> Your SQL has been changed to:
+REWROTED    > select * from N123
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 |  5 |
++--------+----+
+1 row selected.
 SQL> _exit
 Disconnected.

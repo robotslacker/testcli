@@ -98,7 +98,7 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
 安装的前提有：
    * 有一个Python 3.6以上的环境
    * 能够连接到互联网上， 便于下载必要的包
-   * 安装JDK8或者JDK11  
+   * 安装JDK8或者JDK11  （目前我的调试环境和测试环境均为JDK11，未对其他JDK环境进行验证） 
    * 对于Windows平台，需要提前安装微软的C++编译器（jpype1使用了JNI技术，需要动态编译）  
    * 对于Linux平台，  需要提前安装gcc编译器，以及Python3的开发包（原因同上）  
      yum install -y gcc-c++ gcc  
@@ -110,9 +110,10 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
    * 这些安装包会在robotslacker-testcli安装的时候自动随带安装
    * click                    : Python的命令行参数处理
    * hdfs                     : HDFS类库，支持对HDFS文件操作
-   * JPype1                   : Python的Java请求封装，用于完成JDBC请求调用  
+   * fs                       : 构建虚拟文件系统，用来支撑随机数据文件的生成
+   * JPype1                   : Python的Java请求封装，用于完成运行时JDBC请求调用  
    * paramiko                 : Python的SSH协议支持，用于完成远程主机操作  
-   * prompt_toolkit           : 用于提供包括提示符功能的控制台终端的显示样式
+   * prompt_toolkit           : 用于提供交互式命令行和终端应用程序
    * setproctitle             : Python通过setproctitle来设置进程名称，从而在多进程并发时候给调试人员以帮助
    * urllib3                  : HTTP客户端请求操作
    * antlr4-python3-runtime   : Antlr4运行时引用
@@ -155,7 +156,7 @@ SQL>
 尽管这不是程序运行所必须的，但是仍然建议在部署应用之前运行该命令以帮助发现潜在的问题。  
 命令大概需要几分钟的时间，为了测试API业务，程序还会占用8000端口作为测试的需要。  
 ```
-(base) D:\Work\testcli>testcli --selftest
+(base) C:\>testcli --selftest
 =========================== test session starts =======================
 platform win32 -- Python 3.9.7, pytest-7.2.0, pluggy-0.13.1 -- C:\Anaconda3\python.exe
 cachedir: .pytest_cache
@@ -1456,9 +1457,147 @@ Mapping file loaded.
 # 以上文件还没有更新，请等等哈
 
 ***    
+### 加载附加的命令行映射文件
+这里的使用方法和在testcli命令中使用--commandmapping的参数效果是一样的。  
+这里将对mapping文件的规则进行详细的解释和说明。  
+正如前面介绍的， 映射文件的设计目的是为了解决一个典型的测试场景。即：有的测试脚本需要反复多次的运行，其区别仅仅是部分参数信息的不同。
+```
+   _LOAD MAP <file location of command mapping file>   
+```
+以下是一个实际使用的例子：
+```
+# aa.map以下是一个典型的映射文件, 这里我们将TAB映射为了TAB1
+(base) C:\> type testsqlmapping.map
+#..*:
+TABA=>TAB1
+#.
+```
+```
+(base) C:\> testcli
+TestCli Release 0.0.8
+SQL> --在脚本中直接加载映射文件
+SQL> _load map testsqlmapping.map
+Mapping file loaded.
+SQL> _connect /mem
+Database connected.
+SQL> create table {{TABA}}
+   > (
+   >     id  int
+   > );
+REWROTED SQL> Your SQL has been changed to:
+REWROTED    > create table TAB1
+REWROTED    > (
+REWROTED    >     id  int
+REWROTED    > )
+0 row affected.
+SQL>
+SQL> insert into {{TABA}} values(3);
+REWROTED SQL> Your SQL has been changed to:
+REWROTED    > insert into TAB1 values(3)
+1 row affected.
+Disconnected.
+```
+以下对testsqlmapping.map的格式进行详细的说明：  
+映射文件的查找顺序：  
+1. 首先会判断映射文件是否是一个基于绝对路径定义的文件，如果是，则以绝对路径定义的文件为准；    
+2. 如果绝对路径下文件无法找到，则以当前执行脚本（对于控制台输入，以程序当前所在工作目录）的上下文目录去相对查找；  
+
+映射文件的格式要求：  
+```
+1  #..*:
+2  TABA=>TAB1
+3  TABB=>TAB2
+4  M(.*)=>N\1
+5  #.
+```
+上述内容的前面数字1，2，3，4不是文件真实内容，只是为了后面便于表达添加的。  
+1. 行1：  
+    这里定义的是参与匹配的脚本文件名，以#.开头，以:结束，这里可以根据需要写出绝对文件名称，也可以按照正则表达式的写法写出正则匹配表达。  
+    当写出的一个正则匹配表达式的时候： 如果当前执行的脚本文件名和这里定义的内容符合正则匹配条件，则当前配置段生效  
+2. 行2,行3,行4：  
+   这里定义的是正则替换规则, 用Pattern=>Target的方式来描述。
+   即用=>分割，脚本中出现的符合Pattern定义的内容，将会替换为Target表达的内容  
+   在上述定义的例子中，我们会把脚本中的TABA替换成TAB1，会把脚本中的TABB替换成TAB2
+   还会根据正式表达式规则完成从M123到N123的替换，类似M456到N456.
+3. 行5  
+   当前配置段落终止
+
+每一个映射文件中，可以循环反复多个这样的类似配置，每一个配置段都会生效。  
+如果一个文件规则或者替换规则多次出现定义，则会发生多次匹配的现象。  
+
+
+### 加载附加的外挂插件
+为了让测试框架能够支持更多的扩展，testcli支持你将自己写好的Python程序作为一个插件的方式放入到系统中。  
+虽然这是一个可能解决问题的近乎外能良药，但是这么做会导致一定的测试脚本可读性下降。需要你在使用的时候小心谨慎。  
+```
+   _LOAD PLUGIN <插件文件的位置>   
+```
+这里的插件文件是一个有效的Python文件，python文件可能包含有类的定义，全局函数的定义等等。  
+以下是一个简单插件文件的例子：  
+```
+(base) C:\>type testplugin.py
+class cc:
+    def welcome(self, message: str):
+        if self:
+            pass
+        return 'thx ' + message
+
+
+def fun(b):
+    return "b" + str(b)
+```
+通过在testcli中执行LOAD PLUGIN命令可以完成对插件文件的加载
+```
+(base) C:\>testcli
+TestCli Release 0.0.8
+SQL> _load plugin testplugin.py
+Plugin module [cc] loaded successful.
+Plugin function [fun] loaded successful.
+Plugin file loaded successful.
+```
+加载成功后，我们就可以直接在测试脚本中使用插件文件中定义的内容，以下是一个例子：
+```
+(base) C:\>testcli
+-- 接上面的测试命令
+SQL> _connect /mem
+Database connected.
+SQL> create table aaa (id int);
+0 row affected.
+SQL> insert into aaa values(10);
+1 row affected.
+SQL> select * from aaa;
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 | 10 |
++--------+----+
+1 row selected.
+SQL>
+SQL> > {%
+   > import copy
+   > x=copy.copy(lastCommandResult)
+   > %}
+SQL>
+SQL> _assert {% x["rows"][0][0]==10 %};
+Assert successful.
+SQL>
+SQL> > {%
+   > sessionContext["status"] = fun(x["rows"][0][0])
+   > %}
+b10
+SQL>
+SQL> > {%
+   > xx = cc()
+   > sessionContext["status"] = xx.welcome("Boy.")
+   > %}
+thx Boy.
+SQL> _exit
+```
+具体对于SessionConext的用法解释请参考文档的其他章节。  
+上面的例子中，我们在内置脚本中执行了插件中定义的类和方法，并完成了数据的处理和返回。  
 
 ### 加载数据库驱动
-TestCli会默认加载所有配置在conf/TestCli.ini中的JDBC驱动  
+TestCli会默认加载所有配置在conf/testcli.ini中的JDBC驱动  
 你也可以在启动后手工加载额外的驱动，或者更改已经加载的配置。
 ```
     _LOAD JDBCDRIVER

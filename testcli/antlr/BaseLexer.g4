@@ -48,6 +48,9 @@ LOAD                : '_LOAD' -> pushMode(LoadMode);
 // 执行主机操作系统命令
 HOST                : '_HOST' -> pushMode(HostMode);
 
+// 指定帮助命令
+HELP                : '_HELP' -> pushMode(HelpMode);
+
 // 条件表达式判断
 IF                  : '_IF' -> pushMode(IfMode);
 ENDIF               : '_ENDIF';
@@ -286,3 +289,9 @@ DATACOLUMN_EXPRESSION     :
     (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' | '{' | '}' | '(' | ')' | ',' | '\n')+;
 DATACOLUMN_SPACE    : [ \t\n]+ -> channel (HIDDEN);
 DATACOLUMN_CLOSE    : ']' -> popMode;
+
+mode HelpMode;
+HELP_SPACE           : [ \t]+ -> channel (HIDDEN);
+HELP_LOAD            : 'LOAD';
+HELP_CRLF            : CRLF -> popMode;
+HELP_SEMICOLON       : ';';

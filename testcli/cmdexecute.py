@@ -40,6 +40,7 @@ from .commands.whenever import setWheneverAction
 from .commands.ssh import executeSshRequest
 from .commands.ssh import rewriteSshRequest
 from .commands.compare import executeCompareRequest
+from .commands.helper import showHelp
 
 from .common import rewriteHintStatement
 from .common import rewriteSQLStatement
@@ -1025,7 +1026,14 @@ class CmdExecute(object):
                            "DROP", "COMMIT", "ROLLBACK",
                            "PROCEDURE", "DECLARE", "BEGIN",
                            "SQL_UNKNOWN"]
-            if parseObject["name"] == "ECHO":
+            if parseObject["name"] == "HELP":
+                # 显示帮助信息
+                for commandResult in showHelp(
+                        cls=self.cliHandler,
+                        topicName=parseObject["topic"],
+                ):
+                    yield commandResult
+            elif parseObject["name"] == "ECHO":
                 # 将后续内容回显到指定的文件中
                 for commandResult in echo_input(
                         cls=self.cliHandler,

@@ -1,3 +1,5 @@
 #..*:
 TABA=>TAB1
+TABB=>TAB2
+M(.*)=>N\1
 #.

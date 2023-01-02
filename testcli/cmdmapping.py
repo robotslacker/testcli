@@ -140,7 +140,11 @@ class CmdMapping(object):
                                         _, end = matchObj.span()
                                         if end == len(str(word)):
                                             # 正则必须全文匹配
-                                            word = matchValue
+                                            try:
+                                                word = re.sub(pattern=matchKey, repl=matchValue,
+                                                              string=word, flags=re.DOTALL)
+                                            except re.error:
+                                                word = matchValue
                 except re.error as ex:
                     raise TestCliException("[WARNING] Invalid regex pattern in filePattern match. "
                                            "[" + str(mappingFile["filePattern"]) +

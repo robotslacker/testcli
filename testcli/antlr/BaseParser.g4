@@ -28,6 +28,7 @@ baseCommand:
       | job
       | compare
       | data
+      | help
       ;
 
 // Exit
@@ -176,3 +177,11 @@ data      :
               (DATA_CONVERT DATA_FILETYPE DATA_FILE DATA_EXPRESSION DATA_FROM DATA_FILETYPE DATA_FILE DATA_EXPRESSION)
           )
           (DATA_SEMICOLON)? CRLF?;
+
+// 帮助信息
+help       :
+           HELP
+           (
+                (HELP_LOAD)
+           )?
+           (HELP_SEMICOLON)? CRLF?;
