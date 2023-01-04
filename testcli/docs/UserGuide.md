@@ -1631,16 +1631,18 @@ TestCli会默认加载所有配置在conf/testcli.ini中的JDBC驱动
    ```
    例子：_LOAD JDBCDRIVER NAME=ORACLE PROPS="socket_timeout:360000000"
 5. 如果不提供额外的参数，则会显示当前的数据库驱动信息
-   如: _LOAD JDBCDRIVER; 
-   
-```
-(base) TestCli 
-SQL*Cli Release 0.0.32
-SQL> loaddriver;
-没有任何参数的loaddriver命令将显示出所有系统已经加载的驱动程序
-SQL> loaddriver [database_name]  [jdbc_jarfile]
-将用参数中jdbc_jarfile指定的文件替换掉配置文件中的文件信息
-```
+   如: 
+    ```
+    (base) C:\>testcli
+    SQL> _LOAD JDBCDRIVER
+     Current Drivers:
+    +--------+------------+----------------------------------------------+------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------+-------------+
+    |   ##   |  Database  |                  ClassName                   |                                                  FileName                                                  |                                                              JDBCURL                                                               |   JDBCProp  |
+    +--------+------------+----------------------------------------------+------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------+-------------+
+    ...
+    |     13 | h2mem      | org.h2.Driver                                | ['C:\\Anaconda3\\lib\\site-packages\\robotslacker_testcli-0.0.8-py3.9.egg\\testcli\\jlib\\h2-1.4.200.jar'] | jdbc:h2:mem:                                                                                                                       | <null>      |
+    ...
+    ```      
 
 ### 程序的并发和后台执行
 TestCli被设计为支持并发执行脚本，支持后台执行脚本。    
@@ -1949,3 +1951,62 @@ SQL> _JOB job timer slave_finished;
     (_EXIT | _QUIT) [返回值]
     # 退出的值将是这里的<INT>值, 如果不填写，将为0
 ```
+
+### 程序中涌到的环境变量
+程序中我们定义了一些环境变量，用来支撑客户部署和调试的需要。  
+
+#### TESTCLI_DEBUG
+布尔类型，用来标记程序是否在DEBUG模式。  
+如果为0（默认）： 表示程序处于非调试模式。  
+如果为1（即打开DEBUG模式）：  表示程序处于调试模式。  
+调试模式仅仅用于，在你认为程序发生了问题，希望打印更多的信息来发现问题所在的时候。    
+在环境变量里头设置TESTCLI_DEBUG和在命令行或者脚本中执行 _set debug on的效果完全一致。  
+```
+   export TESTCLI_DEBUG=1
+   # Windows下用：  set TESTCLI_DEBUG 1
+   
+   随后执行的语句将打印更多的内部日志  
+```
+
+#### TESTCLI_CONF
+用来定义程序配置文件的目录。  
+默认的配置文件是程序安装目录的conf/testcli.ini。 即PYTHON_HOME/lib/python36/site-packages/testcli/conf/testcli.ini.  
+```
+   export TESTCLI_CONF=/tmp/mycli.conf
+   # Windows下用：  set TESTCLI_CONF \Temp\mycli.conf  
+```
+
+#### TESTCLI_JLIBDIR
+用来定义程序需要加载的数据源JAR包的位置（文件夹名称）    
+默认的配置文件是程序安装目录的jlib。 即PYTHON_HOME/lib/python36/site-packages/testcli/jlib.  
+```
+   export TESTCLI_JLIBDIR=/tmp/myjlib
+   # Windows下用：  set TESTCLI_JLIBDIR \Temp\myjlib  
+```
+如果实际部署中用到了客户化的JAR包，可以通过定义TESTCLI_CONF和TESTCLI_JLIBDIR来指定客户化文件的位置，而不用修改PYTHON系统目录。  
+
+
+#### TESTCLI_CONNECTION_URL
+用来定义程序的默认数据库连接地址  
+格式和CONNECT语法中的URL相同， 如：  
+```
+   export TESTCLI_CONNECTION_URL=jdbc:linkoopdb:tcp://localhost:9105/ldb
+   # Windows下用：  set TESTCLI_CONNECTION_URL jdbc:linkoopdb:tcp://localhost:9105/ldb
+```
+在设置了TESTCLI_CONNECTION_URL，在连接数据库的时候，可以不再指定连接字符串的后半部分。  
+如：
+```
+   set TESTCLI_CONNECTION_URL jdbc:linkoopdb:tcp://localhost:9105/ldb
+   (base) C:\>testcli
+   TestCli Release 0.0.8
+   SQL> _connect admin/123456
+   Connected.
+   
+   这和不设置TESTCLI_CONNECTION_URL，执行如下语句的效果是完全一致的。  
+   (base) C:\>testcli
+   TestCli Release 0.0.8
+   SQL> _connect admin/123456@jdbc:linkoopdb:tcp://localhost:9105/ldb
+   Connected.
+```
+
+

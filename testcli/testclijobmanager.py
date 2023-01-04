@@ -32,9 +32,13 @@ class TestCliMeta(object):
         self.MetaURL = None
         self.MetaPort = 0
         self.JarList = None
+        self.appOptions = None
 
     def setJVMJarList(self, p_JarList):
         self.JarList = p_JarList
+
+    def setAppOptions(self, appOptions):
+        self.appOptions = appOptions
 
     def DisConnect(self):
         if self.dbConn is not None:
@@ -56,20 +60,10 @@ class TestCliMeta(object):
             self.MetaServer = None
 
     def StartAsServer(self):
-        # 检查TESTCLI_HOME是否存在
         try:
             # 读取配置文件，并连接数据库
-            m_AppOptions = configparser.ConfigParser()
-            m_conf_filename = os.path.join(os.path.dirname(__file__), "conf", "testcli.ini")
-            m_AppOptions.read(m_conf_filename)
-            m_MetaClass = m_AppOptions.get("meta_driver", "driver")
-            m_MetaDriverFile = os.path.join(os.path.dirname(__file__),
-                                            "jlib", m_AppOptions.get("meta_driver", "filename"))
-            if not os.path.exists(m_MetaDriverFile):
-                raise TestCliException("TestCli-0000: "
-                                       "TestCliMeta:: Driver file [" + m_MetaDriverFile +
-                                       "] does not exist! JobManager Aborted!")
-            m_MetaDriverURL = m_AppOptions.get("meta_driver", "jdbcurl")
+            m_MetaClass = self.appOptions.get("meta_driver", "driver")
+            m_MetaDriverURL = self.appOptions.get("meta_driver", "jdbcurl")
             self.dbConn = jdbcconnect(jclassname=m_MetaClass, url=m_MetaDriverURL,
                                       driverArgs={'user': 'sa', 'password': 'sa'},
                                       jars=self.JarList)
@@ -223,22 +217,8 @@ class TestCliMeta(object):
 
         try:
             # 读取配置文件，并连接数据库
-            m_AppOptions = configparser.ConfigParser()
-            m_conf_filename = os.path.join(os.path.dirname(__file__), "conf", "testcli.ini")
-            if os.path.exists(m_conf_filename):
-                m_AppOptions.read(m_conf_filename)
-            else:
-                if "TESTCLI_DEBUG" in os.environ:
-                    print("DEBUG:: TestCliMeta:: testcli.ini does not exist! JobManager Connect Failed!")
-                return
-            m_MetaClass = m_AppOptions.get("meta_driver", "driver")
-            m_MetaDriverFile = os.path.join(os.path.dirname(__file__),
-                                            "jlib", m_AppOptions.get("meta_driver", "filename"))
-            if not os.path.exists(m_MetaDriverFile):
-                if "TESTCLI_DEBUG" in os.environ:
-                    print("DEBUG:: TestCliMeta:: Driver file does not exist! JobManager Connect Failed!")
-                return
-            m_MetaDriverURL = m_AppOptions.get("meta_driver", "jdbcurl")
+            m_MetaClass = self.appOptions.get("meta_driver", "driver")
+            m_MetaDriverURL = self.appOptions.get("meta_driver", "jdbcurl")
             m_MetaDriverURL = m_MetaDriverURL.replace("mem", p_MetaServerURL + "/mem")
             self.dbConn = jdbcconnect(jclassname=m_MetaClass, url=m_MetaDriverURL,
                                       driverArgs={'user': 'sa', 'password': 'sa'},

@@ -2,9 +2,14 @@
 
 helpMessage = [
     {
-        "topic": 'help',
-        "summary": "show command help",
-        "synatx": "_HELP [<SubCommand>]",
+        "topic": 'exit',
+        "summary": "exit current script with exitValue (Default is 0) ",
+        "synatx": "_EXIT [<exitValue>]",
+    },
+    {
+        "topic": 'quit',
+        "summary": "force exit current script with exitValue (Default is 0) ",
+        "synatx": "_QUIT [<exitValue>]",
     },
     {
         "topic": 'load',
