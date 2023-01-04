@@ -1455,6 +1455,165 @@ Mapping file loaded.
 ```
 
 # 以上文件还没有更新，请等等哈
+***    
+### 在脚本中使用ASSERT语句来判断运行结果
+使用Assert可以判断测试运行的结果，结果作为测试运行的结论
+```
+   _ASSERT {% <python表达式> %} [, <AssertName>]   
+```
+上面语法中的python表达式是任何合法的python表达式。  
+以下是一个实际使用的例子
+``` 
+    (base) C:\>testcli
+    TestCli Release 0.0.9
+    SQL> _connect /mem
+    Database connected.
+    SQL> create table aaa (num int);
+    0 row affected.
+    SQL> insert into aaa values(10);
+    1 row affected.
+    SQL> select * from aaa;
+    +--------+-----+
+    |   ##   | NUM |
+    +--------+-----+
+    |      1 |  10 |
+    +--------+-----+
+    1 row selected.
+    SQL> _assert {% lastCommandResult["rows"][0][0] == 10 %}
+    Assert successful.
+    SQL> _assert {% lastCommandResult["rows"][0][0] == 11 %}, test1
+    Assert [test1] fail.    
+```
+这里用ASSERT语句来判断上一个结果集返回的第一行、第一列是否为10。
+如果是，返回成功，否则返回失败。  
+AssertName是Assert具体的名字，可以为任何字符串，用在这里可以方便最后的日志输出和统计。  
+注意： 这里的python表达式必须是一个非赋值表达式，即只能做判断语句，无法对内容发生改变。  
+以下的python表达式用在Assert语句中是不合法的：
+```
+    SQL> _assert {% x = 11 %}, test1
+```
+上述错误的例子中定义了一个新的变量x，这违反了python表达式必须是非赋值表达式的限制。  
+
+###  在脚本中嵌入python语法
+为了方便测试脚本的扩展，testcli支持在测试脚本中嵌入python语法的写法。
+```
+> {% 
+<Python单行或者多行语句> 
+%}
+
+如果内容少，也可以将python语句写在一行，类似> {% <Python单行或者多行语句> %}
+```
+以下是使用的例子：
+```
+> {% 
+import time
+start = time.time() 
+%}
+
+do some script....
+
+> {% 
+end = time.time() 
+%}
+
+_assert {% end - start > 300 %}
+```
+上述的语句中两次用python内嵌脚本获取了系统当前的时间，并最后用时间差判断这一段脚本执行是否超过了300秒。  
+理论上，我们用这种内嵌脚本的方式支持所有可能的python语法。  
+但是在实际的应用中，如果业务的逻辑比较复杂，建议将业务逻辑代码写成独立的Python文件，并通过插件（_LOAD PLUGIN)的方式来导入。  
+通过插件导入的方式，将使得程序变得更容易复用，而且可读性有所提高。  
+
+需要注意的是： 在一个测试脚本运行的过程中，所有的python内嵌语法都拥有共同的变量空间。   
+即如何保证变量空间的不冲突是写业务逻辑代码的时候需要保证的。    
+
+#### 内置Python语法中的系统预制变量
+为了更方便来满足业务的判断，我们内置了一些系统变量，这些系统变量在使用的过程中不需要业务层面重新定义，可以直接拿来使用。  
+
+##### lastCommandResult
+用来标记上一次语句执行的结果。  
+如果需要保留上一次的语句执行结果，则在执行下一个语句前必须对该变量进行深度复制。（直接赋值会导致Python中的引用问题，结果将偏离预期）
+复制的方法是：
+```
+  > {%
+  import copy
+  x = copy.copy(lastCommandResult) 
+  %}
+```
+执行完上述语句后，就可以在随后的脚本中使用x来做进一步的判断的处理。  
+对于正常的SQL语法，lastCommandResult的结果是一个数据字典，其内容为：  
+```
+   {
+       "rows": [(Cell1-1,Cell1-2,),(Cell2-1,Cell2-2),],
+       "headers": [列名1，列名2,],
+       "elapsed": <命令执行的时间，如1.35，单位为秒>,
+       "status": <语句的最后命令行状态输出>,
+       "errorCode": 0
+   }
+```
+对于一个错误的SQL写法，lastCommandResult的结果是一个数据字典，其内容为：
+```
+   {
+       "errorCode": 1,
+       "rows": [],
+       "headers": [],
+       "elapsed": <命令执行的时间，如1.35，单位为秒>,
+       "status": <语句的最后命令行状态输出, 这里指错误消息>,
+   }
+``` 
+对于一个正确的API调用，lastCommandResult的结果是一个数据字典，其内容为：
+``` 
+   {
+       "content": <HTTP响应正文>,
+       "elapsed": <命令执行的时间，如1.35，单位为秒>,
+       "status": <HTTP的响应状态，即HTTP.RESP.STATUS>,
+       "errorCode": 0
+   }
+``` 
+对于一个错误的API调用，lastCommandResult的结果是一个数据字典，其内容为：
+``` 
+   {
+       "message": <请求错误消息>,
+       "errorCode": 1
+   }
+``` 
+
+##### sessionContext
+定义当前会话的上下文信息。  
+sessionContext是一个字典结果。  
+1： 可以通过sessionContext获得当前会话的数据库连接信息；  
+2： 可以通过sessionContext向当前会话传递结果，并作为当前Python内嵌语句的返回结果；
+
+```
+    -- 获得当前数据库的数据库连接
+    > {%
+        dbConn = sessionContext["dbConn"]
+        ...
+    %}
+```
+```
+    -- 从内嵌语法中返回
+    > {%
+        # type可以为result或者error
+        #     如果为result，则应填写相应的title, rows, headers, columnTypes
+        #     如果为result，则应填写相应的message
+        sessionContext["type"] = "result"
+        sessionContext["status"] = "这是从Python的内置语法中返回，可以为None，即不填写"
+        sessionContext["title"] = "以下是返回标题，可以为None，即不填写"
+        sessionContext["rows"] = [(10,15), (20,25)]
+        sessionContext["headers"] = ['COL1','COL2',]
+    %}
+    -- 返回的样子:
+    以下是返回标题，可以为None，即不填写
+    +--------+------+------+
+    |   ##   | COL1 | COL2 |
+    +--------+------+------+
+    |      1 | 10   | 15   |
+    |      2 | 20   | 25   |
+    +--------+------+------+
+    这是从Python的内置语法中返回，可以为None，即不填写
+```
+
+##### argv
 
 ***    
 ### 加载附加的命令行映射文件
@@ -1525,7 +1684,7 @@ Disconnected.
 每一个映射文件中，可以循环反复多个这样的类似配置，每一个配置段都会生效。  
 如果一个文件规则或者替换规则多次出现定义，则会发生多次匹配的现象。  
 
-
+*** 
 ### 加载附加的外挂插件
 为了让测试框架能够支持更多的扩展，testcli支持你将自己写好的Python程序作为一个插件的方式放入到系统中。  
 虽然这是一个可能解决问题的近乎外能良药，但是这么做会导致一定的测试脚本可读性下降。需要你在使用的时候小心谨慎。  
@@ -1596,6 +1755,7 @@ SQL> _exit
 具体对于SessionConext的用法解释请参考文档的其他章节。  
 上面的例子中，我们在内置脚本中执行了插件中定义的类和方法，并完成了数据的处理和返回。  
 
+*** 
 ### 加载数据库驱动
 TestCli会默认加载所有配置在conf/testcli.ini中的JDBC驱动  
 你也可以在启动后手工加载额外的驱动，或者更改已经加载的配置。
@@ -1644,6 +1804,7 @@ TestCli会默认加载所有配置在conf/testcli.ini中的JDBC驱动
     ...
     ```      
 
+*** 
 ### 程序的并发和后台执行
 TestCli被设计为支持并发执行脚本，支持后台执行脚本。    
 为了支持后台操作，我们这里有一系列的语句，他们是：    
@@ -1666,7 +1827,6 @@ TestCli被设计为支持并发执行脚本，支持后台执行脚本。
    _JOB SET <JOB的名字> { <JOB选项名称>=><JOB选项值>}
    _JOB REGISTER WORKER TO <JOB名称>
    _JOB DEREGISTER WORKER
-
 ```
 #### 创建后台任务脚本
 在很多时候，我们需要TestCli来帮我们来运行数据库脚本，但是又不想等待脚本的运行结束。    
@@ -1740,7 +1900,6 @@ Detail Tasks:
 +----------+----------+--------------------+--------------------+
 这里可以看到具体对于JOB名称为jobtst的任务的详细情况
 ```
-  
 #### 如何启动后台任务脚本
 通过start的方式，我可以启动全部的后台任务或者只启动部分后台任务
 ```
@@ -1753,6 +1912,7 @@ SQL> _JOB job start jobtest;
 这里只会启动JOB名称为jobtest的后台任务
 随后，再次通过show来查看信息，可以注意到相关已经启动
 ```
+
 #### 如何停止后台任务脚本
 在脚本运行过程中，你可以用shutdown来停止某个某个任务或者全部任务，
 ```
@@ -1939,7 +2099,7 @@ SQL> _JOB job timer slave_finished;
    TODO： ECHO中能够处理{{}}的替代信息，能够支持APPEND操作
     ```
 2. 这里文件内容的所有东西都将被直接输出到指定的文件中，包括换行符等信息
-
+*** 
 ### 程序退出
 如果你执行一个脚本，则在以下三种情况下会退出
 1. 脚本执行失败。并且设置_WHENEVER ERROR EXIT <INT>的时候。退出的值将是这里的<INT>值
@@ -1951,7 +2111,7 @@ SQL> _JOB job timer slave_finished;
     (_EXIT | _QUIT) [返回值]
     # 退出的值将是这里的<INT>值, 如果不填写，将为0
 ```
-
+*** 
 ### 程序中用到的环境变量
 程序中我们定义了一些环境变量，用来支撑客户部署和调试的需要。  
 
@@ -2008,5 +2168,3 @@ SQL> _JOB job timer slave_finished;
    SQL> _connect admin/123456@jdbc:linkoopdb:tcp://localhost:9105/ldb
    Connected.
 ```
-
-
