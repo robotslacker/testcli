@@ -20,7 +20,7 @@ command:
 
 // connect
 connect
-     : (connectjdbc | connectlocal)
+     : (connectjdbc | connectlocal) (CONNECT_SEMICOLON)?
      ;
 
 connectlocal
@@ -30,7 +30,7 @@ connectlocal
 connectjdbc
         : CONNECT (connectUserInfo (CONNECT_AT)?)
           (connectDriver CONNECT_COLON connectDriverSchema CONNECT_COLON (connectDriverType CONNECT_COLON)? CONNECT_DASH
-          connectHost (connectPort)? (CONNECT_SLASH | CONNECT_COLON) connectService)?
+          connectHost (connectPort)? ((CONNECT_SLASH | CONNECT_COLON) connectService)? )?
           (CONNECT_QUESTION connectParameters)?
         ;
 

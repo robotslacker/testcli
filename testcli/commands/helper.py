@@ -20,11 +20,18 @@ def showHelp(cls, topicName: str):
             "status": "Use \"_HELP <command>\" to get detail help messages."
         }
     else:
-        helpTopic = {}
+        helpTopic = None
         for item in helpMessage:
             if item["topic"].upper() == topicName.upper():
                 helpTopic = copy.copy(item)
                 break
+        if helpTopic is None:
+            yield {
+                "type": "error",
+                "message": "Unrecognized command [" + topicName.upper() + "]. " +
+                           "Use \"_HELP\" to list all commands."
+            }
+            return
         status = "  Command:"
         status = status + "\n    " + str(topicName).upper()
         status = status + "\n"
@@ -50,4 +57,3 @@ def showHelp(cls, topicName: str):
             "columnTypes": None,
             "status": status
         }
-    pass

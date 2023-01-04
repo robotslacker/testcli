@@ -1411,8 +1411,8 @@ class SQLVisitor(SQLParserVisitor):
         parsedObject = {'name': 'HELP'}
 
         parsedObject.update({'topic': ""})
-        if ctx.HELP_LOAD() is not None:
-            parsedObject.update({'topic': "LOAD"})
+        if ctx.HELP_COMMAND() is not None:
+            parsedObject.update({'topic': str(ctx.HELP_COMMAND().getText()).strip().upper()})
 
         # 获取错误代码
         errorCode = 0

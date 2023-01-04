@@ -180,8 +180,4 @@ data      :
 
 // 帮助信息
 help       :
-           HELP
-           (
-                (HELP_LOAD)
-           )?
-           (HELP_SEMICOLON)? CRLF?;
+           HELP (HELP_COMMAND)? (HELP_SEMICOLON)? CRLF?;

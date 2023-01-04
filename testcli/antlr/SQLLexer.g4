@@ -79,6 +79,10 @@ CONNECT_PARA_AND
             : '&'
             ;
 
+CONNECT_SEMICOLON
+            : ';'
+            ;
+
 JDBC: 'JDBC';
 
 IPV4

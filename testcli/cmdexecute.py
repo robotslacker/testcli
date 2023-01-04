@@ -740,6 +740,23 @@ class CmdExecute(object):
                 if self.testOptions.get("NAMESPACE") == "SQL":
                     (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
                         = SQLAnalyze(currentStatement)
+                    parsedObject = ret_CommandSplitResult
+                    if parsedObject is not None and ret_errorCode != 0:
+                        if parsedObject["name"] == "CONNECT":
+                            ret_CommandSplitResults.append(
+                                {'name': 'PARSE_ERROR',
+                                 'statement': currentStatement,
+                                 'reason': ret_errorMsg}
+                            )
+                            # 解析前的语句
+                            ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+                            # 所有的提示信息
+                            ret_CommandHints.append(currentHints)
+                            # 清空语句的变量
+                            currentHints = []
+                            currentStatement = None
+                            currentStatementWithComments = None
+                            continue
                 elif self.testOptions.get("NAMESPACE") == "API":
                     (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
                         = APIAnalyze(currentStatement)
@@ -1424,9 +1441,9 @@ class CmdExecute(object):
                         requestObject=parseObject,
                 ):
                     yield result
-            elif parseObject["name"] in ["UNKNOWN"]:
+            elif parseObject["name"] in ["PARSE_ERROR"]:
                 yield {"type": "error",
-                       "message": "TESTCLI_0000:  " + parseObject["reason"]}
+                       "message": "TestCli parse error:  " + str(parseObject["reason"])}
             else:
                 raise TestCliException("FDDFSFDFSDSFD " + str(parseObject))
 

@@ -91,7 +91,7 @@ class TestCli(object):
         self.MetaHandler = TestCliMeta()                # SQLCli元数据
         self.SpoolFileHandler = []                      # Spool文件句柄, 是一个数组，可能发生嵌套
         self.EchoFileHandler = None                     # 当前回显文件句柄
-        self.AppOptions = None                          # 应用程序的配置参数
+        self.appOptions = None                          # 应用程序的配置参数
         self.Encoding = None                            # 应用程序的Encoding信息
         self.prompt_app = None                          # PromptKit控制台
         self.echofilename = None                        # 当前回显文件的文件名称
@@ -212,12 +212,47 @@ class TestCli(object):
             self.testOptions.set("WHENEVER_ERROR", "CONTINUE")
 
         # 加载程序的配置文件
-        self.AppOptions = configparser.ConfigParser()
-        m_conf_filename = os.path.join(os.path.dirname(__file__), "conf", "testcli.ini")
-        if os.path.exists(m_conf_filename):
-            self.AppOptions.read(m_conf_filename)
+        # 搜先尝试读取TESTCLI_CONF中的信息，如果TESTCLI_CONF中没有信息，则从安装目录获取
+        self.appOptions = configparser.ConfigParser()
+        if "TESTCLI_CONF" in os.environ:
+            confFilename = str(os.environ["TESTCLI_CONF"]).strip()
+            if os.path.exists(confFilename):
+                self.appOptions.read(confFilename)
+            else:
+                raise TestCliException("Can not open config file [" + confFilename + "]")
         else:
-            raise TestCliException("Can not open inifile for read [" + m_conf_filename + "]")
+            confFilename = os.path.join(os.path.dirname(__file__), "conf", "testcli.ini")
+            if os.path.exists(confFilename):
+                self.appOptions.read(confFilename)
+            else:
+                raise TestCliException("Can not open config file [" + confFilename + "]")
+
+        # 追加系统内部必须使用的h2mem、h2tcp、meta_driver
+        h2JarFile = None
+        for root, dirs, files in os.walk(
+                os.path.join(os.path.dirname(__file__), "jlib")):
+            for file in files:
+                if file.startswith("h2") and file.endswith(".jar"):
+                    h2JarFile = os.path.abspath(os.path.join(root, str(file)))
+                    break
+            if h2JarFile is not None:
+                break
+        if h2JarFile is None:
+            raise TestCliException("Corruptted jlib directory. H2 driver file missed.")
+        self.appOptions.add_section("meta_driver")
+        self.appOptions.set("meta_driver", "driver", "org.h2.Driver")
+        self.appOptions.set("meta_driver", "jdbcurl",
+                            "jdbc:h2:mem:testclimeta;TRACE_LEVEL_SYSTEM_OUT=0;TRACE_LEVEL_FILE=0")
+        self.appOptions.add_section("h2_memdriver")
+        self.appOptions.set("h2_memdriver", "filename", h2JarFile)
+        self.appOptions.set("h2_memdriver", "driver", "org.h2.Driver")
+        self.appOptions.set("h2_memdriver", "jdbcurl", "jdbc:h2:mem:")
+        self.appOptions.add_section("h2_tcpdriver")
+        self.appOptions.set("h2_tcpdriver", "filename", h2JarFile)
+        self.appOptions.set("h2_tcpdriver", "driver", "org.h2.Driver")
+        self.appOptions.set("h2_tcpdriver", "jdbcurl", "jdbc:h2:${driverType}://${host}:${port}/${service}")
+        self.appOptions.set("driver", "h2mem", "h2_memdriver")
+        self.appOptions.set("driver", "h2tcp", "h2_tcpdriver")
 
         # 打开输出日志, 如果打开失败，就直接退出
         try:
@@ -230,12 +265,19 @@ class TestCli(object):
                 print('traceback.format_exc():\n%s' % traceback.format_exc())
             raise TestCliException("Can not open logfile for write [" + self.logfilename + "]")
 
-        # 加载已经被隐式包含的数据库驱动，文件放置在TestCli\jlib下
-        m_jlib_directory = os.path.join(os.path.dirname(__file__), "jlib")
+        # 加载已经被隐式包含的数据库驱动，文件放置在testcli\jlib下
+        # 首先尝试TESTCLI_JLIBDIR下的内容，其次查看安装目录下的东西
+        if "TESTCLI_JLIBDIR" in os.environ:
+            jlibDirectory = str(os.environ["TESTCLI_JLIBDIR"])
+        else:
+            jlibDirectory = os.path.join(os.path.dirname(__file__), "jlib")
+        if not os.path.isdir(jlibDirectory):
+            raise TestCliException("Can not open jlib directory for read [" + jlibDirectory + "]")
+
         if self.db_connectionConf is None:
             self.db_connectionConf = []
-        if self.AppOptions is not None:
-            for row in self.AppOptions.items("driver"):
+        if self.appOptions is not None:
+            for row in self.appOptions.items("driver"):
                 m_DriverName = None
                 m_JarFullFileName = []
                 m_JDBCURL = None
@@ -246,32 +288,32 @@ class TestCli(object):
                     m_driversection = m_driversection.strip()
                     if m_DriverName is None:
                         try:
-                            m_DriverName = self.AppOptions.get(m_driversection, "driver")
+                            m_DriverName = self.appOptions.get(m_driversection, "driver")
                         except (configparser.NoSectionError, configparser.NoOptionError):
                             m_DriverName = None
                     if m_JDBCURL is None:
                         try:
-                            m_JDBCURL = self.AppOptions.get(m_driversection, "jdbcurl")
+                            m_JDBCURL = self.appOptions.get(m_driversection, "jdbcurl")
                         except (configparser.NoSectionError, configparser.NoOptionError):
                             m_JDBCURL = None
                     if m_JDBCProp is None:
                         try:
-                            m_JDBCProp = self.AppOptions.get(m_driversection, "jdbcprop")
+                            m_JDBCProp = self.appOptions.get(m_driversection, "jdbcprop")
                         except (configparser.NoSectionError, configparser.NoOptionError):
                             m_JDBCProp = None
                     if m_jar_filename is None:
                         try:
-                            m_jar_filename = self.AppOptions.get(m_driversection, "filename")
-                            if os.path.exists(os.path.join(m_jlib_directory, m_jar_filename)):
-                                m_JarFullFileName.append(os.path.join(m_jlib_directory, m_jar_filename))
+                            m_jar_filename = self.appOptions.get(m_driversection, "filename")
+                            if os.path.exists(os.path.join(jlibDirectory, m_jar_filename)):
+                                m_JarFullFileName.append(os.path.join(jlibDirectory, m_jar_filename))
                                 if "TESTCLI_DEBUG" in os.environ:
                                     print("Load jar ..! [" +
-                                          os.path.join(m_jlib_directory, m_jar_filename) + "]")
+                                          os.path.join(jlibDirectory, m_jar_filename) + "]")
                                 m_jar_filename = None
                             else:
                                 if "TESTCLI_DEBUG" in os.environ:
                                     print("Driver file does not exist! [" +
-                                          os.path.join(m_jlib_directory, m_jar_filename) + "]")
+                                          os.path.join(jlibDirectory, m_jar_filename) + "]")
                         except (configparser.NoSectionError, configparser.NoOptionError):
                             m_jar_filename = None
                 jarConfig = {"ClassName": m_DriverName,
@@ -282,10 +324,14 @@ class TestCli(object):
                 self.db_connectionConf.append(jarConfig)
 
         # 设置Meta连接时候需要用到的JarList1
-        m_JarList = []
+        jarList = []
         for jarConfig in self.db_connectionConf:
-            m_JarList.extend(jarConfig["FullName"])
-        self.MetaHandler.setJVMJarList(m_JarList)
+            jarFileNames = jarConfig["FullName"]
+            for jarFileName in jarFileNames:
+                if jarFileName not in jarList:
+                    jarList.append(jarFileName)
+        self.MetaHandler.setJVMJarList(jarList)
+        self.MetaHandler.setAppOptions(self.appOptions)
 
         # 对于子进程，连接到JOB管理服务
         if "TESTCLI_JOBMANAGERURL" in os.environ:
@@ -455,6 +501,8 @@ class TestCli(object):
                                                 "Not Connected." if self.db_conn is None
                                                 else "Connected with " + self.db_username + "/******@" + self.db_url
                                             )) + ' | ' +
+                                         ' Type "_HELP" to get help information.' + ' | ' +
+                                         ' Type "_EXIT" to exit app.' + ' | ' +
                                          '</style></b>')
                     self.prompt_app.bottom_toolbar = bottomToolbar
                     if full_text is None:

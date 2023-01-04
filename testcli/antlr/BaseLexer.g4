@@ -292,6 +292,6 @@ DATACOLUMN_CLOSE    : ']' -> popMode;
 
 mode HelpMode;
 HELP_SPACE           : [ \t]+ -> channel (HIDDEN);
-HELP_LOAD            : 'LOAD';
+HELP_COMMAND         : [0-9A-Z]+;
 HELP_CRLF            : CRLF -> popMode;
 HELP_SEMICOLON       : ';';

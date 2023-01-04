@@ -33,7 +33,15 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-    def test_SQLAnalyze_ConnectH2Mem(self):
+    def test_SQLAnalyze_Connect(self):
+        # connect with local h2 mem
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect SYSDBA/Dameng123:62310jdbc:dm://10.15.1.19:6231/")
+        self.assertTrue(isFinished)
+        self.assertEqual({'name': 'CONNECT', 'password': 'Dameng123', 'username': 'SYSDBA'}, ret_CommandSplitResult)
+        self.assertEqual(1, ret_errorCode)
+        self.assertEqual("line1:25  mismatched input ':62310' expecting <EOF> ", ret_errorMsg)
+
         # connect with local h2 mem
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_connect /mem")

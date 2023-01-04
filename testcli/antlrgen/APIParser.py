@@ -292,8 +292,7 @@ class APIParser ( Parser ):
                      "'LCS'", "'MYERS'", "<INVALID>", "<INVALID>", "<INVALID>", 
                      "<INVALID>", "'SEEDFILE'", "'DIR'", "<INVALID>", "<INVALID>", 
                      "<INVALID>", "'ROWS'", "<INVALID>", "<INVALID>", "<INVALID>", 
-                     "'CONVERT'", "'FROM'", "<INVALID>", "<INVALID>", "<INVALID>", 
-                     "<INVALID>", "<INVALID>", "'LOAD'" ]
+                     "'CONVERT'", "'FROM'" ]
 
     symbolicNames = [ "<INVALID>", "HTTP_OPEN", "SCRIPT_OPEN", "COMMENT1", 
                       "COMMENT2", "CRLF", "COMMA", "SEMICOLON", "COLON", 
@@ -350,7 +349,7 @@ class APIParser ( Parser ):
                       "DATA_INT", "DATA_COMMA", "DATACOLUMN_OPEN", "DATA_CONVERT", 
                       "DATA_FROM", "DATA_EXPRESSION", "DATACOLUMN_EXPRESSION", 
                       "DATACOLUMN_SPACE", "DATACOLUMN_CLOSE", "HELP_SPACE", 
-                      "HELP_LOAD", "HELP_CRLF", "HELP_SEMICOLON" ]
+                      "HELP_COMMAND", "HELP_CRLF", "HELP_SEMICOLON" ]
 
     RULE_prog = 0
     RULE_command = 1
@@ -615,7 +614,7 @@ class APIParser ( Parser ):
     DATACOLUMN_SPACE=209
     DATACOLUMN_CLOSE=210
     HELP_SPACE=211
-    HELP_LOAD=212
+    HELP_COMMAND=212
     HELP_CRLF=213
     HELP_SEMICOLON=214
 
@@ -4161,14 +4160,14 @@ class APIParser ( Parser ):
         def HELP(self):
             return self.getToken(APIParser.HELP, 0)
 
+        def HELP_COMMAND(self):
+            return self.getToken(APIParser.HELP_COMMAND, 0)
+
         def HELP_SEMICOLON(self):
             return self.getToken(APIParser.HELP_SEMICOLON, 0)
 
         def CRLF(self):
             return self.getToken(APIParser.CRLF, 0)
-
-        def HELP_LOAD(self):
-            return self.getToken(APIParser.HELP_LOAD, 0)
 
         def getRuleIndex(self):
             return APIParser.RULE_help
@@ -4196,7 +4195,7 @@ class APIParser ( Parser ):
             _la = self._input.LA(1)
             if _la==212:
                 self.state = 559
-                self.match(APIParser.HELP_LOAD)
+                self.match(APIParser.HELP_COMMAND)
 
 
             self.state = 563
