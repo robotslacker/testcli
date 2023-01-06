@@ -891,8 +891,6 @@ def _javaobj_to_pyobj(p_javaobj, p_objColumnSQLType=None):
         return decimal.Decimal(p_javaobj.toString())
     elif typeName == "java.lang.Double":
         return decimal.Decimal(p_javaobj.toString())
-    elif typeName == "java.lang.Float":
-        return decimal.Decimal(p_javaobj.toString())
     elif typeName == "java.math.BigDecimal":
         return decimal.Decimal(p_javaobj.toPlainString())
     elif typeName == "java.sql.Timestamp":

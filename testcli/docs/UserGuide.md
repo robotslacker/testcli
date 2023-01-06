@@ -12,7 +12,7 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
 * 满足API方面的相关功能测试、压力测试需要。
 * 能够作为一个日常小工具，进行数据库的日常操作，进行数据查询、更新等。      
 * 更多的为测试工作带来的便利功能，包括：
-  * 方便的用来生成随机数据文件的工具。 
+  * 方便地用来生成随机数据文件的工具。 
   * 使用提示（Hint）信息来过滤或者掩码输出结果。
   * 使用TermOut，FeedBack，ECHO来控制显示输出的内容。
   * 使用ECHO来生成一些临时性的测试文件
@@ -1823,8 +1823,8 @@ TestCli被设计为支持并发执行脚本，支持后台执行脚本。
    _JOB START <JOB的名字 | ALL>   
    _JOB ABORT <JOB的名字 | ALL> 
    _JOB SHUTDOWN <JOB的名字 | ALL>   
-   _JOB CREATE <JOB的名字> { <JOB选项名称>=><JOB选项值>}
-   _JOB SET <JOB的名字> { <JOB选项名称>=><JOB选项值>}
+   _JOB CREATE <JOB的名字> { <JOB选项名称>=<JOB选项值>}
+   _JOB SET <JOB的名字> { <JOB选项名称>=<JOB选项值>}
    _JOB REGISTER WORKER TO <JOB名称>
    _JOB DEREGISTER WORKER
 ```
@@ -1975,9 +1975,9 @@ SQL> _JOB job timer slave_finished;
    _COMPARE RESET
    _COMPARE SET {MASK | NOMASK | CASE | NOCASE | IGBLANK | NOIGBLANK | TRIM | NOTRIM}
    _COMPARE SET OUTPUT { CONSOLE | DIFFFILE }
-   _COMPARE SET ALGORITHM [LCS | COMPARE_MYERS]
-   _COMPARE SET WORK <需要比对文件的字符集信息，默认为UTF-8>
-   _COMPARE SET REFERENCE <比对参考文件的字符集信息，默认为UTF-8>
+   _COMPARE SET ALGORITHM [LCS | MYERS]
+   _COMPARE SET WORK ENCODING <需要比对文件的字符集信息，默认为UTF-8>
+   _COMPARE SET REFERENCE ENCODING <需要比对文件的字符集信息，默认为UTF-8>
 
    TODO:
       1. 支持 _COMPARE SET OUTPUT HTMLFILE
@@ -2032,11 +2032,11 @@ SQL> _JOB job timer slave_finished;
     _SSH SFTP CHOWN <需要修改属主的文件名称> <新的用户ID> <新的组ID>
     _SSH SFTP MKDIR <需要建立的新目录名称> <新目录的文件权限属性(8进制数位表示)>
     _SSH SFTP GET <远程文件名> <本地文件名>
-    _SSH SFTP GET <本地文件名> <远程文件名>
+    _SSH SFTP PUT <本地文件名> <远程文件名>
     _SSH SFTP REMOVE <需要删除的远程文件名>
     _SSH SFTP RENAME <需要更名的远程文件名> <更名后的远程文件名>
     _SSH SFTP LISTDIR <需要列出详细信息的远程目录名>
-    _SSH SFTP TRUNCATE <需要改变大小的远程文件名> <改变后的文件名>
+    _SSH SFTP TRUNCATE <需要改变大小的远程文件名> <改变后的文件大小>
 
     TODO:
       LISTDIR 需要提供详细信息

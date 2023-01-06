@@ -378,7 +378,12 @@ class APIVisitor(APIParserVisitor):
             parsedObject.update({'expression': ""})
 
         if ctx.ASSERT_NAME() is not None:
-            parsedObject.update({'assertName': str(ctx.ASSERT_NAME().getText()).strip()})
+            assertName = str(ctx.ASSERT_NAME().getText()).strip()
+            if assertName.startswith('"') and assertName.endswith('"'):
+                assertName = assertName[1:-1]
+            if assertName.startswith("'") and assertName.endswith("'"):
+                assertName = assertName[1:-1]
+            parsedObject.update({'assertName': assertName})
         else:
             parsedObject.update({'assertName': None})
 
@@ -603,6 +608,8 @@ class APIVisitor(APIParserVisitor):
                 commands.append(str(expression.getText()))
             commond = str(" ".join(commands)).strip()
             if commond.startswith('"') and commond.endswith('"'):
+                commond = commond[1:-1]
+            if commond.startswith("'") and commond.endswith("'"):
                 commond = commond[1:-1]
             parsedObject.update({"command": commond})
         if ctx.SSH_CONNECT() is not None:

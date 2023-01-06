@@ -15,13 +15,18 @@ localEmbeddScriptScope = {}
         "elapsed": 
         "errorCode": 0
     }
+    SQL Error:
+    {
+        "errorCode": 1
+        "message":  errorMsg
+    }
     HTTP Result:
     {
         "status":
-        "data":
+        "content":
         "errorCode": 0
     }
-    Error:
+    HTTP Error:
     {
         "errorCode": 1
         "errorMsg":  errorMsg

@@ -643,7 +643,8 @@ class CmdExecute(object):
                                     "java.sql.SQLTransientConnectionException:",
                                     "java.sql.SQLFeatureNotSupportedException",
                                     "com.microsoft.sqlserver.jdbc.",
-                                    "org.h2.jdbc.JdbcSQLSyntaxErrorException:"
+                                    "org.h2.jdbc.JdbcSQLSyntaxErrorException:",
+                                    "dm.jdbc.driver.DMException:",
                                     ]:
                     if sqlErrorMessage.startswith(errorPrefix):
                         sqlErrorMessage = sqlErrorMessage[len(errorPrefix):].strip()
@@ -725,7 +726,6 @@ class CmdExecute(object):
             statementLines = statement.split('\n')
             for nPos in range(0, len(statementLines)):
                 statementLine = statementLines[nPos]
-
                 # 将上次没有结束的行和当前行放在一起, 再次看是否已经结束
                 if currentStatement is None:
                     currentStatement = statementLine
@@ -807,6 +807,27 @@ class CmdExecute(object):
                                      'statement': currentStatement,
                                      'reason': ret_errorMsg}
                                 )
+                                # 解析前的语句
+                                ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+                                # 所有的提示信息
+                                ret_CommandHints.append(currentHints)
+                                # 清空语句的变量
+                                currentHints = []
+                                currentStatement = None
+                                currentStatementWithComments = None
+                            if nPos == (len(statementLines) - 1):
+                                if self.testOptions.get("NAMESPACE") == "SQL":
+                                    ret_CommandSplitResults.append(
+                                        {'name': 'SQL_UNKNOWN',
+                                         'statement': currentStatement,
+                                         'reason': "missing SQL_END at '<EOF>'"}
+                                    )
+                                elif self.testOptions.get("NAMESPACE") == "API":
+                                    ret_CommandSplitResults.append(
+                                        {'name': 'API_UNKNOWN',
+                                         'statement': currentStatement,
+                                         'reason': "missing HTTP_END at '<EOF>'"}
+                                    )
                                 # 解析前的语句
                                 ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
                                 # 所有的提示信息

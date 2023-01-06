@@ -38,16 +38,16 @@ def setOptions(cls, options):
             if 'TESTCLI_DEBUG' in os.environ:
                 del os.environ['TESTCLI_DEBUG']
         else:
-            raise TestCliException("SQLCLI-00000: "
-                                   "Unknown option [" + str(optionValue) + "]. ON/OFF only.")
-        return [{
+            raise TestCliException("Unknown option [" + str(optionValue) + "]. ON/OFF only.")
+        yield {
             "type": "result",
             "title": None,
             "rows": None,
             "headers": None,
             "columnTypes": None,
             "status": None
-        }, ]
+        }
+        return
 
     # 处理AUTOCOMMIT选项
     if optionName.upper() == "AUTOCOMMIT":
@@ -58,22 +58,21 @@ def setOptions(cls, options):
         elif optionValue.upper() == 'TRUE':
             cls.db_conn.setAutoCommit(True)
         else:
-            raise TestCliException("SQLCLI-00000: "
-                                   "Unknown option [" + str(optionValue) + "]. True/False only.")
-        return [{
+            raise TestCliException("Unknown option [" + str(optionValue) + "]. True/False only.")
+        yield {
             "type": "result",
             "title": None,
             "rows": None,
             "headers": None,
             "columnTypes": None,
             "status": None
-        }, ]
+        }
+        return
 
     # 对于子进程，连接到JOB管理服务
     if optionName.upper() == "JOBMANAGER_METAURL":
         if cls.testOptions.get("JOBMANAGER") == "ON":
-            raise TestCliException("SQLCLI-00000: "
-                                   "You can't act as worker rule while option JOBMANAGER is ON")
+            raise TestCliException("You can't act as worker rule while option JOBMANAGER is ON.")
         jobManagerURL = optionValue
         if len(jobManagerURL) == 0:
             # 退出Meta的连接
@@ -87,39 +86,45 @@ def setOptions(cls, options):
             cls.JobHandler.setMetaConn(cls.MetaHandler.db_conn)
             cls.TransactionHandler.setMetaConn(cls.MetaHandler.db_conn)
             cls.testOptions.set("JOBMANAGER_METAURL", jobManagerURL)
-        return [{
+        yield {
             "type": "result",
             "title": None,
             "rows": None,
             "headers": None,
             "columnTypes": None,
             "status": None
-        }, ]
+        }
+        return
 
     # 如果特殊的选项，有可能时用户自己定义的变量
     if optionName.startswith('@'):
         cls.testOptions.set(optionName[1], optionValue)
-        return [{
+        yield {
             "type": "result",
             "title": None,
             "rows": None,
             "headers": None,
             "columnTypes": None,
             "status": None
-        }, ]
+        }
+        return
 
     # 查看是否属于定义的选项
     if cls.testOptions.get(optionName.upper()) is not None:
         cls.testOptions.set(optionName.upper(), optionValue)
-        return [{
+        yield {
             "type": "result",
             "title": None,
             "rows": None,
             "headers": None,
             "columnTypes": None,
             "status": None
-        }, ]
+        }
+        return
     else:
         # 不认识的配置选项按照SQL命令处理
-        raise TestCliException("SQLCLI-00000: "
-                               "Unknown option [" + str(optionValue) + "] .")
+        yield {
+            "type": "error",
+            "message": "Unknown option [" + str(optionValue) + "] ."
+        }
+        return

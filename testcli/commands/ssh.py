@@ -185,6 +185,7 @@ def executeSshRequest(requestObject):
                 sshTransport = sshContext.getSshTransport()
                 # 打开SSH访问
                 channel = sshTransport.open_session()
+
                 channel.set_combine_stderr(True)
                 # 执行远程的命令
                 channel.exec_command(command)
@@ -238,6 +239,7 @@ def executeSshRequest(requestObject):
                 ret = channel.recv_exit_status()
                 # 关闭SSH访问
                 channel.close()
+
                 yield {
                     "type": "result",
                     "title": None,
