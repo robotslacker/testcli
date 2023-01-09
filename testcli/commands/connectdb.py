@@ -31,7 +31,11 @@ def connectDb(cls, connectProperties, timeout: int = -1):
     cls.cmdExecuteHandler.sqlConn = None
 
     if cls.db_connectionConf is None:
-        raise TestCliException("Please load driver first.")
+        yield {
+            "type": "error",
+            "message": "Please load driver first."
+        }
+        return
 
     # 如果连接内容仅仅就一个mem，则连接到memory db上
     if "localService" in connectProperties:
@@ -64,7 +68,11 @@ def connectDb(cls, connectProperties, timeout: int = -1):
             connectProperties["port"] = port
             connectProperties["parameters"] = {}
         else:
-            raise TestCliException("Invalid localservice. MEM|META only.")
+            yield {
+                "type": "error",
+                "message": "Invalid localservice. MEM|META only."
+            }
+            return
 
     # 连接数据库
     try:
@@ -96,9 +104,12 @@ def connectDb(cls, connectProperties, timeout: int = -1):
         if connectProperties["driver"] == 'jdbc':  # JDBC 连接数据库
             if connectProperties["driverSchema"] is None:
                 # 必须指定数据库驱动类型
-                raise TestCliException("Unknown database [" + str(connectProperties["driverSchema"]) + "]." +
-                                       "Connect Failed. Missed configuration in conf/testcli.ini.")
-
+                yield {
+                    "type": "error",
+                    "message": "Unknown database [" + str(connectProperties["driverSchema"]) + "]." +
+                               "Connect Failed. Missed configuration in conf/testcli.ini."
+                }
+                return
             # 读取配置文件，判断随后JPype连接的时候使用具体哪一个Jar包
             jarList = []
             driverClass = ""
@@ -114,13 +125,20 @@ def connectDb(cls, connectProperties, timeout: int = -1):
                     break
             if jdbcURL is None:
                 # 没有找到Jar包
-                raise TestCliException("Unknown database [" + str(connectProperties["driverSchema"]) + "]." +
-                                       "Connect Failed. Missed configuration in conf/testcli.ini.")
+                yield {
+                    "type": "error",
+                    "message": "Unknown database [" + str(connectProperties["driverSchema"]) + "]." +
+                               "Connect Failed. Missed configuration in conf/testcli.ini."
+                }
+                return
 
             # 如果没有指定数据库类型，则无法进行数据库连接
             if driverClass is None:
-                raise TestCliException(
-                    "Missed driver config [" + connectProperties["driverSchema"] + "]. Database Connect Failed. ")
+                yield {
+                    "type": "error",
+                    "message": "Missed driver config [" + connectProperties["driverSchema"] + "]. Database Connect Failed. "
+                }
+                return
 
             # 替换连接字符串中的变量信息
             # 连接字符串中可以出现的变量有：  ${host} ${port} ${service} ${driverType}

@@ -169,11 +169,11 @@ data      :
           DATA
           (
               (DATA_SET DATA_SEEDFILE DATA_DIR DATA_EXPRESSION) |
-              (DATA_CREATE DATA_FILETYPE DATA_FILE DATA_EXPRESSION
-               DATACOLUMN_OPEN
-               DATACOLUMN_EXPRESSION+
-               DATACOLUMN_CLOSE
-               (DATA_ROWS DATA_INT)?) |
+              (
+                  DATA_CREATE DATA_FILETYPE DATA_FILE DATA_EXPRESSION
+                  DATACOLUMN_OPEN (DATACOLUMN_CONTENT)?
+                  (DATA_ROWS DATA_INT)?
+              ) |
               (DATA_CONVERT DATA_FILETYPE DATA_FILE DATA_EXPRESSION DATA_FROM DATA_FILETYPE DATA_FILE DATA_EXPRESSION)
           )
           (DATA_SEMICOLON)? CRLF?;

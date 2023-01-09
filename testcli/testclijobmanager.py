@@ -7,7 +7,6 @@ import datetime
 import copy
 from multiprocessing import Lock
 import traceback
-import configparser
 import jpype
 import socket
 from .testcliexception import TestCliException

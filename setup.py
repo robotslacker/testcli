@@ -45,6 +45,7 @@ setup(
                       'hdfs', 'fs',
                       "rich",
                       "pytest", 'fastapi', 'uvicorn',
+                      "coloredlogs", "robotframework", "beautifulsoup4", "lxml"
                       ],
 
     author='RobotSlacker',

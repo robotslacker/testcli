@@ -170,7 +170,7 @@ WHENEVER_CRLF       : CRLF -> popMode;
 
 mode SetMode;
 SET_SPACE           : [ \t]+ -> channel (HIDDEN);
-SET_EXPRESSION      : String;
+SET_EXPRESSION      : (OBS_TEXT | UNRESERVED | SUBDELIMS | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' | '@' | '{' | '}' | '%')+;
 SET_SEMICOLON       : ';';
 SET_AT              : '@';
 SET_CRLF            : CRLF -> popMode;
@@ -278,17 +278,16 @@ DATA_FILETYPE       : 'FS' | 'MEM';
 DATA_ROWS           : 'ROWS';
 DATA_INT            : INT;
 DATA_COMMA          : ',';
-DATACOLUMN_OPEN     : '[' -> pushMode(DataColumnMode);
+DATACOLUMN_OPEN     : '(' -> pushMode(DataColumnMode);
 DATA_CONVERT        : 'CONVERT';
 DATA_FROM           : 'FROM';
 DATA_EXPRESSION     :
     (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' | '{' | '}')+;
 
 mode DataColumnMode;
-DATACOLUMN_EXPRESSION     :
-    (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' | '{' | '}' | '(' | ')' | ',' | '\n')+;
 DATACOLUMN_SPACE    : [ \t\n]+ -> channel (HIDDEN);
-DATACOLUMN_CLOSE    : ']' -> popMode;
+DATACOLUMN_CLOSE    : ')';
+DATACOLUMN_CONTENT  : (.*? DATACOLUMN_CLOSE)+ -> popMode;
 
 mode HelpMode;
 HELP_SPACE           : [ \t]+ -> channel (HIDDEN);

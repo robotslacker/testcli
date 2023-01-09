@@ -41,6 +41,7 @@ from .commands.ssh import executeSshRequest
 from .commands.ssh import rewriteSshRequest
 from .commands.compare import executeCompareRequest
 from .commands.helper import showHelp
+from .commands.data import executeDataRequest
 
 from .common import rewriteHintStatement
 from .common import rewriteSQLStatement
@@ -1458,6 +1459,11 @@ class CmdExecute(object):
                 ):
                     yield result
             elif parseObject["name"] in ["COMPARE"]:
+                for result in executeDataRequest(
+                        requestObject=parseObject,
+                ):
+                    yield result
+            elif parseObject["name"] in ["DATA"]:
                 for result in executeCompareRequest(
                         requestObject=parseObject,
                 ):

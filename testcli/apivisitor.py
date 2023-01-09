@@ -685,6 +685,48 @@ class APIVisitor(APIParserVisitor):
         self.errorCode = errorCode
         self.errorMsg = errorMsg
 
+    def visitData(self, ctx: APIParser.DataContext):
+        parsedObject = {'name': 'DATA'}
+
+        if ctx.DATA_SET() is not None:
+            parsedObject.update({"action": "set"})
+            if ctx.DATA_SEEDFILE() is not None:
+                parsedObject.update({"option": "seedDir"})
+                if len(ctx.DATA_EXPRESSION()) != 0:
+                    parsedObject.update({"seedDir": str(ctx.DATA_EXPRESSION()[0].getText()).strip()})
+
+        if ctx.DATA_CONVERT() is not None:
+            parsedObject.update({"action": "convert"})
+            parsedObject.update({"sourceFileType": str(ctx.DATA_FILETYPE()[0].getText())})
+            parsedObject.update({"targetFileType": str(ctx.DATA_FILETYPE()[1].getText())})
+            parsedObject.update({"sourceFile": str(ctx.DATA_EXPRESSION()[0].getText())})
+            parsedObject.update({"targetFile": str(ctx.DATA_EXPRESSION()[1].getText())})
+
+        if ctx.DATA_CREATE() is not None:
+            parsedObject.update({"action": "create"})
+            parsedObject.update({"fileType": str(ctx.DATA_FILETYPE()[0].getText())})
+            parsedObject.update({"targetFile": str(ctx.DATA_EXPRESSION()[0].getText())})
+            if ctx.DATA_ROWS() is not None:
+                parsedObject.update({"rowCount": int(ctx.DATA_INT().getText())})
+            columnExpression = ""
+            if ctx.DATACOLUMN_CONTENT() is not None:
+                columnExpression = str(ctx.DATACOLUMN_CONTENT().getText()).strip()
+                if columnExpression.endswith(')'):
+                    columnExpression = columnExpression[:-1]
+            parsedObject.update({"columnExpression": str(columnExpression)})
+
+        # 处理错误信息
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = 1
+            errorMsg = ctx.exception.message
+            self.isFinished = False
+
+        self.parsedObject = parsedObject
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
+
     def visitCompare(self, ctx: APIParser.CompareContext):
         parsedObject = {'name': 'COMPARE'}
 
