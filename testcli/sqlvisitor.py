@@ -819,10 +819,10 @@ class SQLVisitor(SQLParserVisitor):
             if ctx.DATA_ROWS() is not None:
                 parsedObject.update({"rowCount": int(ctx.DATA_INT().getText())})
             columnExpression = ""
-            for column in ctx.DATACOLUMN_EXPRESSION():
-                columnExpression = columnExpression + str(column.getText())
-            if ctx.DATA_ROWS() is not None:
-                columnExpression = columnExpression.replace("\n", "")
+            if ctx.DATACOLUMN_CONTENT() is not None:
+                columnExpression = str(ctx.DATACOLUMN_CONTENT().getText()).strip()
+                if columnExpression.endswith(')'):
+                    columnExpression = columnExpression[:-1]
             parsedObject.update({"columnExpression": str(columnExpression)})
 
         # 处理错误信息

@@ -985,10 +985,10 @@ class TestSynatx(unittest.TestCase):
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze(
             "_DATA CREATE FS FILE aa.txt \n" +
-            "[\n" +
+            "(\n" +
             "random_int(10), 'aaa'\n" +
             "bb, ccd"
-            + "] rows 1000"
+            + ") rows 1000"
         )
         self.assertEqual(None, ret_errorMsg)
         self.assertEqual(0, ret_errorCode)
@@ -996,7 +996,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(
             {
                 'action': 'create',
-                'columnExpression': "random_int(10),'aaa'bb,ccd",
+                'columnExpression': "random_int(10), 'aaa'\nbb, ccd",
                 'fileType': 'FS',
                 'name': 'DATA',
                 'rowCount': 1000,
