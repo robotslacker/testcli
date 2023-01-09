@@ -172,7 +172,6 @@ mode SetMode;
 SET_SPACE           : [ \t]+ -> channel (HIDDEN);
 SET_EXPRESSION      : (OBS_TEXT | UNRESERVED | SUBDELIMS | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' | '@' | '{' | '}' | '%')+;
 SET_SEMICOLON       : ';';
-SET_AT              : '@';
 SET_CRLF            : CRLF -> popMode;
 
 mode UseMode;

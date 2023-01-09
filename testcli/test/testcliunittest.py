@@ -263,7 +263,7 @@ class TestSynatx(unittest.TestCase):
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_set")
         self.assertTrue(isFinished)
-        self.assertEqual({'name': 'SET', 'scope': 'local'}, ret_CommandSplitResult)
+        self.assertEqual({'name': 'SET'}, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
@@ -272,8 +272,7 @@ class TestSynatx(unittest.TestCase):
             = SQLAnalyze("_set @aa bbb")
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'SET',
-                          'scope': 'global',
-                          'optionName': 'aa',
+                          'optionName': '@aa',
                           'optionValue': 'bbb'}, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
@@ -284,8 +283,7 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'SET',
                           'optionName': 'XX',
-                          'optionValue': 'YY',
-                          'scope': 'local'}, ret_CommandSplitResult)
+                          'optionValue': 'YY'}, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
@@ -295,8 +293,7 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'SET',
                           'optionName': 'ZZ',
-                          'optionValue': 'DD FF',
-                          'scope': 'local'
+                          'optionValue': 'DD FF'
                           }, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)

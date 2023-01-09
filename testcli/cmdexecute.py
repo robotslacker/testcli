@@ -1459,12 +1459,12 @@ class CmdExecute(object):
                 ):
                     yield result
             elif parseObject["name"] in ["COMPARE"]:
-                for result in executeDataRequest(
+                for result in executeCompareRequest(
                         requestObject=parseObject,
                 ):
                     yield result
             elif parseObject["name"] in ["DATA"]:
-                for result in executeCompareRequest(
+                for result in executeDataRequest(
                         requestObject=parseObject,
                 ):
                     yield result

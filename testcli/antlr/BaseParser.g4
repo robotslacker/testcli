@@ -98,7 +98,7 @@ script
         ;
 
 // SET 语句
-set     : SET (SET_AT)?(SET_EXPRESSION)* (SET_SEMICOLON)? CRLF?;
+set     : SET (SET_EXPRESSION)* (SET_SEMICOLON)? CRLF?;
 
 // SSH 远程连接
 ssh     :

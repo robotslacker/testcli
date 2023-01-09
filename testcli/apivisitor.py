@@ -220,10 +220,6 @@ class APIVisitor(APIParserVisitor):
         for expression in ctx.SET_EXPRESSION():
             expression_list.append(str(expression.getText()))
 
-        if ctx.SET_AT():
-            parsedObject.update({'scope': "global"})
-        else:
-            parsedObject.update({'scope': "local"})
         if len(expression_list) >= 1:
             parsedObject.update({'optionName': expression_list[0]})
         if len(expression_list) >= 2:
