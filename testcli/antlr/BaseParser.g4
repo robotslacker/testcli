@@ -60,7 +60,7 @@ load    :
               (LOAD_JDBCURL LOAD_EQUAL LOAD_EXPRESSION)
             )*
           )
-        ) SEMICOLON? CRLF?;
+        ) LOAD_SEMICOLON? CRLF?;
 
 // ASSERT判断
 assert  : ASSERT ASSERT_EXPRESSION ((ASSERT_COMMA)? ASSERT_NAME)? (ASSERT_SEMICOLON)? CRLF?;
@@ -168,15 +168,16 @@ compare   :
 data      :
           DATA
           (
-              (DATA_SET DATA_SEEDFILE DATA_DIR DATA_EXPRESSION) |
+              (DATA_SET DATA_SEEDFILE DATA_DIR DATA_EXPRESSION (DATA_SEMICOLON)?) |
               (
                   DATA_CREATE DATA_FILETYPE DATA_FILE DATA_EXPRESSION
                   DATACOLUMN_OPEN (DATACOLUMN_CONTENT)?
                   (DATA_ROWS DATA_INT)?
+                  (DATA_SEMICOLON)
               ) |
               (DATA_CONVERT DATA_FILETYPE DATA_FILE DATA_EXPRESSION DATA_FROM DATA_FILETYPE DATA_FILE DATA_EXPRESSION)
           )
-          (DATA_SEMICOLON)? CRLF?;
+          CRLF?;
 
 // 帮助信息
 help       :

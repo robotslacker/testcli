@@ -25,7 +25,6 @@ from .hdfswrapper import HDFSWrapper
 from .testcliexception import TestCliException
 from .testclijobmanager import TestCliMeta
 from .testclijobmanager import JOBManager
-from .datawrapper import DataWrapper
 from .testoption import TestOptions
 from .__init__ import __version__
 from .sqlparse import SQLAnalyze
@@ -87,7 +86,6 @@ class TestCli(object):
         self.testOptions = TestOptions()                # 程序运行中各种参数
         self.HdfsHandler = HDFSWrapper()                # HDFS文件操作
         self.JobHandler = JOBManager()                  # 并发任务管理器
-        self.DataHandler = DataWrapper()                # 随机临时数处理
         self.MetaHandler = TestCliMeta()                # SQLCli元数据
         self.SpoolFileHandler = []                      # Spool文件句柄, 是一个数组，可能发生嵌套
         self.EchoFileHandler = None                     # 当前回显文件句柄
@@ -203,8 +201,6 @@ class TestCli(object):
         self.cmdExecuteHandler.workerName = self.workerName
         self.cmdExecuteHandler.cmdMappingHandler = self.cmdMappingHandler
 
-        self.DataHandler.SQLOptions = self.testOptions
-
         # 设置WHENEVER_ERROR
         if breakWithError:
             self.testOptions.set("WHENEVER_ERROR", "EXIT " + str(self.breakErrorCode))
@@ -212,17 +208,26 @@ class TestCli(object):
             self.testOptions.set("WHENEVER_ERROR", "CONTINUE")
 
         # 加载程序的配置文件
-        # 搜先尝试读取TESTCLI_CONF中的信息，如果TESTCLI_CONF中没有信息，则从安装目录获取
-        self.appOptions = configparser.ConfigParser()
+        self.appOptions = None
         if "TESTCLI_CONF" in os.environ:
+            # 首先尝试读取TESTCLI_CONF中的信息
             confFilename = str(os.environ["TESTCLI_CONF"]).strip()
             if os.path.exists(confFilename):
+                self.appOptions = configparser.ConfigParser()
                 self.appOptions.read(confFilename)
             else:
                 raise TestCliException("Can not open config file [" + confFilename + "]")
-        else:
+        if self.appOptions is None and "TESTCLI_HOME" in os.environ:
+            # 其次尝试读取TESTCLI_HOME/conf/testcli.ini中的信息，如果有，以TESTCLI_HOME/conf/testcli.ini信息为准
+            confFilename = os.path.join(str(os.environ["TESTCLI_HOME"]).strip(), "conf", "testcli.ini")
+            if os.path.exists(confFilename):
+                self.appOptions = configparser.ConfigParser()
+                self.appOptions.read(confFilename)
+        if self.appOptions is None:
+            # 之前的读取都没有找到，以系统默认目录为准
             confFilename = os.path.join(os.path.dirname(__file__), "conf", "testcli.ini")
             if os.path.exists(confFilename):
+                self.appOptions = configparser.ConfigParser()
                 self.appOptions.read(confFilename)
             else:
                 raise TestCliException("Can not open config file [" + confFilename + "]")
@@ -239,6 +244,8 @@ class TestCli(object):
                 break
         if h2JarFile is None:
             raise TestCliException("Corruptted jlib directory. H2 driver file missed.")
+        if "driver" not in self.appOptions.sections():
+            self.appOptions.add_section("driver")
         self.appOptions.add_section("meta_driver")
         self.appOptions.set("meta_driver", "driver", "org.h2.Driver")
         self.appOptions.set("meta_driver", "jdbcurl",
@@ -267,9 +274,19 @@ class TestCli(object):
 
         # 加载已经被隐式包含的数据库驱动，文件放置在testcli\jlib下
         # 首先尝试TESTCLI_JLIBDIR下的内容，其次查看安装目录下的东西
+        jlibDirectory = None
         if "TESTCLI_JLIBDIR" in os.environ:
+            # 如果定义了TESTCLI_JLIBDIR，则查找TESTCLLI_JLIBDIR的位置
             jlibDirectory = str(os.environ["TESTCLI_JLIBDIR"])
-        else:
+            if not os.path.isdir(jlibDirectory):
+                raise TestCliException("Can not open jlib directory for read [" + jlibDirectory + "]")
+        if jlibDirectory is None and "TESTCLI_HOME" in os.environ:
+            # 如果定义了TESTCLI_HOME，则查找TESTCLI_HOME/jlib目录
+            jlibDirectory = str(os.path.join(os.environ["TESTCLI_HOME"], "jlib"))
+            if not os.path.isdir(jlibDirectory):
+                jlibDirectory = None
+        if jlibDirectory is None:
+            # 如果仍然找不到，则查找安装目录的jlib目录
             jlibDirectory = os.path.join(os.path.dirname(__file__), "jlib")
         if not os.path.isdir(jlibDirectory):
             raise TestCliException("Can not open jlib directory for read [" + jlibDirectory + "]")

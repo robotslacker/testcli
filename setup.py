@@ -55,8 +55,8 @@ setup(
     zip_safe=False,
     packages=['testcli'],
     package_data={'testcli': [
-        'jlib/README', 'jlib/h2-1.4.200.jar',
-        'conf/*ini', 'profile/*',
+        'jlib/*',
+        'conf/*', 'profile/*',
         'antlrgen/*', 'commands/*',
         'test/*',
         'docs/UserGuide.md'

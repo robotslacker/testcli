@@ -1,0 +1,16 @@
+{
+    "configurations": [
+        {
+            "name": "运行testcli主程序",
+            "type": "python",
+            "request": "launch",
+            "module": "testcli.main"
+        },
+        {
+            "name": "运行testrobot主程序",
+            "type": "python",
+            "request": "launch",
+            "module": "testrobot.runfarm"
+        }
+    ]
+}

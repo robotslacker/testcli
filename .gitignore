@@ -1,7 +1,6 @@
 .idea/
 .cache/
 .coverage/
-.vscode/
 .pytest_cache/
 gen/
 localtest/

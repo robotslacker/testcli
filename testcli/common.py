@@ -223,7 +223,7 @@ def parseSQLHints(commandHints: list):
             r"^LogFilter(\s+)(.*)", commandHint, re.IGNORECASE | re.DOTALL)
         if match_obj:
             # 可能有多个Filter信息
-            sqlFilter = match_obj.group(5).strip()
+            sqlFilter = match_obj.group(2).strip()
             if "LogFilter" in commandHintList:
                 commandHintList["LogFilter"].append(sqlFilter)
             else:
@@ -234,7 +234,7 @@ def parseSQLHints(commandHints: list):
         match_obj = re.search(
             r"^LogMask(\s+)(.*)", commandHint, re.IGNORECASE | re.DOTALL)
         if match_obj:
-            sqlMask = match_obj.group(5).strip()
+            sqlMask = match_obj.group(2).strip()
             if "LogMask" in commandHintList:
                 commandHintList["LogMask"].append(sqlMask)
             else:

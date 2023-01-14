@@ -9,9 +9,9 @@ SQL> create table testtab(id int, col1 char(10));
 SQL> insert into testtab values(10, 'Master');
 1 row affected.
 SQL>
-SQL> _job create myjob script testjobmanagerslave1.sql tag test1;
+SQL> _job create myjob script=testjobmanagerslave1.sql tag=test1;
 Job [myjob] created successful.
-SQL> _job create myjob script testjobmanagerslave2.sql tag test1;
+SQL> _job create myjob script=testjobmanagerslave2.sql tag=test1;
 Job [myjob] created successful.
 SQL>
 SQL> _job start all;

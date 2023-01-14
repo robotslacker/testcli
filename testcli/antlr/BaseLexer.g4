@@ -126,6 +126,7 @@ LOAD_JDBCPROP       : 'PROPS';
 LOAD_JDBCURL        : 'URL';
 LOAD_EXPRESSION     :
     (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' )+;
+LOAD_SEMICOLON       : ';';
 LOAD_CRLF           : CRLF -> popMode;
 
 mode StartMode;
