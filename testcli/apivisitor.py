@@ -700,8 +700,18 @@ class APIVisitor(APIParserVisitor):
             parsedObject.update({"action": "convert"})
             parsedObject.update({"sourceFileType": str(ctx.DATA_FILETYPE()[0].getText())})
             parsedObject.update({"targetFileType": str(ctx.DATA_FILETYPE()[1].getText())})
-            parsedObject.update({"sourceFile": str(ctx.DATA_EXPRESSION()[0].getText())})
-            parsedObject.update({"targetFile": str(ctx.DATA_EXPRESSION()[1].getText())})
+            sourceFile = str(ctx.DATA_EXPRESSION()[0].getText())
+            targetFile = str(ctx.DATA_EXPRESSION()[1].getText())
+            if sourceFile.startswith('"') and sourceFile.endswith('"'):
+                sourceFile = sourceFile[1:-1]
+            elif sourceFile.startswith("'") and sourceFile.endswith("'"):
+                sourceFile = sourceFile[1:-1]
+            if targetFile.startswith('"') and targetFile.endswith('"'):
+                targetFile = targetFile[1:-1]
+            elif targetFile.startswith("'") and targetFile.endswith("'"):
+                targetFile = targetFile[1:-1]
+            parsedObject.update({"sourceFile": sourceFile})
+            parsedObject.update({"targetFile": targetFile})
 
         if ctx.DATA_CREATE() is not None:
             parsedObject.update({"action": "create"})

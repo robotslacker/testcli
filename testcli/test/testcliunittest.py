@@ -12,7 +12,6 @@ from ..sqlclijdbc import connect as jdbcconnect
 from ..test.testmockserver import startServer
 from ..test.testmockserver import stopServer
 from ..test.testmockserver import waitServerRunning
-from ..testcli import TestCli
 
 
 class TestSynatx(unittest.TestCase):
@@ -255,7 +254,13 @@ class TestSynatx(unittest.TestCase):
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_Assert {% assert expresssion %}")
         self.assertTrue(isFinished)
-        self.assertEqual({'assertName': None, 'name': 'ASSERT', 'expression': ' assert expresssion '}, ret_CommandSplitResult)
+        self.assertEqual(
+            {
+                'assertName': None,
+                'name': 'ASSERT',
+                'expression': ' assert expresssion '
+            },
+            ret_CommandSplitResult)
         self.assertEqual(None, ret_errorMsg)
         self.assertEqual(0, ret_errorCode)
 
@@ -964,7 +969,7 @@ class TestSynatx(unittest.TestCase):
             ret_CommandSplitResult)
 
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("_DATA CONVERT FS FILE aa.txt FROM MEM FILE bb.dat")
+            = SQLAnalyze("_DATA CONVERT FS FILE aa.txt TO MEM FILE bb.dat")
         self.assertEqual(None, ret_errorMsg)
         self.assertEqual(0, ret_errorCode)
         self.assertTrue(isFinished)
@@ -1002,6 +1007,8 @@ class TestSynatx(unittest.TestCase):
             ret_CommandSplitResult)
 
     def test_SQLExecuteSanity(self):
+        from ..testcli import TestCli
+
         scriptFile = "testsqlsanity.sql"
 
         scriptBaseFile = os.path.splitext(scriptFile)[0]
@@ -1033,6 +1040,8 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(compareResult)
 
     def test_SQLExecuteWithStartParameter(self):
+        from ..testcli import TestCli
+
         scriptFile = "testsqlstart.sql"
 
         scriptBaseFile = os.path.splitext(scriptFile)[0]
@@ -1064,6 +1073,8 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(compareResult)
 
     def test_SQLExecuteWithSQLCLI_CONNECTION_URL(self):
+        from ..testcli import TestCli
+
         h2JarFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "jlib", "h2-1.4.200.jar"))
         jarList = [h2JarFile, ]
         jdbcconnect(jclassname="org.h2.Driver",
@@ -1107,6 +1118,8 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(compareResult)
 
     def test_SQLSleep(self):
+        from ..testcli import TestCli
+
         # 记录开始时间
         start = time.time()
 
@@ -1144,6 +1157,8 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(compareResult)
 
     def test_SQLEmbeddScript(self):
+        from ..testcli import TestCli
+
         scriptFile = "testsqlembeddscript.sql"
 
         scriptBaseFile = os.path.splitext(scriptFile)[0]
@@ -1174,6 +1189,8 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(compareResult)
 
     def test_SQLSessionManage(self):
+        from ..testcli import TestCli
+
         scriptFile = "testsessionmanage.sql"
 
         scriptBaseFile = os.path.splitext(scriptFile)[0]
@@ -1204,6 +1221,8 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(compareResult)
 
     def test_SQLIfAndLoopCondition(self):
+        from ..testcli import TestCli
+
         scriptFile = "testsqlifandloop.sql"
 
         scriptBaseFile = os.path.splitext(scriptFile)[0]
@@ -1234,6 +1253,8 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(compareResult)
 
     def test_SQLLoadPlugin(self):
+        from ..testcli import TestCli
+
         scriptFile = "testplugin.sql"
 
         scriptBaseFile = os.path.splitext(scriptFile)[0]
@@ -1264,6 +1285,8 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(compareResult)
 
     def test_SQLWhenever(self):
+        from ..testcli import TestCli
+
         scriptFile = "testsqlwhenever.sql"
 
         scriptBaseFile = os.path.splitext(scriptFile)[0]
@@ -1294,6 +1317,8 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(compareResult)
 
     def test_SQLJobManager(self):
+        from ..testcli import TestCli
+
         scriptFile = "testjobmanager.sql"
 
         scriptBaseFile = os.path.splitext(scriptFile)[0]
@@ -1404,6 +1429,8 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(compareResult)
 
     def test_APIExecute_Get(self):
+        from ..testcli import TestCli
+
         scriptFile = "testapiget.api"
 
         scriptBaseFile = os.path.splitext(scriptFile)[0]
@@ -1435,6 +1462,8 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(compareResult)
 
     def test_lastcommandresult(self):
+        from ..testcli import TestCli
+
         scriptFile = "testlastcommandresult.sql"
 
         scriptBaseFile = os.path.splitext(scriptFile)[0]
@@ -1466,6 +1495,8 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(compareResult)
 
     def test_compare(self):
+        from ..testcli import TestCli
+
         scriptFile = "testcompare.sql"
 
         scriptBaseFile = os.path.splitext(scriptFile)[0]
@@ -1501,6 +1532,8 @@ class TestSynatx(unittest.TestCase):
         os.remove(fullDiffFile)
 
     def test_sqlmapping(self):
+        from ..testcli import TestCli
+
         scriptFile = "testsqlmapping.sql"
 
         scriptBaseFile = os.path.splitext(scriptFile)[0]
@@ -1532,6 +1565,8 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(compareResult)
 
     def test_sqllogmaskandfilter(self):
+        from ..testcli import TestCli
+
         scriptFile = "testlogmaskandfilter.sql"
 
         scriptBaseFile = os.path.splitext(scriptFile)[0]

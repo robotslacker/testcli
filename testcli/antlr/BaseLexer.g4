@@ -280,7 +280,7 @@ DATA_INT            : INT;
 DATA_COMMA          : ',';
 DATACOLUMN_OPEN     : '(' -> pushMode(DataColumnMode);
 DATA_CONVERT        : 'CONVERT';
-DATA_FROM           : 'FROM';
+DATA_TO             : 'TO';
 DATA_EXPRESSION     :
     (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' | '{' | '}')+;
 

@@ -756,19 +756,35 @@ class CmdExecute(object):
                         isFinished = False
                     if not isFinished and self.testOptions.get("NAMESPACE") == "SQL":
                         if currentStatement.strip().endswith(';') or currentStatement.strip().endswith("\n/"):
-                            ret_CommandSplitResults.append(
-                                {'name': 'SQL_UNKNOWN',
-                                 'statement': currentStatement,
-                                 'reason': ret_errorMsg}
-                            )
-                            # 解析前的语句
-                            ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
-                            # 所有的提示信息
-                            ret_CommandHints.append(currentHints)
-                            # 清空语句的变量
-                            currentHints = []
-                            currentStatement = None
-                            currentStatementWithComments = None
+                            if currentStatement.strip().startswith("_"):
+                                # 内部语句，且语句已经结束
+                                ret_CommandSplitResults.append(
+                                    {'name': 'PARSE_ERROR',
+                                     'statement': currentStatement,
+                                     'reason': ret_errorMsg}
+                                )
+                                # 解析前的语句
+                                ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+                                # 所有的提示信息
+                                ret_CommandHints.append(currentHints)
+                                # 清空语句的变量
+                                currentHints = []
+                                currentStatement = None
+                                currentStatementWithComments = None
+                            else:
+                                ret_CommandSplitResults.append(
+                                    {'name': 'SQL_UNKNOWN',
+                                     'statement': currentStatement,
+                                     'reason': ret_errorMsg}
+                                )
+                                # 解析前的语句
+                                ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+                                # 所有的提示信息
+                                ret_CommandHints.append(currentHints)
+                                # 清空语句的变量
+                                currentHints = []
+                                currentStatement = None
+                                currentStatementWithComments = None
                         continue
 
                 # 如果语句没有结束，则需要等待下一句输入

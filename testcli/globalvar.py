@@ -1,35 +1,12 @@
 # -*- coding: utf-8 -*-
-
-globalEmbeddScriptScope = {}
+import fs
 
 # 内嵌脚本执行时候的命名空间
+globalEmbeddScriptScope = {}
 localEmbeddScriptScope = {}
 
-# 最后一次执行后的结果
-'''
-    SQL Result:
-    {
-        "rows":
-        "headers":
-        "status":
-        "elapsed": 
-        "errorCode": 0
-    }
-    SQL Error:
-    {
-        "errorCode": 1
-        "message":  errorMsg
-    }
-    HTTP Result:
-    {
-        "status":
-        "content":
-        "errorCode": 0
-    }
-    HTTP Error:
-    {
-        "errorCode": 1
-        "errorMsg":  errorMsg
-    }
-'''
+# 最后一次命令执行后的结果，对于SQL和API执行结果也会有所不同
 lastCommandResult = {}
+
+# 全局内存文件文件句柄，用于数据的导入导出
+globalMemFsHandler = fs.open_fs("mem://")

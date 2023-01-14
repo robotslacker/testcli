@@ -667,8 +667,14 @@ class fileHandler:
     def __init__(self):
         self.fp = None
 
-    def open(self, fileName: str, mode: str, encoding: str = 'UTF-8'):
+    def open(self, fileName: str, mode: str, encoding: str):
         self.fp = open(file=fileName, mode=mode, encoding=encoding)
+
+    def read(self, nByte: int):
+        return self.fp.read(nByte)
+
+    def write(self, content: bytes):
+        self.fp.write(content)
 
     def writeLines(self, buf: list):
         self.fp.writelines(buf)
@@ -682,9 +688,15 @@ class memHandler:
         self.fp = None
         self.fs = None
 
-    def open(self, fileName: str, mode: str, encoding: str = 'UTF-8'):
-        self.fs = fs.open_fs('mem://')
-        self.fp = self.fs.open(file=fileName, mode=mode, encoding=encoding)
+    def open(self, fileName: str, mode: str, encoding: str):
+        from ..globalvar import globalMemFsHandler
+        self.fp = globalMemFsHandler.open(path=fileName, mode=mode, encoding=encoding)
+
+    def read(self, nByte: int):
+        return self.fp.read(nByte)
+
+    def write(self, content: bytes):
+        self.fp.write(content)
 
     def writeLines(self, buf: list):
         self.fp.writelines(buf)
@@ -693,15 +705,17 @@ class memHandler:
         self.fp.close()
 
 
+fsImplemention = {
+    "MEM": memHandler,
+    "FS": fileHandler
+}
+
+
 def createFile(p_filetype: str, p_filename, p_formula_str, p_rows, p_encoding='UTF-8'):
-    fsImplemention = {
-        "MEM": memHandler,
-        "FS": fileHandler
-    }
     try:
         if p_filetype.upper() not in fsImplemention.keys():
             raise TestCliException("Unknown target file type [" + str(p_filetype) + "]")
-        fsHandler = fsImplemention["FS"]()
+        fsHandler = fsImplemention[p_filetype.upper()]()
         fsHandler.open(fileName=p_filename, mode='w', encoding=p_encoding)
 
         m_row_struct = parse_formula_str(p_formula_str)
@@ -720,6 +734,32 @@ def createFile(p_filetype: str, p_filename, p_formula_str, p_rows, p_encoding='U
             delattr(identity, 'x')
         if hasattr(identity_timestamp, 'x'):
             delattr(identity_timestamp, 'x')
+    except TestCliException as e:
+        raise TestCliException(e.message)
+    except Exception as e:
+        if "TESTCLI_DEBUG" in os.environ:
+            print('traceback.print_exc():\n%s' % traceback.print_exc())
+            print('traceback.format_exc():\n%s' % traceback.format_exc())
+        raise TestCliException(repr(e))
+
+
+def convertFile(srcFileType: str, srcFileName: str, dstFileType: str, dstFileName: str):
+    blockSize = 8192
+
+    try:
+        if srcFileType.upper() not in fsImplemention.keys():
+            raise TestCliException("Unknown target file type [" + str(srcFileType) + "]")
+        srcHandler = fsImplemention[srcFileType.upper()]()
+        srcHandler.open(fileName=srcFileName, mode='rb', encoding=None)
+        dstHandler = fsImplemention[dstFileType.upper()]()
+        dstHandler.open(fileName=dstFileName, mode='wb', encoding=None)
+        while True:
+            readContents = srcHandler.read(blockSize)
+            dstHandler.write(readContents)
+            if len(readContents) <= blockSize:
+                break
+        srcHandler.close()
+        dstHandler.close()
     except TestCliException as e:
         raise TestCliException(e.message)
     except Exception as e:
@@ -767,6 +807,29 @@ def executeDataRequest(cls, requestObject):
                 "headers": None,
                 "columnTypes": None,
                 "status": "File [" + str(targetFile) + "] created successful. " + str(rowCount) + " rows generated."
+            }
+        except TestCliException as te:
+            yield {
+                "type": "error",
+                "message": te.message,
+            }
+
+    if requestObject["action"] == "convert":
+        try:
+            convertFile(
+                srcFileType=requestObject["sourceFileType"],
+                srcFileName=requestObject["sourceFile"],
+                dstFileType=requestObject["targetFileType"],
+                dstFileName=requestObject["targetFile"],
+            )
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": "File [" + str(requestObject["sourceFile"]) +
+                          "] has been converted to [" + requestObject["targetFile"] + "] generated."
             }
         except TestCliException as te:
             yield {
