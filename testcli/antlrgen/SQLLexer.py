@@ -966,8 +966,8 @@ class SQLLexer(Lexer):
     SPOOL = 34
     SLEEP = 35
     USE = 36
-    ECHO_OPEN = 37
-    SCRIPT_OPEN = 38
+    ECHO = 37
+    SCRIPT = 38
     ASSERT = 39
     START = 40
     LOAD = 41
@@ -1221,13 +1221,13 @@ class SQLLexer(Lexer):
             "SQL_CREATE_PROCEDURE", "CRLF", "COMMA", "SEMICOLON", "COLON", 
             "AT", "DOT", "SLASH", "BRACKET_OPEN", "BRACKET_CLOSE", "SQUARE_OPEN", 
             "SQUARE_CLOSE", "DOUBLE_QUOTE", "SINGLE_QUOTE", "ESCAPE", "SPACE", 
-            "EXIT", "QUIT", "SPOOL", "SLEEP", "USE", "ECHO_OPEN", "SCRIPT_OPEN", 
-            "ASSERT", "START", "LOAD", "HOST", "HELP", "IF", "ENDIF", "SET", 
-            "LOOP", "WHENEVER", "SSH", "JOB", "COMPARE", "DATA", "INT", 
-            "DECIMAL", "String", "CONNECT_SPACE", "CONNECT_AT", "CONNECT_SLASH", 
-            "CONNECT_COLON", "CONNECT_QUESTION", "CONNECT_POUND", "CONNECT_OR", 
-            "CONNECT_DASH", "CONNECT_EQUAL", "CONNECT_PARA_AND", "CONNECT_SEMICOLON", 
-            "JDBC", "IPV4", "IPV6", "CONNECT_PORT", "CONNECT_STRING", "CommentString", 
+            "EXIT", "QUIT", "SPOOL", "SLEEP", "USE", "ECHO", "SCRIPT", "ASSERT", 
+            "START", "LOAD", "HOST", "HELP", "IF", "ENDIF", "SET", "LOOP", 
+            "WHENEVER", "SSH", "JOB", "COMPARE", "DATA", "INT", "DECIMAL", 
+            "String", "CONNECT_SPACE", "CONNECT_AT", "CONNECT_SLASH", "CONNECT_COLON", 
+            "CONNECT_QUESTION", "CONNECT_POUND", "CONNECT_OR", "CONNECT_DASH", 
+            "CONNECT_EQUAL", "CONNECT_PARA_AND", "CONNECT_SEMICOLON", "JDBC", 
+            "IPV4", "IPV6", "CONNECT_PORT", "CONNECT_STRING", "CommentString", 
             "HINT_SP", "HINT", "HINT_CLOSE", "HINT_STRING", "SESSION_SPACE", 
             "SESSION_SAVE", "SESSION_RELEASE", "SESSION_RESTORE", "SESSION_SAVEURL", 
             "SESSION_SHOW", "SESSION_NAME", "SESSION_END", "SQL_CRLF", "SQL_SPACE", 
@@ -1278,11 +1278,11 @@ class SQLLexer(Lexer):
                   "CRLF", "COMMA", "SEMICOLON", "COLON", "AT", "DOT", "SLASH", 
                   "BRACKET_OPEN", "BRACKET_CLOSE", "SQUARE_OPEN", "SQUARE_CLOSE", 
                   "DOUBLE_QUOTE", "SINGLE_QUOTE", "ESCAPE", "SPACE", "EXIT", 
-                  "QUIT", "SPOOL", "SLEEP", "USE", "ECHO_OPEN", "SCRIPT_OPEN", 
-                  "ASSERT", "START", "LOAD", "HOST", "HELP", "IF", "ENDIF", 
-                  "SET", "LOOP", "WHENEVER", "SSH", "JOB", "COMPARE", "DATA", 
-                  "INT", "DECIMAL", "String", "UNRESERVED", "SUBDELIMS", 
-                  "PCTENCODED", "DIGIT", "ALPHA", "HEX", "OBS_TEXT", "DoubleQuoteString", 
+                  "QUIT", "SPOOL", "SLEEP", "USE", "ECHO", "SCRIPT", "ASSERT", 
+                  "START", "LOAD", "HOST", "HELP", "IF", "ENDIF", "SET", 
+                  "LOOP", "WHENEVER", "SSH", "JOB", "COMPARE", "DATA", "INT", 
+                  "DECIMAL", "String", "UNRESERVED", "SUBDELIMS", "PCTENCODED", 
+                  "DIGIT", "ALPHA", "HEX", "OBS_TEXT", "DoubleQuoteString", 
                   "SingleQuoteString", "CONNECT_SPACE", "CONNECT_CRLF", 
                   "CONNECT_AT", "CONNECT_SLASH", "CONNECT_COLON", "CONNECT_QUESTION", 
                   "CONNECT_POUND", "CONNECT_OR", "CONNECT_DASH", "CONNECT_EQUAL", 

@@ -366,8 +366,8 @@ class SQLParser ( Parser ):
                       "SLASH", "BRACKET_OPEN", "BRACKET_CLOSE", "SQUARE_OPEN", 
                       "SQUARE_CLOSE", "DOUBLE_QUOTE", "SINGLE_QUOTE", "ESCAPE", 
                       "SPACE", "EXIT", "QUIT", "SPOOL", "SLEEP", "USE", 
-                      "ECHO_OPEN", "SCRIPT_OPEN", "ASSERT", "START", "LOAD", 
-                      "HOST", "HELP", "IF", "ENDIF", "SET", "LOOP", "WHENEVER", 
+                      "ECHO", "SCRIPT", "ASSERT", "START", "LOAD", "HOST", 
+                      "HELP", "IF", "ENDIF", "SET", "LOOP", "WHENEVER", 
                       "SSH", "JOB", "COMPARE", "DATA", "INT", "DECIMAL", 
                       "String", "CONNECT_SPACE", "CONNECT_AT", "CONNECT_SLASH", 
                       "CONNECT_COLON", "CONNECT_QUESTION", "CONNECT_POUND", 
@@ -529,8 +529,8 @@ class SQLParser ( Parser ):
     SPOOL=34
     SLEEP=35
     USE=36
-    ECHO_OPEN=37
-    SCRIPT_OPEN=38
+    ECHO=37
+    SCRIPT=38
     ASSERT=39
     START=40
     LOAD=41
@@ -4159,8 +4159,8 @@ class SQLParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-        def ECHO_OPEN(self):
-            return self.getToken(SQLParser.ECHO_OPEN, 0)
+        def ECHO(self):
+            return self.getToken(SQLParser.ECHO, 0)
 
         def EchoBlock(self):
             return self.getToken(SQLParser.EchoBlock, 0)
@@ -4191,7 +4191,7 @@ class SQLParser ( Parser ):
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 471
-            self.match(SQLParser.ECHO_OPEN)
+            self.match(SQLParser.ECHO)
             self.state = 472
             self.match(SQLParser.EchoBlock)
             self.state = 474
@@ -4223,8 +4223,8 @@ class SQLParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-        def SCRIPT_OPEN(self):
-            return self.getToken(SQLParser.SCRIPT_OPEN, 0)
+        def SCRIPT(self):
+            return self.getToken(SQLParser.SCRIPT, 0)
 
         def ScriptBlock(self):
             return self.getToken(SQLParser.ScriptBlock, 0)
@@ -4252,7 +4252,7 @@ class SQLParser ( Parser ):
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 476
-            self.match(SQLParser.SCRIPT_OPEN)
+            self.match(SQLParser.SCRIPT)
             self.state = 477
             self.match(SQLParser.ScriptBlock)
             self.state = 479

@@ -1241,93 +1241,6 @@ Mapping file loaded.
 
 ```
 
-### 用TestCli来产生测试数据文件
-```
-   SQL> __internal__ DATA SET HDFSUSER [USERNAME]
-   这里将指定随后操作HDFS操作时使用的用户名（程序使用InSecureClient来上传文件，所以无需口令)
-     
-   SQL> __internal__ DATA SET SEEDFILE DIR [DIRECTORY]
-   这里将指定随后程序加载种子Seed文件时所使用的目录，如果不指定，默认目录是TestCli_HOME\data
-   
-   SQL> __internal__ DATA CREATE [string|integer] SEEDDATAFILE [SeedName] LENGTH [row length] ROWS [row number]  
-      > WITH NULL ROWS [null rows number];
-   如果指定了SEEDFILE的目录，则会在目录下创建seed文件。否则，会在$TestCli_HOME/data下创建seed文件，用来后续的随机函数
-
-    [string|integer]          是字符型随机数据文件还是数字型随机数据文件
-    [SeedName]                数据种子的名称，根据需要编写，应简单好记
-    [row length]              数据种子中每行数据的最大长度
-    [row number]              数据种子的行数
-    [null rows number]        在该数据文件row number的行数中有多少行为空行
-
-   __internal__ DATA CREATE [MEM|FS|HDFS] FILE [FileName]
-   (
-     此处为宏代码
-
-     如果参数中提供了ROWS：
-         这里将把括号内内容理解为一行内容，其中的换行符在处理过程中被去掉
-         相关信息将被完成宏替换后，重复ROWS行数后构成一个文件
-     如果参数没有提供了ROWS：
-         这里将把括号内内容理解为多行内容
-         相关信息将被完成宏替换后构成一个文件
-   ) ROWS [number of rows];
-   
-   MEM:  表示文件将被创建在内存中，程序退出后，文件将不复存在
-   FS:   表示文件将被创建在文件中，需要注意的是，这里的目录不是真实的OS目录，而是一个相对于工作目录的相对目录
-   HDFS: 表示文件将被创建在HDFS上，这里需要远程的HDFS服务器开启WebFS的功能
-         文件格式例子：  http://nodexx:port/dirx/diry/xx.dat
-         其中port是webfs的port，不是rpc的port， TestCli并不支持rpc协议
-   这里语句的开头：  __internal__ 是必须的内容，固定写法
-   宏代码的格式包括：
-     {identity(start_number)}                  表示一个自增字段，起始数字为start_number
-                                               如果一行内有多个identity，他们将分别自增
-     {identity_timestamp(start_time,fmt,step)} 表示一个自增的时间戳
-                                               起始数字为start_time，格式位fmt（可以省略，默认是%Y-%m-%d %H:%M:%S)，
-                                               每次自增长度为Step， Step的单位可以是s,ms,ns (默认为ms)
-                                               s: 秒 ;  ms: 毫秒； ns: 纳秒
-                                               如果一行内有多个identity，他们将分别自增
-     {random_ascii_letters(length)}            表示一个随机的ascii字符串，可能大写，可能小写，最大长度为length
-     {random_ascii_lowercase(length)}          表示一个随机的ascii字符串，只能是大写字母，最大长度为length
-     {random_ascii_uppercase(length)}          表示一个随机的ascii字符串，只能是小写字母，最大长度为length
-     {random_digits(length)}                   表示一个随机的数字，可能数字，最大长度为length
-     {random_ascii_letters_and_digits(length)} 表示一个随机的ascii字符串，可能大写，可能小写，可能数字，最大长度为length
-     {random_date(start, end, frmt)}           表示一个随机的日期， 日期区间为 start到end，日期格式为frmt
-                                               frmt可以不提供，默认为%Y-%m-%d
-     {random_time(start, end, frmt)}           表示一个随机的时间， 时间区间为 start到end，时间格式为frmt
-                                               frmt可以不提供，默认为%H:%M:%S
-     {random_timestamp(start, end, frmt)}      表示一个随机的时间戳， 时间区间为 start到end，日期格式为frmt
-                                               frmt可以不提供，默认为%Y-%m-%d %H:%M:%S
-     {random_boolean())                        表示一个随机的Boolean，可能为0，也可能为1
-     {current_unixtimestamp()}                 unix时间戳格式表示的系统当前时间
-     {column_name: macro()}                    一个带有列名的宏定义，其中macro()的写法参考前面的写法
-     {value(:column_name)}                     根据列名，引用之前的一个定义
-     {random_from_seed(seedname,length)}                  表示从seed文件中随机选取一个内容，并且最大长度限制在length, 此时seedname不要引号
-     {random_from_seed(seedname,start_pos, length)}       表示从seed文件中随机选取一个内容，内容从start_pos开始(第一个位置为0)， 并且最大长度限制在length, 此时seedname不要引号
-     使用random_from_seed需要用到seed文件，必须提前准备到$TestCli_HOME/data下，用来后续的随机函数  
-
-   SQL> __internal__ DATA CREATE [MEM|FS|HDFS] FILE [LocalFileName] FROM [MEM|FS|HDFS] FILE [RemoteFileName]
-   如果是HDFS文件，则文件名格式为： http://HDFSHOST:HDFSRPCPORT/RemoteFileName
-   会下载相应文件, 并保存到指定目录，即完成文件复制
-
-   例子：
-   SQL> __internal__ DATA CREATE FS FILE abc.txt
-      > (
-      > {identity(10)},'{random_ascii_letters(5)}','{random_ascii_lowercase(3)}'
-      > ) ROWS 3;
-    会在当前的文件目录下创建一个名字为abc.txt的文本文件，其中的内容为：
-    10,'vxbMd','jsr'
-    11,'SSiAa','vtg'
-    12,'SSdaa','cfg'
-
-   SQL> __internal__ DATA CREATE FS FILE abc.txt
-      > (
-      > {identity(10)},'{random_ascii_letters(5)}','{random_ascii_lowercase(3)}'
-      > {identity(10)},'{random_ascii_letters(5)}','{random_ascii_lowercase(3)}'
-      > );
-    会在当前的文件目录下创建一个名字为abc.txt的文本文件，其中的内容为：
-    10,'vxbMd','jsr'
-    11,'SSiAa','vtg'
-
-```
 ### 用TestCli工具操作Kafka
 ```
    TestCli工具可以操作Kafka，建立、删除Topic，查看Topic的状态，给Topic发送信息
@@ -1614,7 +1527,82 @@ sessionContext是一个字典结果。
 ```
 
 ##### argv
+通过argv，我们可以在调用start命令的时候传递命令运行的参数。
+```
+    -- 这里testsqlstartchild.sql是一个脚本，里头将打印传递参数到控制台 
+    testsqlstartchild.sql：
+      {%
+      sessionContext["status"] = "argv=" + str(argv)
+      %}
+    
+    -- 在主程序中调用testsqlstartchild.sql，并传递参数3和5，就可以得到如下的结果
+    SQL> _start testsqlstartchild.sql 3 5
+    SQL> > {%
+       > sessionContext["status"] = "argv=" + str(argv)
+       > %}
+    argv=['3', '5']    
+```
+***
+### 用TestCli来产生测试数据文件
+为了方便测试，有时候我们要生成大量的测试数据，生成这些测试数据的要求是：  
+1. 能够按照规则进行随机生成  
+2. 能够快速的生成数据
+```
+  _DATA SET SEEDFILE DIR <种子文件的路径>;
+  
+  _DATA CREATE MEM|FS FILE <目标文件路径> 
+  (
+     <列表达式..>
+     <列表达式..>
+  )
+  [ROWS <计划生成的记录行数>]
+  
+  _DATA CONVERT MEM|FS FILE <源文件路径> TO MEM|FS FILE <目标文件路径>  
+```
 
+```
+    如果参数中提供了ROWS：
+        这里将把列表达式中内容理解为一行内容，其中的换行符在处理过程中被去掉
+    如果参数没有提供了ROWS：
+        这里将把列表达式内中的内容理解为多行内容
+
+   列表达式的表达可以为：
+     {identity(start_number)}                  表示一个自增字段，起始数字为start_number
+                                               如果一行内有多个identity，他们将分别自增
+     {identity_timestamp(start_time,fmt,step)} 表示一个自增的时间戳
+                                               起始数字为start_time，格式位fmt（可以省略，默认是%Y-%m-%d %H:%M:%S)，
+                                               每次自增长度为Step， Step的单位可以是s,ms,ns (默认为ms)
+                                               s: 秒 ;  ms: 毫秒； ns: 纳秒
+                                               如果一行内有多个identity，他们将分别自增
+     {random_ascii_letters(length)}            表示一个随机的ascii字符串，可能大写，可能小写，最大长度为length
+     {random_ascii_lowercase(length)}          表示一个随机的ascii字符串，只能是大写字母，最大长度为length
+     {random_ascii_uppercase(length)}          表示一个随机的ascii字符串，只能是小写字母，最大长度为length
+     {random_digits(length)}                   表示一个随机的数字，可能数字，最大长度为length
+     {random_ascii_letters_and_digits(length)} 表示一个随机的ascii字符串，可能大写，可能小写，可能数字，最大长度为length
+     {random_date(start, end, frmt)}           表示一个随机的日期， 日期区间为 start到end，日期格式为frmt
+                                               frmt可以不提供，默认为%Y-%m-%d
+     {random_time(start, end, frmt)}           表示一个随机的时间， 时间区间为 start到end，时间格式为frmt
+                                               frmt可以不提供，默认为%H:%M:%S
+     {random_timestamp(start, end, frmt)}      表示一个随机的时间戳， 时间区间为 start到end，日期格式为frmt
+                                               frmt可以不提供，默认为%Y-%m-%d %H:%M:%S
+     {random_boolean())                        表示一个随机的Boolean，可能为0，也可能为1
+     {current_unixtimestamp()}                 unix时间戳格式表示的系统当前时间
+     {column_name: macro()}                    一个带有列名的宏定义，其中macro()的写法参考前面的写法
+     {value(:column_name)}                     根据列名，引用之前的一个定义
+     {random_from_seed(seedname,length)}                  表示从seed文件中随机选取一个内容，并且最大长度限制在length, 此时seedname不要引号
+     {random_from_seed(seedname,start_pos, length)}       表示从seed文件中随机选取一个内容，内容从start_pos开始(第一个位置为0)， 并且最大长度限制在length, 此时seedname不要引号
+     使用random_from_seed需要用到seed文件，必须提前准备到$TestCli_HOME/data下，用来后续的随机函数  
+
+   例子：
+   SQL> _DATA CREATE FS FILE abc.txt
+      > (
+      > {identity(10)},'{random_ascii_letters(5)}','{random_ascii_lowercase(3)}'
+      > ) ROWS 3;
+    会在当前的文件目录下创建一个名字为abc.txt的文本文件，其中的内容为：
+    10,'UmMwr','bam'
+    11,'HWgiR','dmh'
+    12,'Skxag','mlj'
+```
 ***    
 ### 加载附加的命令行映射文件
 这里的使用方法和在testcli命令中使用--commandmapping的参数效果是一样的。  

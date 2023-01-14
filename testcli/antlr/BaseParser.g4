@@ -85,14 +85,14 @@ spool   : SPOOL String (SEMICOLON)? CRLF?;
 
 // 回显指定的文件
 echo
-        :   ECHO_OPEN
+        :   ECHO
             EchoBlock
             (CRLF | EOF)?
         ;
 
 // 内嵌脚本
 script
-        :   SCRIPT_OPEN
+        :   SCRIPT
             ScriptBlock
             CRLF?
         ;

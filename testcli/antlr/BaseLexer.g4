@@ -31,10 +31,10 @@ SLEEP               : '_SLEEP';
 USE                 : '_USE' -> pushMode(UseMode);
 
 // 回显随后的脚本
-ECHO_OPEN           : '_ECHO' .*? (CRLF | EOF) ->pushMode(EchoMode);
+ECHO                : '_ECHO' .*? (CRLF | EOF) ->pushMode(EchoMode);
 
 // 执行内置的Python脚本
-SCRIPT_OPEN         : '> {%' ->pushMode(ScriptMode);
+SCRIPT              : '> {%' ->pushMode(ScriptMode);
 
 // 表达式判断，用来验证执行结果
 ASSERT              :  '_ASSERT' -> pushMode(AssertMode);

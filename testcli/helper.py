@@ -120,16 +120,104 @@ helpMessage = [
                                             default value is 0, which means no limit.
                starter_maxprocess       ：  Optional. To reduce the load pressure of the first start, we don't start all 
                                             jobs in a single batch. This parameter is meaningful only when the job first 
-                                            started. The default is 9999, that is, there is no limit.
+                                            started. The default is 9999, which means no limit.
                                             For example: parallel is 10, and starter_maxprocess is 2.
-                                            two jobs are started each "starter_interval" time until the parallel 
-                                            requirements(10) are met.
+                                                         two jobs are started each "starter_interval" time until the 
+                                                         parallel requirements(10) are met.
                starter_interval         ：  Optional. Referring to the previous description, starter_interval define the 
                                             interval time when job first start. default is 0, it means no wait.
                think_time               ：  Optional. After each job completed, the time interval required to start the 
                                             next job. Default is 0, which means no think, start next job immediate.
                blowout_threshold_count  ：  Optional. The failure threshold value. If threshold has reached, we think 
                                             following jobs are unnecessary to run.  The default is 0, that is, no limit.  
+            ''',
+    },
+    {
+        "topic": 'data',
+        "summary": "Generate test random data.",
+        "synatx":
+            '''
+                _DATA SET SEEDFILE DIR <seed file location>;
+                  
+                _DATA CREATE MEM|FS FILE <target file location> 
+                (
+                   <column expression..>,
+                   <column expression..>
+                )
+                [ROWS <rows will generated>];
+                  
+                _DATA CONVERT MEM|FS FILE <source file location> TO MEM|FS FILE <target file location>;  
+            ''',
+    },
+    {
+        "topic": 'SLEEP',
+        "summary": "sleep app some time",
+        "synatx":
+            '''
+                _SLEEP <sleep time (seconds)>
+            ''',
+    },
+    {
+        "topic": 'ASSERT',
+        "summary": "Execute the assertion. Determine whether the specified conditions are met.",
+        "synatx":
+            '''
+                _ASSERT {% <assert python expression> %}, [<name of assertion, optional>]
+            ''',
+    },
+    {
+        "topic": 'USE',
+        "summary": "Switch the namespace of the current script.",
+        "synatx":
+            '''
+                _USE SQL|API
+            ''',
+    },
+    {
+        "topic": 'HOST',
+        "summary": "Execute local system commands.",
+        "synatx":
+            '''
+                _HOST <os file command>
+            ''',
+    },
+    {
+        "topic": 'SET',
+        "summary": "Set/View app runtime options.",
+        "synatx":
+            '''
+                _SET [<OPTION_NAME> <OPTION_VALUE>]
+                
+                If you run this command without any parameter, it will show current runtime options.
+            ''',
+    },
+    {
+        "topic": 'START',
+        "summary": "Run sub command script.",
+        "synatx":
+            '''
+                _STARRT <command script file location> [<argv1> <argv2> ....]
+            ''',
+    },
+    {
+        "topic": 'SCRIPT',
+        "summary": "Run embedded python script.",
+        "synatx":
+            '''
+                > {%
+                <python script>
+                %}
+            ''',
+    },
+    {
+        "topic": 'SPOOL',
+        "summary": "Print subsequent run commands and results to the specified file.",
+        "synatx":
+            '''
+                _SPOOL <spool file location>
+                <command1 ...>
+                <command2 ...>
+                _SPOOL OFF
             ''',
     },
 ]

@@ -1,5 +1,7 @@
 # 帮助文档
 
-## [使用手册](testcli/docs/UserGuide.md)
+## [testcli使用手册](testcli/docs/UserGuide.md)
+## [testRobot使用手册](testrobot/docs/UserGuide.md)
+
 ## [程序员说明](testcli/docs/Developer.md)
 
