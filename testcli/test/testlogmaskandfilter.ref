@@ -1,0 +1,46 @@
+SQL> _start testlogmaskandfilter.sql
+SQL> _use sql;
+Current NameSpace: SQL.
+SQL> _connect /mem
+Database connected.
+SQL>
+SQL> create table aaa(name varchar(20), age int);
+0 row affected.
+SQL> insert into aaa values('张三', 10);
+1 row affected.
+SQL> insert into aaa values('李四', 20);
+1 row affected.
+SQL> insert into aaa values('张飞', 30);
+1 row affected.
+SQL>
+SQL> select * from aaa order by 1;
++--------+------+-----+
+|   ##   | NAME | AGE |
++--------+------+-----+
+|      1 | 张三 |  10 |
+|      2 | 张飞 |  30 |
+|      3 | 李四 |  20 |
++--------+------+-----+
+3 rows selected.
+SQL>
+SQL> --[Hint] LogMask  张.*=>王五
+SQL> select * from aaa order by 1,2;
++--------+------+-----+
+|   ##   | NAME | AGE |
++--------+------+-----+
+|      1 | 王五 |  10 |
+|      2 | 王五 |  30 |
+|      3 | 李四 |  20 |
++--------+------+-----+
+3 rows selected.
+SQL>
+SQL> --[Hint] LogFilter  .*张.*
+SQL> select * from aaa order by 1,2;
++--------+------+-----+
+|   ##   | NAME | AGE |
++--------+------+-----+
+|      1 | 李四 |  20 |
++--------+------+-----+
+3 rows selected.
+SQL> _exit
+Disconnected.
