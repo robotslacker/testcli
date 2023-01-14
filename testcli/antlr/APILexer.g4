@@ -10,9 +10,6 @@ channels { COMMENT_CHANNEL }
 // HTTP 请求进入Http处理模式
 HTTP_OPEN   : '###' .*? CRLF ->pushMode(HttpMode);
 
-// 脚本模式
-SCRIPT_OPEN : '> {%' ->pushMode(ScriptMode);
-
 // 注释
 COMMENT1     :  '//' .*? (CRLF | EOF) ->channel(HIDDEN);
 COMMENT2     :  '--' .*? (CRLF | EOF) ->channel(HIDDEN);

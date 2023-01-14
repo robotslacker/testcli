@@ -464,7 +464,7 @@ class SQLVisitor(SQLParserVisitor):
             self.isFinished = False
 
         # 需要输出的文件名
-        param = ctx.ECHO_OPEN().getText().partition(' ')[2]
+        param = ctx.ECHO().getText().partition(' ')[2]
         if param is not None:
             param = param.splitlines()[0]
             parsedObject.update({'param': str(param).strip()})

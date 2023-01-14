@@ -168,7 +168,7 @@ class APIVisitor(APIParserVisitor):
             self.isFinished = False
 
         # 需要输出的文件名
-        param = ctx.ECHO_OPEN().getText().partition(' ')[2]
+        param = ctx.ECHO().getText().partition(' ')[2]
         if param is not None:
             param = param.splitlines()[0]
             parsedObject.update({'param': str(param).strip()})
@@ -344,11 +344,11 @@ class APIVisitor(APIParserVisitor):
                         newLines.append(line[4:])
                     block = "\n".join(newLines)
                 parsedObject.update({'block': block})
-
             else:
                 self.isFinished = False
         else:
             self.isFinished = False
+
         # 获取错误代码
         errorCode = 0
         errorMsg = None
