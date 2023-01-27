@@ -76,6 +76,9 @@ COMPARE             : '_COMPARE' ->pushMode(CompareMode);
 // 执行随机文件生成
 DATA                : '_DATA' ->pushMode(DataMode);
 
+// 执行主机监控任务
+MONITOR             : '_MONITOR'  ->pushMode(MonitorMode);
+
 INT                 : DIGIT+ ;
 DECIMAL             : DIGIT+ '.' DIGIT+ ;
 String              : (OBS_TEXT | UNRESERVED | SUBDELIMS | PCTENCODED | DoubleQuoteString | SingleQuoteString)+;
@@ -294,3 +297,21 @@ HELP_SPACE           : [ \t]+ -> channel (HIDDEN);
 HELP_COMMAND         : [0-9A-Z]+;
 HELP_CRLF            : CRLF -> popMode;
 HELP_SEMICOLON       : ';';
+
+mode MonitorMode;
+MONITOR_SPACE         : [ \t]+ -> channel (HIDDEN);
+MONITOR_MANAGER       : 'MONITORMANAGER';
+MONITOR_WORKERS       : 'WORKERS';
+MONITOR_CREATE        : 'CREATE';
+MONITOR_TASK          : 'TASK';
+MONITOR_EQUAL         : '=';
+MONITOR_START         : 'START';
+MONITOR_STOP          : 'STOP';
+MONITOR_REPORT        : 'REPORT';
+MONITOR_LIST          : 'LIST';
+MONITOR_ON            : 'ON';
+MONITOR_OFF           : 'OFF';
+MONITOR_EXPRESSION    :
+    (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString )+;
+MONITOR_CRLF          : CRLF -> popMode;
+MONITOR_SEMICOLON     : ';';

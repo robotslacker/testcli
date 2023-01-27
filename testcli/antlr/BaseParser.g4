@@ -29,6 +29,7 @@ baseCommand:
       | compare
       | data
       | help
+      | monitor
       ;
 
 // Exit
@@ -182,3 +183,17 @@ data      :
 // 帮助信息
 help       :
            HELP (HELP_COMMAND)? (HELP_SEMICOLON)? CRLF?;
+
+monitor    :
+           MONITOR
+           (
+               (MONITOR_MANAGER MONITOR_ON (MONITOR_WORKERS MONITOR_EXPRESSION)?) |
+               (MONITOR_MANAGER MONITOR_OFF) |
+               (MONITOR_CREATE MONITOR_TASK ((MONITOR_EXPRESSION)?
+                    (MONITOR_EXPRESSION MONITOR_EQUAL MONITOR_EXPRESSION)+))|
+               (MONITOR_START MONITOR_TASK MONITOR_EXPRESSION) |
+               (MONITOR_STOP MONITOR_TASK MONITOR_EXPRESSION) |
+               (MONITOR_REPORT MONITOR_TASK MONITOR_EXPRESSION) |
+               (MONITOR_LIST MONITOR_TASK)
+           )
+           (MONITOR_SEMICOLON)? MONITOR_CRLF?;

@@ -209,5 +209,10 @@ class APIParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by APIParser#monitor.
+    def visitMonitor(self, ctx:APIParser.MonitorContext):
+        return self.visitChildren(ctx)
+
+
 
 del APIParser

@@ -42,6 +42,7 @@ from .commands.ssh import rewriteSshRequest
 from .commands.compare import executeCompareRequest
 from .commands.helper import showHelp
 from .commands.data import executeDataRequest
+from .commands.monitor import executeMonitorRequest
 
 from .common import rewriteHintStatement
 from .common import rewriteSQLStatement
@@ -1449,6 +1450,12 @@ class CmdExecute(object):
             elif parseObject["name"] in ["PARSE_ERROR"]:
                 yield {"type": "error",
                        "message": "TestCli parse error:  " + str(parseObject["reason"])}
+            elif parseObject["name"] in ["MONITOR"]:
+                for result in executeMonitorRequest(
+                        cls=self.cliHandler,
+                        requestObject=parseObject,
+                ):
+                    yield result
             else:
                 raise TestCliException("FDDFSFDFSDSFD " + str(parseObject))
 
@@ -1474,7 +1481,7 @@ class CmdExecute(object):
                     "type": "statistics",
                     "startedTime": startTime,
                     "elapsed": endTime - startTime,
-                    "thread_name": self.workerName,
+                    "processName": self.workerName,
                     "rawCommand": ret_CommandSplitResultsWithComments[pos],
                     "commandType": parseObject["name"],
                     "command": json.dumps(obj=parseObject, sort_keys=True, ensure_ascii=False),

@@ -1006,6 +1006,108 @@ class TestSynatx(unittest.TestCase):
              },
             ret_CommandSplitResult)
 
+    def test_SQLAnalyze_Monitor(self):
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) = SQLAnalyze("_MONITOR MONITORMANAGER ON")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {
+                'action': 'startManager',
+                'name': 'MONITOR',
+                'workerThreads': None
+            },
+            ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) = \
+            SQLAnalyze("_MONITOR MONITORMANAGER ON WORKERS 5")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {
+                'action': 'startManager',
+                'name': 'MONITOR',
+                'workerThreads': 5,
+            },
+            ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) = SQLAnalyze("_MONITOR MONITORMANAGER OFF")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {
+                'action': 'stopManager',
+                'name': 'MONITOR',
+            },
+            ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) = \
+            SQLAnalyze("_MONITOR START TASK task1")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {
+                'action': 'startTask',
+                'name': 'MONITOR',
+                'taskName': 'task1'
+            },
+            ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) = \
+            SQLAnalyze("_MONITOR REPORT TASK task1")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {
+                'action': 'reportTask',
+                'name': 'MONITOR',
+                'taskName': 'task1'
+            },
+            ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) = \
+            SQLAnalyze("_MONITOR STOP TASK task1")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {
+                'action': 'stopTask',
+                'name': 'MONITOR',
+                'taskName': 'task1'
+            },
+            ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) = \
+            SQLAnalyze("_MONITOR CREATE TASK task1 UID=aaa PWD=YYY")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {
+                'action': 'createTask',
+                'name': 'MONITOR',
+                'param': {'PWD': 'YYY', 'UID': 'aaa'},
+                'taskName': 'task1'
+             },
+            ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) = \
+            SQLAnalyze("_MONITOR LIST TASK")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {
+                'action': 'listTask',
+                'name': 'MONITOR'
+            },
+            ret_CommandSplitResult)
+
     def test_SQLExecuteSanity(self):
         from ..testcli import TestCli
 
@@ -1016,7 +1118,7 @@ class TestSynatx(unittest.TestCase):
         fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
         fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
-        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        # 运行测试程序，开启无头模式(不在控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
@@ -1049,7 +1151,7 @@ class TestSynatx(unittest.TestCase):
         fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
         fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
-        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        # 运行测试程序，开启无头模式(不在控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
@@ -1084,6 +1186,7 @@ class TestSynatx(unittest.TestCase):
         tcpServer = jpype.JClass("org.h2.tools.Server").\
             createTcpServer("-tcp", "-tcpAllowOthers", "-tcpPort", str(19091))
         tcpServer.start()
+        time.sleep(2)
         os.environ["SQLCLI_CONNECTION_URL"] = "jdbc:h2tcp:tcp://127.0.0.1:19091/mem:test"
 
         scriptFile = "testsqlwithurl.sql"
@@ -1092,7 +1195,7 @@ class TestSynatx(unittest.TestCase):
         fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
         fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
-        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        # 运行测试程序，开启无头模式(不在控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
@@ -1130,7 +1233,7 @@ class TestSynatx(unittest.TestCase):
         fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
         fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
-        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        # 运行测试程序，开启无头模式(不在控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
@@ -1166,7 +1269,7 @@ class TestSynatx(unittest.TestCase):
         fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
         fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
-        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        # 运行测试程序，开启无头模式(不在控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
@@ -1198,7 +1301,7 @@ class TestSynatx(unittest.TestCase):
         fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
         fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
-        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        # 运行测试程序，开启无头模式(不在控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
@@ -1230,7 +1333,7 @@ class TestSynatx(unittest.TestCase):
         fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
         fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
-        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        # 运行测试程序，开启无头模式(不在控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
@@ -1262,7 +1365,7 @@ class TestSynatx(unittest.TestCase):
         fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
         fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
-        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        # 运行测试程序，开启无头模式(不在控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
@@ -1294,7 +1397,7 @@ class TestSynatx(unittest.TestCase):
         fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
         fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
-        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        # 运行测试程序，开启无头模式(不在控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
@@ -1326,7 +1429,7 @@ class TestSynatx(unittest.TestCase):
         fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
         fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
-        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        # 运行测试程序，开启无头模式(不在控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
@@ -1438,7 +1541,7 @@ class TestSynatx(unittest.TestCase):
         fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
         fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
-        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        # 运行测试程序，开启无头模式(不在控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
@@ -1471,7 +1574,7 @@ class TestSynatx(unittest.TestCase):
         fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
         fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
-        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        # 运行测试程序，开启无头模式(不在控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
@@ -1504,7 +1607,7 @@ class TestSynatx(unittest.TestCase):
         fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), scriptBaseFile + ".ref"))
         fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
-        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        # 运行测试程序，开启无头模式(不在控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
@@ -1541,7 +1644,7 @@ class TestSynatx(unittest.TestCase):
         fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
         fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
-        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        # 运行测试程序，开启无头模式(不在控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,
@@ -1574,7 +1677,7 @@ class TestSynatx(unittest.TestCase):
         fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
         fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
-        # 运行测试程序，开启无头模式(不再控制台上显示任何内容),同时不打印Logo
+        # 运行测试程序，开启无头模式(不在控制台上显示任何内容),同时不打印Logo
         testcli = TestCli(
             logfilename=fullLogFile,
             headlessMode=True,

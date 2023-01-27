@@ -12,7 +12,6 @@ import configparser
 import unicodedata
 import itertools
 import urllib3
-from multiprocessing import Lock
 from time import strftime, localtime
 
 from prompt_toolkit.history import FileHistory
@@ -29,6 +28,7 @@ from .testoption import TestOptions
 from .__init__ import __version__
 from .sqlparse import SQLAnalyze
 from .apiparse import APIAnalyze
+from .commands.monitor import stopMonitorManager
 
 OFLAG_LOGFILE = 1
 OFLAG_LOGGER = 2
@@ -95,8 +95,8 @@ class TestCli(object):
         self.echofilename = None                        # 当前回显文件的文件名称
         self.Version = __version__                      # 当前程序版本
         self.xlogFile = None                            # xlog文件名
+        self.xlogFileFullPath = None                    # xlog文件名-绝对路径
         self.xlogFileHandle = None                      # xlog文件句柄
-        self.xlogFileLocker = None                      # 进程锁, 用来在输出perf文件的时候控制并发写文件
         self.breakWithError = breakWithError            # 是否在遇到错误的时候退出
         self.breakErrorCode = breakErrorCode            # 遇到错误的退出代码
         self.breakScenarioWithError = breakScenarioWithError  # 遇到命令行错误是否立刻退出当前Scenario的继续运行
@@ -271,6 +271,48 @@ class TestCli(object):
                 print('traceback.print_exc():\n%s' % traceback.print_exc())
                 print('traceback.format_exc():\n%s' % traceback.format_exc())
             raise TestCliException("Can not open logfile for write [" + self.logfilename + "]")
+
+        # 如果要求打开扩展日志，则打开扩展日志
+        if self.xlogFile is not None:
+            # 创建文件，并写入文件头信息
+            if self.xlogOverwrite:
+                # 如果打开了覆盖模式，则删除之前的历史文件
+                if os.path.exists(self.xlogFile):
+                    os.remove(self.xlogFile)
+            self.xlogFileFullPath = os.path.abspath(self.xlogFile)
+            self.xlogFileHandle = sqlite3.connect(
+                database=self.xlogFile,
+                check_same_thread=False,
+            )
+            cursor = self.xlogFileHandle.cursor()
+            cursor.execute("CREATE TABLE IF NOT EXISTS TestCli_Xlog "
+                           "("
+                           "  Id              INTEGER PRIMARY KEY AUTOINCREMENT,"
+                           "  Script          TEXT,"
+                           "  Started         DATETIME,"
+                           "  Elapsed         NUMERIC,"
+                           "  RawCommand      TEXT,"
+                           "  CommandType     TEXT,"
+                           "  Command         TEXT,"
+                           "  CommandStatus   TEXT,"
+                           "  ErrorCode       TEXT,"
+                           "  WorkerName      TEXT,"
+                           "  SuiteName       TEXT,"
+                           "  CaseName        TEXT,"
+                           "  ScenarioId      TEXT,"
+                           "  ScenarioName    TEXT"
+                           ")"
+                           "")
+            cursor.execute("CREATE TABLE IF NOT EXISTS TestCli_PerfLog "
+                           "("
+                           "  Id              INTEGER PRIMARY KEY AUTOINCREMENT,"
+                           "  MonitorTime     DATETIME,"
+                           "  TaskId          NUMERIC,"
+                           "  TaskName        TEXT,"
+                           "  MonitorItem     TEXT,"
+                           "  MonitorValue    TEXT"
+                           ")")
+            cursor.close()
 
         # 加载已经被隐式包含的数据库驱动，文件放置在testcli\jlib下
         # 首先尝试TESTCLI_JLIBDIR下的内容，其次查看安装目录下的东西
@@ -670,6 +712,9 @@ class TestCli(object):
         except (TestCliException, EOFError):
             pass
 
+        # 关闭监控进程
+        stopMonitorManager()
+
         # 退出进程, 如果要求不显示logo，则也不会显示Disconnected字样
         if self.exitValue == 0:
             if not self.nologo:
@@ -1044,50 +1089,17 @@ class TestCli(object):
         # SQL的前20个字母  SQLPrefix
         # 运行状态         SQLStatus
         # 错误日志         ErrorMessage
-        # 线程名称         thread_name
+        # 线程名称         processName
 
         # 如果没有打开性能日志记录文件，直接跳过
-        if self.xlogFile is None:
+        if self.xlogFileHandle is None:
             return
-
-        # 初始化文件加锁机制
-        if self.xlogFileLocker is None:
-            self.xlogFileLocker = Lock()
 
         # 多进程，多线程写入，考虑锁冲突
         try:
-            self.xlogFileLocker.acquire()
-            if self.xlogFileHandle is None:
-                # 创建文件，并写入文件头信息
-                if self.xlogOverwrite:
-                    # 如果打开了覆盖模式，则删除之前的历史文件
-                    if os.path.exists(self.xlogFile):
-                        os.remove(self.xlogFile)
-                self.xlogFileHandle = sqlite3.connect(self.xlogFile)
-                cursor = self.xlogFileHandle.cursor()
-                cursor.execute("CREATE TABLE IF NOT EXISTS TestCli_Xlog "
-                               "("
-                               "  Id              INTEGER PRIMARY KEY AUTOINCREMENT,"
-                               "  Script          TEXT,"
-                               "  Started         DATETIME,"
-                               "  Elapsed         NUMERIC,"
-                               "  RawCommand      TEXT,"
-                               "  CommandType     TEXT,"
-                               "  Command         TEXT,"
-                               "  CommandStatus   TEXT,"
-                               "  ErrorCode       TEXT,"
-                               "  WorkerName      TEXT,"
-                               "  SuiteName       TEXT,"
-                               "  CaseName        TEXT,"
-                               "  ScenarioId      TEXT,"
-                               "  ScenarioName    TEXT"
-                               ")"
-                               "")
-                cursor.close()
-
-            # 对于多线程运行，这里的thread_name格式为JOB_NAME#副本数-完成次数
-            # 对于单线程运行，这里的thread_name格式为固定的MAIN
-            threadName = str(commandResult["thread_name"])
+            # 对于多线程运行，这里的processName格式为JOB_NAME#副本数-完成次数
+            # 对于单线程运行，这里的processName格式为固定的MAIN
+            processName = str(commandResult["processName"])
 
             # 写入内容信息
             if self.executeScript is None:
@@ -1104,7 +1116,7 @@ class TestCli(object):
                 str(commandResult["command"]),
                 str(commandResult["commandStatus"]),
                 str(commandResult["errorCode"]),
-                str(threadName),
+                str(processName),
                 str(self.suitename),
                 str(self.casename),
                 str(commandResult["scenarioId"]),
@@ -1121,8 +1133,3 @@ class TestCli(object):
             self.xlogFileHandle.commit()
         except Exception as ex:
             print("Internal error:: xlog file [" + str(self.xlogFile) + "] write not complete. " + repr(ex))
-        finally:
-            if self.xlogFileHandle:
-                self.xlogFileHandle.close()
-                self.xlogFileHandle = None
-            self.xlogFileLocker.release()
