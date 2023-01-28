@@ -136,7 +136,8 @@ def connectDb(cls, connectProperties, timeout: int = -1):
             if driverClass is None:
                 yield {
                     "type": "error",
-                    "message": "Missed driver config [" + connectProperties["driverSchema"] + "]. Database Connect Failed. "
+                    "message": "Missed driver config [" + connectProperties["driverSchema"] +
+                               "]. Database Connect Failed. "
                 }
                 return
 
@@ -191,7 +192,7 @@ def connectDb(cls, connectProperties, timeout: int = -1):
                         print('traceback.print_exc():\n%s' % traceback.print_exc())
                         print('traceback.format_exc():\n%s' % traceback.format_exc())
                     retryCount = retryCount + 1
-                    if retryCount >= int(cls.testOptions.get("CONN_RETRY_TIMES")):
+                    if retryCount >= int(cls.testOptions.get("SQLCONN_RETRYTIMES")):
                         raise je
                     else:
                         time.sleep(2)

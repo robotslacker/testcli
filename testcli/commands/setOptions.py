@@ -30,15 +30,77 @@ def setOptions(cls, options):
         }
         return
 
+    if optionName.upper() == "JOBMANAGER":
+        # JOBMANAGER无法通过SET命令来设置
+        yield {
+            "type": "error",
+            "message": "Can't update this option with set command. Please use '_JOB JOBMANAGER ON|OFF'."
+        }
+        return
+    if optionName.upper() == "MONITORMANAGER":
+        # MONITORMANAGER无法通过SET命令来设置
+        yield {
+            "type": "error",
+            "message": "Can't update this option with set command. Please use '_MONITOR MONITORMANAGER ON|OFF'."
+        }
+        return
+    if optionName.upper() == "WHENEVER_ERROR":
+        # WHENEVER无法通过SET命令来设置
+        yield {
+            "type": "error",
+            "message": "Can't update this option with set command. Please use '_WHENEVER ERROR <EXIT <int> | CONTINUE>'."
+        }
+        return
+
+    # 以下参数只能为ON或者OFF
+    if optionName.upper() in ["DEBUG", "TIMING", "TIME", "ECHO", "PAGE", "TERMOUT", "FEEDBACK",
+                              "OUTPUT_SORT_ARRAY", "OUTPUT_CSV_HEADER", "SILENT"]:
+        if optionValue.upper() not in ['ON', 'OFF']:
+            yield {
+                "type": "error",
+                "message": "Option is ON/OFF only'."
+            }
+            return
+
+    # 以下参数只能为整形
+    if optionName.upper() in ["SQL_FETCHSIZE", "LOB_LENGTH", "SQLCONN_RETRYTIMES"]:
+        try:
+            optionValue = int(str(optionValue))
+            if optionValue <=0:
+                yield {
+                    "type": "error",
+                    "message": "Option is valid positive integer only."
+                }
+                return
+        except ValueError:
+            yield {
+                "type": "error",
+                "message": "Option is valid integer only."
+            }
+            return
+    if optionName.upper() in ["SCRIPT_TIMEOUT", "SQL_TIMEOUT", "API_TIMEOUT"]:
+        try:
+            optionValue = int(str(optionValue))
+            if optionValue <=0 and optionValue != -1:
+                yield {
+                    "type": "error",
+                    "message": "Option is valid positive integer(or -1 means unlimited) only."
+                }
+                return
+        except ValueError:
+            yield {
+                "type": "error",
+                "message": "Option is valid integer only."
+            }
+            return
+
     # 处理DEBUG选项
     if optionName.upper() == "DEBUG":
         if optionValue.upper() == 'ON':
             os.environ['TESTCLI_DEBUG'] = "1"
-        elif optionValue.upper() == 'OFF':
+        else:
             if 'TESTCLI_DEBUG' in os.environ:
                 del os.environ['TESTCLI_DEBUG']
-        else:
-            raise TestCliException("Unknown option [" + str(optionValue) + "]. ON/OFF only.")
         yield {
             "type": "result",
             "title": None,
@@ -96,19 +158,6 @@ def setOptions(cls, options):
         }
         return
 
-    # 如果特殊的选项，有可能时用户自己定义的变量
-    if optionName.startswith('@'):
-        cls.testOptions.set(optionName[1], optionValue)
-        yield {
-            "type": "result",
-            "title": None,
-            "rows": None,
-            "headers": None,
-            "columnTypes": None,
-            "status": None
-        }
-        return
-
     # 查看是否属于定义的选项
     if cls.testOptions.get(optionName.upper()) is not None:
         cls.testOptions.set(optionName.upper(), optionValue)
@@ -122,7 +171,7 @@ def setOptions(cls, options):
         }
         return
     else:
-        # 不认识的配置选项按照SQL命令处理
+        # 不认识的配置选项
         yield {
             "type": "error",
             "message": "Unknown option [" + str(optionValue) + "] ."

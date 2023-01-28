@@ -228,6 +228,9 @@ def executeMonitorRequest(cls, requestObject):
     global schedulerThread
 
     if requestObject["action"] == "startManager":
+        # 设置程序运行选项
+        cls.testOptions.set("MONITORMANAGER", "ON")
+
         # 标记线程运行
         threadRunningFlag = True
 
@@ -253,6 +256,9 @@ def executeMonitorRequest(cls, requestObject):
         }
         return
     if requestObject["action"] == "stopManager":
+        # 设置程序运行选项
+        cls.testOptions.set("MONITORMANAGER", "OFF")
+
         # 退出所有工作线程
         stopMonitorManager()
         yield {

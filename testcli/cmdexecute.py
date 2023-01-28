@@ -274,7 +274,7 @@ class CmdExecute(object):
                 status = "{0} row{1} selected with warnings."
             else:
                 status = "{0} row{1} selected."
-            arraySize = int(self.testOptions.get("ARRAYSIZE"))
+            arraySize = int(self.testOptions.get("SQL_FETCHSIZE"))
             rowset = cursor.fetchmany(arraySize)
             for row in rowset:
                 collatedRow = []
@@ -1039,6 +1039,8 @@ class CmdExecute(object):
                     self.scenarioId = scenarioId
 
             # 处理各种命令
+            if "TESTCLI_DEBUG" in os.environ:
+                print("[DEBUG] parsedObject=[" + str(parseObject) + "]")
             sqlKeyWords = ["SELECT", "DELETE", "UPDATE", "CREATE", "INSERT",
                            "DROP", "COMMIT", "ROLLBACK",
                            "PROCEDURE", "DECLARE", "BEGIN",

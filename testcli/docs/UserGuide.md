@@ -116,6 +116,7 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
    * prompt_toolkit           : 用于提供交互式命令行和终端应用程序
    * setproctitle             : Python通过setproctitle来设置进程名称，从而在多进程并发时候给调试人员以帮助
    * urllib3                  : HTTP客户端请求操作
+   * psutil                   : Python的监控管理
    * antlr4-python3-runtime   : Antlr4运行时引用
 
 利用pip来安装：
@@ -123,10 +124,8 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
    pip install -U robotslacker-testcli
 ```
 
-安装后步骤-更新驱动程序配置：  
-   * 根据你的需要， 放置自己的jar包到 <PYTHON_HONE>/../site-packages/testcli/jlib下
-   * github上提供的仅仅是一些测试用的Jar包，请根据需要，自行添加实际需要的Jar包
-   * 如果自行了添加了jar包，修改testcli/conf/testcli.ini文件：  
+安装后步骤-部署自己的驱动程序：  
+   * 将jar包放在正确的位置下testcli/jlib(或采用环境变量指定)，并修改testcli/conf/testcli.ini文件（或采用环境变量指定）  
    
 ***
 
@@ -138,7 +137,7 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
 TestCli Release 0.0.7
 SQL>
 ```
-如果你这里看到了版本信息，那祝贺你，你的程序安装成功了
+如果你这里看到了版本信息，那祝贺你，程序安装成功了
 
 ```
 (base) C:\>testcli
@@ -509,59 +508,484 @@ Disconnected.
 显示本帮助信息并退出  
 
 ***
+### 在TestCli里面使用帮助
+```
+(base) TestCli 
+TestCli Release 0.1.1
+SQL> _help
++--------+---------+----------------------------------------------------------------------------+
+|   ##   | COMMAND |                                  SUMMARY                                   |
++--------+---------+----------------------------------------------------------------------------+
+|      1 | EXIT    | exit current script with exitValue (Default is 0)                          |
+|      2 | QUIT    | force exit current script with exitValue (Default is 0)                    |
+|      3 | LOAD    | load external map/driver/plugin files.                                     |
+|      4 | SSH     | Remote SSH operation.                                                      |
+|      5 | COMPARE | Diff test result and reference log.                                        |
+|      6 | ECHO    | echo some message to file.                                                 |
+|      7 | SPOOL   | spool following command and command output to file.                        |
+|      8 | JOB     | Run slave script in parallel.                                              |
+|      9 | DATA    | Generate test random data.                                                 |
+|     10 | SLEEP   | sleep app some time                                                        |
+|     11 | ASSERT  | Execute the assertion. Determine whether the specified conditions are met. |
+|     12 | USE     | Switch the namespace of the current script.                                |
+|     13 | HOST    | Execute local system commands.                                             |
+|     14 | SET     | Set/View app runtime options.                                              |
+|     15 | START   | Run sub command script.                                                    |
+|     16 | SCRIPT  | Run embedded python script.                                                |
+|     17 | SPOOL   | Print subsequent run commands and results to the specified file.           |
++--------+---------+----------------------------------------------------------------------------+
+Use "_HELP <command>" to get detail help messages.
+```
+这里显示的是TestCli自身支持的命令，不包括SQL语句，API执行语句部分。  
+具体SQL语句的写法参考具体数据库对SQL的要求；    
+具体API语句的写法参考HTTP协议报文要求；  
+
+查看命令的详细信息，以下用COMPARE命令作为例子（其他命令的描述格式类似，不再重复说明）：  
+```
+SQL> _help compare
+  Command:
+    COMPARE
+
+  Summary:
+    Diff test result and reference log.
+
+  Synatx:
+    _COMPARE <work file name> <reference file name> {MASK | NOMASK | CASE | NOCASE | IGBLANK | NOIGBLANK | TRIM | NOTRIM}
+    _COMPARE SKIPLINE <the line expression to skip>
+    _COMPARE NOSKIPLINE <the skip line to undefine>
+    _COMPARE MASKLINE <<src pattern to mask> >= <target string after mask>>
+    _COMPARE NOMASKLINE <the mask line to undefine>
+    _COMPARE RESET
+    _COMPARE SET {MASK | NOMASK | CASE | NOCASE | IGBLANK | NOIGBLANK | TRIM | NOTRIM}
+    _COMPARE SET OUTPUT { CONSOLE | DIFFFILE }
+    _COMPARE SET ALGORITHM [LCS | MYERS]
+    _COMPARE SET WORK ENCODING <work file codec, default is UTF-8>
+    _COMPARE SET REFERENCE ENCODING <reference file codec. default is UTF-8>
+```
+对于上述语法描述中，遵循BNF格式。 即：
+```
+1. <>     表示需要输入的内容    
+2. []     表示可选输入的内容
+3. |      表示必须是几个选项之一
+4. {}     表示为其中一项或者多项
+5. 无符号  表示需要输入的关键字
+```
+
+***
+### 设置程序的运行选项
+通过SET命令，我们可以改变TestCli的一些行为或者显示选项。
+```
+    SQL> _set
+    Current Options:
+    +--------+----------------------+----------------------+--------------------------------------------+
+    |   ##   |         Name         |        Value         |                  Comments                  |
+    +--------+----------------------+----------------------+--------------------------------------------+
+    |      1 | WHENEVER_ERROR       | CONTINUE             |                                            |
+    |      2 | PAGE                 | OFF                  | ON|OFF                                     |
+    |      3 | ECHO                 | ON                   | ON|OFF                                     |
+    |      4 | TIMING               | OFF                  | ON|OFF                                     |
+    |      5 | TIME                 | OFF                  | ON|OFF                                     |
+    |      6 | FEEDBACK             | ON                   | ON|OFF                                     |
+    |      7 | TERMOUT              | ON                   | ON|OFF                                     |
+    |      8 | SQL_FETCHSIZE        | 10000                |                                            |
+    |      9 | LOB_LENGTH           | 20                   |                                            |
+    |     10 | FLOAT_FORMAT         | %.7g                 |                                            |
+    |     11 | DECIMAL_FORMAT       |                      |                                            |
+    |     12 | DATE_FORMAT          | %Y-%m-%d             |                                            |
+    |     13 | DATETIME_FORMAT      | %Y-%m-%d %H:%M:%S.%f |                                            |
+    |     14 | TIME_FORMAT          | %H:%M:%S.%f          |                                            |
+    |     15 | DATETIME-TZ_FORMAT   | %Y-%m-%d %H:%M:%S %z |                                            |
+    |     16 | OUTPUT_SORT_ARRAY    | ON                   | Print Array output with sort order. ON|OFF |
+    |     17 | OUTPUT_PREFIX        |                      | Output Prefix                              |
+    |     18 | OUTPUT_ERROR_PREFIX  |                      | Error Output Prefix                        |
+    |     19 | OUTPUT_FORMAT        | TAB                  | TAB|CSV|LEGACY                             |
+    |     20 | OUTPUT_CSV_HEADER    | OFF                  | ON|OFF                                     |
+    |     21 | OUTPUT_CSV_DELIMITER | ,                    |                                            |
+    |     22 | OUTPUT_CSV_QUOTECHAR |                      |                                            |
+    |     23 | SQLCONN_RETRYTIMES   | 1                    | Connect retry times.                       |
+    |     24 | CONNURL              |                      | Connection URL                             |
+    |     25 | CONNSCHEMA           |                      | Current DB schema                          |
+    |     26 | SQL_EXECUTE          | PREPARE              | DIRECT|PREPARE                             |
+    |     27 | JOBMANAGER           | OFF                  | ON|OFF                                     |
+    |     28 | JOBMANAGER_METAURL   |                      |                                            |
+    |     29 | SCRIPT_TIMEOUT       | -1                   |                                            |
+    |     30 | SQL_TIMEOUT          | -1                   |                                            |
+    |     31 | API_TIMEOUT          | -1                   |                                            |
+    |     32 | SCRIPT_ENCODING      | UTF-8                |                                            |
+    |     33 | RESULT_ENCODING      | UTF-8                |                                            |
+    |     34 | NAMESPACE            | SQL                  | Script Namespace, SQL|API                  |
+    |     35 | MONITORMANAGER       | OFF                  | ON|OFF                                     |
+    +--------+----------------------+----------------------+--------------------------------------------+
+    
+    没有任何参数的set命令将会列出程序所有的配置情况。
+```
+
+#### 控制参数解释-WHENEVER_ERROR
+&emsp; 用来控制在执行命令过程中遇到命令错误，是否继续。 默认是CONTINUE，即继续。   
+&emsp; 目前支持的选项有：    
+```
+       CONTINUE      |     遇到SQL语句错误继续执行 
+       EXIT <int>    |     遇到SQL语句错误直接退出TestCli程序, int为退出时候的返回值
+```
+WHENEVER_ERROR不支持用SET命令来调整，如果需要调整，需要使用_WHENEVER ERROR <EXIT <int> | CONTINUE>
+
+#### 控制参数解释-PAGE
+&emsp; 是否分页显示，当执行的命令结果超过了屏幕显示的内容，是否会暂停显示，等待用户输入任意键后继续显示下一页，默认是OFF，即不中断。  
+&emsp; 以下是中断的效果， 中断后单击任意键将显示下一篇内容。  
+&emsp; PAGE的设置在脚本执行中将被忽略。
+```
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 |  1 |
+|      2 |  1 |
+|      3 |  1 |
+|      4 |  1 |
+|      5 |  1 |
+|      6 |  1 |
+|      7 |  1 |
+|      8 |  1 |
+|      9 |  1 |
+|     10 |  1 |
+|     11 |  1 |
+|     12 |  1 |
+|     13 |  1 |
+-- More  --
+```
+
+#### 控制参数解释-ECHO
+&emsp; &emsp; 命令回显标志， 默认为ON，即命令内容在LOG中需要回显
+```
+        SQL> _set ECHO ON      # 在LOG中将会回显命令语句
+        SQL> _set ECHO OFF     # 在LOG中不会回显命令语句
+
+        例如：执行SELECT 3 + 5 COL1 FROM DUAL，
+
+        在ECHO打开下，log文件内容如下:
+        SQL> SELECT 3 + 5 COL1 FROM DUAL;
+        SQL> ===========
+        SQL> =  COL1 ===
+        SQL> ===========
+        SQL>           8
+        SQL> 1 rows selected.
+
+        在ECHO关闭下，log文件内容如下:
+        SQL> ===========
+        SQL> =  COL1 ===
+        SQL> ===========
+        SQL>           8
+        SQL> 1 rows selected.
+```
+
+#### 控制参数解释-TIMING
+&emsp; 语句运行结束后打印当前语句的执行时间  
+```
+    SQL> _set timing ON
+    Running time elapsed:      0.00 seconds
+    SQL> delete from aaa;
+    510 rows affected.
+    Running time elapsed:      0.04 seconds
+```
+
+#### 控制参数解释-TIME
+&emsp; 语句运行结束后打印当前系统时间  
+```
+    SQL> _set time ON
+    Current clock time  :2023-01-28 20:02:12
+    SQL> _connect /mem
+    Database connected.
+    Current clock time  :2023-01-28 20:02:18
+    SQL> create table aaa (id int);
+    0 row affected.
+    Current clock time  :2023-01-28 20:02:25
+```
+
+#### 控制参数解释-FEEDBACK
+&emsp; 控制是否回显执行影响的行数，默认是ON，显示  
+```
+       SQL> _set feedback on
+       SQL> select * from test_tab;
+       +----+----------+
+       | ID | COL2     |
+       +----+----------+
+       | 1  | XYXYXYXY |
+       | 1  | XYXYXYXY |
+       +----+----------+
+       2 rows selected.
+       SQL> _set feedback off
+       SQL> select * from test_tab;
+       +----+----------+
+       | ID | COL2     |
+       +----+----------+
+       | 1  | XYXYXYXY |
+       | 1  | XYXYXYXY |
+       +----+----------+
+```
+#### 控制参数解释-TERMOUT
+&emsp; 控制是否显示命令结果的返回，默认是ON，显示  
+
+```
+       SQL> _set termout on
+       SQL> select * from test_tab;
+       +----+----------+
+       | ID | COL2     |
+       +----+----------+
+       | 1  | XYXYXYXY |
+       | 1  | XYXYXYXY |
+       +----+----------+
+       2 rows selected.
+       SQL> set termout off
+       SQL> select * from test_tab;
+       2 rows selected.
+
+```
+
+#### 控制参数解释-SQL_FETCHSIZE
+&emsp; SQL数据预读取Fetch的缓冲区大小  
+```
+    默认是10000，设置值为非零的正整数
+    如果数据量很大，一次性从数据源读取，会造成数据库过大压力
+    通过这个参数，可以控制每次从数据库读取的记录集大小
+    如果没有十分必要的需求，不建议修改这个参数。过低的参数将导致程序运行性能下降
+```
+
+#### 控制参数解释-OUTPUT_FORMAT
+&emsp; 结果集显示格式， 默认是TAB
+&emsp; 目前支持的选项有：
+```
+      LEGACY    |     显示格式为表格的格式(第三方工具提供，暂时保留，来作为兼容性) 
+      CSV       |     显示格式为CSV文件的格式
+      TAB       |     显示格式为表格的格式
+```
+&emsp; 以下是一个例子：
+```
+       SQL> _set output_format legacy
+       SQL> select * from test_tab;
+       +----+----------+
+       | ID | COL2     |
+       +----+----------+
+       | 1  | XYXYXYXY |
+       | 1  | XYXYXYXY |
+       +----+----------+
+       2 rows selected.
+      
+       SQL> _set output_format csv
+       SQL> select * from test_tab;
+       "ID","COL2"
+       "1","XYXYXYXY"
+       "1","XYXYXYXY"
+       2 rows selected.
+
+       SQL> _set output_format tab
+       SQL> select * from test_tab;
+       +--------+----+----------+
+       |   ##   | ID | COL2     |
+       +--------+----+----------+
+       |      1 | 1  | XYXYXYXY |
+       |      2 | 1  | XYXYXYXY |
+       +--------+----+----------+
+       2 rows selected.
+```
+TAB模式和LEGACY模式的区别：  
+1. TAB模式会在每一行的输出前显示行号，LEGACY模式不会
+2. TAB模式下字符串默认输出是右对齐，整形模式输出是左对齐； LEGACY模式全部是右对齐；
+
+#### 控制参数解释-LOB_LENGTH
+&emsp; 控制LOB字段的输出长度，默认是20  
+&emsp; 由于LOB字段中的文本长度可能会比较长，所以默认不会显示出所有的LOB内容到当前输出中，而是最大长度显示LOB_LENGTH值所代表的长度对于超过默认显示长度的，将在输出内容后面添加...省略号来表示   
+&emsp; 对于BLOB类型，输出默认为16进制格式。对于超过默认显示长度的，将在输出内容后面添加...省略号来表示 
+```       
+        SQL> create table aaa(id clob);
+        0 row affected.
+        SQL> insert into aaa values('123123123131221321jfdlasjfsdalfjdsalf;jdsaf;dssjf;sadjfads;fsdafasfafafdafdajfoieqwupqewrqweerqp');
+        1 row affected.
+        SQL> -- 默认的LOB_LENGTH长度不足数据长度
+        SQL> select * from aaa;
+        +--------+------------------------------------------+
+        |   ##   |                    ID                    |
+        +--------+------------------------------------------+
+        |      1 | Len:96;Content:[12312312313122132...rqp] |
+        +--------+------------------------------------------+
+        1 row selected.
+        SQL> -- 设置的长度不足数据长度
+        SQL> _set LOB_LENGTH 5
+        SQL> select * from aaa;
+        +--------+---------------------------+
+        |   ##   |             ID            |
+        +--------+---------------------------+
+        |      1 | Len:96;Content:[12...rqp] |
+        +--------+---------------------------+
+        1 row selected.
+        SQL> -- 设置的长度超过数据的长度 
+        SQL> _set LOB_LENGTH 300
+        SQL> select * from aaa;
+        +--------+--------------------------------------------------------------------------------------------------+
+        |   ##   |                                                ID                                                |
+        +--------+--------------------------------------------------------------------------------------------------+
+        |      1 | 123123123131221321jfdlasjfsdalfjdsalf;jdsaf;dssjf;sadjfads;fsdafasfafafdafdajfoieqwupqewrqweerqp |
+        +--------+--------------------------------------------------------------------------------------------------+
+        1 row selected.
+```
+
+#### 控制参数解释-FLOAT_FORMAT/DECIMAL_FORMAT/DATE_FORMAT/DATETIME_FORMAT/TIME_FORMAT
+&emsp; FLOAT_FORMAT    控制浮点数字的显示格式，默认是%.7g
+```
+    SQL> _set DECIMAL_FORMAT %0.7g
+    SQL> select abs(1.234567891234) from dual;
+    +----------+
+    | C1       |
+    +----------+
+    | 1.234568 |
+    +----------+
+    1 row selected.
+    SQL> _set DECIMAL_FORMAT %0.10g
+    SQL> select abs(1.234567891234) from dual;
+    +-------------+
+    | C1          |
+    +-------------+
+    | 1.234567891 |
+    +-------------+
+    1 row selected.
+    类似的参数还有FLOAT_FORMAT
+    
+    SQL> _set DATE_FORMAT %Y%m%d
+    SQL> select CAST('2000-02-02' AS DATE) from dual;
+    +-------------+
+    | C1          |
+    +-------------+
+    | 20000111    |
+    +-------------+
+    1 row selected.
+    类似的参数还有DATETIME_FORMAT, TIME_FORMAT
+```
+
+#### 控制参数解释-CSV_HEADER/CSV_DELIMITER/CSV_QUOTECHAR
+&emsp; CSV格式控制  
+```
+    CSV_HEADER        控制CSV输出中是否包括字段名称信息， 默认是OFF
+    CSV_DELIMITER     CSV输出中字段的分隔符, 默认为逗号，即,  
+    CSV_QUOTECHAR     CSV中字符类型字段的前后标记符号，默认为不标记
+
+    SQL> select * from cat where rownum<10;
+    ADATA_1000W,TABLE
+    ADATA_100W,TABLE
+    ADATA_10W,TABLE
+    ADATA_1W,TABLE
+    ADATA_2000W,TABLE
+    ADATA_500W,TABLE
+    BIN$p+HZrV/nKjTgU1ABqMCZxw==$0,TABLE
+    BIN$p+HaveUdKjzgU1ABqMC4xg==$0,TABLE
+    BIN$p+HbAAWeKlfgU1ABqMCSUg==$0,TABLE
+    
+    SQL> select 1.2+2.2 from dual
+       > union
+       > select 3+4 from dual;
+    3.4
+    7
+```
 
 # 以下内容尚未来得及更新，请等等哈
 
 
-### 在TestCli里面查看当前支持的命令
+#### 控制参数解释-SQLCONN_RETRYTIMES
+&emsp; &emsp; 11. 连接尝试次数  
 ```
-(base) TestCli 
-SQL*Cli Release 0.0.32
-SQL> help
-+--------------+-----------------------------------------------------+
-| Command      | Description                                         |
-+--------------+-----------------------------------------------------+
-| __internal__ | 执行内部操作命令：                                  |
-| __internal__ |     __internal__ hdfs          HDFS文件操作         |
-| __internal__ |     __internal__ kafka         kafka队列操作        |
-| __internal__ |     __internal__ data          随机测试数据管理     |
-| __internal__ |     __internal__ test          测试管理             |
-| __internal__ |     __internal__ job           后台并发测试任务管理 |
-| __internal__ |     __internal__ transaction   后台并发测试事务管理 |
-| connect      | 连接到指定的数据库                                  |
-| disconnect   | 断开数据库连接                                      |
-| echo         | 回显输入到指定的文件                                |
-| exit         | 正常退出当前应用程序                                |
-| help         | Show this help.                                     |
-| host         | 执行操作系统命令                                    |
-| loaddriver   | 加载数据库驱动文件                                  |
-| loadcommandMap   | 加载SQL映射文件                                     |
-| quit         | Quit.                                               |
-| session      | 数据库连接会话管理                                  |
-| set          | 设置运行时选项                                      |
-| sleep        | 程序休眠(单位是秒)                                  |
-| spool        | 将输出打印到指定文件                                |
-| start        | 执行指定的测试脚本                                  |
-+--------------+-----------------------------------------------------+
-这里显示的是所有除了标准SQL语句外，可以被执行的各种命令开头。
-标准的SQL语句并没有在这里显示出来，你可以直接在控制行内或者脚本里头执行SQL脚本。
-
-
-
+    默认是1，即数据库只尝试一次数据库连接，失败后即退回。
+    可以调整到其他数值，来应用不稳定的数据库连接环境
+```
+#### 控制参数解释-SQLREWRITE
+&emsp; &emsp; 13. SQLREWRITE  
+```
+    控制是否启用SQL重写，默认是ON。
+    当设置为OFF的时候，无论运行是否指定了COMMANDMAP，映射都不会工作
+```
+#### 控制参数解释-SQL_EXECUTE
+&emsp; &emsp; 14. SQL_EXECUTE  
+```
+    控制Jpype调用JDBC测试的时候，使用的具体行为方式。有两个可能的选项，分别是DIRECT和PREPARE
+    对于DIRECT的行为类似：
+        conn.createStatement().execute("sql ...")
+    对于PREPARE的行为类似：
+        PrepareStatement m_pstmt == conn.PrepareStatement(sql)
+        m_pstmt.execute()
+    在某些特定的情况下，这个参数将影响显示输出效果。目前正在测试中。
 ```
 
+#### 控制参数解释-JOBManager, JOBManager_MetaURL
+&emsp; &emsp; 15. SQL脚本并发控制  
+```
+   程序实现了并发的脚本运行，以及对脚本运行中的聚合点支持
+   并发运行的时候， 应用程序的角色分为主调度程序和Worker工作程序
+   
+   通过 SET JOBManager ON的方式可以启用本机的主调度程序。
+   在SET JOBManager ON后，通过SET命令查看当前设置，可以看到如下信息：
+   | JOBMANAGER         | on                        | ON|OFF               |
+   | JOBMANAGER_METAURL | tcp://192.168.3.155:50869 |                      |
+   此时的JOBMANAGER_METAURL就是主调度程序所工作的地址
+   
+   Worker工作程序可以通过手工的方式注册到主调度程序上，也可以通过主调度程序利用JOB的相关命令来启动
+   具体的使用方法随后的章节将详细介绍   
+```
 
+#### 控制参数-SQL_TIMEOUT，SCRIPT_TIMEOUT
+&emsp; &emsp; 15. SQL脚本超时控制
+```
+   程序实现了超时管理，默认的超时时间为无限制，即不做任何控制
+   SCRIPT_TIMEOUT    脚本的最大运行时间，单位为秒，当脚本运行超过这个时间后，脚本将失败，程序将退出
+   SQL_TIMEOUT       单个语句的最大运行时间，单位为秒，当单个语句运行超过这个时间后，当前语句将失败，程序将继续
+   两个参数可以同时设置，同时生效，也可以根据需要设置其中一个
+   
+   注意： 
+   1： 当发生SQL超时中断后，程序将会启动调用数据库的cancel机制来回退当前运行状态，但不是每个数据库都能支持cancel机制
+      所以，不要对超时退出后，数据库的连接状态有所预期，可能（非常可能）会导致后续的所有SQL执行失败
+   2： 目前TimeOut仅用于如下函数， Connect,  Execute
+   
+```
 
+### 在SQL中使用Hint信息
+&emsp; &emsp; 在一些场景中，我们通过Hint隐含提示符来控制SQL的具体行为
+```
+    SQL> -- [Hint] Order
+    SQL> Select ID,Name From TestTab;
+    ....
+    加入这个提示符后，TestCli将会把随后的SQL语句进行排序输出，原程序的输出顺序被忽略
 
+    SQL> -- [Hint] LogFilter  .*Error.*
+    SQL> Select ID,Name From TestTab;
+    ....
+    加入这个提示符后，TestCli将不再显示随后输出中任何包含Error字样的行
+    .*Error.* 是一个正则表达式写法
 
+    SQL> -- [Hint] LogFilter  ^((?!Error).)*$
+    SQL> Select ID,Name From TestTab;
+    ....
+    加入这个提示符后，TestCli仅显示输出中包含Error字样的行
 
+    SQL> -- [Hint] LogMask  Password:.*=>Password:******
+    SQL> Select ID,Name From TestTab;
+    ....
+    加入这个提示符后，TestCli将把日志输出中所有符合Password:.*的内容替换成Password:*****
 
+    SQL> -- [Hint] SQL_PREPARE
+    SQL> Select ID,Name From TestTab;
+    ....
+    加入这个提示符后，随后的TestCli程序在执行的时候将首先解析SQL语句，随后再执行，
+    这是默认的方式
 
+    SQL> -- [Hint] SQL_DIRECT
+    SQL> Select ID,Name From TestTab;
+    ....
+    加入这个提示符后，随后的语句在TestCli执行中将跃过解析(PrepareStatement)层面
+    这不是默认方式，和之前的SQL_PREPARE相互斥的一个设置
+    在某些情况下，有的特殊SQL语句不支持PREPARE，这是一个可以绕开问题的办法
+    可以通过设置变量的方式来全局影响这个设置.
+    SQL> SET SQL_EXECUTE PREPARE|DIRECT
 
-
-
-
-
+    SQL> -- [Hint] LOOP [LoopTimes] UNTIL [EXPRESSION] INTERVAL [INTERVAL]
+    循环执行当前SQL语句一直到表达式EXPRESSION被满足，或者循环次数满足设置要求
+    循环执行的次数是LoopTimes，每次循环的间隔是INTERVAL(秒作为单位)
+    
+```
 
 
 
@@ -807,333 +1231,6 @@ Mapping file loaded.
     SQL> 
 
 ```  
-***
-### 设置程序的运行选项
-通过SET命令，我们可以改变TestCli的一些行为或者显示选项。
-```
-    SQL> set
-    Current set options: 
-    +--------------------+----------------------+----------------------+
-    | Name               | Value                | Comments             |
-    +--------------------+----------------------+----------------------+
-    | WHENEVER_ERROR  | CONTINUE             |                      |
-    | PAGE               | OFF                  |                      |
-    | ECHO               | ON                   |                      |
-    | TIMING             | OFF                  |                      |
-    | TIME               | OFF                  |                      |
-    | OUTPUT_FORMAT      | LEGACY               | TAB|CSV|LEGACY       |
-    | CSV_HEADER         | OFF                  | ON|OFF               |
-    | CSV_DELIMITER      | ,                    |                      |
-    | CSV_QUOTECHAR      |                      |                      |
-    | FEEDBACK           | ON                   | ON|OFF               |
-    | TERMOUT            | ON                   | ON|OFF               |
-    | ARRAYSIZE          | 10000                |                      |
-    | SQLREWRITE         | OFF                  | ON|OFF               |
-    | LOB_LENGTH         | 20                   |                      |
-    | FLOAT_FORMAT       | %.7g                 |                      |
-    | DECIMAL_FORMAT     |                      |                      |
-    | DATE_FORMAT        | %Y-%m-%d             |                      |
-    | DATETIME_FORMAT    | %Y-%m-%d %H:%M:%S %f |                      |
-    | TIME_FORMAT        | %H:%M:%S %f          |                      |
-    | CONN_RETRY_TIMES   | 1                    | Connect retry times. |
-    | OUTPUT_PREFIX      |                      | Output Prefix        |
-    | SQL_EXECUTE        | PREPARE              | DIRECT|PREPARE       |
-    | JOBMANAGER         | OFF                  | ON|OFF               |
-    | JOBMANAGER_METAURL |                      |                      |
-    | SCRIPT_TIMEOUT     | -1                   |                      |
-    | SQL_TIMEOUT        | -1                   |                      |
-    +--------------------+----------------------+----------------------+
-    没有任何参数的set将会列出程序所有的配置情况。
-
-```
-#### 控制参数解释-ECHO
-&emsp; &emsp; 主要的控制参数解释：  
-&emsp; &emsp; 1.ECHO    SQL回显标志， 默认为ON，即SQL内容在LOG中回显
-```
-        SQL> set ECHO ON      # 在LOG中将会回显SQL语句
-        SQL> set ECHO OFF     # 在LOG中不会回显SQL语句
-
-        例如：执行SELECT 3 + 5 COL1 FROM DUAL，
-
-        在ECHO打开下，log文件内容如下:
-        SQL> SELECT 3 + 5 COL1 FROM DUAL;
-        SQL> ===========
-        SQL> =  COL1 ===
-        SQL> ===========
-        SQL>           8
-        SQL> 1 rows selected.
-
-        在ECHO关闭下，log文件内容如下:
-        SQL> ===========
-        SQL> =  COL1 ===
-        SQL> ===========
-        SQL>           8
-        SQL> 1 rows selected.
-```
-
-#### 控制参数解释-WHENEVER_ERROR
-&emsp; &emsp; 2. WHENEVER_ERROR  SQL错误终端表示， 用来控制在执行SQL过程中遇到SQL错误，是否继续。 默认是CONTINUE，即继续。   
-&emsp; 目前支持的选项有：    
-```
-       CONTINUE |     遇到SQL语句错误继续执行 
-       EXIT     |     遇到SQL语句错误直接退出TestCli程序
-```
-#### 控制参数解释-PAGE
-&emsp; &emsp; 3. PAGE        是否分页显示，当执行的SQL语句结果超过了屏幕显示的内容，是否会暂停显示，等待用户输入任意键后继续显示下一页，默认是OFF，即不中断。
-
-#### 控制参数解释-OUTPUT_FORMAT
-&emsp; &emsp; 4. OUTPUT_FORMAT   显示格式， 默认是ASCII(会择机变化成TAB)
-&emsp; 目前支持的选项有：
-```
-      LEGACY    |     显示格式为表格的格式(第三方工具提供，暂时保留，来作为兼容性) 
-      CSV      |     显示格式为CSV文件的格式
-      TAB      |     显示格式为表格的格式
-```
-&emsp; 以下是一个例子：
-```
-       SQL> set output_format legacy
-       SQL> select * from test_tab;
-       +----+----------+
-       | ID | COL2     |
-       +----+----------+
-       | 1  | XYXYXYXY |
-       | 1  | XYXYXYXY |
-       +----+----------+
-       2 rows selected.
-      
-       SQL> set output_format csv
-       SQL> select * from test_tab;
-       "ID","COL2"
-       "1","XYXYXYXY"
-       "1","XYXYXYXY"
-       2 rows selected.
-       SQL>           
-```
-#### 控制参数解释-LOB_LENGTH
-&emsp; &emsp; 5. LOB_LENGTH      控制LOB字段的输出长度，默认是20  
-&emsp; &emsp; 由于LOB字段中的文本长度可能会比较长，所以默认不会显示出所有的LOB内容到当前输出中，而是最大长度显示LOB_LENGTH值所代表的长度对于超过默认显示长度的，将在输出内容后面添加...省略号来表示   
-&emsp; &emsp; 对于BLOB类型，输出默认为16进制格式。对于超过默认显示长度的，将在输出内容后面添加...省略号来表示 
-```       
-        SQL> set LOB_LENGTH 300     # CLOB将会显示前300个字符
-        例子，执行一个CLOB字段查询,CLOB中的信息为ABCDEFGHIJKLMNOPQRSTUVWXYZ
-        SQL> set LOB_LENGTH 5
-        SQL> SELECT CLOB1 FROM TEST_TAB;
-        SQL> ===========
-        SQL> =  CLOB1 ==
-        SQL> ===========
-        SQL>       ABCDE
-        SQL> 1 rows selected.
-        SQL> set LOB_LENGTH 15
-        SQL> =====================
-        SQL> =        CLOB1      =
-        SQL> =====================
-        SQL>    ABCDEFGHIJKLMNO...
-        SQL> 1 rows selected.
-```
-#### 控制参数解释-FEEDBACK
-&emsp; &emsp; 6. FEEDBACK      控制是否回显执行影响的行数，默认是ON，显示  
-```
-       SQL> set feedback on
-       SQL> select * from test_tab;
-       +----+----------+
-       | ID | COL2     |
-       +----+----------+
-       | 1  | XYXYXYXY |
-       | 1  | XYXYXYXY |
-       +----+----------+
-       2 rows selected.
-       SQL> set feedback off
-       SQL> select * from test_tab;
-       +----+----------+
-       | ID | COL2     |
-       +----+----------+
-       | 1  | XYXYXYXY |
-       | 1  | XYXYXYXY |
-       +----+----------+
-```
-#### 控制参数解释-TERMOUT
-&emsp; &emsp; 7. TERMOUT       控制是否显示SQL查询的返回，默认是ON，显示  
-
-```
-       SQL> set termout on
-       SQL> select * from test_tab;
-       +----+----------+
-       | ID | COL2     |
-       +----+----------+
-       | 1  | XYXYXYXY |
-       | 1  | XYXYXYXY |
-       +----+----------+
-       2 rows selected.
-       SQL> set termout off
-       SQL> select * from test_tab;
-       2 rows selected.
-
-```
-#### 控制参数解释-FLOAT_FORMAT/DECIMAL_FORMAT/DATE_FORMAT/DATETIME_FORMAT/TIME_FORMAT
-&emsp; &emsp; 8. FLOAT_FORMAT    控制浮点数字的显示格式，默认是%.7g
-```
-    SQL>  select abs(1.234567891234) from dual;
-    +----------+
-    | C1       |
-    +----------+
-    | 1.234568 |
-    +----------+
-    1 row selected.
-    SQL> set FLOAT_FORMAT %0.10g
-    SQL> select abs(1.234567891234) from dual;
-    +-------------+
-    | C1          |
-    +-------------+
-    | 1.234567891 |
-    +-------------+
-    1 row selected.
-    类似的参数还有DECIMAL_FORMAT
-    
-    SQL> set DATE_FORMAT %Y%m%d
-    SQL> select CAST('2000-02-02' AS DATE) from dual;
-    +-------------+
-    | C1          |
-    +-------------+
-    | 20000111    |
-    +-------------+
-    1 row selected.
-    类似的参数还有DATETIME_FORMAT, TIME_FORMAT
-```
-#### 控制参数解释-CSV_HEADER/CSV_DELIMITER/CSV_QUOTECHAR
-&emsp; &emsp; 9. CSV格式控制  
-```
-    CSV_HEADER        控制CSV输出中是否包括字段名称信息， 默认是OFF
-    CSV_DELIMITER     CSV输出中字段的分隔符, 默认为逗号，即,  
-    CSV_QUOTECHAR     CSV中字符类型字段的前后标记符号，默认为不标记
-
-    SQL> select * from cat where rownum<10;
-    ADATA_1000W,TABLE
-    ADATA_100W,TABLE
-    ADATA_10W,TABLE
-    ADATA_1W,TABLE
-    ADATA_2000W,TABLE
-    ADATA_500W,TABLE
-    BIN$p+HZrV/nKjTgU1ABqMCZxw==$0,TABLE
-    BIN$p+HaveUdKjzgU1ABqMC4xg==$0,TABLE
-    BIN$p+HbAAWeKlfgU1ABqMCSUg==$0,TABLE
-    
-    SQL> select 1.2+2.2 from dual
-       > union
-       > select 3+4 from dual;
-    3.4
-    7
-```
-#### 控制参数解释-TIMING/TIME
-&emsp; &emsp; 10. 运行时间显示  
-```
-    TIMING    ON|OFF  控制在SQL运行结束后是否显示执行消耗时间， 默认是OFF
-    TIME      ON|OFF  控制在SQL运行结束后是否显示系统当前时间， 默认是OFF
-```
-#### 控制参数解释-CONN_RETRY_TIMES
-&emsp; &emsp; 11. 连接尝试次数  
-```
-    默认是1，即数据库只尝试一次数据库连接，失败后即退回。
-    可以调整到其他数值，来应用不稳定的数据库连接环境
-```
-#### 控制参数解释-ARRAYSIZE
-&emsp; &emsp; 12. 数据读取预Fetch的缓冲区大小  
-```
-    默认是10000，即数据库每次读取数据的时候，预缓存10000条记录到本地
-    如果没有十分必要的需求，不建议修改这个参数。过低的参数将导致程序运行性能下降
-```
-#### 控制参数解释-SQLREWRITE
-&emsp; &emsp; 13. SQLREWRITE  
-```
-    控制是否启用SQL重写，默认是ON。
-    当设置为OFF的时候，无论运行是否指定了COMMANDMAP，映射都不会工作
-```
-#### 控制参数解释-SQL_EXECUTE
-&emsp; &emsp; 14. SQL_EXECUTE  
-```
-    控制Jpype调用JDBC测试的时候，使用的具体行为方式。有两个可能的选项，分别是DIRECT和PREPARE
-    对于DIRECT的行为类似：
-        conn.createStatement().execute("sql ...")
-    对于PREPARE的行为类似：
-        PrepareStatement m_pstmt == conn.PrepareStatement(sql)
-        m_pstmt.execute()
-    在某些特定的情况下，这个参数将影响显示输出效果。目前正在测试中。
-```
-
-#### 控制参数解释-JOBManager, JOBManager_MetaURL
-&emsp; &emsp; 15. SQL脚本并发控制  
-```
-   程序实现了并发的脚本运行，以及对脚本运行中的聚合点支持
-   并发运行的时候， 应用程序的角色分为主调度程序和Worker工作程序
-   
-   通过 SET JOBManager ON的方式可以启用本机的主调度程序。
-   在SET JOBManager ON后，通过SET命令查看当前设置，可以看到如下信息：
-   | JOBMANAGER         | on                        | ON|OFF               |
-   | JOBMANAGER_METAURL | tcp://192.168.3.155:50869 |                      |
-   此时的JOBMANAGER_METAURL就是主调度程序所工作的地址
-   
-   Worker工作程序可以通过手工的方式注册到主调度程序上，也可以通过主调度程序利用JOB的相关命令来启动
-   具体的使用方法随后的章节将详细介绍   
-```
-
-#### 控制参数-SQL_TIMEOUT，SCRIPT_TIMEOUT
-&emsp; &emsp; 15. SQL脚本超时控制
-```
-   程序实现了超时管理，默认的超时时间为无限制，即不做任何控制
-   SCRIPT_TIMEOUT    脚本的最大运行时间，单位为秒，当脚本运行超过这个时间后，脚本将失败，程序将退出
-   SQL_TIMEOUT       单个语句的最大运行时间，单位为秒，当单个语句运行超过这个时间后，当前语句将失败，程序将继续
-   两个参数可以同时设置，同时生效，也可以根据需要设置其中一个
-   
-   注意： 
-   1： 当发生SQL超时中断后，程序将会启动调用数据库的cancel机制来回退当前运行状态，但不是每个数据库都能支持cancel机制
-      所以，不要对超时退出后，数据库的连接状态有所预期，可能（非常可能）会导致后续的所有SQL执行失败
-   2： 目前TimeOut仅用于如下函数， Connect,  Execute
-   
-```
-
-### 在SQL中使用Hint信息
-&emsp; &emsp; 在一些场景中，我们通过Hint隐含提示符来控制SQL的具体行为
-```
-    SQL> -- [Hint] Order
-    SQL> Select ID,Name From TestTab;
-    ....
-    加入这个提示符后，TestCli将会把随后的SQL语句进行排序输出，原程序的输出顺序被忽略
-
-    SQL> -- [Hint] LogFilter  .*Error.*
-    SQL> Select ID,Name From TestTab;
-    ....
-    加入这个提示符后，TestCli将不再显示随后输出中任何包含Error字样的行
-    .*Error.* 是一个正则表达式写法
-
-    SQL> -- [Hint] LogFilter  ^((?!Error).)*$
-    SQL> Select ID,Name From TestTab;
-    ....
-    加入这个提示符后，TestCli仅显示输出中包含Error字样的行
-
-    SQL> -- [Hint] LogMask  Password:.*=>Password:******
-    SQL> Select ID,Name From TestTab;
-    ....
-    加入这个提示符后，TestCli将把日志输出中所有符合Password:.*的内容替换成Password:*****
-
-    SQL> -- [Hint] SQL_PREPARE
-    SQL> Select ID,Name From TestTab;
-    ....
-    加入这个提示符后，随后的TestCli程序在执行的时候将首先解析SQL语句，随后再执行，
-    这是默认的方式
-
-    SQL> -- [Hint] SQL_DIRECT
-    SQL> Select ID,Name From TestTab;
-    ....
-    加入这个提示符后，随后的语句在TestCli执行中将跃过解析(PrepareStatement)层面
-    这不是默认方式，和之前的SQL_PREPARE相互斥的一个设置
-    在某些情况下，有的特殊SQL语句不支持PREPARE，这是一个可以绕开问题的办法
-    可以通过设置变量的方式来全局影响这个设置.
-    SQL> SET SQL_EXECUTE PREPARE|DIRECT
-
-    SQL> -- [Hint] LOOP [LoopTimes] UNTIL [EXPRESSION] INTERVAL [INTERVAL]
-    循环执行当前SQL语句一直到表达式EXPRESSION被满足，或者循环次数满足设置要求
-    循环执行的次数是LoopTimes，每次循环的间隔是INTERVAL(秒作为单位)
-    
-```
 
 ### 在SQL中使用变量信息
 &emsp; &emsp; 在一些场景中，我们需要通过变量来变化SQL的运行  

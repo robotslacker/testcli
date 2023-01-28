@@ -455,6 +455,9 @@ class Cursor(object):
     _description = None
     warnings = None
 
+    # 默认的fetchmany返回记录数，100
+    arraysize = 100
+
     def __init__(self, connection, converters):
         self._connection = connection
         self._converters = converters
@@ -702,9 +705,6 @@ class Cursor(object):
                 rows.append(row)
         return rows
 
-    # 默认的fetchmany返回记录数，100
-    arraysize = 100
-
     def setinputsizes(self, sizes):
         pass
 
@@ -940,18 +940,18 @@ def _javaobj_to_pyobj(p_javaobj, p_objColumnSQLType=None):
             return bytearray(p_javaobj)
     elif typeName.upper().find('CLOB') != -1:
         m_Length = p_javaobj.length()
-        m_LargeObject = SQLCliJDBCLargeObject()
-        m_LargeObject.setColumnTypeName(p_objColumnSQLType)
-        m_LargeObject.setObjectLength(m_Length)
-        m_LargeObject.setObject(p_javaobj)
-        return m_LargeObject
+        largeObject = SQLCliJDBCLargeObject()
+        largeObject.setColumnTypeName(p_objColumnSQLType)
+        largeObject.setObjectLength(m_Length)
+        largeObject.setObject(p_javaobj)
+        return largeObject
     elif typeName.upper().find('BLOB') != -1:
         m_Length = p_javaobj.length()
-        m_LargeObject = SQLCliJDBCLargeObject()
-        m_LargeObject.setColumnTypeName(p_objColumnSQLType)
-        m_LargeObject.setObjectLength(m_Length)
-        m_LargeObject.setObject(p_javaobj)
-        return m_LargeObject
+        largeObject = SQLCliJDBCLargeObject()
+        largeObject.setColumnTypeName(p_objColumnSQLType)
+        largeObject.setObjectLength(m_Length)
+        largeObject.setObject(p_javaobj)
+        return largeObject
     elif typeName.upper() in ['ORACLE.SQL.ROWID']:
         return p_javaobj.toString()
     elif typeName.upper() in ['ORACLE.XDB.XMLTYPE']:

@@ -14,19 +14,19 @@ class TestOptions(object):
                                     "Hidden": False})
         self.testOptionList.append({"Name": "PAGE",
                                     "Value": "OFF",
-                                    "Comments": '',
+                                    "Comments": 'ON|OFF',
                                     "Hidden": False})
         self.testOptionList.append({"Name": "ECHO",
                                     "Value": "ON",
-                                    "Comments": '',
+                                    "Comments": 'ON|OFF',
                                     "Hidden": False})
         self.testOptionList.append({"Name": "TIMING",
                                     "Value": "OFF",
-                                    "Comments": '',
+                                    "Comments": 'ON|OFF',
                                     "Hidden": False})
         self.testOptionList.append({"Name": "TIME",
                                     "Value": "OFF",
-                                    "Comments": '',
+                                    "Comments": 'ON|OFF',
                                     "Hidden": False})
         self.testOptionList.append({"Name": "FEEDBACK",
                                     "Value": "ON",
@@ -38,13 +38,9 @@ class TestOptions(object):
                                     "Comments": 'ON|OFF',
                                     "Hidden": False
                                     })
-        self.testOptionList.append({"Name": "ARRAYSIZE",
+        self.testOptionList.append({"Name": "SQL_FETCHSIZE",
                                     "Value": 10000,
                                     "Comments": '',
-                                    "Hidden": False})
-        self.testOptionList.append({"Name": "TESTREWRITE",
-                                    "Value": "ON",
-                                    "Comments": 'ON|OFF',
                                     "Hidden": False})
         self.testOptionList.append({"Name": "LOB_LENGTH",
                                     "Value": 20,
@@ -77,7 +73,7 @@ class TestOptions(object):
 
         self.testOptionList.append({"Name": "OUTPUT_SORT_ARRAY",
                                     "Value": "ON",
-                                    "Comments": 'Print Array output with sort order.',
+                                    "Comments": 'Print Array output with sort order. ON|OFF',
                                     "Hidden": False})
         self.testOptionList.append({"Name": "OUTPUT_PREFIX",
                                     "Value": "",
@@ -105,7 +101,7 @@ class TestOptions(object):
                                     "Comments": '',
                                     "Hidden": False})
 
-        self.testOptionList.append({"Name": "CONN_RETRY_TIMES",
+        self.testOptionList.append({"Name": "SQLCONN_RETRYTIMES",
                                     "Value": "1",
                                     "Comments": 'Connect retry times.',
                                     "Hidden": False})
@@ -123,7 +119,7 @@ class TestOptions(object):
                                     "Hidden": False})
         self.testOptionList.append({"Name": "SILENT",
                                     "Value": "OFF",
-                                    "Comments": '',
+                                    "Comments": 'ON|OFF',
                                     "Hidden": True})
         self.testOptionList.append({"Name": "SQL_EXECUTE",
                                     "Value": "PREPARE",
@@ -165,6 +161,11 @@ class TestOptions(object):
         self.testOptionList.append({"Name": "NAMESPACE",
                                     "Value": "SQL",
                                     "Comments": 'Script Namespace, SQL|API',
+                                    "Hidden": False})
+
+        self.testOptionList.append({"Name": "MONITORMANAGER",
+                                    "Value": "OFF",
+                                    "Comments": 'ON|OFF',
                                     "Hidden": False})
 
         # 如果DEBUG选项设置为TRUE，需要处理

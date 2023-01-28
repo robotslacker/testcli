@@ -59,10 +59,9 @@ def rewiteStatement(cls, statement: str, commandScriptFile: str):
             varName = str(match_obj.group(1)).strip()
 
             # 先尝试在MAPPING文件中进行查找替换
-            if cls.testOptions.get("TESTREWRITE").upper() == 'ON':
-                mappingResult = cls.cmdMappingHandler.RewriteWord(commandScriptFile, varName)
-                if varName != mappingResult:
-                    statement = statement.replace(searchResult, str(mappingResult))
+            mappingResult = cls.cmdMappingHandler.RewriteWord(commandScriptFile, varName)
+            if varName != mappingResult:
+                statement = statement.replace(searchResult, str(mappingResult))
 
             # 尝试本地变量
             try:

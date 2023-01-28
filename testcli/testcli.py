@@ -401,21 +401,17 @@ class TestCli(object):
             self.testOptions.set("JOBMANAGER_METAURL", m_JobManagerURL)
 
         # 处理传递的映射文件, 首先加载参数的部分，如果环境变量里头有设置，则环境变量部分会叠加参数部分
-        self.testOptions.set("TESTREWRITE", "OFF")
         if self.commandMap is not None:
             # 如果传递的参数，有Mapping，以参数为准，先加载参数中的Mapping文件
             self.cmdMappingHandler.loadCommandMappings(self.commandScript, self.commandMap)
-            self.testOptions.set("TESTREWRITE", "ON")
         if "SQLCLI_COMMANDMAPPING" in os.environ:
             # 如果没有参数，则以环境变量中的信息为准
             if len(os.environ["SQLCLI_COMMANDMAPPING"].strip()) > 0:
                 self.cmdMappingHandler.loadCommandMappings(self.commandScript, os.environ["SQLCLI_COMMANDMAPPING"])
-                self.testOptions.set("TESTREWRITE", "ON")
         if "TESTCLI_COMMANDMAPPING" in os.environ:
             # 如果没有参数，则以环境变量中的信息为准
             if len(os.environ["TESTCLI_COMMANDMAPPING"].strip()) > 0:
                 self.cmdMappingHandler.loadCommandMappings(self.commandScript, os.environ["TESTCLI_COMMANDMAPPING"])
-                self.testOptions.set("TESTREWRITE", "ON")
 
         # 给Page做准备，PAGE显示的默认换页方式.
         if not os.environ.get("LESS"):

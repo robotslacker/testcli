@@ -157,7 +157,6 @@ def loadMap(cls, mapFile: str):
             commandScriptFileName=cls.executeScript,
             commandMappings=mapFile
         )
-        cls.testOptions.set("TESTREWRITE", "ON")
         cls.commandMap = mapFile
         yield {
             "type": "result",
