@@ -239,7 +239,8 @@ def connectDb(cls, connectProperties, timeout: int = -1):
             print("db_service = [" + str(connectProperties["service"]) + "]")
             print("db_parameters = [" + str(connectProperties["parameters"]) + "]")
             print("db_url = [" + str(cls.db_url) + "]")
-            print("jar_file = [" + str(cls.db_connectionConf) + "]")
+            for jarfile in cls.db_connectionConf:
+                print("jar_file = " + str(jarfile) + "]")
         if str(e).find("SQLInvalidAuthorizationSpecException") != -1:
             yield {
                 "type": "error",

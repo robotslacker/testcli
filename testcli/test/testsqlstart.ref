@@ -3,6 +3,6 @@ SQL> _start testsqlstartchild.sql 3 5
 SQL> > {%
    > sessionContext["status"] = "argv=" + str(argv)
    > %}
-argv=['3', '5']
+argv=['testsqlstartchild.sql', '3', '5']
 SQL> _exit
 Disconnected.

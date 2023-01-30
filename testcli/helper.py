@@ -4,16 +4,19 @@ helpMessage = [
     {
         "topic": 'exit',
         "summary": "exit current script with exitValue (Default is 0) ",
+        "nameSpace": "ALL",
         "synatx": "_EXIT [<exitValue>]",
     },
     {
         "topic": 'quit',
         "summary": "force exit current script with exitValue (Default is 0) ",
+        "nameSpace": "ALL",
         "synatx": "_QUIT [<exitValue>]",
     },
     {
         "topic": 'load',
         "summary": "load external map/driver/plugin files.",
+        "nameSpace": "ALL",
         "synatx":
             '''
             _LOAD JDBCDRIVER 
@@ -33,6 +36,7 @@ helpMessage = [
     {
         "topic": 'ssh',
         "summary": "Remote SSH operation.",
+        "nameSpace": "ALL",
         "synatx":
             '''
             _SSH CONNECT <remote hostname or ip address> WITH USER <username> KEYFILE <ssh key file location>
@@ -57,6 +61,7 @@ helpMessage = [
     {
         "topic": 'compare',
         "summary": "Diff test result and reference log.",
+        "nameSpace": "ALL",
         "synatx":
         '''
            _COMPARE <work file name> <reference file name> {MASK | NOMASK | CASE | NOCASE | IGBLANK | NOIGBLANK | TRIM | NOTRIM}
@@ -75,6 +80,7 @@ helpMessage = [
     {
         "topic": 'echo',
         "summary": "echo some message to file.",
+        "nameSpace": "ALL",
         "synatx":
             '''
                 _ECHO <target file name>
@@ -85,6 +91,7 @@ helpMessage = [
     {
         "topic": 'spool',
         "summary": "spool following command and command output to file.",
+        "nameSpace": "ALL",
         "synatx":
             '''
                 _SPOOL  <target file name>
@@ -97,6 +104,7 @@ helpMessage = [
     {
         "topic": 'job',
         "summary": "Run slave script in parallel.",
+        "nameSpace": "ALL",
         "synatx":
             '''
                _JOB MANAGER [ON | OOF]
@@ -135,6 +143,7 @@ helpMessage = [
     {
         "topic": 'data',
         "summary": "Generate test random data.",
+        "nameSpace": "ALL",
         "synatx":
             '''
                 _DATA SET SEEDFILE DIR <seed file location>;
@@ -152,6 +161,7 @@ helpMessage = [
     {
         "topic": 'SLEEP',
         "summary": "sleep app some time",
+        "nameSpace": "ALL",
         "synatx":
             '''
                 _SLEEP <sleep time (seconds)>
@@ -160,6 +170,7 @@ helpMessage = [
     {
         "topic": 'ASSERT',
         "summary": "Execute the assertion. Determine whether the specified conditions are met.",
+        "nameSpace": "ALL",
         "synatx":
             '''
                 _ASSERT {% <assert python expression> %}, [<name of assertion, optional>]
@@ -168,6 +179,7 @@ helpMessage = [
     {
         "topic": 'USE',
         "summary": "Switch the namespace of the current script.",
+        "nameSpace": "ALL",
         "synatx":
             '''
                 _USE SQL|API
@@ -176,6 +188,7 @@ helpMessage = [
     {
         "topic": 'HOST',
         "summary": "Execute local system commands.",
+        "nameSpace": "ALL",
         "synatx":
             '''
                 _HOST <os file command>
@@ -184,6 +197,7 @@ helpMessage = [
     {
         "topic": 'SET',
         "summary": "Set/View app runtime options.",
+        "nameSpace": "ALL",
         "synatx":
             '''
                 _SET [<OPTION_NAME> <OPTION_VALUE>]
@@ -194,6 +208,7 @@ helpMessage = [
     {
         "topic": 'START',
         "summary": "Run sub command script.",
+        "nameSpace": "ALL",
         "synatx":
             '''
                 _STARRT <command script file location> [<argv1> <argv2> ....]
@@ -202,6 +217,7 @@ helpMessage = [
     {
         "topic": 'SCRIPT',
         "summary": "Run embedded python script.",
+        "nameSpace": "ALL",
         "synatx":
             '''
                 > {%
@@ -212,12 +228,30 @@ helpMessage = [
     {
         "topic": 'SPOOL',
         "summary": "Print subsequent run commands and results to the specified file.",
+        "nameSpace": "ALL",
         "synatx":
             '''
                 _SPOOL <spool file location>
                 <command1 ...>
                 <command2 ...>
                 _SPOOL OFF
+            ''',
+    },
+    {
+        "topic": 'CONNECT',
+        "summary": "Connect to JDBC database.",
+        "nameSpace": "SQL",
+        "synatx":
+            '''
+                _CONNECT /[MEM|META]
+                _CONNECT <username>/<password>
+                _CONNECT <username>/<password>@jdbc:<driver>{:<driverType>}/<host>{:<port>}{/<serviceName>}                
+                _CONNECT <username>/<password>@jdbc:<driver>{:<driverType>/<host>{:<port>}{/<serviceName>}?<param1=value1&param1=value1...>
+                
+                Example:
+                    _connect user/pass@jdbc:mysql:tcp://[2001:251:e000:1::c0a8:230]:3306/mydb
+                    _connect user/pass@jdbc:mysql:tcp://10.10.10.10:3306/mydb
+                    _connect user/pass
             ''',
     },
 ]

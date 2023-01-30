@@ -31,7 +31,9 @@ def executeFile(cls, scriptFile, argv):
             return
 
         # 将程序的参数记录到环境信息中
-        localEmbeddScriptScope["argv"] = argv
+        localargv = [scriptFile]
+        localargv.extend(argv)
+        localEmbeddScriptScope["argv"] = localargv
 
         # 处理脚本文件头数据, 文件开头的0xFEFF,codecs.BOM_UTF8忽略不看
         if ord(query[0]) == 0xFEFF:

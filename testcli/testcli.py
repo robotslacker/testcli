@@ -364,7 +364,7 @@ class TestCli(object):
                         try:
                             m_jar_filename = self.appOptions.get(m_driversection, "filename")
                             if os.path.exists(os.path.join(jlibDirectory, m_jar_filename)):
-                                m_JarFullFileName.append(os.path.join(jlibDirectory, m_jar_filename))
+                                m_JarFullFileName.append(os.path.abspath(os.path.join(jlibDirectory, m_jar_filename)))
                                 if "TESTCLI_DEBUG" in os.environ:
                                     print("Load jar ..! [" +
                                           os.path.join(jlibDirectory, m_jar_filename) + "]")

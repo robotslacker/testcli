@@ -884,6 +884,7 @@ class APIVisitor(APIParserVisitor):
         # 是否是###结束分界符结束
         if ctx.HTTP_CLOSE() is None:
             errorCode = -1
+            errorMsg = "missing HTTP_CLOSE before <EOF>"
             self.isFinished = False
 
         self.parsedObject = parsedObject

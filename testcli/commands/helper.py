@@ -6,10 +6,14 @@ from ..helper import helpMessage
 
 def showHelp(cls, topicName: str):
     if topicName == "":
-        headers = ["COMMAND", "SUMMARY"]
+        headers = ["COMMAND", "SUMMARY", "NAMESPACE"]
         rows = []
         for helpTopic in helpMessage:
-            row = (helpTopic["topic"].upper(), helpTopic["summary"])
+            row = (
+                helpTopic["topic"].upper(),
+                helpTopic["summary"],
+                helpTopic["nameSpace"].upper(),
+            )
             rows.append(row)
         yield {
             "type": "result",

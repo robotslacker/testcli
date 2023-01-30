@@ -174,6 +174,6 @@ def setOptions(cls, options):
         # 不认识的配置选项
         yield {
             "type": "error",
-            "message": "Unknown option [" + str(optionValue) + "] ."
+            "message": "Unknown option [" + str(optionName) + "] ."
         }
         return

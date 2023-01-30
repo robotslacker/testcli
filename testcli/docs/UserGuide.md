@@ -884,23 +884,8 @@ TAB模式和LEGACY模式的区别：
     7
 ```
 
-# 以下内容尚未来得及更新，请等等哈
-
-
-#### 控制参数解释-SQLCONN_RETRYTIMES
-&emsp; &emsp; 11. 连接尝试次数  
-```
-    默认是1，即数据库只尝试一次数据库连接，失败后即退回。
-    可以调整到其他数值，来应用不稳定的数据库连接环境
-```
-#### 控制参数解释-SQLREWRITE
-&emsp; &emsp; 13. SQLREWRITE  
-```
-    控制是否启用SQL重写，默认是ON。
-    当设置为OFF的时候，无论运行是否指定了COMMANDMAP，映射都不会工作
-```
 #### 控制参数解释-SQL_EXECUTE
-&emsp; &emsp; 14. SQL_EXECUTE  
+&emsp; SQL_EXECUTE  
 ```
     控制Jpype调用JDBC测试的时候，使用的具体行为方式。有两个可能的选项，分别是DIRECT和PREPARE
     对于DIRECT的行为类似：
@@ -908,37 +893,31 @@ TAB模式和LEGACY模式的区别：
     对于PREPARE的行为类似：
         PrepareStatement m_pstmt == conn.PrepareStatement(sql)
         m_pstmt.execute()
-    在某些特定的情况下，这个参数将影响显示输出效果。目前正在测试中。
+    在某些特定的情况下，这个参数将影响显示输出效果。
 ```
 
-#### 控制参数解释-JOBManager, JOBManager_MetaURL
-&emsp; &emsp; 15. SQL脚本并发控制  
+
+#### 控制参数解释-SQLCONN_RETRYTIMES
+&emsp;  数据库连接尝试次数  
 ```
-   程序实现了并发的脚本运行，以及对脚本运行中的聚合点支持
-   并发运行的时候， 应用程序的角色分为主调度程序和Worker工作程序
-   
-   通过 SET JOBManager ON的方式可以启用本机的主调度程序。
-   在SET JOBManager ON后，通过SET命令查看当前设置，可以看到如下信息：
-   | JOBMANAGER         | on                        | ON|OFF               |
-   | JOBMANAGER_METAURL | tcp://192.168.3.155:50869 |                      |
-   此时的JOBMANAGER_METAURL就是主调度程序所工作的地址
-   
-   Worker工作程序可以通过手工的方式注册到主调度程序上，也可以通过主调度程序利用JOB的相关命令来启动
-   具体的使用方法随后的章节将详细介绍   
+    默认是1，即数据库只尝试一次数据库连接，失败后即退回。
+    可以调整到其他数值，来应用不稳定的数据库连接环境。
+    每次重试中间会休息2秒
+    
 ```
 
-#### 控制参数-SQL_TIMEOUT，SCRIPT_TIMEOUT
-&emsp; &emsp; 15. SQL脚本超时控制
+#### 控制参数-SQL_TIMEOUT，SCRIPT_TIMEOUT，API_TIMEOUT
+&emsp; 脚本/语句超时控制
 ```
    程序实现了超时管理，默认的超时时间为无限制，即不做任何控制
    SCRIPT_TIMEOUT    脚本的最大运行时间，单位为秒，当脚本运行超过这个时间后，脚本将失败，程序将退出
-   SQL_TIMEOUT       单个语句的最大运行时间，单位为秒，当单个语句运行超过这个时间后，当前语句将失败，程序将继续
-   两个参数可以同时设置，同时生效，也可以根据需要设置其中一个
+   SQL_TIMEOUT       单个SQL语句的最大运行时间，单位为秒，当单个语句运行超过这个时间后，当前语句将失败，程序将继续
+   API_TIMEOUT       单个API语句的最大运行时间，单位为秒，当单个语句运行超过这个时间后，当前语句将失败，程序将继续
+   几个参数可以同时设置，同时生效，也可以根据需要设置其中一个
    
-   注意： 
-   1： 当发生SQL超时中断后，程序将会启动调用数据库的cancel机制来回退当前运行状态，但不是每个数据库都能支持cancel机制
-      所以，不要对超时退出后，数据库的连接状态有所预期，可能（非常可能）会导致后续的所有SQL执行失败
-   2： 目前TimeOut仅用于如下函数， Connect,  Execute
+   注意（非常重要）： 
+   当发生SQL超时中断后，程序将会启动调用数据库的cancel机制来回退当前运行状态，但不是每个数据库都能支持cancel机制
+   所以，不要对超时退出后，数据库的连接状态有所预期，可能（非常可能）会导致后续的所有SQL执行失败
    
 ```
 
@@ -979,16 +958,11 @@ TAB模式和LEGACY模式的区别：
     这不是默认方式，和之前的SQL_PREPARE相互斥的一个设置
     在某些情况下，有的特殊SQL语句不支持PREPARE，这是一个可以绕开问题的办法
     可以通过设置变量的方式来全局影响这个设置.
-    SQL> SET SQL_EXECUTE PREPARE|DIRECT
+    SQL> _SET SQL_EXECUTE PREPARE|DIRECT
 
-    SQL> -- [Hint] LOOP [LoopTimes] UNTIL [EXPRESSION] INTERVAL [INTERVAL]
-    循环执行当前SQL语句一直到表达式EXPRESSION被满足，或者循环次数满足设置要求
-    循环执行的次数是LoopTimes，每次循环的间隔是INTERVAL(秒作为单位)
-    
 ```
 
-
-
+# 以下内容尚未来得及更新，请等等哈
 
 ***
 ### 连接数据库

@@ -19,4 +19,15 @@ Content-Type: application/json
 
 ###
 
+### bbb
+// @hint
+GET http://{{host}}:{{port}}/health
+    ?requestId=1 HTTP/1.1
+Accept: application/json
+X-Language: zh_CN
+Content-Type: application/json
+
+{"col1":"aaa","col2":"bbb","async":true}
+
+###
 
