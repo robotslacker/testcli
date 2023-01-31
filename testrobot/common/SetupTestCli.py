@@ -19,15 +19,12 @@ class SetupTestCli(object):
 
     # 初始化文件，文件加载后会自动执行这个文件，用来放置文件的目录
     def __init__(self):
-        m_SRCHOME = os.path.abspath(os.path.join(os.path.split(os.path.realpath(__file__))[0], "../.."))
-        if "T_WORK" not in os.environ:            # 不覆盖已经有的T_WORK设置
-            os.environ["T_WORK"] = os.path.join(m_SRCHOME, "work")
         self.FirstTest = True
 
         # 将当前目录添加进入Python的ModulePath。 主要是为了多进程并发，子进程能够找到对应的PythonPath
-        m_ModulePath = str(os.path.dirname(os.path.realpath(__file__)))
-        if m_ModulePath not in sys.path:
-            sys.path.append(m_ModulePath)
+        modulePath = str(os.path.dirname(os.path.realpath(__file__)))
+        if modulePath not in sys.path:
+            sys.path.append(modulePath)
 
     @staticmethod
     def SetupRoot_CD_CurrentDirectory(p_szDirectory):

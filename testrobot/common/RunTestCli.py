@@ -243,7 +243,7 @@ class RunTestCli(object):
                             data.append(rowMap)
                         for row in data:
                             scenarioName = row["ScenarioId"] + ":" + row["ScenarioName"]
-                            if scenarioName == "":
+                            if scenarioName == ":":
                                 scenarioName = "NONAME"
                             if scenarioName not in scenarioResults:
                                 scenarioResults[scenarioName] = {"ErrorCode": "0", "CommandStatus": ""}
@@ -263,17 +263,12 @@ class RunTestCli(object):
                 logger.info(r'<hr style="border:6 outset #ff0033" width="100%" SIZE=6>', html=True)
                 for scenarioName, scenarioResult in scenarioResults.items():
                     if scenarioResult["ErrorCode"] == "0":
-                        logger.info("<b>Scenario:[" + scenarioName + "]</b>", html=True)
-                        logger.info(
-                            "<b>Status: [<font color=\"green\">" + "Successful" + "</font>]</b>",
-                            html=True)
+                        if scenarioName != "NONAME":
+                            logger.info("<b>Scenario:[" + scenarioName + "]</b>", html=True)
+                            logger.info("<b>Status: [<font color=\"green\">" + "Successful" + "</font>]</b>", html=True)
                     else:
-                        logger.error("<b>Scenario:[" + scenarioName + "]</b>", html=True)
-                        logger.error("<b>Status: [<font color=\"red\">" +
-                                     "Failed with " + scenarioResult["ErrorCode"] + "</font>]</b>", html=True)
-                        logger.info("<b>Message:</b> ", html=True)
-                        logger.info(r'<div style="background-color: #F5F5F5;">' +
-                                    scenarioResult["CommandStatus"] + r'</div>', html=True)
+                        logger.error("<b><font color=\"red\">Scenario:[" + scenarioName + "</font>]</b><b>[" +
+                                     "Failed with " + scenarioResult["CommandStatus"] + "]</b>", html=True)
                     logger.info(r'<hr style="border:6 outset #ff0033" width="100%" SIZE=6>', html=True)
                 logger.info("<b>>>>>>>>>>>>>>>> Test Result Summary <<<<<<<<<<<<< </b>", html=True)
 

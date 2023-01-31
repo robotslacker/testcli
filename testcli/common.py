@@ -120,6 +120,49 @@ def rewriteSQLStatement(cls, statement: str, commandScriptFile: str):
     return statement, rewrotedCommandHistory
 
 
+def rewriteConnectRequest(cls, connectRequestObject, commandScriptFile: str):
+    # 命令可能会被多次改写
+    rewrotedRequestObjects = []
+
+    # 保留原脚本
+    rawConnectRequestObject = copy.copy(connectRequestObject)
+
+    for keyword in ["username", "password", "driver", "driverSchema", "driverType", "host", "port", "service"]:
+        if keyword in connectRequestObject:
+            oldType = type(connectRequestObject[keyword])
+            newValue = rewiteStatement(
+                cls=cls, statement=str(connectRequestObject[keyword]),
+                commandScriptFile=commandScriptFile)
+            newValue = oldType(newValue)
+            connectRequestObject[keyword] = newValue
+
+    # 语句发生了变化
+    if rawConnectRequestObject != connectRequestObject:
+        # 记录被变量信息改写的命令
+        statement = "_CONNECT "
+        if "username" in connectRequestObject:
+            statement = statement + connectRequestObject["username"]
+        if "password" in connectRequestObject:
+            statement = statement + "/" + str(connectRequestObject["password"])
+        if "driver" in connectRequestObject:
+            statement = statement + "@" + str(connectRequestObject["driver"])
+        if "driverSchema" in connectRequestObject:
+            statement = statement + ":" + str(connectRequestObject["driverSchema"])
+        if "driverType" in connectRequestObject:
+            statement = statement + ":" + str(connectRequestObject["driverType"])
+        if "host" in connectRequestObject:
+            statement = statement + "//" + str(connectRequestObject["host"])
+        if "port" in connectRequestObject:
+            statement = statement + ":" + str(connectRequestObject["port"])
+        if "service" in connectRequestObject:
+            statement = statement + "/" + str(connectRequestObject["service"])
+
+        rewrotedRequestObjects.append(
+            SQLFormatWithPrefix("Your CONNECT has been changed to :\n" + statement, "REWROTED '"))
+
+    return connectRequestObject, rewrotedRequestObjects
+
+
 def rewriteAPIStatement(cls, requestObject: [], commandScriptFile: str):
     # 命令可能会被多次改写
     rewrotedRequestObjects = []

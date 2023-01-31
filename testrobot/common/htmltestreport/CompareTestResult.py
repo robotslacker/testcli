@@ -520,5 +520,3 @@ if __name__ == "__main__":
     CompareTestResultRunner.generateReport(
         result=compareTestResult,
         output="E:\\Temp\\aa.html")
-
-    print("OOKK")

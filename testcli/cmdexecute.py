@@ -47,6 +47,7 @@ from .commands.monitor import executeMonitorRequest
 from .common import rewriteHintStatement
 from .common import rewriteSQLStatement
 from .common import rewriteAPIStatement
+from .common import rewriteConnectRequest
 from .common import parseSQLHints
 from .common import parseAPIHints
 from .common import sortresult
@@ -1092,28 +1093,35 @@ class CmdExecute(object):
                         lastCommandResult["errorCode"] = 1
                     yield commandResult
             elif parseObject["name"] == "CONNECT":
-                # 执行CONNECT命令
-                if self.testOptions.get("NAMESPACE") == "SQL":
-                    for commandResult in connectDb(
-                            cls=self.cliHandler,
-                            connectProperties=parseObject
-                    ):
-                        if commandResult["type"] == "result":
-                            lastCommandResult.clear()
-                            lastCommandResult["status"] = commandResult["status"]
-                            lastCommandResult["errorCode"] = 0
-                        if commandResult["type"] == "error":
-                            lastCommandResult["message"] = commandResult["message"]
-                            lastCommandResult["errorCode"] = 1
-                        yield commandResult
-                else:
-                    lastCommandResult["message"] = "Not support connect command in non-sql namespace"
-                    lastCommandResult["errorCode"] = 1
+                # 根据语句中的变量或者其他定义信息来重写当前语句
+                connectRequestObject, rewrotedCommandList = rewriteConnectRequest(
+                    cls=self.cliHandler,
+                    connectRequestObject=parseObject,
+                    commandScriptFile=commandScriptFile
+                )
+                if len(rewrotedCommandList) != 0:
+                    # 如果命令被发生了改写，要打印改写记录
                     yield {
-                        "type": "error",
-                        "message": "Not support connect command in non-sql namespace",
+                        "type": "parse",
+                        "rawCommand": None,
+                        "formattedCommand": None,
+                        "rewrotedCommand": rewrotedCommandList,
                         "script": commandScriptFile
                     }
+
+                # 执行CONNECT命令
+                for commandResult in connectDb(
+                        cls=self.cliHandler,
+                        connectProperties=connectRequestObject
+                ):
+                    if commandResult["type"] == "result":
+                        lastCommandResult.clear()
+                        lastCommandResult["status"] = commandResult["status"]
+                        lastCommandResult["errorCode"] = 0
+                    if commandResult["type"] == "error":
+                        lastCommandResult["message"] = commandResult["message"]
+                        lastCommandResult["errorCode"] = 1
+                    yield commandResult
             elif parseObject["name"] == "SET":
                 # 执行SET命令
                 for commandResult in setOptions(
