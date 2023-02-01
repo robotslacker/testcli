@@ -64,13 +64,13 @@ helpMessage = [
         "nameSpace": "ALL",
         "synatx":
         '''
-           _COMPARE <work file name> <reference file name> {MASK | NOMASK | CASE | NOCASE | IGBLANK | NOIGBLANK | TRIM | NOTRIM}
+           _COMPARE <work file name> <reference file name> {MASK|NOMASK|CASE|NOCASE|IGBLANK|NOIGBLANK|TRIM|NOTRIM}
            _COMPARE SKIPLINE <the line expression to skip>
            _COMPARE NOSKIPLINE <the skip line to undefine>
            _COMPARE MASKLINE <<src pattern to mask> >= <target string after mask>>
            _COMPARE NOMASKLINE <the mask line to undefine>
            _COMPARE RESET
-           _COMPARE SET {MASK | NOMASK | CASE | NOCASE | IGBLANK | NOIGBLANK | TRIM | NOTRIM}
+           _COMPARE SET {MASK|NOMASK|CASE|NOCASE|IGBLANK|NOIGBLANK|TRIM|NOTRIM}
            _COMPARE SET OUTPUT { CONSOLE | DIFFFILE }
            _COMPARE SET ALGORITHM [LCS | MYERS]
            _COMPARE SET WORK ENCODING <work file codec, default is UTF-8>
@@ -243,15 +243,15 @@ helpMessage = [
         "nameSpace": "SQL",
         "synatx":
             '''
-                _CONNECT /[MEM|META]
-                _CONNECT <username>/<password>
-                _CONNECT <username>/<password>@jdbc:<driver>{:<driverType>}/<host>{:<port>}{/<serviceName>}                
-                _CONNECT <username>/<password>@jdbc:<driver>{:<driverType>/<host>{:<port>}{/<serviceName>}?<param1=value1&param1=value1...>
-                
-                Example:
-                    _connect user/pass@jdbc:mysql:tcp://[2001:251:e000:1::c0a8:230]:3306/mydb
-                    _connect user/pass@jdbc:mysql:tcp://10.10.10.10:3306/mydb
-                    _connect user/pass
+        _CONNECT /[MEM|META]
+        _CONNECT <user>/<pass>
+        _CONNECT <user>/<pass>@jdbc:<driver>{:<driverType>}/<host>{:<port>}{/<service>}                
+        _CONNECT <user>/<pass>@jdbc:<driver>{:<driverType>}/<host>{:<port>}{/<service>}?<param1=value1&param2=value2...>
+        
+        Example:
+            _connect user/pass@jdbc:mysql:tcp://[2001:251:e000:1::c0a8:230]:3306/mydb
+            _connect user/pass@jdbc:mysql:tcp://10.10.10.10:3306/mydb
+            _connect user/pass
             ''',
     },
 ]

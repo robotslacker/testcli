@@ -417,13 +417,6 @@ class TestCli(object):
         if not os.environ.get("LESS"):
             os.environ["LESS"] = "-RXF"
 
-        # 如果参数要求不显示版本，则不再显示版本
-        if not self.nologo:
-            self.echo(
-                s="TestCli Release " + __version__,
-                Flags=OFLAG_LOGGER | OFLAG_CONSOLE | OFLAG_SPOOL | OFLAG_ECHO,
-            )
-
         # 处理初始化启动文件，如果需要的话，在处理的过程中不打印任何日志信息
         if len(self.profile) != 0:
             self.testOptions.set('OUTPUT_PREFIX', 'PROFILE')
@@ -645,6 +638,13 @@ class TestCli(object):
 
     # 主程序
     def run_cli(self):
+        # 如果参数要求不显示版本，则不再显示版本
+        if not self.nologo:
+            self.echo(
+                s="TestCli Release " + __version__,
+                Flags=OFLAG_LOGGER | OFLAG_CONSOLE | OFLAG_SPOOL | OFLAG_ECHO,
+            )
+
         # 如果运行在脚本方式下，不再调用PromptSession
         # 运行在无终端的模式下，也不会调用PromptSession
         # 对于脚本程序，在执行脚本完成后就会自动退出

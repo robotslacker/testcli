@@ -1469,7 +1469,7 @@ class SQLVisitor(SQLParserVisitor):
             nPos = 0
             param = {}
             paramKey = None
-            if len(ctx.MONITOR_EXPRESSION()) %2 == 0:
+            if len(ctx.MONITOR_EXPRESSION()) % 2 == 0:
                 # 省略了taskName
                 parsedObject.update({"taskName": "NO-NAME"})
                 for expression in ctx.MONITOR_EXPRESSION():

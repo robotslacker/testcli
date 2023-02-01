@@ -428,9 +428,10 @@ class CmdExecute(object):
             body = "".join(apiRequest["contents"])
         else:
             body = ""
+        body = body.encode(self.testOptions.get("SCRIPT_ENCODING"))
         try:
             # 重置Header的Content-Length
-            headers["Content-Length"] = len(str(body))
+            headers["Content-Length"] = len(body)
             ret = httpHandler.request(
                 method=httpMethod,
                 url=httpRequestTarget,
@@ -1049,7 +1050,6 @@ class CmdExecute(object):
             if parseObject["name"] == "HELP":
                 # 显示帮助信息
                 for commandResult in showHelp(
-                        cls=self.cliHandler,
                         topicName=parseObject["topic"],
                 ):
                     yield commandResult

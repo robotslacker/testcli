@@ -4,7 +4,7 @@ import copy
 from ..helper import helpMessage
 
 
-def showHelp(cls, topicName: str):
+def showHelp(topicName: str):
     if topicName == "":
         headers = ["COMMAND", "SUMMARY", "NAMESPACE"]
         rows = []

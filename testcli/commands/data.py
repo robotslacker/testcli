@@ -5,7 +5,6 @@ import time
 import datetime
 import random
 import traceback
-import fs
 from ..testcliexception import TestCliException
 
 # 定义种子文件的存放目录

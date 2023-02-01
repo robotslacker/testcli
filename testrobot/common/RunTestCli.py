@@ -7,6 +7,16 @@ from robot.errors import ExecutionFailed
 from robot.running.context import EXECUTION_CONTEXTS
 
 
+class TestCliContinuableError(RuntimeError):
+    # 即使当前测试执行失败，也要继续运行下去。不退出
+    ROBOT_CONTINUE_ON_FAILURE = True
+
+
+class TestCliFatalError(RuntimeError):
+    # 若当前测试执行失败，不再继续运行后面的关键字
+    ROBOT_CONTINUE_ON_FAILURE = False
+
+
 class RunTestCli(object):
     # TEST SUITE 在suite中引用，只会实例化一次
     # 也就是说多test case都引用了这个类的方法，但是只有第一个test case调用的时候实例化
@@ -315,7 +325,11 @@ class RunTestCli(object):
         except RuntimeError as ex:
             raise ex
         except ExecutionFailed:
-            raise RuntimeError("TEST Execute failed.")
+            # 根据标志判断退出的类型，决定后续的Case是否继续操作
+            if self.__BreakWithError:
+                raise TestCliFatalError()
+            else:
+                raise TestCliContinuableError()
         except Exception as ex:
             logger.info('str(e):  ', str(ex))
             logger.info('repr(e):  ', repr(ex))

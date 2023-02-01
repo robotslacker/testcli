@@ -48,7 +48,8 @@ def setOptions(cls, options):
         # WHENEVER无法通过SET命令来设置
         yield {
             "type": "error",
-            "message": "Can't update this option with set command. Please use '_WHENEVER ERROR <EXIT <int> | CONTINUE>'."
+            "message": "Can't update this option with set command. "
+                       "Please use '_WHENEVER ERROR <EXIT <int> | CONTINUE>'."
         }
         return
 
@@ -66,7 +67,7 @@ def setOptions(cls, options):
     if optionName.upper() in ["SQL_FETCHSIZE", "LOB_LENGTH", "SQLCONN_RETRYTIMES"]:
         try:
             optionValue = int(str(optionValue))
-            if optionValue <=0:
+            if optionValue <= 0:
                 yield {
                     "type": "error",
                     "message": "Option is valid positive integer only."
@@ -81,7 +82,7 @@ def setOptions(cls, options):
     if optionName.upper() in ["SCRIPT_TIMEOUT", "SQL_TIMEOUT", "API_TIMEOUT"]:
         try:
             optionValue = int(str(optionValue))
-            if optionValue <=0 and optionValue != -1:
+            if optionValue <= 0 and optionValue != -1:
                 yield {
                     "type": "error",
                     "message": "Option is valid positive integer(or -1 means unlimited) only."
