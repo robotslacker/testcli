@@ -51,7 +51,11 @@ class SQLCliJDBCLargeObject:
             if m_ObjectType.upper().find("CLOB") != -1:
                 return self._object.getSubString(p_nStartPos, int(p_nLength))
             elif m_ObjectType.upper().find("BLOB") != -1:
-                return bytearray(self._object.getBytes(p_nStartPos, int(p_nLength)))
+                byteResult = self._object.getBytes(p_nStartPos, int(p_nLength))
+                if byteResult is not None:
+                    return bytearray(self._object.getBytes(p_nStartPos, int(p_nLength)))
+                else:
+                    return None
             else:
                 raise SQLCliJDBCException("SQLCLI-00000: Unknown LargeObjectType [" + m_ObjectType + "]")
 

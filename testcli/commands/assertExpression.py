@@ -7,31 +7,30 @@ from ..globalvar import lastCommandResult
 def assertExpression(cls, expression: str, assertName: str):
     try:
         ret = evalExpression(cls, expression)
-        if type(ret) == bool:
-            if ret:
-                if assertName is None:
-                    status = "Assert successful."
-                else:
-                    status = "Assert [" + assertName + "] successful."
+        if ret:
+            if assertName is None:
+                status = "Assert successful."
             else:
-                if assertName is None:
-                    status = "Assert fail."
-                else:
-                    status = "Assert [" + assertName + "] fail."
-            if ret:
-                yield {
-                    "type": "result",
-                    "title": "",
-                    "rows": "",
-                    "headers": "",
-                    "columnTypes": "",
-                    "status": status
-                }
+                status = "Assert [" + assertName + "] successful."
+        else:
+            if assertName is None:
+                status = "Assert fail."
             else:
-                yield {
-                    "type": "error",
-                    "message": status
-                }
+                status = "Assert [" + assertName + "] fail."
+        if ret:
+            yield {
+                "type": "result",
+                "title": "",
+                "rows": "",
+                "headers": "",
+                "columnTypes": "",
+                "status": status
+            }
+        else:
+            yield {
+                "type": "error",
+                "message": status
+            }
     except Exception as ae:
         yield {
             "type": "error",

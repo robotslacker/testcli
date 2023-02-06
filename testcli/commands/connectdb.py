@@ -39,7 +39,7 @@ def connectDb(cls, connectProperties, timeout: int = -1):
 
     # 如果连接内容仅仅就一个mem，则连接到memory db上
     if "localService" in connectProperties:
-        if connectProperties["localService"] == "mem":
+        if str(connectProperties["localService"]).upper() == "MEM":
             # 内置一个mem，用户调试需要
             connectProperties["service"] = "X"
             connectProperties["username"] = "sa"
@@ -50,7 +50,7 @@ def connectDb(cls, connectProperties, timeout: int = -1):
             connectProperties["host"] = "0.0.0.0"
             connectProperties["port"] = 0
             connectProperties["parameters"] = {}
-        elif connectProperties["localService"] == "meta":
+        elif str(connectProperties["localService"]).upper() == "META":
             jobManagerURL = str(cls.testOptions.get("JOBMANAGER_METAURL")).strip()
             if len(jobManagerURL) == 0:
                 raise TestCliException("TestCli-0000:  Meta is used for jobmanager, but you have not enable it.")
