@@ -267,7 +267,7 @@ COMPARE_REFERENCE   : 'REFERENCE';
 COMPARE_LCS         : 'LCS';
 COMPARE_MYERS       : 'MYERS';
 COMPARE_EXPRESSION  :
-    (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' )+;
+    (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' | '{' |'}')+;
 
 mode DataMode;
 DATA_SPACE          : [ \t\n]+ -> channel (HIDDEN);

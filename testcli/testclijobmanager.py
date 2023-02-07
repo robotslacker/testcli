@@ -1172,7 +1172,7 @@ class JOBManager(object):
         except Exception:
             print("Internal error:: Save Job write not complete. ")
             import traceback
-            if "TESTCLI_DEBUG" in os.environ:
+            if "TESTCLI_DEBUG" not in os.environ:
                 print('traceback.print_exc():\n%s' % traceback.print_exc())
                 print('traceback.format_exc():\n%s' % traceback.format_exc())
         finally:
@@ -1605,6 +1605,12 @@ class JOBManager(object):
                     "message": "Job manager already started. You can not start job manager again."
                 }
         if requestObject["action"] == "stopJobmanager":
+            if self.MetaConn is None:
+                yield {
+                    "type": "error",
+                    "message": "JOB Manager is not started.",
+                }
+                return
             if cls.testOptions.get("JOBMANAGER").upper() == "ON":
                 del os.environ["TESTCLI_JOBMANAGERURL"]
                 cls.testOptions.set("JOBMANAGER", "OFF")
@@ -1624,9 +1630,21 @@ class JOBManager(object):
                     "message": "Job manager already stopped. You can not stop job manager again."
                 }
         if requestObject["action"] == "show":
+            if self.MetaConn is None:
+                yield {
+                    "type": "error",
+                    "message": "JOB Manager is not started. Please use \"_JOB startJobManager\" first.",
+                }
+                return
             jobName = requestObject["jobName"]
             yield self.showjob(jobName)
         if requestObject["action"] == "create":
+            if self.MetaConn is None:
+                yield {
+                    "type": "error",
+                    "message": "JOB Manager is not started. Please use \"_JOB startJobManager\" first.",
+                }
+                return
             jobName = requestObject["jobName"]
             params = dict(requestObject["param"])
             job = self.createjob(jobName)
@@ -1642,6 +1660,12 @@ class JOBManager(object):
                 "status": "Job [" + jobName + "] created successful."
             }
         if requestObject["action"] == "set":
+            if self.MetaConn is None:
+                yield {
+                    "type": "error",
+                    "message": "JOB Manager is not started. Please use \"_JOB startJobManager\" first.",
+                }
+                return
             jobName = requestObject["jobName"]
             params = dict(requestObject["param"])
             job = self.getJobByName(jobName)
@@ -1657,6 +1681,12 @@ class JOBManager(object):
                 "status": "Job [" + jobName + "] set successful."
             }
         if requestObject["action"] == "start":
+            if self.MetaConn is None:
+                yield {
+                    "type": "error",
+                    "message": "JOB Manager is not started. Please use \"_JOB startJobManager\" first.",
+                }
+                return
             jobName = requestObject["jobName"]
             nJobStarted = self.startjob(jobName)
             yield {
@@ -1668,6 +1698,12 @@ class JOBManager(object):
                 "status": "Total [" + str(nJobStarted) + "] jobs started."
             }
         if requestObject["action"] == "wait":
+            if self.MetaConn is None:
+                yield {
+                    "type": "error",
+                    "message": "JOB Manager is not started. Please use \"_JOB startJobManager\" first.",
+                }
+                return
             jobName = str(requestObject["jobName"])
             self.waitjob(jobName)
             if jobName.strip().upper() == "ALL":
@@ -1689,6 +1725,12 @@ class JOBManager(object):
                     "status": "Job [" + jobName + "] finished."
                 }
         if requestObject["action"] == "shutdown":
+            if self.MetaConn is None:
+                yield {
+                    "type": "error",
+                    "message": "JOB Manager is not started. Please use \"_JOB startJobManager\" first.",
+                }
+                return
             jobName = requestObject["jobName"]
             nJobShutdowned = self.shutdownjob(jobName)
             yield {
@@ -1700,6 +1742,12 @@ class JOBManager(object):
                 "status": "Total [" + str(nJobShutdowned) + "] jobs shutdown complete."
             }
         if requestObject["action"] == "abort":
+            if self.MetaConn is None:
+                yield {
+                    "type": "error",
+                    "message": "JOB Manager is not started. Please use \"_JOB startJobManager\" first.",
+                }
+                return
             jobName = requestObject["jobName"]
             nJobAbortted = self.abortjob(jobName)
             yield {
@@ -1711,6 +1759,12 @@ class JOBManager(object):
                 "status": "Total [" + str(nJobAbortted) + "] jobs abort complete."
             }
         if requestObject["action"] == "timer":
+            if self.MetaConn is None:
+                yield {
+                    "type": "error",
+                    "message": "JOB Manager is not started. Please use \"_JOB startJobManager\" first.",
+                }
+                return
             timerPoint = requestObject["timerPoint"]
             self.waitjobtimer(timerPoint)
             yield {
@@ -1722,6 +1776,12 @@ class JOBManager(object):
                 "status": "TimerPoint [" + timerPoint + "] has arrived."
             }
         if requestObject["action"] == "register":
+            if self.MetaConn is None:
+                yield {
+                    "type": "error",
+                    "message": "JOB Manager is not started. Please use \"_JOB startJobManager\" first.",
+                }
+                return
             jobName = requestObject["jobName"]
             self.registerjob(jobName)
             yield {
@@ -1733,6 +1793,12 @@ class JOBManager(object):
                 "status": "Register worker to Job [" + str(jobName) + "] successful."
             }
         if requestObject["action"] == "deregister":
+            if self.MetaConn is None:
+                yield {
+                    "type": "error",
+                    "message": "JOB Manager is not started. Please use \"_JOB startJobManager\" first.",
+                }
+                return
             self.unregisterjob()
             yield {
                 "type": "result",

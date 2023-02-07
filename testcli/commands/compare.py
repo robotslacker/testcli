@@ -3,6 +3,7 @@ import copy
 import os
 import re
 from collections import namedtuple
+from ..common import rewiteStatement
 
 # 默认的比较选项
 compareDefaultOption = {
@@ -446,7 +447,7 @@ class POSIXCompare:
         return compareResult, newCompareResultList
 
 
-def executeCompareRequest(requestObject):
+def executeCompareRequest(cls, requestObject, commandScriptFile: str):
     global compareOption
     global compareDefaultOption
     global compareMaskLines
@@ -586,6 +587,9 @@ def executeCompareRequest(requestObject):
         targetFile = str(requestObject["targetFile"])
         referenceFile = str(requestObject["referenceFile"])
 
+        # 处理targetFile和referenceFile的变量替换
+        targetFile = rewiteStatement(cls=cls, statement=targetFile, commandScriptFile=commandScriptFile)
+        referenceFile = rewiteStatement(cls=cls, statement=referenceFile, commandScriptFile=commandScriptFile)
         compareHandler = POSIXCompare()
         try:
             compareResult, compareReport = \

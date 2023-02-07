@@ -384,8 +384,19 @@ class SQLVisitor(SQLParserVisitor):
 
         # 连接参数信息
         if ctx.connectParameter() is not None:
-            result, script, hint, code, message = self.visit(ctx.connectParameter())
-            parsedObject.update(result)
+            parameters = []
+            for parameter in ctx.connectParameter():
+                result, code, message = self.visit(parameter)
+                if code != 0:
+                    errorCode = code
+                    errorMsg = message
+                    return parsedObject, errorCode, errorMsg
+                parameters.append(result)
+            parsedObject.update(
+                {
+                    "parameters": parameters
+                }
+            )
 
         # 获取错误代码
         errorCode = 0
@@ -400,11 +411,11 @@ class SQLVisitor(SQLParserVisitor):
         parsedObject = {}
 
         if ctx.connectParameterName() is not None:
-            result, script, hint, code, message = self.visit(ctx.connectParameterName())
+            result, code, message = self.visit(ctx.connectParameterName())
             parsedObject.update(result)
 
         if ctx.connectParameterValue() is not None:
-            result, script, hint, code, message = self.visit(ctx.connectParameterValue())
+            result, code, message = self.visit(ctx.connectParameterValue())
             parsedObject.update(result)
 
         # 获取错误代码

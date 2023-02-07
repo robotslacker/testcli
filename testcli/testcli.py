@@ -25,6 +25,7 @@ from .testcliexception import TestCliException
 from .testclijobmanager import TestCliMeta
 from .testclijobmanager import JOBManager
 from .testoption import TestOptions
+from .globalvar import lastCommandResult
 from .__init__ import __version__
 from .sqlparse import SQLAnalyze
 from .apiparse import APIAnalyze
@@ -635,6 +636,11 @@ class TestCli(object):
                 print('traceback.format_exc():\n%s' % traceback.format_exc())
             self.echo(repr(e), err=True, fg="red")
             return False
+
+    # 返回语句的上一次执行结果
+    @staticmethod
+    def getLastCommandResult():
+        return lastCommandResult
 
     # 主程序
     def run_cli(self):

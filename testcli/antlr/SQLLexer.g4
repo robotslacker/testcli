@@ -28,7 +28,8 @@ SQL_BEGIN:      'BEGIN' -> mode(SQLProcedureMode) ;
 SQL_DROP:       'DROP' -> mode(SQLStatementMode) ;
 SQL_COMMIT:     'COMMIT' -> mode(SQLStatementMode) ;
 SQL_ROLLBACK:   'ROLLBACK' -> mode(SQLStatementMode) ;
-SQL_CREATE_PROCEDURE: ('CREATE' | 'REPLACE' | ' '+ | 'OR')+ ('PROCEDURE'|'FUNCTION') ->mode(SQLProcedureMode);
+SQL_CREATE_PROCEDURE: ('CREATE' | 'REPLACE' | ' '+ | 'OR')+ ('PROCEDURE'|'FUNCTION'|'CLASS'|'TRIGGER'|'PACKAGE')
+                             ->mode(SQLProcedureMode);
 
 /**
  * 链接模式

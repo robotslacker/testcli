@@ -238,9 +238,12 @@ class CmdExecute(object):
                         return dataValue
                     elif p_column.getColumnTypeName().upper().find("BLOB") != -1:
                         dataValue = p_column.getData(1, p_column.getObjectLength())
-                        dataValue = binascii.b2a_hex(dataValue)
-                        dataValue = dataValue.decode()
-                        return "0x" + dataValue
+                        if dataValue is not None:
+                            dataValue = binascii.b2a_hex(dataValue)
+                            dataValue = dataValue.decode()
+                            return "0x" + dataValue
+                        else:
+                            return None
                 else:
                     if p_column.getColumnTypeName().upper().find("CLOB") != -1:
                         dataValue = "Len:" + str(p_column.getObjectLength()) + ";" + \
@@ -751,14 +754,29 @@ class CmdExecute(object):
 
                 # 如果发生了语句解析错误，且错误信息是缺少EOF，则是认为语句没有结束导致，不是正常的错误
                 if ret_errorCode != 0:
+                    missedSQLSlash = False
                     if re.search(pattern=r'missing.*<EOF>', string=ret_errorMsg):
                         # 语句没有结束
+                        isFinished = False
+                    if re.search(pattern=r'missing.*SQL_SLASH', string=ret_errorMsg):
+                        # 语句没有结束
+                        missedSQLSlash = True
                         isFinished = False
                     if re.search(pattern=r'expecting.*<EOF>', string=ret_errorMsg):
                         # 语句没有结束
                         isFinished = False
                     if not isFinished and self.testOptions.get("NAMESPACE") == "SQL":
-                        if currentStatement.strip().endswith(';') or currentStatement.strip().endswith("\n/"):
+                        statementFinished = False
+                        if nPos == (len(statementLines) - 1):
+                            # 都已经到最后一行了，不需要继续等待了
+                            statementFinished = True
+                        if currentStatement.strip().endswith(';') and not missedSQLSlash:
+                            # 遇到了分号，且不是复合语句，那么直接结束
+                            statementFinished = True
+                        if currentStatement.strip().endswith("\n/"):
+                            # 遇到了顶行的/，不管是不是复合语句，直接结束
+                            statementFinished = True
+                        if statementFinished:
                             if currentStatement.strip().startswith("_"):
                                 # 内部语句，且语句已经结束
                                 ret_CommandSplitResults.append(
@@ -1448,7 +1466,9 @@ class CmdExecute(object):
                     yield result
             elif parseObject["name"] in ["COMPARE"]:
                 for result in executeCompareRequest(
+                        cls=self.cliHandler,
                         requestObject=parseObject,
+                        commandScriptFile=commandScriptFile
                 ):
                     yield result
             elif parseObject["name"] in ["DATA"]:
