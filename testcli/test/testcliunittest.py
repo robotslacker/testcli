@@ -729,6 +729,30 @@ class TestSynatx(unittest.TestCase):
              'user': 'root'},
             ret_CommandSplitResult)
 
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze(
+            """
+                _ssh execute  "source ~/.bash_profile;{{DMHOME}}/bin/dmrman  << EOF
+                restore database '{{DMHOME}}/data/DAMENG/dm.ini'  from backupset 'DB_backupset01_for_FUT_BFHF_DB01';
+                exit;
+                EOF
+                "            
+            """)
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {
+                'action': 'execute',
+                'command': 'source ~/.bash_profile;{{DMHOME}}/bin/dmrman  << EOF\n'
+                           "                restore database '{{DMHOME}}/data/DAMENG/dm.ini'  "
+                           "from backupset 'DB_backupset01_for_FUT_BFHF_DB01';\n"
+                           '                exit;\n'
+                           '                EOF\n'
+                           '                ',
+                'name': 'SSH'},
+            ret_CommandSplitResult)
+
     def test_SQLAnalyze_Job(self):
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_JOB JOBMANAGER ON")
@@ -1691,6 +1715,39 @@ class TestSynatx(unittest.TestCase):
         from ..testcli import TestCli
 
         scriptFile = "testlogmaskandfilter.sql"
+
+        scriptBaseFile = os.path.splitext(scriptFile)[0]
+        fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
+        fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
+        fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
+
+        # 运行测试程序，开启无头模式(不在控制台上显示任何内容),同时不打印Logo
+        testcli = TestCli(
+            logfilename=fullLogFile,
+            headlessMode=True,
+            script=fullScriptFile
+        )
+        retValue = testcli.run_cli()
+        self.assertEqual(0, retValue)
+
+        # 对文件进行比对，判断返回结果是否吻合
+        compareHandler = POSIXCompare()
+
+        compareResult, compareReport = compareHandler.compare_text_files(
+            file1=fullLogFile,
+            file2=fullRefFile,
+            CompareIgnoreTailOrHeadBlank=True
+        )
+        if not compareResult:
+            for line in compareReport:
+                if line.startswith("-") or line.startswith("+"):
+                    print(line)
+        self.assertTrue(compareResult)
+
+    def test_sqlautocommit(self):
+        from ..testcli import TestCli
+
+        scriptFile = "testautocommit.sql"
 
         scriptBaseFile = os.path.splitext(scriptFile)[0]
         fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))

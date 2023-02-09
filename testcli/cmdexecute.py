@@ -770,7 +770,9 @@ class CmdExecute(object):
                         if nPos == (len(statementLines) - 1):
                             # 都已经到最后一行了，不需要继续等待了
                             statementFinished = True
-                        if currentStatement.strip().endswith(';') and not missedSQLSlash:
+                        if not currentStatement.strip().startswith("_") and \
+                                currentStatement.strip().endswith(';') and \
+                                not missedSQLSlash:
                             # 遇到了分号，且不是复合语句，那么直接结束
                             statementFinished = True
                         if currentStatement.strip().endswith("\n/"):

@@ -1633,7 +1633,7 @@ class JOBManager(object):
             if self.MetaConn is None:
                 yield {
                     "type": "error",
-                    "message": "JOB Manager is not started. Please use \"_JOB startJobManager\" first.",
+                    "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
                 }
                 return
             jobName = requestObject["jobName"]
@@ -1642,7 +1642,7 @@ class JOBManager(object):
             if self.MetaConn is None:
                 yield {
                     "type": "error",
-                    "message": "JOB Manager is not started. Please use \"_JOB startJobManager\" first.",
+                    "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
                 }
                 return
             jobName = requestObject["jobName"]
@@ -1663,7 +1663,7 @@ class JOBManager(object):
             if self.MetaConn is None:
                 yield {
                     "type": "error",
-                    "message": "JOB Manager is not started. Please use \"_JOB startJobManager\" first.",
+                    "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
                 }
                 return
             jobName = requestObject["jobName"]
@@ -1684,7 +1684,7 @@ class JOBManager(object):
             if self.MetaConn is None:
                 yield {
                     "type": "error",
-                    "message": "JOB Manager is not started. Please use \"_JOB startJobManager\" first.",
+                    "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
                 }
                 return
             jobName = requestObject["jobName"]
@@ -1701,7 +1701,7 @@ class JOBManager(object):
             if self.MetaConn is None:
                 yield {
                     "type": "error",
-                    "message": "JOB Manager is not started. Please use \"_JOB startJobManager\" first.",
+                    "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
                 }
                 return
             jobName = str(requestObject["jobName"])
@@ -1728,7 +1728,7 @@ class JOBManager(object):
             if self.MetaConn is None:
                 yield {
                     "type": "error",
-                    "message": "JOB Manager is not started. Please use \"_JOB startJobManager\" first.",
+                    "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
                 }
                 return
             jobName = requestObject["jobName"]
@@ -1745,7 +1745,7 @@ class JOBManager(object):
             if self.MetaConn is None:
                 yield {
                     "type": "error",
-                    "message": "JOB Manager is not started. Please use \"_JOB startJobManager\" first.",
+                    "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
                 }
                 return
             jobName = requestObject["jobName"]
@@ -1762,7 +1762,7 @@ class JOBManager(object):
             if self.MetaConn is None:
                 yield {
                     "type": "error",
-                    "message": "JOB Manager is not started. Please use \"_JOB startJobManager\" first.",
+                    "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
                 }
                 return
             timerPoint = requestObject["timerPoint"]
@@ -1779,7 +1779,7 @@ class JOBManager(object):
             if self.MetaConn is None:
                 yield {
                     "type": "error",
-                    "message": "JOB Manager is not started. Please use \"_JOB startJobManager\" first.",
+                    "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
                 }
                 return
             jobName = requestObject["jobName"]
@@ -1796,7 +1796,7 @@ class JOBManager(object):
             if self.MetaConn is None:
                 yield {
                     "type": "error",
-                    "message": "JOB Manager is not started. Please use \"_JOB startJobManager\" first.",
+                    "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
                 }
                 return
             self.unregisterjob()
