@@ -66,6 +66,12 @@ def APIRequestObjectFormatWithPrefix(headerPrefix, requestObject, outputPrefix):
     if "httpRequestTarget" in requestObject:
         formattedString = formattedString + outputPrefix + '   > ' + \
                           requestObject["httpMethod"] + " " + requestObject["httpRequestTarget"]
+    if "httpFields" in requestObject:
+        fieldSigin = "?"
+        for httpFieldName, httpFieldValue in requestObject["httpFields"].items():
+            formattedString = formattedString + "\n" + outputPrefix + '   >     ' \
+                              + fieldSigin + str(httpFieldName) + "=" + str(httpFieldValue)
+            fieldSigin = "&"
     if "contents" in requestObject:
         formattedString = formattedString + "\n" + outputPrefix + "   > "
         for content in requestObject["contents"]:
@@ -83,9 +89,18 @@ def APIRequestObjectFormatWithPrefix(headerPrefix, requestObject, outputPrefix):
                 for output in data.split('\n'):
                     formattedString = formattedString + "\n" + outputPrefix + '   > ' + output
             except JSONDecodeError:
-                # 不是一个Json内容，直接打印好了
-                for output in content.split('\n'):
-                    formattedString = formattedString + outputPrefix + '   > ' + output
+                # 不是一个Json内容，直接打印好了. 但是去掉正文的最后无意义空行（仅仅是不打印）
+                outputLines = content.split('\n')
+                while True:
+                    if len(outputLines) > 0:
+                        if outputLines[-1] == "":
+                            del outputLines[-1]
+                        else:
+                            break
+                    else:
+                        break
+                for output in outputLines:
+                    formattedString = formattedString + "\n" + outputPrefix + '   > ' + output
 
     return formattedString
 

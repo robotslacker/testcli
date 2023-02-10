@@ -1434,9 +1434,16 @@ class CmdExecute(object):
                     pos = self.loopStartPos
                     continue
                 elif parseObject["rule"] == "BEGIN":
-                    self.loopMode = True
-                    self.loopStartPos = pos
-                    self.loopCondition = not evalExpression(self.cliHandler, parseObject["UNTIL"])
+                    try:
+                        self.loopCondition = not evalExpression(self.cliHandler, parseObject["UNTIL"])
+                        self.loopMode = True
+                        self.loopStartPos = pos
+                    except Exception as ex:
+                        self.loopMode = False
+                        yield {
+                            "type": "error",
+                            "message": "Loop condition expression error.. SyntaxError =>[" + str(ex) + "]"
+                        }
             elif parseObject["name"] in ["WHENEVER"]:
                 for result in setWheneverAction(
                         cls=self.cliHandler,
