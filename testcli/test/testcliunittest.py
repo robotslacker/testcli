@@ -732,11 +732,11 @@ class TestSynatx(unittest.TestCase):
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze(
             """
-                _ssh execute  "source ~/.bash_profile;{{DMHOME}}/bin/dmrman  << EOF
-                restore database '{{DMHOME}}/data/DAMENG/dm.ini'  from backupset 'DB_backupset01_for_FUT_BFHF_DB01';
+                _ssh execute  "source ~/.bash_profile;cli  << EOF
+                restore database 'xxdb1'  from backupset 'set02';
                 exit;
                 EOF
-                "            
+                "
             """)
         self.assertEqual(None, ret_errorMsg)
         self.assertEqual(0, ret_errorCode)
@@ -744,13 +744,52 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(
             {
                 'action': 'execute',
-                'command': 'source ~/.bash_profile;{{DMHOME}}/bin/dmrman  << EOF\n'
-                           "                restore database '{{DMHOME}}/data/DAMENG/dm.ini'  "
-                           "from backupset 'DB_backupset01_for_FUT_BFHF_DB01';\n"
+                'command': 'source ~/.bash_profile;cli  << EOF\n'
+                           "                restore database 'xxdb1'  from backupset "
+                           "'set02';\n"
                            '                exit;\n'
                            '                EOF\n'
                            '                ',
                 'name': 'SSH'},
+            ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze(
+            """
+                _ssh execute  "source ~/.bash_profile;cli << EOF
+                restore database 'xxdb'  from backupset 'set01' IDENTIFIED BY "pass1";
+                exit;
+                EOF";
+            """)
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {
+                'action': 'execute',
+                'command': 'source ~/.bash_profile;cli << EOF\n'
+                           "                restore database 'xxdb'  from backupset 'set01' "
+                           'IDENTIFIED BY "pass1";\n'
+                           '                exit;\n'
+                           '                EOF',
+                'name': 'SSH'},
+            ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze(
+            """
+                _ssh execute  "source ~/.bash_profile;cli << EOF
+                restore database 'xxdb'  from backupset 'set01' IDENTIFIED BY "pass1";
+            """)
+        self.assertTrue(ret_errorMsg.startswith("Missing <EOF> un-closed qutote string."))
+        self.assertEqual(1, ret_errorCode)
+        self.assertFalse(isFinished)
+        self.assertEqual(
+            {
+                'action': 'execute',
+                'command': '',
+                'name': 'SSH'
+            },
             ret_CommandSplitResult)
 
     def test_SQLAnalyze_Job(self):

@@ -1,0 +1,67 @@
+SQL> _start testautocommit.sql
+SQL> _connect /mem
+Database connected.
+SQL> create table aaa (id int);
+0 row affected.
+SQL> insert into aaa values(10);
+1 row affected.
+SQL> select * from aaa;
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 | 10 |
++--------+----+
+1 row selected.
+SQL> rollback;
+0 row affected.
+SQL> select * from aaa;
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 | 10 |
++--------+----+
+1 row selected.
+SQL> _set autocommit true;
+SQL> delete from aaa;
+1 row affected.
+SQL> insert into aaa values(20);
+1 row affected.
+SQL> select * from aaa;
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 | 20 |
++--------+----+
+1 row selected.
+SQL> rollback;
+0 row affected.
+SQL> select * from aaa;
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 | 20 |
++--------+----+
+1 row selected.
+SQL> _set autocommit false;
+SQL> delete from aaa;
+1 row affected.
+SQL> insert into aaa values(30);
+1 row affected.
+SQL> select * from aaa;
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 | 30 |
++--------+----+
+1 row selected.
+SQL> rollback;
+0 row affected.
+SQL> select * from aaa;
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 | 20 |
++--------+----+
+1 row selected.
+SQL> _exit
+Disconnected.

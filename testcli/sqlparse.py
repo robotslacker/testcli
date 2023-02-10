@@ -88,7 +88,7 @@ def SQLAnalyze(sqlCommandPlainText, defaultNameSpace="SQL"):
     tree = parser.prog()
 
     visitor = SQLVisitor(token, defaultNameSpace)
-    (isFinished, parsedObjects, errorCode, errorMsg) = visitor.visit(tree)
+    (isFinished, parsedObjects, errorCode, parseErrorMsg) = visitor.visit(tree)
 
     # 词法和语法解析，任何一个失败，都认为失败
     if not lexer_listener.isFinished:
@@ -96,11 +96,17 @@ def SQLAnalyze(sqlCommandPlainText, defaultNameSpace="SQL"):
     if not parser_listener.isFinished:
         isFinished = False
 
+    errorMsg = None
     if lexer_listener.errorCode != 0:
         errorCode = lexer_listener.errorCode
         errorMsg = lexer_listener.errorMsg
     if parser_listener.errorCode != 0:
         errorCode = parser_listener.errorCode
         errorMsg = parser_listener.errorMsg
-
+    if parseErrorMsg is not None and len(str(parseErrorMsg).strip()) != 0:
+        if errorMsg is not None:
+            # 如果访问器有错误信息，则直接记录访问器的错误消息
+            errorMsg = parseErrorMsg + " < " + errorMsg
+        else:
+            errorMsg = parseErrorMsg
     return isFinished, parsedObjects, errorCode, errorMsg

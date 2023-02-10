@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from antlr4.Token import Token
 import re
+from collections import Counter
 
 from .antlrgen.SQLParser import SQLParser
 from .antlrgen.SQLParserVisitor import SQLParserVisitor
@@ -630,15 +631,37 @@ class SQLVisitor(SQLParserVisitor):
             parsedObject.update({"action": "disconnect"})
         if ctx.SSH_EXECUTE() is not None:
             parsedObject.update({"action": "execute"})
+            parsedObject.update({"command": ""})
             commands = []
             for expression in ctx.SSH_EXPRESSION():
                 commands.append(str(expression.getText()))
-            commond = str(" ".join(commands)).strip()
-            if commond.startswith('"') and commond.endswith('"'):
-                commond = commond[1:-1]
-            if commond.startswith("'") and commond.endswith("'"):
-                commond = commond[1:-1]
-            parsedObject.update({"command": commond})
+            command = str(" ".join(commands)).strip()
+            if (
+                    (command.startswith('"') and not command.endswith('"')) or
+                    (command.startswith("'") and not command.endswith("'"))
+            ):
+                # 括号不闭合
+                self.isFinished = False
+                self.parsedObject = parsedObject
+                self.errorCode = 1
+                self.errorMsg = "Missing <EOF> un-closed qutote string."
+                return
+            if command.startswith('"') and command.endswith('"'):
+                command = command[1:-1]
+            if command.startswith("'") and command.endswith("'"):
+                command = command[1:-1]
+            pairQuote = True
+            for quoteChar in ['"', "'"]:
+                for char in command:
+                    if char == quoteChar:
+                        pairQuote = not pairQuote
+                if not pairQuote:
+                    self.isFinished = False
+                    self.parsedObject = parsedObject
+                    self.errorCode = 1
+                    self.errorMsg = "Missing <EOF> un-closed qutote string."
+                    return
+            parsedObject.update({"command": command})
         if ctx.SSH_CONNECT() is not None:
             parsedObject.update({"action": "connect"})
             parsedObject.update({"host": str(ctx.SSH_EXPRESSION()[0].getText())})

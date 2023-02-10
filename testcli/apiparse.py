@@ -115,7 +115,7 @@ def APIAnalyze(apiCommandPlainText: str, defaultNameSpace: str = "API"):
     tree = parser.prog()
 
     visitor = APIVisitor(token, defaultNameSpace)
-    (isFinished, parsedObjects, errorCode, errorMsg) = visitor.visit(tree)
+    (isFinished, parsedObjects, errorCode, parseErrorMsg) = visitor.visit(tree)
 
     # API语句不可能只有一行，所有如果只有第一行，什么都无法判断，直接认定为not Finished (因为解析器可能因为找不到###头，报告其他错误）
     if apiCommandPlainText.startswith("###") and len(apiCommandPlainText.split('\n')) <= 1:
@@ -127,10 +127,18 @@ def APIAnalyze(apiCommandPlainText: str, defaultNameSpace: str = "API"):
     if not parser_listener.isFinished:
         isFinished = False
 
+    errorMsg = None
     if lexer_listener.errorCode != 0:
         errorCode = lexer_listener.errorCode
         errorMsg = lexer_listener.errorMsg
     if parser_listener.errorCode != 0:
         errorCode = parser_listener.errorCode
         errorMsg = parser_listener.errorMsg
+    if parseErrorMsg is not None and len(str(parseErrorMsg).strip()) != 0:
+        if errorMsg is not None:
+            # 如果访问器有错误信息，则直接记录访问器的错误消息
+            errorMsg = parseErrorMsg + " < " + errorMsg
+        else:
+            errorMsg = parseErrorMsg
+
     return isFinished, parsedObjects, errorCode, errorMsg
