@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from antlr4.Token import Token
 import re
-from collections import Counter
 
 from .antlrgen.SQLParser import SQLParser
 from .antlrgen.SQLParserVisitor import SQLParserVisitor
@@ -1390,25 +1389,6 @@ class SQLVisitor(SQLParserVisitor):
         if (ctx.SQL_END() is None) or ((ctx.SQL_END().getText() != ';') and (ctx.SQL_END().getText() != '\n/')):
             self.isFinished = False
 
-        self.parsedObject = parsedObject
-        self.errorCode = errorCode
-        self.errorMsg = errorMsg
-
-    def visitSqlCommitRollback(self, ctx: SQLParser.SqlCommitRollbackContext):
-        parsedObject = {}
-        if ctx.SQL_COMMIT() is not None:
-            parsedObject = {'name': 'COMMIT', 'statement': ctx.SQL_COMMIT().getText()}
-        if ctx.SQL_ROLLBACK() is not None:
-            parsedObject = {'name': 'ROLLBACK', 'statement': ctx.SQL_ROLLBACK().getText()}
-
-        # 获取错误代码
-        errorCode = 0
-        errorMsg = None
-        if ctx.exception is not None:
-            errorCode = -1
-            errorMsg = ctx.exception.message
-
-        # 如果SQL没有结尾，要返回没有结尾的标志
         self.parsedObject = parsedObject
         self.errorCode = errorCode
         self.errorMsg = errorMsg

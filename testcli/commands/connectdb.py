@@ -171,9 +171,8 @@ def connectDb(cls, connectProperties, timeout: int = -1):
                         propValue = str(props[1]).strip()
                         jdbcConnProp[propName] = propValue
             if connectProperties["parameters"] is not None:
-                for propName, propValue in connectProperties["parameters"].items():
-                    jdbcConnProp[propName] = propValue
-
+                for connectParameter in connectProperties["parameters"]:
+                    jdbcConnProp[connectParameter["parameterName"]] = connectParameter["parameterValue"]
             # 尝试数据库连接，保持一定的重试次数，一直到连接上
             retryCount = 0
             while True:

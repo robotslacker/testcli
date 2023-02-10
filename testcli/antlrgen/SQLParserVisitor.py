@@ -159,11 +159,6 @@ class SQLParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by SQLParser#sqlCommitRollback.
-    def visitSqlCommitRollback(self, ctx:SQLParser.SqlCommitRollbackContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by SQLParser#sqlDeclare.
     def visitSqlDeclare(self, ctx:SQLParser.SqlDeclareContext):
         return self.visitChildren(ctx)

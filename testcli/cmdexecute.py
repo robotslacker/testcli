@@ -795,6 +795,10 @@ class CmdExecute(object):
                                 currentStatement = None
                                 currentStatementWithComments = None
                             else:
+                                if currentStatement.strip().endswith("\n/"):
+                                    currentStatement = currentStatement[:-2]
+                                elif currentStatement.strip().endswith(";"):
+                                    currentStatement = currentStatement[:-1]
                                 ret_CommandSplitResults.append(
                                     {'name': 'SQL_UNKNOWN',
                                      'statement': currentStatement,

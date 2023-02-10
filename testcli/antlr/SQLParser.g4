@@ -124,7 +124,6 @@ sql
         | sqlSelect
         | sqlDeclare
         | sqlDrop
-        | sqlCommitRollback
         | sqlCreateProcedure
         | CRLF
         ;
@@ -155,10 +154,6 @@ sqlSelect
 
 sqlDrop
         : SQL_DROP SQL_END CRLF?
-        ;
-
-sqlCommitRollback
-        : (SQL_COMMIT | SQL_ROLLBACK) SQL_END? CRLF?
         ;
 
 sqlDeclare

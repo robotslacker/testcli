@@ -331,21 +331,6 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
-    def test_SQLAnalyze_CommitAndRollback(self):
-        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("commit")
-        self.assertTrue(isFinished)
-        self.assertEqual({'name': 'COMMIT', 'statement': 'commit'}, ret_CommandSplitResult)
-        self.assertEqual(0, ret_errorCode)
-        self.assertEqual(None, ret_errorMsg)
-
-        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-            = SQLAnalyze("rollback")
-        self.assertTrue(isFinished)
-        self.assertEqual({'name': 'ROLLBACK', 'statement': 'rollback'}, ret_CommandSplitResult)
-        self.assertEqual(0, ret_errorCode)
-        self.assertEqual(None, ret_errorMsg)
-
     def test_SQLAnalyze_Echo(self):
         strEchoContent = "aaa" + "\n" + \
                          "bbb" + "\n" + \
