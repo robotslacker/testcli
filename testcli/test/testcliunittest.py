@@ -1599,6 +1599,46 @@ class TestSynatx(unittest.TestCase):
                     print(line)
         self.assertTrue(compareResult)
 
+    def test_APIAnalyze_Get2(self):
+        scriptFile = "testapisynatx-get2.api"
+
+        scriptBaseFile = os.path.splitext(scriptFile)[0]
+        fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
+        fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
+        fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
+
+        scriptFileHandler = open(fullScriptFile, "r")
+        script = "".join(scriptFileHandler.readlines())
+        scriptFileHandler.close()
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = APIAnalyze(script)
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+
+        data = json.dumps(obj=ret_CommandSplitResult,
+                          sort_keys=True,
+                          indent=4,
+                          separators=(',', ': '),
+                          ensure_ascii=False)
+        logFileHandler = open(fullLogFile, "w")
+        logFileHandler.write(data)
+        logFileHandler.close()
+
+        # 对文件进行比对，判断返回结果是否吻合
+        compareHandler = POSIXCompare()
+        compareResult, compareReport = compareHandler.compare_text_files(
+            file1=fullLogFile,
+            file2=fullRefFile,
+            CompareIgnoreTailOrHeadBlank=True
+        )
+        if not compareResult:
+            for line in compareReport:
+                if line.startswith("-") or line.startswith("+"):
+                    print(line)
+        self.assertTrue(compareResult)
+
     def test_APIExecute_Get(self):
         from ..testcli import TestCli
 

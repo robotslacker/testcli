@@ -1070,14 +1070,20 @@ class APIVisitor(APIParserVisitor):
             errorMsg = ctx.exception.message
         
         # 请求域定义名称
-        result, code, message = self.visit(ctx.httpHeaderFieldName())
-        key = result['value']
+        key = None
+        if ctx.httpHeaderFieldName() is not None:
+            result, code, message = self.visit(ctx.httpHeaderFieldName())
+            key = result['value']
+
         # 请求域定义值
-        result, code, message = self.visit(ctx.httpHeaderFieldValue())
-        value = result['value']
+        value = None
+        if ctx.httpHeaderFieldValue() is not None:
+            result, code, message = self.visit(ctx.httpHeaderFieldValue())
+            value = result['value']
         
         # 合并生成新的KV值
-        parsedObject.update({key: value})
+        if key is not None:
+            parsedObject.update({key: value})
 
         return parsedObject, errorCode, errorMsg
 
@@ -1085,7 +1091,10 @@ class APIVisitor(APIParserVisitor):
         处理请求域定义名称部分
     """
     def visitHttpHeaderFieldName(self, ctx: APIParser.HttpHeaderFieldNameContext):
-        parsedObject = {'value': ctx.HttpHeaderFieldName().getText()}
+        if ctx.HttpHeaderFieldName() is None:
+            parsedObject = {'value': ''}
+        else:
+            parsedObject = {'value': str(ctx.HttpHeaderFieldName().getText()).strip()}
 
         # 处理错误信息
         errorCode = 0
@@ -1100,7 +1109,10 @@ class APIVisitor(APIParserVisitor):
         处理请求域定义值部分
     """
     def visitHttpHeaderFieldValue(self, ctx: APIParser.HttpHeaderFieldValueContext):
-        parsedObject = {'value': ctx.HttpHeaderFieldValue().getText()}
+        if ctx.HttpHeaderFieldValue() is None:
+            parsedObject = {'value': ''}
+        else:
+            parsedObject = {'value': str(ctx.HttpHeaderFieldValue().getText()).strip()}
 
         # 处理错误信息
         errorCode = 0

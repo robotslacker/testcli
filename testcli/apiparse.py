@@ -102,6 +102,12 @@ def APIRequestObjectFormatWithPrefix(headerPrefix, requestObject, outputPrefix):
                 for output in outputLines:
                     formattedString = formattedString + "\n" + outputPrefix + '   > ' + output
 
+    if "operate" in requestObject and requestObject["operate"] is not None:
+        if len(requestObject["operate"]) == 1:
+            operate = requestObject["operate"][0]
+            formattedString = formattedString.strip()
+            formattedString = \
+                formattedString + "\n" + outputPrefix + '   > ' + operate["operator"] + " " + operate["content"]
     return formattedString
 
 

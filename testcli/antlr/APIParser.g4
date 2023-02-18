@@ -36,7 +36,7 @@ httpMessage
           ;
 
 /*
- * HTTP请求头 
+ * HTTP请求头
  * httpRequestTarget 包含 HttpVersion 
  */
 httpRequestLine

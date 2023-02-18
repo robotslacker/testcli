@@ -422,16 +422,34 @@ class CmdExecute(object):
 
         headers = {}
         fields = {}
+        operator = None
+        outputTarget = None
+        contentFrom = None
+
         if "headers" in apiRequest:
             headers = apiRequest["headers"]
         if "httpFields" in apiRequest:
             fields = apiRequest["httpFields"]
 
-        if "contents" in apiRequest:
-            body = "".join(apiRequest["contents"])
+        if "operate" in apiRequest.keys() and apiRequest["operate"] is not None:
+            if len(apiRequest["operate"]) == 1:
+                operate = apiRequest["operate"][0]
+                operator = operate["operator"]
+                if operator in [">", ">>"]:
+                    outputTarget = operate["content"].strip()
+                if operator in ["<", "<<"]:
+                    contentFrom = operate["content"].strip()
+
+        if contentFrom is not None:
+            # 如果指定了数据从文件中获取，则不再分析contents的内容
+            with open(contentFrom, mode="rb") as f:
+                body = f.read()
         else:
-            body = ""
-        body = body.encode(self.testOptions.get("SCRIPT_ENCODING"))
+            if "contents" in apiRequest:
+                body = "".join(apiRequest["contents"])
+            else:
+                body = ""
+            body = body.encode(self.testOptions.get("SCRIPT_ENCODING"))
         try:
             # 重置Header的Content-Length
             headers["Content-Length"] = len(body)
@@ -440,16 +458,27 @@ class CmdExecute(object):
                 url=httpRequestTarget,
                 headers=headers,
                 fields=fields,
-                body=body
+                body=body,
             )
             result = {"status": ret.status}
-            data = ret.data.decode('utf-8')
-            try:
-                data = json.loads(data)
-            except JSONDecodeError:
-                # 返回的对象不是一个JSON
-                pass
-            result["content"] = data
+            if outputTarget is not None:
+                result["content"] = None
+                # 将API执行结果输出到文件中
+                mode = None
+                if operator == ">":
+                    mode = "wb"
+                if operator == ">>":
+                    mode = "ab"
+                with open(outputTarget, mode=mode) as f:
+                    f.write(ret.data)
+            else:
+                data = ret.data.decode('utf-8')
+                try:
+                    data = json.loads(data)
+                except JSONDecodeError:
+                    # 返回的对象不是一个JSON
+                    pass
+                result["content"] = data
             result = json.dumps(obj=result,
                                 sort_keys=True,
                                 indent=4,

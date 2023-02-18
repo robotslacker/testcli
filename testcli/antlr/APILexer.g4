@@ -43,14 +43,18 @@ HTTP_CLOSE
  * 分割URI
  */
 mode HttpUriMode;
+URI_SPACE:
+    [ \t]+;
 URI_CRLF:
     CRLF->type(CRLF),mode(HttpHeaderFieldMode);
 HttpRequestTarget:
-    .*? 'HTTP/' DIGIT+ '.' DIGIT+ '\n' ->mode(HttpHeaderFieldMode);
+    .*? 'HTTP/' DIGIT+ '.' DIGIT+ URI_SPACE? '\n' ->mode(HttpHeaderFieldMode);
 TEXT :
     . -> more;
 
 mode HttpHeaderFieldMode;
+HeaderField_SPACE:
+    [ \t]+  ->channel(HIDDEN);
 
 // 域名
 HttpHeaderFieldName
@@ -64,7 +68,7 @@ FIELD_COLON
 
 // 空行, 进入内容模式
 FIELD_CRLF
-      : '\n' ->skip, mode(HttpMessageBodyMode)  
+      : HeaderField_SPACE? '\n' ->skip, mode(HttpMessageBodyMode)
       ;
 
 /** 
@@ -115,7 +119,7 @@ HttpMessageBodyComment
 
 // 处理操作
 HttpMessageBodyOperate
-      : ('>>'|'>!'|'>>!'|'>'|'<') .*? CRLF
+      : ('>>'|'>'|'<') .*? CRLF
       ;
 
 // HTTP 请求结束符号

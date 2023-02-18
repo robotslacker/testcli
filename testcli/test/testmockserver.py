@@ -5,6 +5,7 @@ import uvicorn
 import urllib3
 from fastapi import FastAPI
 from multiprocessing import Process
+from typing import Any, Dict
 
 # 进程和端口信息
 appHost = "127.0.0.1"
@@ -76,6 +77,11 @@ def waitServerRunning():
 @mockApp.get('/health')
 def health():
     return {"status": "OK"}
+
+
+@mockApp.post('/echo')
+def echo(request: Dict[Any, Any]):
+    return request
 
 
 # 主程序

@@ -1,6 +1,6 @@
 {
     "headers": {
-        "Content-Type": " multipart/form-data; boundary=boundary"
+        "Content-Type": "multipart/form-data; boundary=boundary"
     },
     "hints": [],
     "httpFields": {},
@@ -13,7 +13,7 @@
                 "\n"
             ],
             "headers": {
-                "Content-Disposition": " form-data; name=\"first\"; filename=\"input.txt\""
+                "Content-Disposition": "form-data; name=\"first\"; filename=\"input.txt\""
             },
             "operate": [
                 {
@@ -27,7 +27,7 @@
                 "Text\n\n"
             ],
             "headers": {
-                "Content-Disposition": " form-data; name=\"second\"; filename=\"input-second.txt\""
+                "Content-Disposition": "form-data; name=\"second\"; filename=\"input-second.txt\""
             },
             "operate": []
         },
@@ -36,7 +36,7 @@
                 "\n"
             ],
             "headers": {
-                "Content-Disposition": " form-data; name=\"third\";"
+                "Content-Disposition": "form-data; name=\"third\";"
             },
             "operate": [
                 {

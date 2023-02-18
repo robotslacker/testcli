@@ -214,6 +214,25 @@ def rewriteAPIStatement(cls, requestObject: [], commandScriptFile: str):
     else:
         httpRequestFields = None
 
+    # 替换operate信息
+    if "operate" in rawRequestObject:
+        operateList = []
+        for operate in rawRequestObject["operate"]:
+            content = operate["content"]
+            content = rewiteStatement(
+                cls=cls,
+                statement=content,
+                commandScriptFile=commandScriptFile)
+            operateList.append(
+                {
+                    "operator": operate["operator"],
+                    "content": content
+                }
+            )
+        requestObject["operate"] = operateList
+    else:
+        requestObject["operate"] = None
+
     # 更新回原请求对象
     requestObject["httpRequestTarget"] = httpRequestTarget
     if httpRequestContents is not None:
