@@ -1,0 +1,25 @@
+API> _start testapiwithapitimeout.api
+API> _use api
+Current NameSpace: API.
+API>
+API> > {% host="127.0.0.1" %}
+API> > {% port=8000 %}
+API>
+API> _SET API_TIMEOUT 5
+API>
+API> -- 当前API请求会由于TimeOut的限制导致失败
+API> ### aaa
+   > // @no-redirect
+   > GET http://{{host}}:{{port}}/timeoutTest
+   >     ?requestId=1 HTTP/1.1
+   > Accept: application/json
+   > X-Language: zh_CN
+   > Content-Type: application/json
+   >
+   > ###
+REWROTED API> Your API has been changed to:
+REWROTED    > GET http://127.0.0.1:8000/timeoutTest
+REWROTED    >     ?requestId=1
+Testcli-0000: Request timeout limit command threshold [5] reached.
+API> _exit
+Disconnected.

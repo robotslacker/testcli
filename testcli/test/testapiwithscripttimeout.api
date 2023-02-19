@@ -1,0 +1,28 @@
+_use api
+
+> {% host="127.0.0.1" %}
+> {% port=8000 %}
+
+_SET SCRIPT_TIMEOUT 15
+
+-- 当前API请求会成功，未达到超时限制
+### aaa
+// @no-redirect
+GET http://{{host}}:{{port}}/timeoutTest
+    ?requestId=1 HTTP/1.1
+Accept: application/json
+X-Language: zh_CN
+Content-Type: application/json
+
+###
+
+-- 当前API请求会由于TimeOut的限制导致失败
+### aaa
+// @no-redirect
+GET http://{{host}}:{{port}}/timeoutTest
+    ?requestId=1 HTTP/1.1
+Accept: application/json
+X-Language: zh_CN
+Content-Type: application/json
+
+###

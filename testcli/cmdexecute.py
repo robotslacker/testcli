@@ -12,6 +12,7 @@ import binascii
 import decimal
 import traceback
 import urllib3
+import copy
 from .sqlclijdbc import SQLCliJDBCException
 from .sqlclijdbc import SQLCliJDBCLargeObject
 from .sqlclijdbc import SQLCliJDBCTimeOutException
@@ -397,7 +398,7 @@ class CmdExecute(object):
             apiRequest             JSON对象，请求的内容
             apiHints               提示信息            
     '''
-    def executeAPIStatement(self, apiRequest, apiHints, startTime):
+    def executeAPIStatement(self, apiRequest, apiHints):
         """
         返回内容：
             错误情况下：
@@ -429,7 +430,111 @@ class CmdExecute(object):
         if "headers" in apiRequest:
             headers = apiRequest["headers"]
         if "httpFields" in apiRequest:
-            fields = apiRequest["httpFields"]
+            # fields字段需要复制下来
+            # 因为后续会不断更新fields的内容，甚至包括二进制的内容（以file文件上传的时候）
+            # 这些二进制的内容没有必要（也做不到）记录到扩展日志中
+            fields = copy.copy(apiRequest["httpFields"])
+
+        multiPartBoundary = None
+        if "multipart" in apiRequest:
+            if "Content-Type" in headers.keys() and headers["Content-Type"] is not None:
+                contentType = str(headers["Content-Type"])
+                contentTypeList = contentType.split(';')
+                for contentType in contentTypeList:
+                    contentType = str(contentType).strip()
+                    if contentType.startswith("boundary"):
+                        multiPartBoundary = re.sub(r"boundary(\s+)?=(\s+)?", "", contentType).strip()
+            else:
+                yield {
+                    "type": "error",
+                    "message": "Testcli-0000: " +
+                               "Missed part Content-Disposition:name in multiPart header."
+                }
+                return
+            if multiPartBoundary is None:
+                yield {
+                    "type": "error",
+                    "message": "Testcli-0000: " +
+                               "Missed multiPart boundary in header."
+                }
+                return
+            for multiPart in apiRequest["multipart"]:
+                if "headers" in multiPart.keys() and multiPart["headers"] is not None:
+                    multiPartHeader = multiPart["headers"]
+                    if "Content-Disposition" in multiPartHeader.keys() \
+                            and multiPartHeader["Content-Disposition"] is not None:
+                        contentDisposition = multiPartHeader["Content-Disposition"]
+                        contentDispositions = contentDisposition.split(";")
+                        contentDispositionName = None
+                        contentDispositionFileName = None
+                        for contentDisposition in contentDispositions:
+                            contentDisposition = str(contentDisposition).strip()
+                            if str(contentDisposition).startswith("filename"):
+                                contentDispositionFileName = \
+                                    re.sub(r"filename(\s+)?=(\s+)?", "", contentDisposition).strip()
+                                if contentDispositionFileName.startswith('"') and \
+                                        contentDispositionFileName.endswith('"'):
+                                    contentDispositionFileName = contentDispositionFileName[1:-1]
+                                if contentDispositionFileName.startswith("'") and \
+                                        contentDispositionFileName.endswith("'"):
+                                    contentDispositionFileName = contentDispositionFileName[1:-1]
+                            if str(contentDisposition).startswith("name"):
+                                contentDispositionName = \
+                                    re.sub(r"name(\s+)?=(\s+)?", "", contentDisposition).strip()
+                                if contentDispositionName.startswith('"') and \
+                                        contentDispositionName.endswith('"'):
+                                    contentDispositionName = contentDispositionName[1:-1]
+                                if contentDispositionName.startswith("'") and \
+                                        contentDispositionName.endswith("'"):
+                                    contentDispositionName = contentDispositionName[1:-1]
+                        if contentDispositionName is None:
+                            yield {
+                                "type": "error",
+                                "message": "Testcli-0000: " +
+                                           "Missed part Content-Disposition:name in multiPart header."
+                            }
+                            return
+                        if contentDispositionFileName is None:
+                            # 上传的内容是一个文本内容
+                            multiPartContent = "".join(multiPart["contents"])
+                            fields[contentDispositionName] = (None, multiPartContent)
+                        else:
+                            # 上传的内容是一个文件
+                            contentFrom = None
+                            if "operate" in multiPart.keys() and multiPart["operate"] is not None:
+                                if len(multiPart["operate"]) == 1:
+                                    multiPartOperate = multiPart["operate"][0]
+                                    if "content" in multiPartOperate.keys():
+                                        contentFrom = multiPartOperate["content"].strip()
+                            if contentFrom is None:
+                                # 将当前的文本作为上传数据的一部分
+                                multiPartContent = "".join(multiPart["contents"])
+                                body = multiPartContent.encode(self.testOptions.get("SCRIPT_ENCODING"))
+                                fields[contentDispositionName] = (contentDispositionFileName, body)
+                            else:
+                                # 如果指定了数据从文件中获取，则不再分析contents的内容
+                                if not os.path.exists(contentFrom):
+                                    yield {
+                                        "type": "error",
+                                        "message": "Testcli-0000: " + "File [" + str(contentFrom) + "] does not exist."
+                                    }
+                                    return
+                                with open(contentFrom, mode="rb") as f:
+                                    body = f.read()
+                                fields[contentDispositionName] = (contentDispositionFileName, body)
+                            pass
+                    else:
+                        yield {
+                            "type": "error",
+                            "message": "Testcli-0000: " + "Missed part Content-Disposition in multiPart content."
+                        }
+                        return
+                else:
+                    yield {
+                        "type": "error",
+                        "message": "Testcli-0000: " + "Missed part header in multiPart content."
+                    }
+                    return
 
         if "operate" in apiRequest.keys() and apiRequest["operate"] is not None:
             if len(apiRequest["operate"]) == 1:
@@ -437,7 +542,7 @@ class CmdExecute(object):
                 operator = operate["operator"]
                 if operator in [">", ">>"]:
                     outputTarget = operate["content"].strip()
-                if operator in ["<", "<<"]:
+                if operator in ["<"]:
                     contentFrom = operate["content"].strip()
 
         if contentFrom is not None:
@@ -449,17 +554,35 @@ class CmdExecute(object):
                 body = "".join(apiRequest["contents"])
             else:
                 body = ""
-            body = body.encode(self.testOptions.get("SCRIPT_ENCODING"))
+            if len(fields) != 0:
+                # 如果填写了fields字段，且body中仅仅包含一个换行符，则标记body为空字符串
+                # Python的urllib3不容许同时出现fields和body内容
+                if body.strip() == "":
+                    body = None
+            if body is not None:
+                body = body.encode(self.testOptions.get("SCRIPT_ENCODING"))
+                # 重置Header的Content-Length
+                headers["Content-Length"] = len(body)
+            else:
+                # 重置Header的Content-Length
+                headers["Content-Length"] = 0
         try:
-            # 重置Header的Content-Length
-            headers["Content-Length"] = len(body)
-            ret = httpHandler.request(
-                method=httpMethod,
-                url=httpRequestTarget,
-                headers=headers,
-                fields=fields,
-                body=body,
-            )
+            if self.timeout == -1:
+                timeoutLimit = None
+            else:
+                timeoutLimit = self.timeout
+            args = {
+                "method": httpMethod,
+                "url": httpRequestTarget,
+                "fields": fields,
+                "headers": headers,
+                "timeout": timeoutLimit,
+            }
+            if body is not None:
+                args["body"] = body
+            if multiPartBoundary is not None:
+                args["multipart_boundary"] = multiPartBoundary
+            ret = httpHandler.request(**args)
             result = {"status": ret.status}
             if outputTarget is not None:
                 result["content"] = None
@@ -493,15 +616,32 @@ class CmdExecute(object):
                 "status": result
             }
             return
-        except (
-                urllib3.exceptions.MaxRetryError, urllib3.exceptions.ProtocolError) as ex:
+        except urllib3.exceptions.MaxRetryError as ue:
+            if self.timeOutMode == "COMMAND":
+                if self.testOptions.get("API_TIMEOUT") != "-1":
+                    message = "Request timeout limit command threshold [" + \
+                              str(self.testOptions.get("API_TIMEOUT")) + "] reached."
+                else:
+                    message = str(ue)
+            else:
+                if self.testOptions.get("SCRIPT_TIMEOUT") != "-1":
+                    message = "Request timeout limit script threshold [" + \
+                              str(self.testOptions.get("SCRIPT_TIMEOUT")) + "] reached."
+                else:
+                    message = str(ue)
             yield {
                 "type": "error",
-                "message": str(ex)
+                "message": "Testcli-0000: " + message
+            }
+            return
+        except Exception as ex:
+            yield {
+                "type": "error",
+                "message": "Testcli-0000: " + str(ex)
             }
             return
 
-    def executeSQLStatement(self, sql: str, sqlHints, startTime):
+    def executeSQLStatement(self, sql: str, sqlHints):
         """
         返回内容：
             错误情况下：
@@ -657,11 +797,11 @@ class CmdExecute(object):
                 # 处理超时时间问题
                 if sql.upper() not in ["_EXIT", "_QUIT"]:
                     if self.timeOutMode == "SCRIPT":
-                        sqlErrorMessage = "TestCli-000: Script Timeout " \
+                        sqlErrorMessage = "Testcli-0000: Script Timeout " \
                                              "(" + str(self.scriptTimeOut) + \
                                              ") expired. Abort this command."
                     else:
-                        sqlErrorMessage = "TestCli-000: SQL Timeout " \
+                        sqlErrorMessage = "Testcli-0000: SQL Timeout " \
                                              "(" + str(self.sqlTimeOut) + \
                                              ") expired. Abort this command."
                     yield {"type": "error", "message": sqlErrorMessage}
@@ -1014,7 +1154,7 @@ class CmdExecute(object):
             # 处理超时时间问题
             if self.scriptTimeOut > 0:
                 if self.scriptTimeOut <= time.time() - self.getStartTime():
-                    commandErrorMessage = "TestCli-000: Script Timeout " \
+                    commandErrorMessage = "Testcli-0000: Script Timeout " \
                                          "(" + str(round(self.scriptTimeOut, 2)) + \
                                          ") expired. Abort this Script."
                     yield {"type": "error", "message": commandErrorMessage}
@@ -1233,8 +1373,7 @@ class CmdExecute(object):
                 # 执行SQL语句
                 for result in self.executeSQLStatement(
                         sql=sqlCommand,
-                        sqlHints=commandHintList,
-                        startTime=0):
+                        sqlHints=commandHintList):
                     if result["type"] == "result":
                         lastCommandResult["rows"] = result["rows"]
                         lastCommandResult["headers"] = result["headers"]
@@ -1408,8 +1547,7 @@ class CmdExecute(object):
                 # 执行HTTP请求
                 for result in self.executeAPIStatement(
                         apiRequest=parseObject,
-                        apiHints=commandHintList,
-                        startTime=0):
+                        apiHints=commandHintList):
                     if result["type"] == "result":
                         lastCommandResult.clear()
                         data = json.loads(result["status"])
@@ -1529,7 +1667,7 @@ class CmdExecute(object):
                 ):
                     yield result
             else:
-                raise TestCliException("FDDFSFDFSDSFD " + str(parseObject))
+                raise TestCliException("TestCli parse error:  unknown parseObject [" + str(parseObject) + "]")
 
             # 如果需要，打印语句执行时间
             endTime = time.time()

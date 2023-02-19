@@ -44,7 +44,7 @@ setup(
                       'click', 'prompt_toolkit',  'paramiko', 'antlr4-python3-runtime',
                       'hdfs', 'fs', "psutil",
                       "rich",
-                      "pytest", 'fastapi', 'uvicorn',
+                      "pytest", 'fastapi', 'uvicorn', "pytest-xdist",
                       "coloredlogs", "robotframework", "beautifulsoup4", "lxml"
                       ],
 

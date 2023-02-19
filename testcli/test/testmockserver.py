@@ -3,7 +3,7 @@ import time
 
 import uvicorn
 import urllib3
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File
 from multiprocessing import Process
 from typing import Any, Dict
 
@@ -72,6 +72,19 @@ def waitServerRunning():
             # 没有链接上，等待2秒钟后再试
             time.sleep(2)
             pass
+
+
+@mockApp.post('/fileUpload')
+def fileUpload(my_file: UploadFile = File(...)):
+    print(my_file)
+    return {"status": "OK"}
+
+
+@mockApp.get('/timeoutTest')
+def timeoutTest():
+    # 休息10秒后再回应
+    time.sleep(10)
+    return {"status": "OK"}
 
 
 @mockApp.get('/health')
