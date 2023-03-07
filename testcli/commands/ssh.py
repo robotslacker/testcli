@@ -213,9 +213,12 @@ def executeSshRequest(requestObject):
                                     consoleOutputBytes = consoleOutputBytes + readByte
                             else:
                                 break
+                    # 避免后台长时作业时CPU过度占用
+                    time.sleep(0.5)
+
                 # 要等待最后完成
                 while not channel.eof_received:
-                    time.sleep(0.1)
+                    time.sleep(0.5)
 
                 # 可能包含再最后一批的消息里头
                 while True:

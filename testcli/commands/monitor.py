@@ -5,6 +5,7 @@ import psutil
 import threading
 import sqlite3
 import copy
+import re
 from queue import Queue
 
 # 默认启动的监控线程数量
@@ -31,7 +32,7 @@ currentTaskId = 0
 
 
 # 任务调度分配, 扫描monitorTasks，把需要进行监控检查的项目放入到
-class monitorScheduler(threading.Thread):
+class MonitorScheduler(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
 
@@ -45,8 +46,16 @@ class monitorScheduler(threading.Thread):
                 break
             # 遍历所有列表，如果需要进行性能监控，则将监控任务放入到队列中
             for taskId, monitorTask in monitorTasks.items():
-                if monitorTask["status"] in ["SUBMITTED", "STOPPED"]:
+                if monitorTask["status"] in ["SUBMITTED", "STOPPED", "FAILED"]:
                     # 任务已经结束或者尚未启动，不考虑
+                    continue
+                if "TAG" not in monitorTask["param"].keys():
+                    # TAG是必须的参数，不可忽略
+                    monitorTasks[taskId].update(
+                        {
+                            "status": "FAILED",
+                            "description": "Missed parameter TAG in task description.",
+                        })
                     continue
                 if monitorTask["last"] is not None:
                     # 判断期限是否已经到达，需要进行下一次采集
@@ -66,16 +75,22 @@ class monitorScheduler(threading.Thread):
                 )
                 monitorTasks[taskId].update({"last": time.time()})
                 if monitorTask["param"]["TAG"] in ["cpu_count", "cpu_count_physical"]:
-                    monitorTasks[taskId].update({"status": "STOPPED"})
+                    # 一次性作业，没有必要重复多次检查
+                    monitorTasks[taskId].update(
+                        {
+                            "status": "STOPPED"
+                        }
+                    )
+            # 每次检查完成后都休息一会，避免CPU过于繁忙
             time.sleep(3)
 
 
 # 调度线程
-schedulerThread = monitorScheduler()
+schedulerThread = MonitorScheduler()
 
 
 # 监控数据采集器
-class monitorWorker(threading.Thread):
+class MonitorWorker(threading.Thread):
     def __init__(self, threadID, xlogFile):
         threading.Thread.__init__(self)
         self.threadID = threadID
@@ -111,19 +126,20 @@ class monitorWorker(threading.Thread):
             )
             cursor.close()
             self.xlogFileHandle.commit()
-            monitorResults.append(
-                {
-                    "monitorTime": monitorTime,
-                    "taskId": taskId,
-                    "taskName": taskName,
-                    "item": monitorItem,
-                    "value": monitorValue
-                }
-            )
+        monitorResults.append(
+            {
+                "monitorTime": monitorTime,
+                "taskId": taskId,
+                "taskName": taskName,
+                "item": monitorItem,
+                "value": monitorValue
+            }
+        )
 
     def run(self):
         global monitorResults
         global monitorTaskQueue
+        global monitorTasks
 
         while True:
             # 如果已经不需要继续运行，则直接退出
@@ -137,7 +153,7 @@ class monitorWorker(threading.Thread):
                 time.sleep(3)
                 continue
 
-            param = task["param"]
+            param = dict(task["param"])
             taskId = task["taskId"]
             taskName = task["taskName"]
             if param["TAG"] == "cpu_count":
@@ -196,6 +212,245 @@ class monitorWorker(threading.Thread):
                     monitorValue=monitorValues
                 )
                 continue
+            elif param["TAG"] == "memory":
+                memoryStatis = psutil.virtual_memory()
+                monitorValues = [{
+                    "available": memoryStatis.available,
+                    "free": memoryStatis.free,
+                    "total": memoryStatis.total,
+                    "percent": memoryStatis.percent,
+                }]
+                self.appendTestResult(
+                    monitorTime=time.time(),
+                    taskId=taskId,
+                    taskName=taskName,
+                    monitorItem="memory",
+                    monitorValue=monitorValues
+                )
+            elif param["TAG"] == "network":
+                if "FILTER" in param.keys():
+                    nicFilter = str(param["FILTER"])
+                    if nicFilter.startswith("'") and nicFilter.endswith("'"):
+                        nicFilter = nicFilter[1:-1]
+                    elif nicFilter.startswith('"') and nicFilter.endswith('"'):
+                        nicFilter = nicFilter[1:-1]
+                    networkStatis = dict(psutil.net_io_counters(pernic=True))
+                    for nicName in networkStatis.keys():
+                        if re.match(pattern=nicFilter, string=nicName, flags=re.IGNORECASE):
+                            networkStatis1 = networkStatis[nicName]
+                            time.sleep(1)
+                            networkStatis = psutil.net_io_counters(pernic=True)
+                            networkStatis2 = networkStatis[nicName]
+                            monitorValues = [
+                                {
+                                    "nicName": nicName,
+                                    "bytes_sent": networkStatis2.bytes_sent,
+                                    "bytes_recv": networkStatis2.bytes_recv,
+                                    "errin": networkStatis2.errin,
+                                    "errout": networkStatis2.errout,
+                                    "dropin": networkStatis2.dropin,
+                                    "dropout": networkStatis2.dropout,
+                                    "netin": networkStatis2.bytes_recv - networkStatis1.bytes_recv,
+                                    "netout": networkStatis2.bytes_sent - networkStatis1.bytes_sent,
+                                }
+                            ]
+                            self.appendTestResult(
+                                monitorTime=time.time(),
+                                taskId=taskId,
+                                taskName=taskName,
+                                monitorItem="network",
+                                monitorValue=monitorValues
+                            )
+                else:
+                    networkStatis1 = psutil.net_io_counters()
+                    time.sleep(1)
+                    networkStatis2 = psutil.net_io_counters()
+                    monitorValues = [{
+                        "nicName": "GLOBAL",
+                        "bytes_sent": networkStatis2.bytes_sent,
+                        "bytes_recv": networkStatis2.bytes_recv,
+                        "errin": networkStatis2.errin,
+                        "errout": networkStatis2.errout,
+                        "dropin": networkStatis2.dropin,
+                        "dropout": networkStatis2.dropout,
+                        "netin": networkStatis2.bytes_recv - networkStatis1.bytes_recv,
+                        "netout": networkStatis2.bytes_sent - networkStatis1.bytes_sent,
+                    }]
+                    self.appendTestResult(
+                        monitorTime=time.time(),
+                        taskId=taskId,
+                        taskName=taskName,
+                        monitorItem="network",
+                        monitorValue=monitorValues
+                    )
+            elif param["TAG"] == "disk":
+                if "FILTER" in param.keys():
+                    diskFilter = param["FILTER"]
+                    if diskFilter.startswith("'") and diskFilter.endswith("'"):
+                        diskFilter = diskFilter[1:-1]
+                    elif diskFilter.startswith('"') and diskFilter.endswith('"'):
+                        diskFilter = diskFilter[1:-1]
+                    diskStatis = dict(psutil.disk_io_counters(perdisk=True))
+                    for diskName in diskStatis.keys():
+                        if re.match(pattern=diskFilter, string=diskName, flags=re.IGNORECASE):
+                            diskStatis1 = diskStatis[diskName]
+                            time.sleep(1)
+                            diskStatis2 = psutil.disk_io_counters(perdisk=True)[diskName]
+                            monitorValues = [{
+                                "diskName": diskName,
+                                "read_count": diskStatis2.read_count,
+                                "write_count": diskStatis2.write_count,
+                                "read_bytes": diskStatis2.read_bytes,
+                                "write_bytes": diskStatis2.write_bytes,
+                                "read_time": diskStatis2.read_time,
+                                "write_time": diskStatis2.write_time,
+                                "read_speed": diskStatis2.read_bytes - diskStatis1.read_bytes,
+                                "write_speed": diskStatis2.write_bytes - diskStatis1.write_bytes,
+                            }]
+                            self.appendTestResult(
+                                monitorTime=time.time(),
+                                taskId=taskId,
+                                taskName=taskName,
+                                monitorItem="disk",
+                                monitorValue=monitorValues
+                            )
+                else:
+                    diskStatis1 = psutil.disk_io_counters()
+                    time.sleep(1)
+                    diskStatis2 = psutil.disk_io_counters()
+                    monitorValues = [{
+                        "diskName": "GLOBAL",
+                        "read_count": diskStatis2.read_count,
+                        "write_count": diskStatis2.write_count,
+                        "read_bytes": diskStatis2.read_bytes,
+                        "write_bytes": diskStatis2.write_bytes,
+                        "read_time": diskStatis2.read_time,
+                        "write_time": diskStatis2.write_time,
+                        "read_speed": diskStatis2.read_bytes - diskStatis1.read_bytes,
+                        "write_speed": diskStatis2.write_bytes - diskStatis1.write_bytes,
+                    }]
+                    self.appendTestResult(
+                        monitorTime=time.time(),
+                        taskId=taskId,
+                        taskName=taskName,
+                        monitorItem="disk",
+                        monitorValue=monitorValues
+                    )
+            elif param["TAG"] == "process":
+                if "NAME" not in param.keys() and "EXE" not in param.keys() and "USERNAME" not in param.keys():
+                    taskLock = threading.Lock()
+                    # 添加任务列表
+                    try:
+                        taskLock.acquire()
+                        monitorTasks.update(
+                            {
+                                taskId:
+                                    {
+                                        "taskName": taskName,
+                                        "param": param,
+                                        "status": "FAILED",
+                                        "worker": None,
+                                        "last": None,
+                                        "description":
+                                            "Missed filter option [USERNAME/NAME/EXE] for process monitor."
+                                    }
+                            }
+                        )
+                    finally:
+                        taskLock.release()
+                    continue
+                nameFilter = None
+                if "NAME" in param.keys():
+                    nameFilter = param["NAME"]
+                    if nameFilter.startswith("'") and nameFilter.endswith("'"):
+                        nameFilter = nameFilter[1:-1]
+                    elif nameFilter.startswith('"') and nameFilter.endswith('"'):
+                        nameFilter = nameFilter[1:-1]
+                userNameFilter = None
+                if "USERNAME" in param.keys():
+                    userNameFilter = param["USERNAME"]
+                    if userNameFilter.startswith("'") and userNameFilter.endswith("'"):
+                        userNameFilter = userNameFilter[1:-1]
+                    elif userNameFilter.startswith('"') and userNameFilter.endswith('"'):
+                        userNameFilter = userNameFilter[1:-1]
+                exeFilter = None
+                if "EXE" in param.keys():
+                    exeFilter = param["EXE"]
+                    if exeFilter.startswith("'") and exeFilter.endswith("'"):
+                        exeFilter = exeFilter[1:-1]
+                    elif exeFilter.startswith('"') and exeFilter.endswith('"'):
+                        exeFilter = exeFilter[1:-1]
+                for proc in psutil.process_iter():
+                    try:
+                        username = proc.username()
+                    except psutil.AccessDenied:
+                        username = "AccessDenied."
+                    if userNameFilter is not None:
+                        if not re.match(pattern=userNameFilter, string=username, flags=re.IGNORECASE):
+                            continue
+                    if nameFilter is not None:
+                        if not re.match(pattern=nameFilter, string=proc.name(), flags=re.IGNORECASE):
+                            continue
+                    try:
+                        exe = proc.exe()
+                    except psutil.AccessDenied:
+                        exe = "AccessDenied."
+                    if exeFilter is not None:
+                        if not re.match(pattern=exeFilter, string=exe, flags=re.IGNORECASE):
+                            continue
+                    try:
+                        cmdLine = proc.cmdline()
+                    except psutil.AccessDenied:
+                        cmdLine = "AccessDenied."
+                    try:
+                        files = len(proc.open_files())
+                    except psutil.AccessDenied:
+                        files = 0
+                    monitorValues = [{
+                        "pid": proc.pid,
+                        "username": username,
+                        "name": proc.name(),
+                        "cmdline": cmdLine,
+                        "status": proc.status(),
+                        "threads": proc.num_threads(),
+                        "files": files,
+                        "exec": exe,
+                        "create_time": proc.create_time(),
+                        "cpu_percent": proc.cpu_percent(),
+                        "cpu_times_user": proc.cpu_times().user,
+                        "cpu_times_sys": proc.cpu_times().system,
+                        "mem_rss": proc.memory_info().rss,
+                        "mem_vms": proc.memory_info().vms,
+                        "mem_percenmt": proc.memory_percent(),
+                    }]
+                    self.appendTestResult(
+                        monitorTime=time.time(),
+                        taskId=taskId,
+                        taskName=taskName,
+                        monitorItem="process",
+                        monitorValue=monitorValues
+                    )
+            else:
+                taskLock = threading.Lock()
+                # 添加任务列表
+                try:
+                    taskLock.acquire()
+                    monitorTasks.update(
+                        {
+                            taskId:
+                                {
+                                    "taskName": taskName,
+                                    "param": param,
+                                    "status": "FAILED",
+                                    "worker": None,
+                                    "last": None,
+                                    "description": "Invalid TAG " + param["TAG"] + " in task description."
+                                }
+                        }
+                    )
+                finally:
+                    taskLock.release()
+                continue
 
     def addTask(self, task):
         self.runningTasks.append(task)
@@ -243,7 +498,7 @@ def executeMonitorRequest(cls, requestObject):
         else:
             workerCount = int(requestObject["workerThreads"])
         for nPos in range(0, workerCount):
-            worker = monitorWorker(nPos, cls.xlogFileFullPath)
+            worker = MonitorWorker(nPos, cls.xlogFileFullPath)
             worker.start()
             workerThreads.append(worker)
         yield {
@@ -285,6 +540,7 @@ def executeMonitorRequest(cls, requestObject):
                         "status": "SUBMITTED",
                         "worker": None,
                         "last": None,
+                        "description": None
                     }
                 }
             )
@@ -370,7 +626,7 @@ def executeMonitorRequest(cls, requestObject):
             }
             return
     if requestObject["action"] == "listTask":
-        headers = ["taskId", "taskName", "taskParam", "status", "lastActiveTime"]
+        headers = ["taskId", "taskName", "taskParam", "status", "lastActiveTime", "description"]
         rows = []
         for taskId, monitorTask in monitorTasks.items():
             rows.append(
@@ -379,7 +635,8 @@ def executeMonitorRequest(cls, requestObject):
                     monitorTask["taskName"],
                     monitorTask["param"],
                     monitorTask["status"],
-                    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(monitorTask["last"]))
+                    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(monitorTask["last"])),
+                    monitorTask["description"],
                 )
             )
         if len(rows) == 1:

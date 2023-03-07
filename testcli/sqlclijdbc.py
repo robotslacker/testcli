@@ -904,6 +904,15 @@ def _javaobj_to_pyobj(p_javaobj, p_objColumnSQLType=None):
                                        str(ld.getMinute()).zfill(2) + ":" + str(ld.getSecond()).zfill(2) + " " +
                                        str(ld.getNano() // 1000), "%Y-%m-%d %H:%M:%S %f")
         return d
+    elif typeName == "java.time.LocalDateTime":
+        d = datetime.datetime.strptime(str(p_javaobj.getYear()).zfill(4) + "-" +
+                                       str(p_javaobj.getMonthValue()).zfill(2) + "-" +
+                                       str(p_javaobj.getDayOfMonth()).zfill(2) + " " +
+                                       str(p_javaobj.getHour()).zfill(2) + ":" +
+                                       str(p_javaobj.getMinute()).zfill(2) + ":" +
+                                       str(p_javaobj.getSecond()).zfill(2) + " " +
+                                       str(p_javaobj.getNano() // 1000), "%Y-%m-%d %H:%M:%S %f")
+        return d
     elif typeName == "oracle.sql.TIMESTAMP":
         ld = p_javaobj.toJdbc().toLocalDateTime()
         d = datetime.datetime.strptime(str(ld.getYear()).zfill(4) + "-" + str(ld.getMonthValue()).zfill(2) + "-" +
@@ -911,7 +920,7 @@ def _javaobj_to_pyobj(p_javaobj, p_objColumnSQLType=None):
                                        str(ld.getMinute()).zfill(2) + ":" + str(ld.getSecond()).zfill(2) + " " +
                                        str(ld.getNano() // 1000), "%Y-%m-%d %H:%M:%S %f")
         return d
-    elif typeName == 'java.sql.Date':
+    elif typeName in ['java.sql.Date', 'java.time.LocalDateTime']:
         d = datetime.date(year=p_javaobj.toLocalDate().getYear(),
                           month=p_javaobj.toLocalDate().getMonthValue(),
                           day=p_javaobj.toLocalDate().getDayOfMonth())

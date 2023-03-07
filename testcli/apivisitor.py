@@ -1292,3 +1292,71 @@ class APIVisitor(APIParserVisitor):
         self.parsedObject = parsedObject
         self.errorCode = errorCode
         self.errorMsg = errorMsg
+
+    def visitMonitor(self, ctx: APIParser.MonitorContext):
+        parsedObject = {'name': 'MONITOR'}
+
+        if ctx.MONITOR_MANAGER() is not None:
+            if ctx.MONITOR_ON() is not None:
+                parsedObject.update({'action': 'startManager'})
+                if ctx.MONITOR_WORKERS() is not None:
+                    workerThreads = int(ctx.MONITOR_EXPRESSION()[0].getText())
+                else:
+                    workerThreads = None
+                parsedObject.update({'workerThreads': workerThreads})
+            if ctx.MONITOR_OFF() is not None:
+                parsedObject.update({'action': 'stopManager'})
+        if ctx.MONITOR_CREATE() is not None:
+            parsedObject.update({'action': 'createTask'})
+            nPos = 0
+            param = {}
+            paramKey = None
+            if len(ctx.MONITOR_EXPRESSION()) % 2 == 0:
+                # 省略了taskName
+                parsedObject.update({"taskName": "NO-NAME"})
+                for expression in ctx.MONITOR_EXPRESSION():
+                    if paramKey is None:
+                        paramKey = str(expression.getText()).strip()
+                    else:
+                        paramValue = str(expression.getText()).strip()
+                        param[paramKey.upper()] = paramValue
+                        paramKey = None
+                    nPos = nPos + 1
+            else:
+                for expression in ctx.MONITOR_EXPRESSION():
+                    if nPos == 0:
+                        parsedObject.update({"taskName": expression.getText().strip()})
+                    else:
+                        if paramKey is None:
+                            paramKey = str(expression.getText()).strip()
+                        else:
+                            paramValue = str(expression.getText()).strip()
+                            param[paramKey.upper()] = paramValue
+                            paramKey = None
+                    nPos = nPos + 1
+            parsedObject.update({"param": param})
+        if ctx.MONITOR_START() is not None:
+            parsedObject.update({"action": "startTask"})
+            taskName = str(ctx.MONITOR_EXPRESSION()[0].getText()).strip()
+            parsedObject.update({"taskName": taskName})
+        if ctx.MONITOR_STOP() is not None:
+            parsedObject.update({"action": "stopTask"})
+            taskName = str(ctx.MONITOR_EXPRESSION()[0].getText()).strip()
+            parsedObject.update({"taskName": taskName})
+        if ctx.MONITOR_REPORT() is not None:
+            parsedObject.update({"action": "reportTask"})
+            taskName = str(ctx.MONITOR_EXPRESSION()[0].getText()).strip()
+            parsedObject.update({"taskName": taskName})
+        if ctx.MONITOR_LIST() is not None:
+            parsedObject.update({"action": "listTask"})
+
+        # 获取错误代码
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = -1
+            errorMsg = ctx.exception.message
+
+        self.parsedObject = parsedObject
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg

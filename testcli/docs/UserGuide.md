@@ -945,11 +945,10 @@ TAB模式和LEGACY模式的区别：
 
 ```
 
-# 以下内容尚未来得及更新，请等等哈
-
 ***
 ### 连接数据库
-在TestCli命令行里头，可以通过connect命令来连接到具体的数据库
+在TestCli命令行里头，可以通过connect命令来连接到具体的数据库  
+执行数据库的连接，前提是你的程序处于SQL的命名空间下
 ```
 (base) TestCli 
 SQL*Cli Release 0.0.32
@@ -960,45 +959,45 @@ SQL>
 
 如果已经在环境变量中指定了TestCli_CONNECTION_URL，连接可以简化为
 (base) TestCli 
-SQL*Cli Release 0.0.32
-SQL> connect user/pass
+TestCli Release 0.0.32
+SQL> _CONNECT user/pass
 Database connected.
 SQL> 
 
 在数据库第一次连接后，第二次以及以后的连接可以不再输入连接字符串，程序会默认使用上一次已经使用过的连接字符串信息，比如：
 (base) TestCli 
-SQL*Cli Release 0.0.32
-SQL> connect user/pass@jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名] 
+TestCli Release 0.0.32
+SQL> _CONNECT user/pass@jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名] 
 Database connected.
-SQL> connect user2/pass2
+SQL> _CONNECT user2/pass2
 Database connected.
 SQL> 
 
 常见数据库的连接方式示例：
 H2:
-    connnet mem
+    _CONNECT mem
 ORACLE:
-    connect username/password@jdbc:oracle:tcp://IP:Port/Service_Name
+    _CONNECT username/password@jdbc:oracle:tcp://IP:Port/Service_Name
 MYSQL:
-    connect username/password@jdbc:mysql:tcp://IP:Port/Service_Name
+    _CONNECT username/password@jdbc:mysql:tcp://IP:Port/Service_Name
 PostgreSQL：
-    connect username/password@jdbc:postgresql:tcp://IP:Port/Service_Name
+    _CONNECT username/password@jdbc:postgresql:tcp://IP:Port/Service_Name
 SQLServer：
-    connect username/password@jdbc:sqlserver:tcp://IP:Port/DatabaseName
+    _CONNECT username/password@jdbc:sqlserver:tcp://IP:Port/DatabaseName
 TeraData：
-    connect username/password@jdbc:teradata:tcp://IP/DatabaseName
+    _CONNECT username/password@jdbc:teradata:tcp://IP/DatabaseName
 Hive:
-    connect hive/hive@jdbc:hive2://IP:Port/DatabaseName
+    _CONNECT hive/hive@jdbc:hive2://IP:Port/DatabaseName
 ClickHouse:
-	connect default/""@jdbc:clickhouse:tcp://IP:Port/DatabaseName
+    _CONNECT default/""@jdbc:clickhouse:tcp://IP:Port/DatabaseName
 LinkoopDB:
-    connect username/password@jdbc:linkoopdb:tcp://IP:Port/Service_Name
+    _CONNECT username/password@jdbc:linkoopdb:tcp://IP:Port/Service_Name
 ```
 
 ### 断开数据库连接
 ```
 (base) TestCli 
-SQL*Cli Release 0.0.32
+TestCli Release 0.0.32
 SQL> connect user/pass@jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名] 
 Database connected.
 SQL> disconnect
@@ -1007,23 +1006,29 @@ Database disconnected.
 ***
 
 ### 会话的切换和保存
+通过_SESSION语句可以保存当前数据库会话，并切换到新的数据库会话上进行工作。  
+如果需要的话，还可以通过SESSION的语句切换回之前保留的会话。
+
+```
+    _SESSION [SAVE|RELEASE|RESTOR|SAVEURL|SHOW] <Session Name> 
+```
 ```
 (base) TestCli 
-SQL*Cli Release 0.0.32
-SQL> connect user/pass@jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名] 
+TestCli Release 0.0.32
+SQL> _CONNECT user/pass@jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名] 
 Database connected.
-SQL> session save sesssion1
+SQL> _SESSION save sesssion1
 Session saved.
 # 这里会把当前会话信息保存到名字为session1的上下文中，session1为用户自定义的名字
 # 注意：这里并不会断开程序的Session1连接，当Restore的时候也不会重新连接
-SQL> connect user/pass@jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名]
+SQL> _CONNECT user/pass@jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名]
 Database connected.
 # 连接到第一个会话
-SQL> session save sesssion2
+SQL> _SESSION save sesssion2
 Session saved.
 # 这里会把当前会话信息保存到名字为session2的上下文中，session2为用户自定义的名字
 # 注意：这里并不会断开程序的Session2连接，当Restore的时候也不会重新连接
-SQL> session show
+SQL> _SESSION show
 +---------------+-----------+-----------------------------------------------+
 | Sesssion Name | User Name | URL                                           |
 +---------------+-----------+-----------------------------------------------+
@@ -1032,20 +1037,20 @@ SQL> session show
 +---------------+-----------+-----------------------------------------------+
 # 显示当前保存的所有会话信息
 
-SQL> session restore sesssion1
+SQL> _SESSION restore sesssion1
 Session stored.
 # 这里将恢复当前数据库连接为之前的会话1
 
-SQL> session restore sesssion2
+SQL> _SESSION restore sesssion2
 Session stored.
 # 这里将恢复当前数据库连接为之前的会话2
 
-SQL> session saveurl sesssion3
+SQL> _SESSION saveurl sesssion3
 Session saved.
 # 这里会把当前会话信息的URL保存到名字为session3的上下文中，session3为用户自定义的名字
 # 注意：这里并不会保持程序的Session3连接，仅仅记录了URL信息，当Restore的时候程序会自动重新连接
 
-SQL> session release sesssion3
+SQL> _SESSION release sesssion3
 Session released.
 # 这里将释放之前保存的数据库连接，和针对具体一个连接的DisConnect类似
 ```
@@ -1055,68 +1060,42 @@ Session released.
 我们可以把语句保存在一个SQL文件中，并通过执行SQL文件的方式来执行具体的SQL  
 语法格式为：
 ```
-    start [script1.sql] [script2.sql] .... [loop $nlooptime]
+    _START <script1.sql> <script2.sql> ...
 ```
 例如：
 ```
 (base) TestCli 
-SQL*Cli Release 0.0.32
-SQL> start aa.api
+TestCli Release 0.0.32
+SQL> _START aa.api
 SQL> ....
-SQL> disconnect
+SQL> _DISCONNECT
 这里将执行aa.sql
-如果有多个文件，可以依次填写，如SQL> start aa.api bb.sql ....
+如果有多个文件，可以依次填写，如SQL> _START aa.api bb.sql ....
 
-(base) TestCli 
-SQL*Cli Release 0.0.32
-SQL> start aa.api loop 10
-SQL> ....
-SQL> disconnect
-这里将执行aa.sql共计10次
-如果有多个文件，可以依次填写，如SQL> start aa.api bb.sql .... loop 10
+# 以下内容尚未来得及更新，请等等哈
+
 
 ```
 ### 让程序休息一会
 ```
 (base) TestCli 
-SQL*Cli Release 0.0.32
-SQL> sleep 10
-SQL> disconnect
+TestCli Release 0.0.32
+SQL> _SLEEP 10
+SQL> _DISCONNECT
 Database disconnected.
 这里的10指的是10秒，通过这个命令可以让程序暂停10秒钟。
 Sleep的做法主要用在一些定期循环反复脚本的执行上
 ```
+
 ### 执行主机的操作命令
 ```
 (base) TestCli 
-SQL*Cli Release 0.0.32
-SQL> host date
+TestCli Release 0.0.32
+SQL> _HOST date
 2020年 10月 29日 星期四 11:24:34 CST
-SQL> disconnect
+SQL> _DISCONNECT
 Database disconnected.
 这里的date是主机的命令，需要注意的是：在Windows和Linux上命令的不同，脚本可能因此无法跨平台执行
-```
-### 回显指定的文件
-```
-(base) TestCli 
-SQL*Cli Release 0.0.32
-SQL> echo subtest.sql
--- 这里是subtest.sql
-connect admin/123456
-select * from cat
-SQL> echo off
-这里从echo开始，到echo off结束的中间内容并不会被数据库执行，而且会记录在subtest.sql中
-同样的操作，这里也可以用来生成一些简单的配置文件，简单的报告信息等
-```
-
-### 加载SQL重写配置文件
-在TestCli命令行里头，可以通过loadcommandMap命令来加载SQL重写配置文件
-```
-(base) TestCli 
-SQL*Cli Release 0.0.31
-SQL> loadcommandMap map1
-Mapping file loaded.
-这里的map1表示一个重写配置文件，这里可以写多个配置文件的名字，比如loadcommandMap map1,map2,map3，多个文件名之间用逗号分隔
 ```
 
 ### 执行数据库SQL语句
@@ -1144,7 +1123,7 @@ Mapping file loaded.
    多行SQL语句是指不能在一行内写完，需要分成多行来写的SQL语句。  
    多行SQL语句的判断依据是： 语句用如下内容作为关键字开头
 ```
-    CREATE | SELECT | UPDATE | DELETE | INSERT | __INTERNAL__ | DROP | REPLACE | ALTER
+    'CREATE' | 'REPLACE' | 'ALTER'|  '+ | 'OR')+ ('PROCEDURE'|'FUNCTION'|'CLASS'|'TRIGGER'|'PACKAGE'
 
 ```
 #### 执行多行SQL语句
@@ -1189,104 +1168,12 @@ Mapping file loaded.
 
 ```  
 
-### 在SQL中使用变量信息
-&emsp; &emsp; 在一些场景中，我们需要通过变量来变化SQL的运行  
-&emsp; &emsp; 这里提供的解决办法是：   
-&emsp; &emsp; * 用set的语句来定义一个变量
-```
-    SQL> set @var1 value1
-
-    如果value1中包含空格等特殊字符，需要考虑用^将其前后包括，例如：
-    SQL> set @var1 ^value1 fafsadfd^
-    此时，尖括号内部的字符串将作为参数的值，但尖括号并不包括在内
-
-    注意： value1 是一个eval表达式，可以被写作 3+5, ${a}+1, 等
-    如果你要在value1中传入一个字符串，请务必将字符串用‘包括，即'value1'
-
-```
-&emsp; &emsp; * 用${}的方式来引用已经定义的变量
-```
-    SQL> select ${var1} from dual;
-    REWROTED SQL> Your SQL has been changed to:
-    REWROTED    > select value1 from dual
-    -- 这里真实的表达意思是： select value1 from dual, 其中${var1}已经被其对应的变量替换
-```
-
-
-### 在SQL中用内置变量来查看上一个SQL的执行结果
-&emsp; &emsp; 有一些场景通常要求我们来下一个SQL指定的时候，将上一个SQL的结果做出参数来执行  
-&emsp; &emsp; 这里提供的解决办法是： 在SQL中引入用JQ表达式定义的表达式  
-&emsp; &emsp; 例子：  
-&emsp; &emsp; &emsp; &emsp; {$LastSQLResult(JQPattern)}
-```
-    LastSQLResult 是一个包含了上次结果集的JSON表达式，其包含的内容为：
-    {
-        "desc": [column name1, column name2, ....],
-        "rows": rowcount,
-        "elapsed": sql elapsed time,
-        "result": [[row1-column1 , row1-column2,...] [row2-column1 , row2-column2,...] ...]
-    }
-    SQL>  -- 返回上一个SQL执行影响的记录数量
-    SQL>  select '${LastSQLResult(.rows)}' from dual;
-    REWROTED SQL> Your SQL has been changed to:
-    REWROTED    > select '1' from dual
-    +-----+
-    | '1' |
-    +-----+
-    | 1   |
-    +-----+
-    1 row selected.
-    
-    SQL>  -- 返回上一个SQL结果记录集的零行零列内容    
-    SQL> select '${LastSQLResult(.result.0.0)}' from dual;
-    REWROTED SQL> Your SQL has been changed to:
-    REWROTED    > select '1' from dual
-    +-----+
-    | '1' |
-    +-----+
-    | 1   |
-    +-----+
-    1 row selected.
-
-    支持的JQ过滤表达式：
-        dict key过滤           .key
-        dict key列表           .keys()
-        dict value列表         .values()
-        dict key,value对       .iterms()
-        list过滤                .3 或 .[3]
-        list负索引              .-2 或 .[-2]
-        list切片1               .2:6 或 .[2:6]
-        list切片2               .2: 或 .[2:]
-        list切片3               .:6 或 .[:6]
-        list step1             .1:6:2 或 .[1:6:2]
-        list step2             .1::2 或 .[1::2]
-        list step3             .::2 或 .[::2]
-        string过滤              ..与list相同
-        string切片              ..与list相同
-        string切片step          ..与list相同
-
-   
-```
-### 在TestCli中完成简单的循环语句
-```
-    通过使用SQLHint，我们可以实现简单的语句循环。
-    例子：
-    SQL> -- [Hint] LOOP 100 UNTIL False INTERVAL 2
-    Select * From Cat;
-    -- 以上的语句将以间隔2秒执行一次的节奏执行100次的“Select * From Cat”
-
-    SQL> -- [Hint] LOOP 100 UNTIL ${LastSQLResult(.result.0.0)}>10 INTERVAL 2
-    Select * From Cat;
-    以上的语句将以间隔2秒执行一次的节奏执行“Select * From Cat”
-    一直执行到100次或者该语句返回结果集的第一行第一内内容大于10
-    其中： ${LastSQLResult(.result.0.0)}是一个标准的JQ表达式，写法参考__internal__ test assert中写法说明
-``` 
 ### 定义TestCli的初始化文件
 ```
     TestCli在执行的时候可以指定初始化文件，初始化文件会在真正的脚本执行之前被执行
     可以通过以下三种方式来定义TestCli的初始化文件：
     1： 通过在TestCli的命令行参数中执行，   
-    OS>  TestCli --profile xxxx
+    $>  TestCli --profile xxxx
     2. 通过创建TestCli_HOME/profile/default文件，并在其中输入相关信息
     3. 通过修改程序的安装目录中对应文件来指定，即<PYTHON_PACKAGE>/TestCli/profile/default
     同时存在上述3类文件的时候，3类文件都会被执行。叠加执行的顺序是：3，2，1
@@ -1295,133 +1182,6 @@ Mapping file loaded.
 
 ```
 
-### 用TestCli工具操作Kafka
-```
-   TestCli工具可以操作Kafka，建立、删除Topic，查看Topic的状态，给Topic发送信息
-
-   提前准备：
-   SQL> __internal__ kafka connect server [bootstrap_server];
-   连接一个Kafka服务器，格式位nodex:port1,nodey:port2....
-   注意，这里并没有校验服务器的实际信息是否正确。
-
-   SQL> __internal__ kafka create topic [topic name] 
-        [ Partitions [number of partitions] 
-          replication_factor [number of replication factor] 
-          timeout [timeout of creation]
-          .... kafka valid configuration ...
-        ];
-   创建一个kafka的Topic.
-   其中： timeout of creation 可以省略， 默认是60
-         number of partitions 可以省略， 默认是16
-         number of replication factor 可以省略， 默认是1
-         kafka valid configuration    可以为1个或者多个有效的配置参数，比如retention.ms
-   例子： __internal__ kafka create topic mytopic;
-   
-   SQL> __internal__ kafka get info topic [topic name] group [gruop id];
-   其中： group id 可以省略
-   获得消息队列的高水位线和低水位线
-    +-----------+-----------+-----------+
-    | Partition | minOffset | maxOffset |
-    +-----------+-----------+-----------+
-    | 0         | 0         | 1         |
-    | 1         | 0         | 1         |
-    +-----------+-----------+-----------+
-   例子： __internal__ kafka get info topic mytopic Partition 0 group abcd;
-
-   SQL> __internal__ kafka produce message from file [text file name] to topic [topic name];
-   将指定文本文件中所有内容按行发送到Kafka指定的Topic中
-   例子： __internal__ kafka produce message from file Doc.md to topic Hello;
-
-   SQL> __internal__ kafka consume message from topic [topic name] to file [text file name];
-   将Kafka指定的Topic中所有消息消费到指定文本文件中
-   例子： __internal__ kafka consume message from topic Hello to file xxx.md;
-
-   SQL> __internal__ kafka produce message topic [topic name]
-       > (
-       >    [message item1]
-       >    [message item2] 
-       >    [message item3]
-       > );
-   将SQL中包含的Message item发送到kafka指定的topic中
-   上述的例子，将发送3条消息到服务器。
-
-   SQL> __internal__ kafka produce message topic [topic name]
-       > (
-       >    [message part1]
-       >    [message part2] 
-       >    [message part3]
-       > ) rows [num of rowcount]
-       > frequency [num of frequency];   
-   将SQL中包含的Message part重复num of rowcount发送到kafka指定的topic中
-   上述的例子，将发送num of rowcount条消息到服务器。
-   其中: num of frequency 表示每秒最多发送的消息数量。 可以省略，省略表示不对发送频率进行限制
-        具体message part的写法参考前面描述的创建数据文件的例子
-   注意：frequency的计数器并不是精准计数器，不排除1~2秒的误差
-
-   SQL> __internal__ kafka drop topic [topic name] timeout [timeout of deletion];
-   其中： timeout of deletion 可以省略， 默认是1800
-   删除指定的topic
-```
-
-### 用TestCli工具操作HDFS
-```
-    SQL> __internal__ hdfs connect [hdfs webui url] with user [hdfs user name]
-    用HDFSweb连接到指定的HDFS上
-    例子：
-    SQL> __internal__  hdfs connect http://localhost:9870/user/testuser/abcd with user testuser;
-    Hdfs Server set successful.
-    这里的/user/testuser/abcd将作为后续HDFS操作的根目录
-
-    SQL> __internal__ hdfs cd [hdfs new dir]
-    切换当前HDFS的主目录到新的目录上
-    例子：
-    SQL> __internal__  hdfs cd testuser/abcd;
-    Hdfs root dir change successful.
-    这里的testuser/abcd将作为后续HDFS操作的根目录
-
-    SQL> __internal__ hdfs status [hdfs path]
-    获取指定的HDFS文件信息
-    例子：
-    SQL> __internal__  hdfs status aa.log;
-    HDFS file status:
-    +--------+------------+-------+--------+------+---------------------+
-    | Path   | Permission | owner | group  | Size | Modified            |
-    +--------+------------+-------+--------+------+---------------------+
-    | aa.log | -rw-r--r-- | ldb   | ldbp67 | 1148 | 2021-03-05 11:11:41 |
-    +--------+------------+-------+--------+------+---------------------+
-    Total 1 files listed.
-
-    SQL> __internal__ hdfs list [hdfs path] 
-    显示远程的HDFS文件目录信息。 hdfs_path可以省略，省略情况下显示当然目录信息。
-    例子：
-    SQL> __internal__  hdfs list;
-    HDFS file List:
-    +-------+------------+--------+--------+------+---------------------+
-    | Path  | Permission | owner  | group  | Size | Modified            |
-    +-------+------------+--------+--------+------+---------------------+
-    | 111   | drwxr-xr-x | ldbp67 | ldbp67 | 0    | 2021-03-05 09:26:56 |
-    | aa.sh | -rw-r--r-- | ldbp67 | ldbp67 | 363  | 2021-03-05 09:07:35 |
-    +-------+------------+--------+--------+------+---------------------+
-    Total 2 files listed.
-
-    SQL> __internal__ hdfs rm [hdfs path]
-    删除指定的HDFS文件信息，如果需要删除多个文件，可以提供文件通配符
-    例子：
-    SQL> __internal__  hdfs rm aa.log;
-    Hdfs file deleted successful.
-
-    SQL> __internal__ hdfs makedirs [hdfs path]
-    建立需要的HDFS路径
-
-    SQL> __internal__ hdfs upload [local file] [remote file]
-    上传本地文件到远程的HDFS文件目录中
-
-    SQL> __internal__ hdfs download [remote file] [local file] 
-    下载远程的HDFS文件到本地文件目录中
-
-```
-
-# 以上文件还没有更新，请等等哈
 ***    
 ### 在脚本中使用ASSERT语句来判断运行结果
 使用Assert可以判断测试运行的结果，结果作为测试运行的结论
