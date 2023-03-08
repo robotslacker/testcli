@@ -43,7 +43,7 @@ setup(
     install_requires=['JPype1', 'setproctitle', 'urllib3<1.27',
                       'click', 'prompt_toolkit',  'paramiko', 'antlr4-python3-runtime',
                       'hdfs', 'fs', "psutil",
-                      "rich",
+                      "rich", "python-multipart",
                       "pytest", 'fastapi', 'uvicorn', "pytest-xdist",
                       "coloredlogs", "robotframework", "beautifulsoup4", "lxml"
                       ],

@@ -1167,6 +1167,100 @@ Database disconnected.
     SQL> 
 
 ```  
+### 执行API测试
+在切换到API命名空间后，你就可以使用REST API的语法来书写测试脚本了。  
+REST API的语法结构，这个文档里不会详细描述，具体可以参考网上资料。  
+#### 请求的大致结果：
+``` 
+    Method Request-URI HTTP-Version
+    Header-field: Header-value
+    
+    Request-Body
+```
+其中Method可以为POST，GET，或者其他任何合法的HTTP请求方法。  
+Request-URI为请求的地址，地址可能包含请求参数。 如果请求参数列表很长，可以用多行表达。  
+#### 单行表达的请求：
+```
+   ### GET请求，一行表达
+   GET http://example.com:8080/api/get/html?firstname=John&lastname=Doe&planet=Tatooine&town=Freetown  HTTP/1.1
+   
+   ###
+```
+#### 多行表达的请求：
+```
+   ### GET请求，多行表达
+    GET http://example.com:8080/api/get/html?  HTTP/1.1
+        firstname=John&
+        lastname=Doe&
+        planet=Tatooine&
+        town=Freetown   
+   
+   ###
+```
+
+#### 包含请求体的请求示例：
+```
+    ### POST请求，包含请求体
+    POST http://example.com:8080/api/html/post HTTP/1.1
+    Content-Type: application/json
+    Cookie: key=first-value
+    
+    { "key" : "value", "list": [1, 2, 3] }
+   ###
+```
+
+#### 从一个外部文件中加载消息体：
+```
+    ### POST请求，包含请求体
+    POST http://example.com:8080/api/html/post HTTP/1.1
+    Content-Type: application/json
+    Cookie: key=first-value
+    
+    < input.json
+   ###
+```
+
+#### 把执行结果输出到外部文件中(也可以使用>>来追加输出)：
+```
+    ### POST请求，包含请求体
+    POST http://example.com:8080/api/html/post HTTP/1.1
+    Content-Type: application/json
+    Cookie: key=first-value
+
+    { "key" : "value", "list": [1, 2, 3] }
+
+    > output.json    
+   ###
+```
+
+#### API多段提交：
+``` 
+    ### POST多段请求
+    POST http://example.com/api/upload HTTP/1.1
+    Content-Type: multipart/form-data; boundary=boundary
+    
+    --boundary
+    Content-Disposition: form-data; name="first"; filename="input.txt"
+    
+    // The 'input.txt' file will be uploaded
+    < ./input.txt
+    
+    --boundary
+    Content-Disposition: form-data; name="second"; filename="input-second.txt"
+    
+    // A temporary 'input-second.txt' file with the 'Text' content will be created and uploaded
+    Text
+    --boundary
+    Content-Disposition: form-data; name="third";
+    
+    // The 'input.txt' file contents will be sent as plain text.
+    < ./input.txt --boundary--
+   ###
+
+```
+
+#### 脚本中使用变量：
+API脚本中使用变量的方法和SQL脚本、其他脚本中使用方法并无区别，均支持{{var}}的表达方式
 
 ### 定义TestCli的初始化文件
 ```
@@ -1897,10 +1991,154 @@ SQL> _JOB job timer slave_finished;
     _ECHO <输出的文件名>
         <文件内容>
     _ECHO OFF 
-   
-   TODO： ECHO中能够处理{{}}的替代信息，能够支持APPEND操作
     ```
 2. 这里文件内容的所有东西都将被直接输出到指定的文件中，包括换行符等信息
+***
+### 系统运行监控
+使用内置的监控程序，系统将在后台采集需要的性能数据，如果有必要，这些信息可以记录在程序的扩展日志中。  
+```
+    _MONITOR MANAGER ON [WOKERS <int>]
+    _MONITOR MANAGER OFF
+    _MONITOR CREATE TASK <taskName> TAG=<taskTag> taskPara1=taskValue1 taskPara2=taskValue2 ...
+    _MONITOR START TASK [ <taskName> | ALL ]
+    _MONITOR STOP TASK [ <taskName> | ALL ]
+    _MONITOR REPORT TASK [ <taskName> | ALL ]
+    _MONITOR LIST TASK
+```
+1. 启动/停止监控调度管理
+   运行监控必须首先启动后台的调度管理作业。 启动的方式是_MONITOR MANAGER ON    
+   通过指定WORKER的数量来确定监控采集程序占用的线程数目，默认情况下，这个数字为3  
+
+   1. 创建监控任务
+      1. TAG选项：
+      所有的监控任务都必须有TAG选项，用来指定需要采集的指标项目。    
+      目前，支持的TAG包括：   
+      ```
+           cpu_count             # 逻辑CPU数量，该指标只统计一次，不会重复执行                
+           cpu_count_physical    # 物理CPU数量，该指标只统计一次，不会重复执行
+           cpu_percent           # 统计CPU的占用率
+           cpu_times             # CPU运行统计，统计的内容依赖不同的操作系统也会不同
+           memory                # 内存使用情况统计
+           network               # 网络使用情况统计
+           disk                  # 磁盘使用情况统计
+           process               # 进程使用情况统计
+      ```   
+      2. FREQ选项：
+      FREQ不是必须的，但是在循环检测中设置必要的FREQ是必要的。  
+      如果不设置，FREQ的默认值为30，即30秒采集一次数值  
+      3. 针对NETWORK的选项  
+      ``` 
+      NAME  网卡的名称； 可以不填写，不填写意味着查看所有网卡。也可以用通配符表示，如 NAME='eth.*'
+      ```  
+      以下是一个采集网络数据并且指定了选项的例子：  
+      ```
+           _MONITOR CREATE TASK task1 TAG=network NAME='eth0' FREQ=10; 
+      ```   
+      采集的结果信息包括：
+      ```
+          nicName:       网卡名称
+          bytes_sent:    累计发送字节，单位为byte
+          bytes_recv:    累计接收字节，单位为byte
+          errin:         收到数据中发生的错误字节数量，单位为byte
+          errout:        发送数据中发生的错误字节数量，单位为byte
+          dropin:        收到数据中发生的丢弃字节数量，单位为byte
+          dropout:       发送数据中发生的丢弃字节数量，单位为byte
+          netin:         瞬时网络下行流量，单位为byte/秒
+          netout:        瞬时网络上行流量，单位为byte/秒
+      ```
+      4. 针对DISK的选项
+      ``` 
+      NAME  磁盘的名称； 可以不填写，不填写意味着查看所有磁盘。也可以用通配符表示，如 NAME='PhysicalDrive[12]'  
+      ``` 
+      以下是一个采集网络数据并且指定了选项的例子：
+      ```
+           _MONITOR CREATE TASK task1 TAG=disk NAME='PhysicalDrive[12]' FREQ=10; 
+      ```
+      5. 针对MEMORY的选项
+      采集的结果信息包括：
+      ```
+          available:   系统当前可用内存，包括未使用的物理内存、可用缓存
+          free:        未使用的物理内存
+          total:       总使用内存
+          percent:     内存使用率（总内存-可用内存/总内存*100)
+      ```
+      以下是一个采集内存数据的例子：
+      ```
+           _MONITOR CREATE TASK task1 TAG=memory FREQ=10; 
+      ```
+      6. 针对进程的选项  
+      ``` 
+      NAME             进程的名称。可以省略，或者通配符方式表示。需要注意的是，Linux的机制下，对于名称较长的进程，系统会自动截断。  
+      EXE              进程的执行文件。可以省略，或者通配符方式表示。需要注意的是，EXE可能为全路径，即包含路径信息。  
+      USERNAME         进程的执行用户名。可以省略，或者通配符方式表示  
+      ``` 
+      采集的结果包括：
+      ``` 
+           pid:             进程PID
+           username:        进程用户名
+           name:            进程名称
+           cmdline:         进程命令行，列表形式
+           status:          进程状态
+           threads:         进程线程数量
+           files:           进程文件数量
+           exec:            进程执行文件名称
+           create_time:     进程创建时间
+           cpu_percent:     进程占用CPU百分比
+           cpu_times_user:  进程消耗用户态CPU时间
+           cpu_times_sys:   进程消耗系统态CPU时间
+           mem_rss:         进程常驻内存大小，即使用的实际物理内存大小
+           mem_vms:         进程占用内存大小，即包括实际使用的物理内存大小、交换内存、共享内存等
+           mem_percent:     进程消耗内存占实际内存的比例      
+      ```
+      以下是一个进程数据的例子：
+      ```
+           _MONITOR CREATE TASK task1 TAG=process NAME=SunloginRemote.exe FREQ=3; 
+      ```
+      7. 针对CPU数量统计    
+      cpu_count             统计核心CPU的数量（按照内核数量统计）  
+      cpu_count_physical    统计物理CPU的数量  
+      以下是一个采集CPU数据的例子：
+      ```
+           _MONITOR CREATE TASK task1 TAG=cpu_count;
+           _MONITOR CREATE TASK task2 TAG=cpu_count_physical; 
+      ```
+      注意： 针对CPU数量采集设置FREQ是毫无意义的，系统也不会重复采集该数据。  
+      8. CPU使用率统计    
+      以下是一个采集CPU使用率的例子：
+      ```
+           _MONITOR CREATE TASK task1 TAG=cpu_percent FREQ=10; 
+      ```
+      采集的结果包括：
+      ``` 
+           ratio:           CPU使用率比例（百分比）
+      ```
+      9. CPU使用率统计
+   统计CPU使用率的百分比
+2. CPU时间统计  
+      以下是一个采集CPU时间的例子：
+      ```
+          _MONITOR CREATE TASK task1 TAG=cpu_times FREQ=10;
+      ```
+   依赖不同的操作系统，统计指标会所有不同。后期处理需要格外小心。  
+   Linux下：
+   ```
+     user:          用户态进程占据时间
+     system:        核心态进程占据时间
+     idle:          系统空闲时间
+     iowait:        系统IO等待时间
+     irq:           系统硬中断时间
+     softirq:       系统软中断时间
+     steal:         CPU排队时间（只发生在虚拟机中，物理CPU资源不足，导致虚拟CPU必须等待的情况）
+   ```
+   Windows下：
+   ```
+     user:          用户态进程占据时间
+     system:        核心态进程占据时间
+     idle:          系统空闲时间
+     interrupt:     系统中断时间
+     dpc:           延迟系统调用时间（系统核心中断无法提供服务，排队中)
+   ```
+   
 *** 
 ### 程序退出
 如果你执行一个脚本，则在以下三种情况下会退出

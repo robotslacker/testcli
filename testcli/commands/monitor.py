@@ -6,13 +6,14 @@ import threading
 import sqlite3
 import copy
 import re
+import sys
 from queue import Queue
 
 # 默认启动的监控线程数量
 defaultWorkerCount = 3
 
 # 默认的监控频度
-defaultMonitorFreq = 10
+defaultMonitorFreq = 30
 
 # 所有采集线程
 workerThreads = []
@@ -176,13 +177,24 @@ class MonitorWorker(threading.Thread):
                 continue
             elif param["TAG"] == "cpu_times":
                 cpu_times = psutil.cpu_times()
-                monitorValue = {
-                    "user": cpu_times.user,
-                    "system": cpu_times.system,
-                    "idle": cpu_times.idle,
-                    "interrupt": cpu_times.interrupt,
-                    "dpc": cpu_times.dpc
-                }
+                if 'win32' in str(sys.platform).lower():
+                    monitorValue = {
+                        "user": cpu_times.user,
+                        "system": cpu_times.system,
+                        "idle": cpu_times.idle,
+                        "interrupt": cpu_times.interrupt,
+                        "dpc": cpu_times.dpc,
+                    }
+                else:
+                    monitorValue = {
+                        "user": cpu_times.user,
+                        "system": cpu_times.system,
+                        "idle": cpu_times.idle,
+                        "iowait": cpu_times.iowait,
+                        "irq": cpu_times.irq,
+                        "softirq": cpu_times.softirq,
+                        "steal": cpu_times.steal
+                    }
                 self.appendTestResult(
                     monitorTime=time.time(),
                     taskId=taskId,
@@ -191,25 +203,17 @@ class MonitorWorker(threading.Thread):
                     monitorValue=monitorValue
                 )
                 continue
-            elif param["TAG"] == "cpu_times_percpu":
-                cpu_times = psutil.cpu_times(percpu=True)
-                monitorValues = []
-                for cpu_time in cpu_times:
-                    monitorValues.append(
-                        {
-                            "user": cpu_time.user,
-                            "system": cpu_time.system,
-                            "idle": cpu_time.idle,
-                            "interrupt": cpu_time.interrupt,
-                            "dpc": cpu_time.dpc
-                        }
-                    )
+            elif param["TAG"] == "cpu_percent":
+                cpu_percent = psutil.cpu_percent()
+                monitorValue = {
+                    "ratio": cpu_percent,
+                }
                 self.appendTestResult(
                     monitorTime=time.time(),
                     taskId=taskId,
                     taskName=taskName,
-                    monitorItem="cpu_times_percpu",
-                    monitorValue=monitorValues
+                    monitorItem="cpu_percent",
+                    monitorValue=monitorValue
                 )
                 continue
             elif param["TAG"] == "memory":
@@ -228,8 +232,8 @@ class MonitorWorker(threading.Thread):
                     monitorValue=monitorValues
                 )
             elif param["TAG"] == "network":
-                if "FILTER" in param.keys():
-                    nicFilter = str(param["FILTER"])
+                if "NAME" in param.keys():
+                    nicFilter = str(param["NAME"])
                     if nicFilter.startswith("'") and nicFilter.endswith("'"):
                         nicFilter = nicFilter[1:-1]
                     elif nicFilter.startswith('"') and nicFilter.endswith('"'):
@@ -284,8 +288,8 @@ class MonitorWorker(threading.Thread):
                         monitorValue=monitorValues
                     )
             elif param["TAG"] == "disk":
-                if "FILTER" in param.keys():
-                    diskFilter = param["FILTER"]
+                if "NAME" in param.keys():
+                    diskFilter = param["NAME"]
                     if diskFilter.startswith("'") and diskFilter.endswith("'"):
                         diskFilter = diskFilter[1:-1]
                     elif diskFilter.startswith('"') and diskFilter.endswith('"'):
@@ -421,7 +425,7 @@ class MonitorWorker(threading.Thread):
                         "cpu_times_sys": proc.cpu_times().system,
                         "mem_rss": proc.memory_info().rss,
                         "mem_vms": proc.memory_info().vms,
-                        "mem_percenmt": proc.memory_percent(),
+                        "mem_percent": proc.memory_percent(),
                     }]
                     self.appendTestResult(
                         monitorTime=time.time(),

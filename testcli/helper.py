@@ -254,4 +254,43 @@ helpMessage = [
             _connect user/pass
             ''',
     },
+    {
+        "topic": 'MONITOR',
+        "summary": "Monitor system perference.",
+        "nameSpace": "ALL",
+        "synatx":
+            '''
+        _MONITOR MANAGER ON [WOKERS <int>]
+        _MONITOR MANAGER OFF
+        _MONITOR CREATE TASK <taskName> TAG=<taskTag> <taskPara1>=<taskValue1> <taskPara2>=<taskValue2> ...
+        _MONITOR START TASK [ <taskName> | ALL ]
+        _MONITOR STOP TASK [ <taskName> | ALL ]
+        _MONITOR REPORT TASK [ <taskName> | ALL ]
+        _MONITOR LIST TASK
+        
+        Example:
+            _MONITOR MONITORMANAGER ON WORKERS 3;
+            
+            _MONITOR CREATE TASK task1 TAG=cpu_count;
+            _MONITOR CREATE TASK task2 TAG=memory FREQ=10;
+            _MONITOR CREATE TASK task3 TAG=network FILTER='eth0' FREQ=10;
+            _MONITOR CREATE TASK task4 TAG=disk FILTER='.*' FREQ=10;
+            _MONITOR CREATE TASK task5 TAG=process USERNAME='ldb' EXE='.*grassland-launcher';
+            _MONITOR START TASK ALL;
+            _SLEEP 10;
+            _MONITOR LIST TASK;
+            _MONITOR REPORT TASK ALL;
+
+        Supported tags:
+            cpu_count                
+            cpu_count_physical
+            cpu_times
+            cpu_percent
+            memory
+            network
+            disk
+            process
+            ''',
+
+    }
 ]
