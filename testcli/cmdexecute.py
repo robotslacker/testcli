@@ -773,24 +773,14 @@ class CmdExecute(object):
                             "message": sqlErrorMessage
                         }
                     else:
-                        if self.testOptions.get('TERMOUT').upper() != 'OFF':
-                            yield {
-                                "type": "result",
-                                "title": title,
-                                "rows": result,
-                                "headers": headers,
-                                "columnTypes": columnTypes,
-                                "status": status
-                            }
-                        else:
-                            yield {
-                                "type": "result",
-                                "title": title,
-                                "rows": [],
-                                "headers": headers,
-                                "columnTypes": columnTypes,
-                                "status": status
-                            }
+                        yield {
+                            "type": "result",
+                            "title": title,
+                            "rows": result,
+                            "headers": headers,
+                            "columnTypes": columnTypes,
+                            "status": status
+                        }
                     if not fetchStatus:
                         break
             except SQLCliJDBCTimeOutException:
@@ -1665,6 +1655,16 @@ class CmdExecute(object):
                         cls=self.cliHandler,
                         requestObject=parseObject,
                 ):
+                    if result["type"] == "result":
+                        lastCommandResult["rows"] = result["rows"]
+                        lastCommandResult["headers"] = result["headers"]
+                        lastCommandResult["status"] = result["status"]
+                        lastCommandResult["errorCode"] = 0
+                    if result["type"] == "error":
+                        lastCommandResult["rows"] = []
+                        lastCommandResult["headers"] = []
+                        lastCommandResult["status"] = result["message"]
+                        lastCommandResult["errorCode"] = 1
                     yield result
             else:
                 raise TestCliException("TestCli parse error:  unknown parseObject [" + str(parseObject) + "]")

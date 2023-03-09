@@ -1,0 +1,39 @@
+SQL> _start testmonitor.sql
+SQL> _MONITOR MONITORMANAGER ON WORKERS 3;
+Monitor manager has started.
+SQL>
+SQL> _MONITOR CREATE TASK task1 TAG=cpu_count;
+Monitor task [task1] has added.
+SQL> _MONITOR CREATE TASK task1 TAG=cpu_count_physical;
+Monitor task [task1] has added.
+SQL> _MONITOR CREATE TASK task1 TAG=cpu_percent;
+Monitor task [task1] has added.
+SQL> _MONITOR CREATE TASK task1 TAG=cpu_times;
+Monitor task [task1] has added.
+SQL> _MONITOR CREATE TASK task1 TAG=memory;
+Monitor task [task1] has added.
+SQL> _MONITOR CREATE TASK task1 TAG=network NAME='eth0';
+Monitor task [task1] has added.
+SQL> _MONITOR CREATE TASK task1 TAG=disk NAME='PhysicalDrive[12]';
+Monitor task [task1] has added.
+SQL> _MONITOR CREATE TASK task1 TAG=process USERNAME=ldb;
+Monitor task [task1] has added.
+SQL> _MONITOR START TASK ALL;
+Total [8] tasks has been started.
+SQL> _SLEEP 10;
+SQL> _SET TERMOUT OFF
+SQL> _MONITOR LIST TASK;
+Total [8] tasks selected.
+SQL>
+SQL> -- 校验采集结果
+SQL> _SET FEEDBACK OFF
+SQL> _MONITOR REPORT TASK ALL;
+SQL> > {%
+   > import copy
+   > x = copy.copy(lastCommandResult)
+   > %}
+SQL> _SET FEEDBACK ON
+SQL> _ASSERT {% len(x["rows"]) >=5 %}
+Assert successful.
+SQL> _exit
+Disconnected.

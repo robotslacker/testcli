@@ -2009,112 +2009,124 @@ SQL> _JOB job timer slave_finished;
    运行监控必须首先启动后台的调度管理作业。 启动的方式是_MONITOR MANAGER ON    
    通过指定WORKER的数量来确定监控采集程序占用的线程数目，默认情况下，这个数字为3  
 
-   1. 创建监控任务
-      1. TAG选项：
-      所有的监控任务都必须有TAG选项，用来指定需要采集的指标项目。    
-      目前，支持的TAG包括：   
-      ```
-           cpu_count             # 逻辑CPU数量，该指标只统计一次，不会重复执行                
-           cpu_count_physical    # 物理CPU数量，该指标只统计一次，不会重复执行
-           cpu_percent           # 统计CPU的占用率
-           cpu_times             # CPU运行统计，统计的内容依赖不同的操作系统也会不同
-           memory                # 内存使用情况统计
-           network               # 网络使用情况统计
-           disk                  # 磁盘使用情况统计
-           process               # 进程使用情况统计
-      ```   
-      2. FREQ选项：
-      FREQ不是必须的，但是在循环检测中设置必要的FREQ是必要的。  
-      如果不设置，FREQ的默认值为30，即30秒采集一次数值  
-      3. 针对NETWORK的选项  
-      ``` 
-      NAME  网卡的名称； 可以不填写，不填写意味着查看所有网卡。也可以用通配符表示，如 NAME='eth.*'
-      ```  
-      以下是一个采集网络数据并且指定了选项的例子：  
-      ```
-           _MONITOR CREATE TASK task1 TAG=network NAME='eth0' FREQ=10; 
-      ```   
-      采集的结果信息包括：
-      ```
-          nicName:       网卡名称
-          bytes_sent:    累计发送字节，单位为byte
-          bytes_recv:    累计接收字节，单位为byte
-          errin:         收到数据中发生的错误字节数量，单位为byte
-          errout:        发送数据中发生的错误字节数量，单位为byte
-          dropin:        收到数据中发生的丢弃字节数量，单位为byte
-          dropout:       发送数据中发生的丢弃字节数量，单位为byte
-          netin:         瞬时网络下行流量，单位为byte/秒
-          netout:        瞬时网络上行流量，单位为byte/秒
-      ```
-      4. 针对DISK的选项
-      ``` 
-      NAME  磁盘的名称； 可以不填写，不填写意味着查看所有磁盘。也可以用通配符表示，如 NAME='PhysicalDrive[12]'  
-      ``` 
-      以下是一个采集网络数据并且指定了选项的例子：
-      ```
-           _MONITOR CREATE TASK task1 TAG=disk NAME='PhysicalDrive[12]' FREQ=10; 
-      ```
-      5. 针对MEMORY的选项
-      采集的结果信息包括：
-      ```
-          available:   系统当前可用内存，包括未使用的物理内存、可用缓存
-          free:        未使用的物理内存
-          total:       总使用内存
-          percent:     内存使用率（总内存-可用内存/总内存*100)
-      ```
-      以下是一个采集内存数据的例子：
-      ```
-           _MONITOR CREATE TASK task1 TAG=memory FREQ=10; 
-      ```
-      6. 针对进程的选项  
-      ``` 
-      NAME             进程的名称。可以省略，或者通配符方式表示。需要注意的是，Linux的机制下，对于名称较长的进程，系统会自动截断。  
-      EXE              进程的执行文件。可以省略，或者通配符方式表示。需要注意的是，EXE可能为全路径，即包含路径信息。  
-      USERNAME         进程的执行用户名。可以省略，或者通配符方式表示  
-      ``` 
-      采集的结果包括：
-      ``` 
-           pid:             进程PID
-           username:        进程用户名
-           name:            进程名称
-           cmdline:         进程命令行，列表形式
-           status:          进程状态
-           threads:         进程线程数量
-           files:           进程文件数量
-           exec:            进程执行文件名称
-           create_time:     进程创建时间
-           cpu_percent:     进程占用CPU百分比
-           cpu_times_user:  进程消耗用户态CPU时间
-           cpu_times_sys:   进程消耗系统态CPU时间
-           mem_rss:         进程常驻内存大小，即使用的实际物理内存大小
-           mem_vms:         进程占用内存大小，即包括实际使用的物理内存大小、交换内存、共享内存等
-           mem_percent:     进程消耗内存占实际内存的比例      
-      ```
-      以下是一个进程数据的例子：
-      ```
-           _MONITOR CREATE TASK task1 TAG=process NAME=SunloginRemote.exe FREQ=3; 
-      ```
-      7. 针对CPU数量统计    
-      cpu_count             统计核心CPU的数量（按照内核数量统计）  
-      cpu_count_physical    统计物理CPU的数量  
-      以下是一个采集CPU数据的例子：
-      ```
-           _MONITOR CREATE TASK task1 TAG=cpu_count;
-           _MONITOR CREATE TASK task2 TAG=cpu_count_physical; 
-      ```
-      注意： 针对CPU数量采集设置FREQ是毫无意义的，系统也不会重复采集该数据。  
-      8. CPU使用率统计    
-      以下是一个采集CPU使用率的例子：
-      ```
-           _MONITOR CREATE TASK task1 TAG=cpu_percent FREQ=10; 
-      ```
-      采集的结果包括：
-      ``` 
-           ratio:           CPU使用率比例（百分比）
-      ```
-      9. CPU使用率统计
-   统计CPU使用率的百分比
-2. CPU时间统计  
+2. 创建监控任务
+   1. TAG选项：
+   所有的监控任务都必须有TAG选项，用来指定需要采集的指标项目。    
+   目前，支持的TAG包括：   
+   ```
+        cpu_count             # 逻辑CPU数量，该指标只统计一次，不会重复执行                
+        cpu_count_physical    # 物理CPU数量，该指标只统计一次，不会重复执行
+        cpu_percent           # 统计CPU的占用率
+        cpu_times             # CPU运行统计，统计的内容依赖不同的操作系统也会不同
+        memory                # 内存使用情况统计
+        network               # 网络使用情况统计
+        disk                  # 磁盘使用情况统计
+        process               # 进程使用情况统计
+   ```   
+   2. FREQ选项：
+   FREQ不是必须的，但是在循环检测中设置必要的FREQ是必要的。  
+   如果不设置，FREQ的默认值为30，即30秒采集一次数值  
+   3. 针对NETWORK的选项  
+   ``` 
+   NAME  网卡的名称； 可以不填写，不填写意味着查看所有网卡。也可以用通配符表示，如 NAME='eth.*'
+   ```  
+   以下是一个采集网络数据并且指定了选项的例子：  
+   ```
+        _MONITOR CREATE TASK task1 TAG=network NAME='eth0' FREQ=10; 
+   ```   
+   采集的结果信息包括：
+   ```
+       nicName:       网卡名称
+       bytes_sent:    累计发送字节，单位为byte
+       bytes_recv:    累计接收字节，单位为byte
+       errin:         收到数据中发生的错误字节数量，单位为byte
+       errout:        发送数据中发生的错误字节数量，单位为byte
+       dropin:        收到数据中发生的丢弃字节数量，单位为byte
+       dropout:       发送数据中发生的丢弃字节数量，单位为byte
+       netin:         瞬时网络下行流量，单位为byte/秒
+       netout:        瞬时网络上行流量，单位为byte/秒
+   ```
+   4. 针对DISK的选项
+   ``` 
+   NAME  磁盘的名称； 可以不填写，不填写意味着查看所有磁盘。也可以用通配符表示，如 NAME='PhysicalDrive[12]'  
+   ``` 
+   以下是一个采集网络数据并且指定了选项的例子：
+   ```
+        _MONITOR CREATE TASK task1 TAG=disk NAME='PhysicalDrive[12]' FREQ=10; 
+   ```
+   采集的结果信息包括：
+   ```
+       diskName:     磁盘名称
+       read_count:   磁盘读取次数
+       write_count:  磁盘写入次数
+       read_bytes:   磁盘读取字节
+       write_bytes:  磁盘写入字节
+       read_time:    磁盘读取响应时间，单位是毫秒
+       write_time:   磁盘写入响应时间，单位是毫秒
+       read_speed:   磁盘读取速率，单位为byte/秒
+       write_speed:  磁盘写入速率，单位为byte/秒
+   ```
+   5. 针对MEMORY的选项
+   采集的结果信息包括：
+   ```
+       available:   系统当前可用内存，包括未使用的物理内存、可用缓存
+       free:        未使用的物理内存
+       total:       总使用内存
+       percent:     内存使用率（总内存-可用内存/总内存*100)
+   ```
+   以下是一个采集内存数据的例子：
+   ```
+        _MONITOR CREATE TASK task1 TAG=memory FREQ=10; 
+   ```
+   6. 针对进程的选项  
+   ``` 
+   NAME             进程的名称。可以省略，或者通配符方式表示。需要注意的是，Linux的机制下，对于名称较长的进程，系统会自动截断。  
+   EXE              进程的执行文件。可以省略，或者通配符方式表示。需要注意的是，EXE可能为全路径，即包含路径信息。  
+   USERNAME         进程的执行用户名。可以省略，或者通配符方式表示  
+   ``` 
+   采集的结果包括：
+   ``` 
+        pid:             进程PID
+        username:        进程用户名
+        name:            进程名称
+        cmdline:         进程命令行，列表形式
+        status:          进程状态
+        threads:         进程线程数量
+        files:           进程文件数量
+        exec:            进程执行文件名称
+        create_time:     进程创建时间
+        cpu_percent:     进程占用CPU百分比
+        cpu_times_user:  进程消耗用户态CPU时间
+        cpu_times_sys:   进程消耗系统态CPU时间
+        mem_rss:         进程常驻内存大小，即使用的实际物理内存大小
+        mem_vms:         进程占用内存大小，即包括实际使用的物理内存大小、交换内存、共享内存等
+        mem_percent:     进程消耗内存占实际内存的比例      
+   ```
+   以下是一个进程数据的例子：
+   ```
+        _MONITOR CREATE TASK task1 TAG=process NAME=SunloginRemote.exe FREQ=3; 
+   ```
+   7. 针对CPU数量统计    
+   cpu_count             统计核心CPU的数量（按照内核数量统计）  
+   cpu_count_physical    统计物理CPU的数量  
+   以下是一个采集CPU数据的例子：
+   ```
+        _MONITOR CREATE TASK task1 TAG=cpu_count;
+        _MONITOR CREATE TASK task2 TAG=cpu_count_physical; 
+   ```
+   注意： 针对CPU数量采集设置FREQ是毫无意义的，系统也不会重复采集该数据。  
+   8. CPU使用率统计    
+   以下是一个采集CPU使用率的例子：
+   ```
+        _MONITOR CREATE TASK task1 TAG=cpu_percent FREQ=10; 
+   ```
+   采集的结果包括：
+   ``` 
+        ratio:           CPU使用率比例（百分比）
+   ```
+   9. CPU使用率统计
+统计CPU使用率的百分比
+3. CPU时间统计  
       以下是一个采集CPU时间的例子：
       ```
           _MONITOR CREATE TASK task1 TAG=cpu_times FREQ=10;

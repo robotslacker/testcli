@@ -90,6 +90,18 @@ class MonitorScheduler(threading.Thread):
 schedulerThread = MonitorScheduler()
 
 
+def bytes2human(n):
+    symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
+    prefix = {}
+    for i, s in enumerate(symbols):
+        prefix[s] = 1 << (i + 1) * 10
+    for s in reversed(symbols):
+        if n >= prefix[s]:
+            value = float(n) / prefix[s]
+            return '%.1f%s' % (value, s)
+    return "%sB" % n
+
+
 # 监控数据采集器
 class MonitorWorker(threading.Thread):
     def __init__(self, threadID, xlogFile):
@@ -219,9 +231,9 @@ class MonitorWorker(threading.Thread):
             elif param["TAG"] == "memory":
                 memoryStatis = psutil.virtual_memory()
                 monitorValues = [{
-                    "available": memoryStatis.available,
-                    "free": memoryStatis.free,
-                    "total": memoryStatis.total,
+                    "available": bytes2human(memoryStatis.available),
+                    "free": bytes2human(memoryStatis.free),
+                    "total": bytes2human(memoryStatis.total),
                     "percent": memoryStatis.percent,
                 }]
                 self.appendTestResult(
@@ -248,14 +260,14 @@ class MonitorWorker(threading.Thread):
                             monitorValues = [
                                 {
                                     "nicName": nicName,
-                                    "bytes_sent": networkStatis2.bytes_sent,
-                                    "bytes_recv": networkStatis2.bytes_recv,
-                                    "errin": networkStatis2.errin,
-                                    "errout": networkStatis2.errout,
-                                    "dropin": networkStatis2.dropin,
-                                    "dropout": networkStatis2.dropout,
-                                    "netin": networkStatis2.bytes_recv - networkStatis1.bytes_recv,
-                                    "netout": networkStatis2.bytes_sent - networkStatis1.bytes_sent,
+                                    "bytes_sent": bytes2human(networkStatis2.bytes_sent),
+                                    "bytes_recv": bytes2human(networkStatis2.bytes_recv),
+                                    "errin": bytes2human(networkStatis2.errin),
+                                    "errout": bytes2human(networkStatis2.errout),
+                                    "dropin": bytes2human(networkStatis2.dropin),
+                                    "dropout": bytes2human(networkStatis2.dropout),
+                                    "netin": bytes2human(networkStatis2.bytes_recv - networkStatis1.bytes_recv),
+                                    "netout": bytes2human(networkStatis2.bytes_sent - networkStatis1.bytes_sent),
                                 }
                             ]
                             self.appendTestResult(
@@ -271,14 +283,14 @@ class MonitorWorker(threading.Thread):
                     networkStatis2 = psutil.net_io_counters()
                     monitorValues = [{
                         "nicName": "GLOBAL",
-                        "bytes_sent": networkStatis2.bytes_sent,
-                        "bytes_recv": networkStatis2.bytes_recv,
-                        "errin": networkStatis2.errin,
-                        "errout": networkStatis2.errout,
-                        "dropin": networkStatis2.dropin,
-                        "dropout": networkStatis2.dropout,
-                        "netin": networkStatis2.bytes_recv - networkStatis1.bytes_recv,
-                        "netout": networkStatis2.bytes_sent - networkStatis1.bytes_sent,
+                        "bytes_sent": bytes2human(networkStatis2.bytes_sent),
+                        "bytes_recv": bytes2human(networkStatis2.bytes_recv),
+                        "errin": bytes2human(networkStatis2.errin),
+                        "errout": bytes2human(networkStatis2.errout),
+                        "dropin": bytes2human(networkStatis2.dropin),
+                        "dropout": bytes2human(networkStatis2.dropout),
+                        "netin": bytes2human(networkStatis2.bytes_recv - networkStatis1.bytes_recv),
+                        "netout": bytes2human(networkStatis2.bytes_sent - networkStatis1.bytes_sent),
                     }]
                     self.appendTestResult(
                         monitorTime=time.time(),
@@ -304,12 +316,12 @@ class MonitorWorker(threading.Thread):
                                 "diskName": diskName,
                                 "read_count": diskStatis2.read_count,
                                 "write_count": diskStatis2.write_count,
-                                "read_bytes": diskStatis2.read_bytes,
-                                "write_bytes": diskStatis2.write_bytes,
-                                "read_time": diskStatis2.read_time,
-                                "write_time": diskStatis2.write_time,
-                                "read_speed": diskStatis2.read_bytes - diskStatis1.read_bytes,
-                                "write_speed": diskStatis2.write_bytes - diskStatis1.write_bytes,
+                                "read_bytes": bytes2human(diskStatis2.read_bytes),
+                                "write_bytes": bytes2human(diskStatis2.write_bytes),
+                                "read_time": str(diskStatis2.read_time) + "ms",
+                                "write_time": str(diskStatis2.write_time) + "ms",
+                                "read_speed": bytes2human(diskStatis2.read_bytes - diskStatis1.read_bytes) + "/s",
+                                "write_speed": bytes2human(diskStatis2.write_bytes - diskStatis1.write_bytes) + "/s",
                             }]
                             self.appendTestResult(
                                 monitorTime=time.time(),
@@ -326,12 +338,12 @@ class MonitorWorker(threading.Thread):
                         "diskName": "GLOBAL",
                         "read_count": diskStatis2.read_count,
                         "write_count": diskStatis2.write_count,
-                        "read_bytes": diskStatis2.read_bytes,
-                        "write_bytes": diskStatis2.write_bytes,
-                        "read_time": diskStatis2.read_time,
-                        "write_time": diskStatis2.write_time,
-                        "read_speed": diskStatis2.read_bytes - diskStatis1.read_bytes,
-                        "write_speed": diskStatis2.write_bytes - diskStatis1.write_bytes,
+                        "read_bytes": bytes2human(diskStatis2.read_bytes),
+                        "write_bytes": bytes2human(diskStatis2.write_bytes),
+                        "read_time": str(diskStatis2.read_time) + "ms",
+                        "write_time": str(diskStatis2.write_time) + "ms",
+                        "read_speed": bytes2human(diskStatis2.read_bytes - diskStatis1.read_bytes) + "/s",
+                        "write_speed": bytes2human(diskStatis2.write_bytes - diskStatis1.write_bytes) + "/s",
                     }]
                     self.appendTestResult(
                         monitorTime=time.time(),
@@ -384,56 +396,65 @@ class MonitorWorker(threading.Thread):
                         exeFilter = exeFilter[1:-1]
                     elif exeFilter.startswith('"') and exeFilter.endswith('"'):
                         exeFilter = exeFilter[1:-1]
-                for proc in psutil.process_iter():
-                    try:
-                        username = proc.username()
-                    except psutil.AccessDenied:
-                        username = "AccessDenied."
-                    if userNameFilter is not None:
-                        if not re.match(pattern=userNameFilter, string=username, flags=re.IGNORECASE):
-                            continue
-                    if nameFilter is not None:
-                        if not re.match(pattern=nameFilter, string=proc.name(), flags=re.IGNORECASE):
-                            continue
-                    try:
-                        exe = proc.exe()
-                    except psutil.AccessDenied:
-                        exe = "AccessDenied."
-                    if exeFilter is not None:
-                        if not re.match(pattern=exeFilter, string=exe, flags=re.IGNORECASE):
-                            continue
-                    try:
-                        cmdLine = proc.cmdline()
-                    except psutil.AccessDenied:
-                        cmdLine = "AccessDenied."
-                    try:
-                        files = len(proc.open_files())
-                    except psutil.AccessDenied:
-                        files = 0
-                    monitorValues = [{
-                        "pid": proc.pid,
-                        "username": username,
-                        "name": proc.name(),
-                        "cmdline": cmdLine,
-                        "status": proc.status(),
-                        "threads": proc.num_threads(),
-                        "files": files,
-                        "exec": exe,
-                        "create_time": proc.create_time(),
-                        "cpu_percent": proc.cpu_percent(),
-                        "cpu_times_user": proc.cpu_times().user,
-                        "cpu_times_sys": proc.cpu_times().system,
-                        "mem_rss": proc.memory_info().rss,
-                        "mem_vms": proc.memory_info().vms,
-                        "mem_percent": proc.memory_percent(),
-                    }]
-                    self.appendTestResult(
-                        monitorTime=time.time(),
-                        taskId=taskId,
-                        taskName=taskName,
-                        monitorItem="process",
-                        monitorValue=monitorValues
-                    )
+                for proc in psutil.process_iter(
+                        ["username", "name", "exe",
+                         "cmdline", "status", "num_threads",
+                         "create_time", "cpu_percent",
+                         "memory_info", "memory_percent"]
+                ):
+                    # 性能问题说明：
+                    # 1. 只读取非常必要的列，不获取额外的列信息
+                    # 2. 每次获取后都采用快照方式，不要直接去读取
+                    with proc.oneshot():
+                        try:
+                            username = proc.username()
+                        except psutil.AccessDenied:
+                            username = "AccessDenied."
+                        if userNameFilter is not None:
+                            if not re.match(pattern=userNameFilter, string=username, flags=re.IGNORECASE):
+                                continue
+                        if nameFilter is not None:
+                            if not re.match(pattern=nameFilter, string=proc.name(), flags=re.IGNORECASE):
+                                continue
+                        try:
+                            exe = proc.exe()
+                        except psutil.AccessDenied:
+                            exe = "AccessDenied."
+                        if exeFilter is not None:
+                            if not re.match(pattern=exeFilter, string=exe, flags=re.IGNORECASE):
+                                continue
+                        try:
+                            cmdLine = proc.cmdline()
+                        except psutil.AccessDenied:
+                            cmdLine = "AccessDenied."
+                        try:
+                            files = len(proc.open_files())
+                        except psutil.AccessDenied:
+                            files = 0
+                        monitorValues = [{
+                            "pid": proc.pid,
+                            "username": username,
+                            "name": proc.name(),
+                            "cmdline": cmdLine,
+                            "status": proc.status(),
+                            "threads": proc.num_threads(),
+                            "files": files,
+                            "exec": exe,
+                            "create_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(proc.create_time())),
+                            "cpu_percent": proc.cpu_percent(),
+                            "cpu_times_user": proc.cpu_times().user,
+                            "cpu_times_sys": proc.cpu_times().system,
+                            "mem_rss": bytes2human(proc.memory_info().rss),
+                            "mem_vms": bytes2human(proc.memory_info().vms),
+                            "mem_percent": proc.memory_percent(),
+                        }]
+                        self.appendTestResult(
+                            monitorTime=time.time(),
+                            taskId=taskId,
+                            taskName=taskName,
+                            monitorItem="process",
+                            monitorValue=monitorValues
+                        )
             else:
                 taskLock = threading.Lock()
                 # 添加任务列表

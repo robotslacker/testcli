@@ -549,7 +549,10 @@ class TestCli(object):
                                     self.echo(message, m_EchoFlag)
                     elif p_result["type"] == "result":
                         title = p_result["title"]
-                        cur = p_result["rows"]
+                        if self.testOptions.get("TERMOUT").upper() == 'ON':
+                            cur = p_result["rows"]
+                        else:
+                            cur = []
                         headers = p_result["headers"]
                         columnTypes = p_result["columnTypes"]
                         status = p_result["status"]

@@ -140,8 +140,8 @@ TestCli
 ```
 
 #### 从应用程序的角度直接调用该程序
-TestCli是一个控制台应用，但是你也可以直接绕过控制台应用来直接调用  
-以下是一个例子：
+TestCli是一个控制台应用，但是你也可以直接绕过控制台应用来直接调用    
+例子1（结果会用yield的方式非阻塞性逐行返回，包括统计信息、提示信息等）：
 ```
         testcliHandler = TestCli(HeadlessMode=True, namespace='SQL')
         for result in testcliHandler.cmdExecuteHandler.runStatement(
@@ -154,6 +154,13 @@ TestCli是一个控制台应用，但是你也可以直接绕过控制台应用�
                 break
             print("result = " + str(result))
 
+```
+例子2（结果会一次性返回，不会包含统计信息、提示信息等）：
+```
+        testcliHandler = TestCli(HeadlessMode=True, namespace='SQL')
+        command = "_Connect admin/123456@jdbc:linkoopdb:tcp://192.168.10.74:9105/ldb\nselect 1+3 from dual;"
+        testcliHandler.DoCommand(command)
+        print("rsult = " + str(testcliHandler.getLastCommandResult()))
 ```
 
 #### 打包发布
