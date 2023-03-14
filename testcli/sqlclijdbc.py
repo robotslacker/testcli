@@ -644,7 +644,12 @@ class Cursor(object):
             sqltype = self._meta.getColumnType(col)
             columnClassName = self._meta.getColumnClassName(col)
             columnTypeName = self._meta.getColumnTypeName(col)
-            columnDataType = type(self._rs.getObject(col))
+            if columnTypeName != "LONG":
+                # Oracle的LONG类型不支持getObject函数
+                columnDataType = type(self._rs.getObject(col))
+            else:
+                columnDataType = str
+
             if columnClassName is None:
                 # NULL值
                 converter = _DEFAULT_CONVERTERS["VARCHAR"]
@@ -1136,5 +1141,5 @@ _DEFAULT_CONVERTERS = {
     'YEAR':                             _to_year,
     'BINARY':                           _to_binary,
     'BFILE':                            _to_bfile,
-    'ROWID':                            _java_to_py
+    'ROWID':                            _java_to_py,
 }

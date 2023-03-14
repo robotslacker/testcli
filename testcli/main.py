@@ -4,7 +4,8 @@ import sys
 import traceback
 import click
 import pytest
-
+import platform
+import signal
 from .__init__ import __version__
 from .testcli import TestCli
 from .testcliexception import TestCliException
@@ -12,6 +13,8 @@ from .testcliexception import TestCliException
 # 定义全局变量，程序的返回值，默认是0
 appExitValue = 0
 
+# 主程序句柄
+appHandler = None
 
 @click.command()
 @click.option("--version", is_flag=True, help="Show TestCli version.")
@@ -28,7 +31,6 @@ appExitValue = 0
 @click.option("--scripttimeout", type=int, help="Script timeout(seconds).")
 @click.option("--namespace", type=str, help="Command default name space(SQL|API). Default is depend on file suffix.")
 @click.option("--selftest", is_flag=True, help="Run self test and exit.")
-@click.option("--readme", is_flag=True, help="Show README doc and exit.")
 @click.option("--suitename", type=str, help="Test suite name.")
 @click.option("--casename", type=str, help="Test case name.")
 def cli(
@@ -46,7 +48,6 @@ def cli(
         scripttimeout,
         namespace,
         selftest,
-        readme,
         suitename,
         casename
 ):
@@ -65,22 +66,12 @@ def cli(
         )
         return
 
-    # 显示出手册
-    if readme:
-        from rich.console import Console
-        from rich.markdown import Markdown
-        console = Console()
-        readmeFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "docs/UserGuide.md"))
-        with open(readmeFile, encoding="UTF-8") as readme:
-            markdown = Markdown(readme.read())
-            console.print(markdown)
-        return
-
     # 程序脚本超时时间设置
     if not scripttimeout:
         scripttimeout = -1
 
-    testcli = TestCli(
+    global  appHandler
+    appHandler = TestCli(
         logfilename=logfile,
         logon=logon,
         script=execute,
@@ -99,10 +90,24 @@ def cli(
 
     # 运行主程序
     global appExitValue
-    appExitValue = testcli.run_cli()
+    appExitValue = appHandler.run_cli()
+
+
+# 信号处理程序
+def abortSignalHandler(signum, frame):
+    click.secho("Got signal [" + str(signum) + "]. Quit application.", err=True, fg="red")
+    if frame:
+        pass
+    # Cli会处理EOF Error，类似于直接退出
+    raise EOFError
 
 
 if __name__ == "__main__":
+
+    # 捕捉信号，处理服务中断的情况
+    if platform.system().upper() == "LINUX":
+        signal.signal(signal.SIGTERM, abortSignalHandler)
+
     # 根据cli的结果退出，如果意外，退出返回值为255
     try:
         cli()

@@ -620,15 +620,15 @@ class SQLVisitor(SQLParserVisitor):
                 parsedObject.update({"sessionName": str(ctx.SSH_EXPRESSION()[0].getText())})
             else:
                 parsedObject.update({"sessionName": None})
-        if ctx.SSH_RESTORE() is not None:
+        elif ctx.SSH_RESTORE() is not None:
             parsedObject.update({"action": "restore"})
             if ctx.SSH_EXPRESSION() is not None:
                 parsedObject.update({"sessionName": str(ctx.SSH_EXPRESSION()[0].getText())})
             else:
                 parsedObject.update({"sessionName": None})
-        if ctx.SSH_DISCONNECT() is not None:
+        elif ctx.SSH_DISCONNECT() is not None:
             parsedObject.update({"action": "disconnect"})
-        if ctx.SSH_EXECUTE() is not None:
+        elif ctx.SSH_EXECUTE() is not None:
             parsedObject.update({"action": "execute"})
             parsedObject.update({"command": ""})
             commands = []
@@ -661,7 +661,7 @@ class SQLVisitor(SQLParserVisitor):
                     self.errorMsg = "Missing <EOF> un-closed qutote string."
                     return
             parsedObject.update({"command": command})
-        if ctx.SSH_CONNECT() is not None:
+        elif ctx.SSH_CONNECT() is not None:
             parsedObject.update({"action": "connect"})
             parsedObject.update({"host": str(ctx.SSH_EXPRESSION()[0].getText())})
             if ctx.SSH_USER() is not None:
@@ -673,53 +673,52 @@ class SQLVisitor(SQLParserVisitor):
                 if keyFileName.startswith('"') and keyFileName.endswith('"'):
                     keyFileName = keyFileName[1:-1]
                 parsedObject.update({"keyFile": keyFileName})
-
         # 处理SFTP命令
-        if ctx.SFTP_CHMOD() is not None:
+        elif ctx.SFTP_CHMOD() is not None:
             parsedObject.update({"action": "sftp_chmod"})
             fileName = str(ctx.SSH_EXPRESSION()[0].getText())
-            fileMod = str(ctx.SSH_INT()[0].getText())
+            fileMod = str(ctx.INT()[0].getText())
             parsedObject.update({"fileName": fileName})
             parsedObject.update({"fileMod": fileMod})
-        if ctx.SFTP_GETCWD() is not None:
+        elif ctx.SFTP_GETCWD() is not None:
             parsedObject.update({"action": "sftp_cwd"})
-        if ctx.SFTP_CHDIR() is not None:
+        elif ctx.SFTP_CHDIR() is not None:
             parsedObject.update({"action": "sftp_chdir"})
             parsedObject.update({"dir": str(ctx.SSH_EXPRESSION()[0].getText())})
-        if ctx.SFTP_MKDIR() is not None:
+        elif ctx.SFTP_MKDIR() is not None:
             parsedObject.update({"action": "sftp_mkdir"})
             parsedObject.update({"dir": str(ctx.SSH_EXPRESSION()[0].getText())})
-            parsedObject.update({"dirMod": str(ctx.SSH_INT()[0].getText())})
-        if ctx.SFTP_CHOWN() is not None:
+            parsedObject.update({"dirMod": str(ctx.INT()[0].getText())})
+        elif ctx.SFTP_CHOWN() is not None:
             parsedObject.update({"action": "sftp_chown"})
             fileName = str(ctx.SSH_EXPRESSION()[0].getText())
-            uid = int(ctx.SSH_INT()[0].getText())
-            gid = int(ctx.SSH_INT()[1].getText())
+            uid = int(ctx.INT()[0].getText())
+            gid = int(ctx.INT()[1].getText())
             parsedObject.update({"fileName": fileName})
             parsedObject.update({"uid": uid})
             parsedObject.update({"gid": gid})
-        if ctx.SFTP_GET() is not None:
+        elif ctx.SFTP_GET() is not None:
             parsedObject.update({"action": "sftp_get"})
             parsedObject.update({"remoteFile": str(ctx.SSH_EXPRESSION()[0].getText())})
             parsedObject.update({"localFile": str(ctx.SSH_EXPRESSION()[1].getText())})
-        if ctx.SFTP_PUT() is not None:
+        elif ctx.SFTP_PUT() is not None:
             parsedObject.update({"action": "sftp_put"})
             parsedObject.update({"localFile": str(ctx.SSH_EXPRESSION()[0].getText())})
             parsedObject.update({"remoteFile": str(ctx.SSH_EXPRESSION()[1].getText())})
-        if ctx.SFTP_REMOVE() is not None:
+        elif ctx.SFTP_REMOVE() is not None:
             parsedObject.update({"action": "sftp_remove"})
             parsedObject.update({"file": str(ctx.SSH_EXPRESSION()[0].getText())})
-        if ctx.SFTP_RENAME() is not None:
+        elif ctx.SFTP_RENAME() is not None:
             parsedObject.update({"action": "sftp_rename"})
             parsedObject.update({"oldFile": str(ctx.SSH_EXPRESSION()[0].getText())})
             parsedObject.update({"newFile": str(ctx.SSH_EXPRESSION()[1].getText())})
-        if ctx.SFTP_LISTDIR() is not None:
+        elif ctx.SFTP_LISTDIR() is not None:
             parsedObject.update({"action": "sftp_listdir"})
             parsedObject.update({"dir": str(ctx.SSH_EXPRESSION()[0].getText())})
-        if ctx.SFTP_TRUNCATE() is not None:
+        elif ctx.SFTP_TRUNCATE() is not None:
             parsedObject.update({"action": "sftp_truncate"})
             parsedObject.update({"file": str(ctx.SSH_EXPRESSION()[0].getText())})
-            fileSize = int(ctx.SSH_INT()[0].getText())
+            fileSize = int(ctx.INT()[0].getText())
             parsedObject.update({"fileSize": fileSize})
 
         # 处理错误信息

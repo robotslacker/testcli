@@ -113,17 +113,17 @@ ssh     :
             (SSH_RESTORE SSH_EXPRESSION) |
               (
               SFTP (
-                     (SFTP_CHMOD SSH_EXPRESSION SSH_INT) |
+                     (SFTP_CHMOD SSH_EXPRESSION INT) |
                      (SFTP_GETCWD) |
                      (SFTP_CHDIR SSH_EXPRESSION) |
-                     (SFTP_CHOWN SSH_EXPRESSION SSH_INT SSH_INT) |
-                     (SFTP_MKDIR SSH_EXPRESSION SSH_INT) |
+                     (SFTP_CHOWN SSH_EXPRESSION INT INT) |
+                     (SFTP_MKDIR SSH_EXPRESSION INT) |
                      (SFTP_GET SSH_EXPRESSION SSH_EXPRESSION) |
                      (SFTP_PUT SSH_EXPRESSION SSH_EXPRESSION) |
                      (SFTP_REMOVE SSH_EXPRESSION) |
                      (SFTP_RENAME SSH_EXPRESSION SSH_EXPRESSION) |
                      (SFTP_LISTDIR SSH_EXPRESSION) |
-                     (SFTP_TRUNCATE SSH_EXPRESSION SSH_INT)
+                     (SFTP_TRUNCATE SSH_EXPRESSION INT)
                    )
               )
            )
