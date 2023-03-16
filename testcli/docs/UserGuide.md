@@ -1714,7 +1714,7 @@ TestCli被设计为支持并发执行脚本，支持后台执行脚本。
 8：  timer          相关Worker进程等待聚合点
 ```
    _JOB MANAGER [ON | OOF]
-   _JOB WAIT <JOB的名字 | ALL> 
+   _JOB WAIT <JOB的名字 | ALL> { <JOB选项名称>=<JOB选项值>}
    _JOB SHOW <JOB的名字 | ALL> 
    _JOB START <JOB的名字 | ALL>   
    _JOB ABORT <JOB的名字 | ALL> 
@@ -1732,9 +1732,9 @@ create可以有多个参数：
 ```
 SQL> _JOB job create jobtest;
 JOB [jobtest] create successful.
-SQL> _JOB job create jobtest2 loop 4;
+SQL> _JOB job create jobtest2 loop=4;
 JOB [jobtest2] create successful.
-SQL> _JOB job create jobtest3 loop 4 parallel 2;
+SQL> _JOB job create jobtest3 loop=4 parallel=2;
 JOB [jobtest3] create successful.
 
 ```
@@ -1756,11 +1756,11 @@ think_time               ：  每一次作业完成后，启动下一个作业�
 blowout_threshold_count  ：  完全失败阈值，若失败次数已经达到该次数，认为后续作业已经没必要运行。默认是0，即不限制   
 tag                      ：  程序组标识，所有具有相同tag的Worker进程在判断聚合点的时候将保持同步
 例子： 
-SQL> _JOB job set jobtest parallel 2;
+SQL> _JOB job set jobtest script=bb.sql parallel=2;
 JOB [jobtest] set successful.
-SQL> _JOB job set jobtest loop 4;
+SQL> _JOB job set jobtest script=bb.sql loop 4;
 JOB [jobtest] set successful.
-SQL> _JOB job set jobtest script bb.sql;
+SQL> _JOB job set jobtest script=bb.sql;
 JOB [jobtest] set successful.
 SQL>
 ```
@@ -1800,10 +1800,10 @@ Detail Tasks:
 通过start的方式，我可以启动全部的后台任务或者只启动部分后台任务
 ```
 SQL> _JOB jobmanager on
-SQL> _JOB job start all;
+SQL> _JOB start all;
 1 Job Started.
 这里会将你之前提交的所有后台脚本都一次性的启动起来
-SQL> _JOB job start jobtest;
+SQL> _JOB start jobtest;
 1 Job Started.
 这里只会启动JOB名称为jobtest的后台任务
 随后，再次通过show来查看信息，可以注意到相关已经启动
@@ -1812,10 +1812,10 @@ SQL> _JOB job start jobtest;
 #### 如何停止后台任务脚本
 在脚本运行过程中，你可以用shutdown来停止某个某个任务或者全部任务，
 ```
-SQL> _JOB job shutdown all;
+SQL> _JOB shutdown all;
 Total [1] job shutdowned.
 这里会将当前运行的所有后台脚本都停止下来
-SQL> _JOB job shutdown jobtst;
+SQL> _JOB shutdown jobtst;
 Total [1] job shutdowned.
 注意： shutdown并不会真的终止你当前正在运行的作业，但是在这个作业之后的所有作业不再执行，要求循环执行的脚本也不再循环。
       只有在子任务完成当前作业后，shutdownjob才能完成。
@@ -1824,40 +1824,46 @@ Total [1] job shutdowned.
 #### 如何强行停止后台任务脚本
 在脚本运行过程中，你可以用abort来强行停止某个某个任务或者全部任务，
 ```
-SQL> _JOB job abort all;
+SQL> _JOB abort all;
 Total [1] job aborted.
 这里会将当前运行的所有后台脚本都停止下来
-SQL> _JOB job abort jobtst;
+SQL> _JOB abort jobtst;
 Total [1] job aborted.
 ```
 #### 等待后台任务脚本运行结束
 在脚本运行过程中，你可以用wait来等待后台脚本的运行结束
 ```
-SQL> _JOB job wait all;
+SQL> _JOB wait all;
 All jobs [all] finished.
-SQL> _JOB job wait jobtest;
+SQL> _JOB wait jobtest;
 All jobs [jobtest] finished.
 waitjob不会退出，而是会一直等待相关脚本结束后再退出
 ```
+wait 可以指定timeout参数，如果指定，则wait最多等待timeout的时候，随后退出。
+```
+SQL> _job wait all TIMEOUT=3;
+Unexpected internal error: Job wait terminated. Timeout [3]
+```
+
 #### 如何让若干的Worker应用程序保持聚合点
 主调度程序脚本：
 ```
 SQL> _JOB jobmanager on
-SQL> _JOB job create mytest loop 2 parallel 2 script slave1.sql tag group1;
-SQL> _JOB job create mytest2 loop 2 parallel 2 script slave2.sql tag group1;
-SQL> _JOB job start mytest;
-SQL> _JOB job start mytest2;
-SQL> _JOB job wait all;
+SQL> _JOB create mytest loop=2 parallel=2 script=slave1.sql tag=group1;
+SQL> _JOB create mytest2 loop=2 parallel=2 script=slave2.sql tag=group1;
+SQL> _JOB start mytest;
+SQL> _JOB start mytest2;
+SQL> _JOB wait all;
 ```
 
 Worker应用程序脚本(slave1.sql, slave2.sql)：
 ```
 -- 两个Worker程序(slave1.sql,slave2.sql)将会同时结束all_slave_started的聚合点
-SQL> _JOB job timer all_slave_started;
+SQL> _JOB timer all_slave_started;
 SQL> do some sql
-SQL> _JOB job timer slave_point1;
+SQL> _JOB timer slave_point1;
 SQL> do some sql
-SQL> _JOB job timer slave_finished;
+SQL> _JOB timer slave_finished;
 ```
 
 ### 脚本中使用COMPARE命令来比较文件差异性
@@ -1997,8 +2003,8 @@ SQL> _JOB job timer slave_finished;
 ### 系统运行监控
 使用内置的监控程序，系统将在后台采集需要的性能数据，如果有必要，这些信息可以记录在程序的扩展日志中。  
 ```
-    _MONITOR MANAGER ON [WOKERS <int>]
-    _MONITOR MANAGER OFF
+    _MONITOR MONITORMANAGER ON [WOKERS <int>]
+    _MONITOR MONITORMANAGER OFF
     _MONITOR CREATE TASK <taskName> TAG=<taskTag> taskPara1=taskValue1 taskPara2=taskValue2 ...
     _MONITOR START TASK [ <taskName> | ALL ]
     _MONITOR STOP TASK [ <taskName> | ALL ]

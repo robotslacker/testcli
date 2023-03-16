@@ -7,6 +7,8 @@ import datetime
 import copy
 from multiprocessing import Lock
 import traceback
+
+import click
 import jpype
 import socket
 from .testcliexception import TestCliException
@@ -873,53 +875,66 @@ class JOBManager(object):
 
     # 后台守护线程，跟踪进程信息，启动或强制关闭进程
     def JOBManagerAgent(self):
-        if self.getWorkerStatus() == "NOT-STARTED":
-            self.setWorkerStatus("RUNNING")
-        while True:
-            # 如果程序退出，则关闭该Agent线程
-            if self.getWorkerStatus() == "WAITINGFOR_STOP":
-                self.setWorkerStatus("STOPPED")
-                break
-            # 循环处理工作JOB
-            for m_Job in self.getAllJobs():
-                if m_Job.getStatus() in ("Submitted", "FAILED", "SHUTDOWNED", "FINISHED", "ABORTED"):
-                    # 已经结束的Case不再处理， 或者刚提交，但是没有执行的
-                    continue
-                if m_Job.getStatus() in ("RUNNING", "WAITINGFOR_SHUTDOWN", "WAITINGFOR_ABORT"):
-                    # 依次检查Worker的状态
-                    # 即使已经处于WAITINGFOR_SHUTDOWN或者WAITINGFOR_ABORT中，也不排除还有没有完成的作业
-                    m_WorkerList = m_Job.getWorkers()
-                    currenttime = int(time.mktime(datetime.datetime.now().timetuple()))
-                    bAllWorkerFinished = True
-                    for m_Worker in m_WorkerList:
-                        m_ProcessID = m_Worker.ProcessID
-                        if m_ProcessID != 0:
-                            m_Process = self.ProcessID[m_ProcessID]
-                            if not m_Process.is_alive():
-                                # 进程ID不是0，进程已经不存在，或者是正常完成，或者是异常退出
-                                if m_Process.exitcode != 0:
-                                    m_Job.failed_jobs = m_Job.failed_jobs + 1
-                                m_Job.finished_jobs = m_Job.finished_jobs + 1
-                                m_Job.active_jobs = m_Job.active_jobs - 1
-                                m_Job.FinishWorker(self.MetaConn, m_Worker.WorkerHandler_ID,
-                                                   m_Process.exitcode, "")
-                                self.SaveJob(m_Job)
-                                # 从当前保存的进程信息中释放该进程
-                                self.ProcessID.pop(m_ProcessID)
-                            else:
-                                # 进程还在运行中
-                                if m_Job.getTimeOut() != 0:
-                                    # 设置了超时时间，我们需要根据超时时间进行判断
-                                    if m_Worker.start_time + m_Job.getTimeOut() < currenttime:
-                                        m_Process.terminate()
-                                        m_Job.FinishWorker(self.MetaConn, m_Worker.WorkerHandler_ID,
-                                                           m_Process.exitcode, "TIMEOUT")
+        try:
+            if self.getWorkerStatus() == "NOT-STARTED":
+                self.setWorkerStatus("RUNNING")
+            while True:
+                # 如果程序退出，则关闭该Agent线程
+                if self.getWorkerStatus() == "WAITINGFOR_STOP":
+                    self.setWorkerStatus("STOPPED")
+                    break
+                # 循环处理工作JOB
+                for m_Job in self.getAllJobs():
+                    if m_Job.getStatus() in ("Submitted", "FAILED", "SHUTDOWNED", "FINISHED", "ABORTED"):
+                        # 已经结束的Case不再处理， 或者刚提交，但是没有执行的
+                        continue
+                    if m_Job.getStatus() in ("RUNNING", "WAITINGFOR_SHUTDOWN", "WAITINGFOR_ABORT"):
+                        # 依次检查Worker的状态
+                        # 即使已经处于WAITINGFOR_SHUTDOWN或者WAITINGFOR_ABORT中，也不排除还有没有完成的作业
+                        m_WorkerList = m_Job.getWorkers()
+                        currenttime = int(time.mktime(datetime.datetime.now().timetuple()))
+                        bAllWorkerFinished = True
+                        for m_Worker in m_WorkerList:
+                            m_ProcessID = m_Worker.ProcessID
+                            if m_ProcessID != 0:
+                                m_Process = self.ProcessID[m_ProcessID]
+                                if not m_Process.is_alive():
+                                    # 进程ID不是0，进程已经不存在，或者是正常完成，或者是异常退出
+                                    if m_Process.exitcode != 0:
                                         m_Job.failed_jobs = m_Job.failed_jobs + 1
-                                        m_Job.finished_jobs = m_Job.finished_jobs + 1
-                                        m_Job.active_jobs = m_Job.active_jobs - 1
-                                        self.SaveJob(m_Job)
-                                        # 从当前保存的进程信息中释放该进程
-                                        self.ProcessID.pop(m_ProcessID)
+                                    m_Job.finished_jobs = m_Job.finished_jobs + 1
+                                    m_Job.active_jobs = m_Job.active_jobs - 1
+                                    m_Job.FinishWorker(self.MetaConn, m_Worker.WorkerHandler_ID,
+                                                       m_Process.exitcode, "")
+                                    self.SaveJob(m_Job)
+                                    # 从当前保存的进程信息中释放该进程
+                                    self.ProcessID.pop(m_ProcessID)
+                                else:
+                                    # 进程还在运行中
+                                    if m_Job.getTimeOut() != 0:
+                                        # 设置了超时时间，我们需要根据超时时间进行判断
+                                        if m_Worker.start_time + m_Job.getTimeOut() < currenttime:
+                                            m_Process.terminate()
+                                            m_Job.FinishWorker(self.MetaConn, m_Worker.WorkerHandler_ID,
+                                                               m_Process.exitcode, "TIMEOUT")
+                                            m_Job.failed_jobs = m_Job.failed_jobs + 1
+                                            m_Job.finished_jobs = m_Job.finished_jobs + 1
+                                            m_Job.active_jobs = m_Job.active_jobs - 1
+                                            self.SaveJob(m_Job)
+                                            # 从当前保存的进程信息中释放该进程
+                                            self.ProcessID.pop(m_ProcessID)
+                                        else:
+                                            if m_Job.getStatus() == "WAITINGFOR_ABORT":
+                                                m_Process.terminate()
+                                                m_Job.FinishWorker(self.MetaConn, m_Worker.WorkerHandler_ID,
+                                                                   m_Process.exitcode, "ABORTED")
+                                                m_Job.failed_jobs = m_Job.failed_jobs + 1
+                                                m_Job.finished_jobs = m_Job.finished_jobs + 1
+                                                m_Job.active_jobs = m_Job.active_jobs - 1
+                                                self.SaveJob(m_Job)
+                                                # 从当前保存的进程信息中释放该进程
+                                                self.ProcessID.pop(m_ProcessID)
+                                            bAllWorkerFinished = False
                                     else:
                                         if m_Job.getStatus() == "WAITINGFOR_ABORT":
                                             m_Process.terminate()
@@ -932,60 +947,55 @@ class JOBManager(object):
                                             # 从当前保存的进程信息中释放该进程
                                             self.ProcessID.pop(m_ProcessID)
                                         bAllWorkerFinished = False
-                                else:
-                                    if m_Job.getStatus() == "WAITINGFOR_ABORT":
-                                        m_Process.terminate()
-                                        m_Job.FinishWorker(self.MetaConn, m_Worker.WorkerHandler_ID,
-                                                           m_Process.exitcode, "ABORTED")
-                                        m_Job.failed_jobs = m_Job.failed_jobs + 1
-                                        m_Job.finished_jobs = m_Job.finished_jobs + 1
-                                        m_Job.active_jobs = m_Job.active_jobs - 1
-                                        self.SaveJob(m_Job)
-                                        # 从当前保存的进程信息中释放该进程
-                                        self.ProcessID.pop(m_ProcessID)
-                                    bAllWorkerFinished = False
-                                continue
-                    if bAllWorkerFinished and m_Job.getStatus() == "WAITINGFOR_SHUTDOWN":
-                        # 检查脚本信息，如果脚本压根不存在，则无法后续的操作
-                        m_Job.setStatus("SHUTDOWNED")
-                        m_Job.setErrorMessage("JOB has been shutdown successful.")
-                        self.SaveJob(m_Job)
-                        continue
-                    if m_Job.getStatus() == "WAITINGFOR_ABORT":
-                        # 检查脚本信息，如果脚本压根不存在，则无法后续的操作
-                        m_Job.setStatus("ABORTED")
-                        m_Job.setErrorMessage("JOB has been aborted.")
-                        self.SaveJob(m_Job)
-                        continue
-                    if m_Job.getBlowoutThresHoldCount() != 0:
-                        if m_Job.getFailedJobs() >= m_Job.getBlowoutThresHoldCount():
-                            if bAllWorkerFinished:
-                                # 已经失败的脚本实在太多，不能再继续
-                                m_Job.setStatus("FAILED")
-                                m_Job.setErrorMessage("JOB blowout, terminate.")
-                                self.SaveJob(m_Job)
+                                    continue
+                        if bAllWorkerFinished and m_Job.getStatus() == "WAITINGFOR_SHUTDOWN":
+                            # 检查脚本信息，如果脚本压根不存在，则无法后续的操作
+                            m_Job.setStatus("SHUTDOWNED")
+                            m_Job.setErrorMessage("JOB has been shutdown successful.")
+                            self.SaveJob(m_Job)
                             continue
-                    if m_Job.getScript() is None:
-                        # 检查脚本信息，如果脚本压根不存在，则无法后续的操作
-                        m_Job.setStatus("FAILED")
-                        m_Job.setErrorMessage("Script parameter is null.")
-                        self.SaveJob(m_Job)
-                        continue
-                    if m_Job.getScriptFullName() is None:
-                        # 如果脚本没有补充完全的脚本名称，则此刻进行补充
-                        # 命令里头的是全路径名，或者是基于当前目录的相对文件名
-                        m_Script_FileName = m_Job.getScript()
-                        if os.path.isfile(m_Script_FileName):
-                            m_SQL_ScriptBaseName = os.path.basename(m_Script_FileName)
-                            m_SQL_ScriptFullName = os.path.abspath(m_Script_FileName)
-                        else:
-                            if self.getProcessContextInfo("script") is not None:
-                                m_SQL_ScriptHomeDirectory = os.path.dirname(self.getProcessContextInfo("script"))
-                                if os.path.isfile(os.path.join(m_SQL_ScriptHomeDirectory, m_Script_FileName)):
-                                    m_SQL_ScriptBaseName = \
-                                        os.path.basename(os.path.join(m_SQL_ScriptHomeDirectory, m_Script_FileName))
-                                    m_SQL_ScriptFullName = \
-                                        os.path.abspath(os.path.join(m_SQL_ScriptHomeDirectory, m_Script_FileName))
+                        if m_Job.getStatus() == "WAITINGFOR_ABORT":
+                            # 检查脚本信息，如果脚本压根不存在，则无法后续的操作
+                            m_Job.setStatus("ABORTED")
+                            m_Job.setErrorMessage("JOB has been aborted.")
+                            self.SaveJob(m_Job)
+                            continue
+                        if m_Job.getBlowoutThresHoldCount() != 0:
+                            if m_Job.getFailedJobs() >= m_Job.getBlowoutThresHoldCount():
+                                if bAllWorkerFinished:
+                                    # 已经失败的脚本实在太多，不能再继续
+                                    m_Job.setStatus("FAILED")
+                                    m_Job.setErrorMessage("JOB blowout, terminate.")
+                                    self.SaveJob(m_Job)
+                                continue
+                        if m_Job.getScript() is None:
+                            # 检查脚本信息，如果脚本压根不存在，则无法后续的操作
+                            m_Job.setStatus("FAILED")
+                            m_Job.setErrorMessage("Script parameter is null.")
+                            self.SaveJob(m_Job)
+                            continue
+                        if m_Job.getScriptFullName() is None:
+                            # 如果脚本没有补充完全的脚本名称，则此刻进行补充
+                            # 命令里头的是全路径名，或者是基于当前目录的相对文件名
+                            m_Script_FileName = m_Job.getScript()
+                            if os.path.isfile(m_Script_FileName):
+                                m_SQL_ScriptBaseName = os.path.basename(m_Script_FileName)
+                                m_SQL_ScriptFullName = os.path.abspath(m_Script_FileName)
+                            else:
+                                if self.getProcessContextInfo("script") is not None:
+                                    m_SQL_ScriptHomeDirectory = os.path.dirname(self.getProcessContextInfo("script"))
+                                    if os.path.isfile(os.path.join(m_SQL_ScriptHomeDirectory, m_Script_FileName)):
+                                        m_SQL_ScriptBaseName = \
+                                            os.path.basename(os.path.join(m_SQL_ScriptHomeDirectory, m_Script_FileName))
+                                        m_SQL_ScriptFullName = \
+                                            os.path.abspath(os.path.join(m_SQL_ScriptHomeDirectory, m_Script_FileName))
+                                    else:
+                                        m_Job.setStatus("FAILED")
+                                        m_Job.setStartTime(None)
+                                        m_Job.setEndTime(None)
+                                        m_Job.setErrorMessage("Script [" + m_Script_FileName + "] does not exist.")
+                                        self.SaveJob(m_Job)
+                                        continue
                                 else:
                                     m_Job.setStatus("FAILED")
                                     m_Job.setStartTime(None)
@@ -993,70 +1003,80 @@ class JOBManager(object):
                                     m_Job.setErrorMessage("Script [" + m_Script_FileName + "] does not exist.")
                                     self.SaveJob(m_Job)
                                     continue
-                            else:
-                                m_Job.setStatus("FAILED")
-                                m_Job.setStartTime(None)
-                                m_Job.setEndTime(None)
-                                m_Job.setErrorMessage("Script [" + m_Script_FileName + "] does not exist.")
-                                self.SaveJob(m_Job)
-                                continue
-                        m_Job.setScript(m_SQL_ScriptBaseName)
-                        m_Job.setScriptFullName(m_SQL_ScriptFullName)
-                        self.SaveJob(m_Job)
-                    if m_Job.getFinishedJobs() >= (m_Job.getLoop() * m_Job.getParallel()):
-                        # 已经完成了全部的作业，标记为完成状态
-                        m_Job.setStatus("FINISHED")
-                        m_Job.setEndTime(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())))
-                        # 将任务添加到后台进程信息中
-                        self.SaveJob(m_Job)
-                        continue
-                    # 开始陆续启动需要完成的任务
-                    # 获得可以启动的任务进程列表
-                    m_WorkerStarterList = m_Job.getWorkerStarter()
-                    # 给每一个进程提供唯一的日志文件名
-                    m_JOB_Sequence = m_Job.getStartedJobs()
-                    for m_WorkerStarter in m_WorkerStarterList:
+                            m_Job.setScript(m_SQL_ScriptBaseName)
+                            m_Job.setScriptFullName(m_SQL_ScriptFullName)
+                            self.SaveJob(m_Job)
+                        if m_Job.getFinishedJobs() >= (m_Job.getLoop() * m_Job.getParallel()):
+                            # 已经完成了全部的作业，标记为完成状态
+                            m_Job.setStatus("FINISHED")
+                            m_Job.setEndTime(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())))
+                            # 将任务添加到后台进程信息中
+                            self.SaveJob(m_Job)
+                            continue
+                        # 开始陆续启动需要完成的任务
+                        # 获得可以启动的任务进程列表
+                        m_WorkerStarterList = m_Job.getWorkerStarter()
+                        # 给每一个进程提供唯一的日志文件名
+                        m_JOB_Sequence = m_Job.getStartedJobs()
                         # 循环启动所有的进程
-                        m_args = {"logon": self.getProcessContextInfo("logon"),
-                                  "nologo": self.getProcessContextInfo("nologo"),
-                                  "xlog": self.getProcessContextInfo("xlog"),
-                                  "commandMap": self.getProcessContextInfo("commandMap"),
-                                  "script": m_Job.getScriptFullName(),
-                                  "workername":
-                                      m_Job.getJobName() + "#" + str(m_WorkerStarter) + "-" +
-                                      str(m_JOB_Sequence+1)
-                                  }
-                        if self.getProcessContextInfo("logfilename") is not None:
-                            m_logfilename = os.path.join(
-                                os.path.dirname(self.getProcessContextInfo("logfilename")),
-                                m_Job.getScript().split('.')[0] + "_" + str(m_Job.getJobName()) +
-                                str(m_JOB_Sequence+1) + "-" + str(m_WorkerStarter) + ".log")
-                        else:
-                            m_logfilename = \
-                                m_Job.getScript().split('.')[0] + "_" + \
-                                str(m_Job.getJobName()) + "-" + \
-                                str(m_JOB_Sequence+1) + "-" + \
-                                str(m_WorkerStarter) + ".log"
-                        m_args["logfilename"] = m_logfilename
-                        # jpype无法运行在fork机制下的子进程中，linux默认为fork机制，所以这里要强制为spawn
-                        # fork模式下，子进程会继承父进程的一些信息
-                        # spawn模式下，子进程为全新进程
-                        m_ProcessManagerContext = multiprocessing.get_context("spawn")
-                        m_Process = m_ProcessManagerContext.Process(target=self.runSQLCli, args=(m_args,))
-                        m_Process.start()
+                        for m_WorkerStarter in m_WorkerStarterList:
+                            m_args = {"logon": self.getProcessContextInfo("logon"),
+                                      "nologo": self.getProcessContextInfo("nologo"),
+                                      "commandMap": self.getProcessContextInfo("commandMap"),
+                                      "script": m_Job.getScriptFullName(),
+                                      "workername":
+                                          m_Job.getJobName() + "#" + str(m_WorkerStarter) + "-" +
+                                          str(m_JOB_Sequence+1)
+                                      }
+                            xlogPath = str(self.getProcessContextInfo("xlog"))
+                            if xlogPath is None:
+                                m_args["xlog"] = None
+                            else:
+                                # 这里由于Cli已经切换了当前的路径到脚本路径，所以当把带有相对路径的xlog传递给子进程时候，会导致子进程无法使用
+                                # 这里要做相对路径的转换
+                                xlogFullPatch = os.path.join(
+                                    self.getProcessContextInfo("processPwd"),
+                                    xlogPath
+                                )
+                                xlogRelPath = os.path.relpath(
+                                    xlogFullPatch,
+                                    os.getcwd()
+                                )
+                                m_args["xlog"] = xlogRelPath
+                            if self.getProcessContextInfo("logfilename") is not None:
+                                m_logfilename = os.path.join(
+                                    os.path.dirname(self.getProcessContextInfo("logfilename")),
+                                    m_Job.getScript().split('.')[0] + "_" + str(m_Job.getJobName()) +
+                                    str(m_JOB_Sequence+1) + "-" + str(m_WorkerStarter) + ".log")
+                            else:
+                                m_logfilename = \
+                                    m_Job.getScript().split('.')[0] + "_" + \
+                                    str(m_Job.getJobName()) + "-" + \
+                                    str(m_JOB_Sequence+1) + "-" + \
+                                    str(m_WorkerStarter) + ".log"
+                            m_args["logfilename"] = m_logfilename
+                            # jpype无法运行在fork机制下的子进程中，linux默认为fork机制，所以这里要强制为spawn
+                            # fork模式下，子进程会继承父进程的一些信息
+                            # spawn模式下，子进程为全新进程
+                            m_ProcessManagerContext = multiprocessing.get_context("spawn")
+                            m_Process = m_ProcessManagerContext.Process(target=self.runSQLCli, args=(m_args,))
+                            m_Process.start()
 
-                        # 更新Worker字典信息
-                        m_Job.StartWorker(self.MetaConn, m_WorkerStarter, m_Process.pid)
+                            # 更新Worker字典信息
+                            m_Job.StartWorker(self.MetaConn, m_WorkerStarter, m_Process.pid)
 
-                        # 更新JOB信息
-                        m_Job.active_jobs = m_Job.active_jobs + 1
-                        m_Job.started_jobs = m_Job.started_jobs + 1
-                        m_Job.setStartedJobs(m_JOB_Sequence+1)
-                        m_JOB_Sequence = m_JOB_Sequence + 1
-                        self.SaveJob(m_Job)
-                        self.ProcessID[m_Process.pid] = m_Process
-            # 每0.5秒检查一次任务
-            time.sleep(3)
+                            # 更新JOB信息
+                            m_Job.active_jobs = m_Job.active_jobs + 1
+                            m_Job.started_jobs = m_Job.started_jobs + 1
+                            m_Job.setStartedJobs(m_JOB_Sequence+1)
+                            m_JOB_Sequence = m_JOB_Sequence + 1
+                            self.SaveJob(m_Job)
+                            self.ProcessID[m_Process.pid] = m_Process
+                # 每0.5秒检查一次任务
+                time.sleep(3)
+        except Exception as e:
+            click.secho("JobManager failed with [" + str(e) + "]. Quit JobManager Agent.", err=True, fg="red")
+            self.isAgentStarted = False
 
     # 启动Agent进程
     def registerAgent(self):
@@ -1305,9 +1325,22 @@ class JOBManager(object):
 
     # 等待所有的JOB完成
     # 这里不包括光Submit，并没有实质性开始动作的JOB
-    def waitjob(self, p_jobName: str):
+    def waitjob(self, p_jobName: str, params: dict):
+        timeoutLimit = 0
+        for paramKey, paramValue in params.items():
+            if str(paramKey).upper() == "TIMEOUT":
+                if not str(paramValue).isdigit():
+                    raise TestCliException("Invalid timeout set [" + str(paramValue) + "], it must be digit.")
+                timeoutLimit = int(paramValue)
+        start = time.time()
         if p_jobName.lower() == "all":
             while True:
+                # 如果JobManager意外退出，也没有继续等待下去的意义
+                if not self.isAgentStarted:
+                    raise TestCliException("Job agent unexpected lost. Job wait failed.")
+                # 等待也是有时间限制的
+                if (timeoutLimit > 0) and ((time.time() - start) > timeoutLimit):
+                    raise TestCliException("Job wait terminated. Timeout [" + str(timeoutLimit) + "]")
                 # 没有正在运行的JOB
                 if not self.isAllJobClosed():
                     time.sleep(3)
@@ -1324,6 +1357,12 @@ class JOBManager(object):
                     break
         else:
             while True:
+                # 如果JobManager意外退出，也没有继续等待下去的意义
+                if not self.isAgentStarted:
+                    raise TestCliException("Job agent unexpected lost. Job wait failed.")
+                # 等待也是有时间限制的
+                if (timeoutLimit > 0) and ((time.time() - start) > timeoutLimit):
+                    raise TestCliException("Job wait terminated. Timeout [" + str(timeoutLimit) + "]")
                 if self.isJobClosed(p_jobName):
                     break
                 else:
@@ -1407,6 +1446,9 @@ class JOBManager(object):
 
         # 检查是否为READY状态，如果是，则可以离开
         while True:
+            # 如果JobManager意外退出，也没有继续等待下去的意义
+            if not self.isAgentStarted:
+                raise TestCliException("Job agent unexpected lost. Job wait failed.")
             # 检查其他进程是否到达该检查点
             m_TimerPointAllArrived = False
             if (m_JobTag is None) or (m_JobTag == ""):
@@ -1577,238 +1619,246 @@ class JOBManager(object):
         return len(self.ProcessID) == 0
 
     def processRequest(self, cls, requestObject):
-        if requestObject["action"] == "startJobmanager":
-            if cls.testOptions.get("JOBMANAGER").upper() == "OFF":
-                cls.MetaHandler.StartAsServer()
-                # 标记JOB队列管理使用的数据库连接
-                if cls.MetaHandler.dbConn is not None:
-                    os.environ["TESTCLI_JOBMANAGERURL"] = cls.MetaHandler.MetaURL
-                    cls.JobHandler.setMetaConn(cls.MetaHandler.dbConn)
-                    cls.testOptions.set("JOBMANAGER", "ON")
-                    cls.testOptions.set("JOBMANAGER_METAURL", cls.MetaHandler.MetaURL)
+        try:
+            if requestObject["action"] == "startJobmanager":
+                if cls.testOptions.get("JOBMANAGER").upper() == "OFF":
+                    cls.MetaHandler.StartAsServer()
+                    # 标记JOB队列管理使用的数据库连接
+                    if cls.MetaHandler.dbConn is not None:
+                        os.environ["TESTCLI_JOBMANAGERURL"] = cls.MetaHandler.MetaURL
+                        cls.JobHandler.setMetaConn(cls.MetaHandler.dbConn)
+                        cls.testOptions.set("JOBMANAGER", "ON")
+                        cls.testOptions.set("JOBMANAGER_METAURL", cls.MetaHandler.MetaURL)
+                        yield {
+                            "type": "result",
+                            "title": None,
+                            "rows": None,
+                            "headers": None,
+                            "columnTypes": None,
+                            "status": "Job manager started successful."
+                        }
+                    else:
+                        yield {
+                            "type": "error",
+                            "message": "Job manager started fail."
+                        }
+                else:
+                    yield {
+                        "type": "error",
+                        "message": "Job manager already started. You can not start job manager again."
+                    }
+            if requestObject["action"] == "stopJobmanager":
+                if self.MetaConn is None:
+                    yield {
+                        "type": "error",
+                        "message": "JOB Manager is not started.",
+                    }
+                    return
+                if cls.testOptions.get("JOBMANAGER").upper() == "ON":
+                    del os.environ["TESTCLI_JOBMANAGERURL"]
+                    cls.testOptions.set("JOBMANAGER", "OFF")
+                    cls.testOptions.set("JOBMANAGER_METAURL", '')
+                    cls.MetaHandler.ShutdownServer()
                     yield {
                         "type": "result",
                         "title": None,
                         "rows": None,
                         "headers": None,
                         "columnTypes": None,
-                        "status": "Job manager started successful."
+                        "status": "Job manager stopped successful."
                     }
                 else:
                     yield {
                         "type": "error",
-                        "message": "Job manager started fail."
+                        "message": "Job manager already stopped. You can not stop job manager again."
                     }
-            else:
-                yield {
-                    "type": "error",
-                    "message": "Job manager already started. You can not start job manager again."
-                }
-        if requestObject["action"] == "stopJobmanager":
-            if self.MetaConn is None:
-                yield {
-                    "type": "error",
-                    "message": "JOB Manager is not started.",
-                }
-                return
-            if cls.testOptions.get("JOBMANAGER").upper() == "ON":
-                del os.environ["TESTCLI_JOBMANAGERURL"]
-                cls.testOptions.set("JOBMANAGER", "OFF")
-                cls.testOptions.set("JOBMANAGER_METAURL", '')
-                cls.MetaHandler.ShutdownServer()
-                yield {
-                    "type": "result",
-                    "title": None,
-                    "rows": None,
-                    "headers": None,
-                    "columnTypes": None,
-                    "status": "Job manager stopped successful."
-                }
-            else:
-                yield {
-                    "type": "error",
-                    "message": "Job manager already stopped. You can not stop job manager again."
-                }
-        if requestObject["action"] == "show":
-            if self.MetaConn is None:
-                yield {
-                    "type": "error",
-                    "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
-                }
-                return
-            jobName = requestObject["jobName"]
-            yield self.showjob(jobName)
-        if requestObject["action"] == "create":
-            if self.MetaConn is None:
-                yield {
-                    "type": "error",
-                    "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
-                }
-                return
-            jobName = requestObject["jobName"]
-            params = dict(requestObject["param"])
-            job = self.createjob(jobName)
-            for parameterName, parameterValue in params.items():
-                job.setjob(parameterName, parameterValue)
-            self.SaveJob(job)
-            yield {
-                "type": "result",
-                "title": None,
-                "rows": None,
-                "headers": None,
-                "columnTypes": None,
-                "status": "Job [" + jobName + "] created successful."
-            }
-        if requestObject["action"] == "set":
-            if self.MetaConn is None:
-                yield {
-                    "type": "error",
-                    "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
-                }
-                return
-            jobName = requestObject["jobName"]
-            params = dict(requestObject["param"])
-            job = self.getJobByName(jobName)
-            for parameterName, parameterValue in params.items():
-                job.setjob(parameterName, parameterValue)
-            self.SaveJob(job)
-            yield {
-                "type": "result",
-                "title": None,
-                "rows": None,
-                "headers": None,
-                "columnTypes": None,
-                "status": "Job [" + jobName + "] set successful."
-            }
-        if requestObject["action"] == "start":
-            if self.MetaConn is None:
-                yield {
-                    "type": "error",
-                    "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
-                }
-                return
-            jobName = requestObject["jobName"]
-            nJobStarted = self.startjob(jobName)
-            yield {
-                "type": "result",
-                "title": None,
-                "rows": None,
-                "headers": None,
-                "columnTypes": None,
-                "status": "Total [" + str(nJobStarted) + "] jobs started."
-            }
-        if requestObject["action"] == "wait":
-            if self.MetaConn is None:
-                yield {
-                    "type": "error",
-                    "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
-                }
-                return
-            jobName = str(requestObject["jobName"])
-            self.waitjob(jobName)
-            if jobName.strip().upper() == "ALL":
+            if requestObject["action"] == "show":
+                if self.MetaConn is None:
+                    yield {
+                        "type": "error",
+                        "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
+                    }
+                    return
+                jobName = requestObject["jobName"]
+                yield self.showjob(jobName)
+            if requestObject["action"] == "create":
+                if self.MetaConn is None:
+                    yield {
+                        "type": "error",
+                        "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
+                    }
+                    return
+                jobName = requestObject["jobName"]
+                params = dict(requestObject["param"])
+                job = self.createjob(jobName)
+                for parameterName, parameterValue in params.items():
+                    job.setjob(parameterName, parameterValue)
+                self.SaveJob(job)
                 yield {
                     "type": "result",
                     "title": None,
                     "rows": None,
                     "headers": None,
                     "columnTypes": None,
-                    "status": "All jobs finished."
+                    "status": "Job [" + jobName + "] created successful."
                 }
-            else:
+            if requestObject["action"] == "set":
+                if self.MetaConn is None:
+                    yield {
+                        "type": "error",
+                        "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
+                    }
+                    return
+                jobName = requestObject["jobName"]
+                params = dict(requestObject["param"])
+                job = self.getJobByName(jobName)
+                for parameterName, parameterValue in params.items():
+                    job.setjob(parameterName, parameterValue)
+                self.SaveJob(job)
                 yield {
                     "type": "result",
                     "title": None,
                     "rows": None,
                     "headers": None,
                     "columnTypes": None,
-                    "status": "Job [" + jobName + "] finished."
+                    "status": "Job [" + jobName + "] set successful."
                 }
-        if requestObject["action"] == "shutdown":
-            if self.MetaConn is None:
+            if requestObject["action"] == "start":
+                if self.MetaConn is None:
+                    yield {
+                        "type": "error",
+                        "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
+                    }
+                    return
+                jobName = requestObject["jobName"]
+                nJobStarted = self.startjob(jobName)
                 yield {
-                    "type": "error",
-                    "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
+                    "type": "result",
+                    "title": None,
+                    "rows": None,
+                    "headers": None,
+                    "columnTypes": None,
+                    "status": "Total [" + str(nJobStarted) + "] jobs started."
                 }
-                return
-            jobName = requestObject["jobName"]
-            nJobShutdowned = self.shutdownjob(jobName)
-            yield {
-                "type": "result",
-                "title": None,
-                "rows": None,
-                "headers": None,
-                "columnTypes": None,
-                "status": "Total [" + str(nJobShutdowned) + "] jobs shutdown complete."
-            }
-        if requestObject["action"] == "abort":
-            if self.MetaConn is None:
+            if requestObject["action"] == "wait":
+                if self.MetaConn is None:
+                    yield {
+                        "type": "error",
+                        "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
+                    }
+                    return
+                jobName = str(requestObject["jobName"])
+                params = dict(requestObject["param"])
+                self.waitjob(jobName, params)
+                if jobName.strip().upper() == "ALL":
+                    yield {
+                        "type": "result",
+                        "title": None,
+                        "rows": None,
+                        "headers": None,
+                        "columnTypes": None,
+                        "status": "All jobs finished."
+                    }
+                else:
+                    yield {
+                        "type": "result",
+                        "title": None,
+                        "rows": None,
+                        "headers": None,
+                        "columnTypes": None,
+                        "status": "Job [" + jobName + "] finished."
+                    }
+            if requestObject["action"] == "shutdown":
+                if self.MetaConn is None:
+                    yield {
+                        "type": "error",
+                        "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
+                    }
+                    return
+                jobName = requestObject["jobName"]
+                nJobShutdowned = self.shutdownjob(jobName)
                 yield {
-                    "type": "error",
-                    "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
+                    "type": "result",
+                    "title": None,
+                    "rows": None,
+                    "headers": None,
+                    "columnTypes": None,
+                    "status": "Total [" + str(nJobShutdowned) + "] jobs shutdown complete."
                 }
-                return
-            jobName = requestObject["jobName"]
-            nJobAbortted = self.abortjob(jobName)
-            yield {
-                "type": "result",
-                "title": None,
-                "rows": None,
-                "headers": None,
-                "columnTypes": None,
-                "status": "Total [" + str(nJobAbortted) + "] jobs abort complete."
-            }
-        if requestObject["action"] == "timer":
-            if self.MetaConn is None:
+            if requestObject["action"] == "abort":
+                if self.MetaConn is None:
+                    yield {
+                        "type": "error",
+                        "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
+                    }
+                    return
+                jobName = requestObject["jobName"]
+                nJobAbortted = self.abortjob(jobName)
                 yield {
-                    "type": "error",
-                    "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
+                    "type": "result",
+                    "title": None,
+                    "rows": None,
+                    "headers": None,
+                    "columnTypes": None,
+                    "status": "Total [" + str(nJobAbortted) + "] jobs abort complete."
                 }
-                return
-            timerPoint = requestObject["timerPoint"]
-            self.waitjobtimer(timerPoint)
-            yield {
-                "type": "result",
-                "title": None,
-                "rows": None,
-                "headers": None,
-                "columnTypes": None,
-                "status": "TimerPoint [" + timerPoint + "] has arrived."
-            }
-        if requestObject["action"] == "register":
-            if self.MetaConn is None:
+            if requestObject["action"] == "timer":
+                if self.MetaConn is None:
+                    yield {
+                        "type": "error",
+                        "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
+                    }
+                    return
+                timerPoint = requestObject["timerPoint"]
+                self.waitjobtimer(timerPoint)
                 yield {
-                    "type": "error",
-                    "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
+                    "type": "result",
+                    "title": None,
+                    "rows": None,
+                    "headers": None,
+                    "columnTypes": None,
+                    "status": "TimerPoint [" + timerPoint + "] has arrived."
                 }
-                return
-            jobName = requestObject["jobName"]
-            self.registerjob(jobName)
-            yield {
-                "type": "result",
-                "title": None,
-                "rows": None,
-                "headers": None,
-                "columnTypes": None,
-                "status": "Register worker to Job [" + str(jobName) + "] successful."
-            }
-        if requestObject["action"] == "deregister":
-            if self.MetaConn is None:
+            if requestObject["action"] == "register":
+                if self.MetaConn is None:
+                    yield {
+                        "type": "error",
+                        "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
+                    }
+                    return
+                jobName = requestObject["jobName"]
+                self.registerjob(jobName)
                 yield {
-                    "type": "error",
-                    "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
+                    "type": "result",
+                    "title": None,
+                    "rows": None,
+                    "headers": None,
+                    "columnTypes": None,
+                    "status": "Register worker to Job [" + str(jobName) + "] successful."
                 }
-                return
-            self.unregisterjob()
+            if requestObject["action"] == "deregister":
+                if self.MetaConn is None:
+                    yield {
+                        "type": "error",
+                        "message": "JOB Manager is not started. Please use \"_JOB JOGMANAGER ON\" first.",
+                    }
+                    return
+                self.unregisterjob()
+                yield {
+                    "type": "result",
+                    "title": None,
+                    "rows": None,
+                    "headers": None,
+                    "columnTypes": None,
+                    "status": "Worker has deregistered successful."
+                }
+            return
+        except TestCliException as te:
             yield {
-                "type": "result",
-                "title": None,
-                "rows": None,
-                "headers": None,
-                "columnTypes": None,
-                "status": "Worker has deregistered successful."
+                "type": "error",
+                "message": "Unexpected internal error: " + str(te) + "",
             }
-        return
+            return
 
     # 设置进程的启动相关上下文信息
     def setProcessContextInfo(self, p_ContextName, p_ContextValue):

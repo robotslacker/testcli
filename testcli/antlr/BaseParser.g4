@@ -134,7 +134,7 @@ job      :
            JOB
            (
              (JOB_MANGER (JOB_ON | JOB_OFF)) |
-             (JOB_WAIT JOB_EXPRESSION) |
+             (JOB_WAIT JOB_EXPRESSION (JOB_EXPRESSION JOB_EQUAL JOB_EXPRESSION)?) |
              (JOB_SHOW JOB_EXPRESSION) |
              (JOB_ABORT JOB_EXPRESSION) |
              (JOB_SHUTDOWN JOB_EXPRESSION) |

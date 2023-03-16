@@ -506,9 +506,23 @@ class APIVisitor(APIParserVisitor):
             parsedObject.update({"action": "show"})
             parsedObject.update({"jobName": jobName})
         elif ctx.JOB_WAIT() is not None:
-            jobName = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
             parsedObject.update({"action": "wait"})
-            parsedObject.update({"jobName": jobName})
+            param = {}
+            paramKey = None
+            nPos = 0
+            for expression in ctx.JOB_EXPRESSION():
+                if nPos == 0:
+                    jobName = str(expression.getText()).strip()
+                    parsedObject.update({"jobName": jobName})
+                else:
+                    if paramKey is None:
+                        paramKey = str(expression.getText()).strip()
+                    else:
+                        paramValue = str(expression.getText()).strip()
+                        param[paramKey] = paramValue
+                        paramKey = None
+                nPos = nPos + 1
+            parsedObject.update({"param": param})
         elif ctx.JOB_SHUTDOWN() is not None:
             jobName = str(ctx.JOB_EXPRESSION()[0].getText()).strip()
             parsedObject.update({"action": "shutdown"})

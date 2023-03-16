@@ -797,7 +797,26 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
         self.assertEqual(0, ret_errorCode)
         self.assertTrue(isFinished)
-        self.assertEqual({'action': 'wait', 'jobName': 'abcd', 'name': 'JOB'}, ret_CommandSplitResult)
+        self.assertEqual(
+            {
+                'action': 'wait',
+                'jobName': 'abcd',
+                'name': 'JOB',
+                'param': {}
+            }, ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_JOB WAIT abcd timeout=10")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {
+                'action': 'wait',
+                'jobName': 'abcd',
+                'name': 'JOB',
+                'param': {'timeout': '10'}
+            }, ret_CommandSplitResult)
 
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_JOB SHOW abcd")
@@ -1517,6 +1536,7 @@ class TestSynatx(unittest.TestCase):
             for line in compareReport:
                 if line.startswith("-") or line.startswith("+"):
                     print(line)
+
         self.assertTrue(compareResult)
 
     def test_APIAnalyze_MultiPart(self):

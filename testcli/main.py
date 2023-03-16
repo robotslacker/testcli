@@ -103,7 +103,6 @@ def abortSignalHandler(signum, frame):
 
 
 if __name__ == "__main__":
-
     # 捕捉信号，处理服务中断的情况
     if platform.system().upper() == "LINUX":
         signal.signal(signal.SIGTERM, abortSignalHandler)

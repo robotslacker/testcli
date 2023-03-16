@@ -63,7 +63,6 @@ class TestCli(object):
             script=None,                            # 脚本文件名，None表示命令行模式
             commandMap=None,                        # SQL映射文件名，None表示不存在
             nologo=False,                           # 是否不打印登陆时的Logo信息，True的时候不打印
-            breakScenarioWithError=False,           # 遇到命令行错误，是否中断当前Scenario继续运行
             breakWithError=False,                   # 遇到命令行错误，是否中断脚本后续执行，立刻退出
             breakErrorCode=255,                     # 遇到命令行错误时候的退出代码
             xlog=None,                              # 扩展日志信息文件输出名，None表示不需要
@@ -80,7 +79,10 @@ class TestCli(object):
             casename=None,                          # 程序所在的CaseName
             namespace=None,                         # 程序的默认命名空间
     ):
+        self.Version = __version__                      # 当前程序版本
+
         self.db_saved_conn = {}                         # 数据库Session备份
+
         self.cmdMappingHandler = CmdMapping()           # 函数句柄，处理SQLMapping信息
         self.cmdExecuteHandler = CmdExecute()           # 函数句柄，具体来执行语句
         self.httpHandler = urllib3.PoolManager()        # Http请求线程池，用于处理API请求
@@ -93,14 +95,12 @@ class TestCli(object):
         self.appOptions = None                          # 应用程序的配置参数
         self.Encoding = None                            # 应用程序的Encoding信息
         self.prompt_app = None                          # PromptKit控制台
-        self.echofilename = None                        # 当前回显文件的文件名称
-        self.Version = __version__                      # 当前程序版本
+        self.ProcessPwd = os.getcwd()                   # 进程所在的目录
         self.xlogFile = None                            # xlog文件名
         self.xlogFileFullPath = None                    # xlog文件名-绝对路径
         self.xlogFileHandle = None                      # xlog文件句柄
         self.breakWithError = breakWithError            # 是否在遇到错误的时候退出
         self.breakErrorCode = breakErrorCode            # 遇到错误的退出代码
-        self.breakScenarioWithError = breakScenarioWithError  # 遇到命令行错误是否立刻退出当前Scenario的继续运行
 
         # 数据库连接的各种参数
         # 每次连接后需要保存这些变量，下次可以直接重新连接，如果不填写相关信息，则默认上次连接信息
@@ -191,6 +191,7 @@ class TestCli(object):
         self.JobHandler.setProcessContextInfo("logon", self.logon)
         self.JobHandler.setProcessContextInfo("nologo", self.nologo)
         self.JobHandler.setProcessContextInfo("commandMap", self.commandMap)
+        self.JobHandler.setProcessContextInfo("processPwd", self.ProcessPwd)
         self.JobHandler.setProcessContextInfo("xlog", xlog)
         self.JobHandler.setProcessContextInfo("logfilename", self.logfilename)
         self.JobHandler.setProcessContextInfo("script", self.commandScript)
