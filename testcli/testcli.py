@@ -523,7 +523,7 @@ class TestCli(object):
                         if re.match(r'echo\s+off', p_result["message"], re.IGNORECASE):
                             # Echo Off这个语句，不打印到Echo文件中
                             m_EchoFlag = m_EchoFlag & ~OFLAG_ECHO
-                        if p_result["script"] is None:
+                        if p_result["script"] is None and sys.stdin.isatty():
                             # 控制台应用，不再打印SQL语句到控制台（因为用户已经输入了)
                             m_EchoFlag = m_EchoFlag & ~OFLAG_CONSOLE
                         self.echo(message, m_EchoFlag)
@@ -536,7 +536,7 @@ class TestCli(object):
                                 if p_result["rawCommand"]["name"] == "SPOOL":
                                     if p_result["rawCommand"]["file"].strip().upper() == "OFF":
                                         m_EchoFlag = m_EchoFlag & ~OFLAG_SPOOL
-                            if p_result["script"] == "Console":
+                            if p_result["script"] == "Console" and sys.stdin.isatty():
                                 # 控制台应用，不再打印SQL语句到控制台（因为用户已经输入了)
                                 m_EchoFlag = m_EchoFlag & ~OFLAG_CONSOLE
                             if p_result["formattedCommand"] is not None:
@@ -657,7 +657,7 @@ class TestCli(object):
         # 如果运行在脚本方式下，不再调用PromptSession
         # 运行在无终端的模式下，也不会调用PromptSession
         # 对于脚本程序，在执行脚本完成后就会自动退出
-        if self.commandScript is None and not self.HeadlessMode:
+        if self.commandScript is None and not self.HeadlessMode and sys.stdin.isatty():
             # 如果可能，在用户的当前目录下生成sqlcli-history.txt隐含文件
             user_home = os.path.expanduser('~')
             m_HistoryFile = os.path.join(user_home, '.testcli-history.txt')
@@ -691,7 +691,7 @@ class TestCli(object):
                     raise EOFError
 
             # 开始依次处理控制台送来的语句
-            if not self.commandScript:
+            if not self.commandScript and sys.stdin.isatty():
                 while True:
                     # 循环从控制台读取命令
                     if not self.DoCommand():
@@ -699,18 +699,27 @@ class TestCli(object):
 
             # 如果传递的参数中有脚本文件，先执行脚本文件, 执行完成后自动退出
             try:
-                # 如果有脚本目录，则运行的时候切换到脚本所在的目录下，运行结束后要返回当前目录
-                currentPwd = os.getcwd()
-                scriptDir = os.path.dirname(str(self.commandScript))
-                scriptBase = os.path.basename(str(self.commandScript))
-                if scriptDir.strip() != "":
-                    # 如果脚本不是当前目录，需要切换到脚本目录下
-                    # 如果脚本是当前目录，切换到空目录会报错，所以不能切换
-                    os.chdir(scriptDir)
-                self.DoCommand(text='_start ' + scriptBase)
-                if scriptDir.strip() != "":
-                    # 如果发生了脚本切换，则执行脚本后要返回切换前的目录
-                    os.chdir(currentPwd)
+                if self.commandScript:
+                    # 如果有脚本目录，则运行的时候切换到脚本所在的目录下，运行结束后要返回当前目录
+                    currentPwd = os.getcwd()
+                    scriptDir = os.path.dirname(str(self.commandScript))
+                    scriptBase = os.path.basename(str(self.commandScript))
+                    if scriptDir.strip() != "":
+                        # 如果脚本不是当前目录，需要切换到脚本目录下
+                        # 如果脚本是当前目录，切换到空目录会报错，所以不能切换
+                        os.chdir(scriptDir)
+                    self.DoCommand(text='_start ' + scriptBase)
+                    if scriptDir.strip() != "":
+                        # 如果发生了脚本切换，则执行脚本后要返回切换前的目录
+                        os.chdir(currentPwd)
+                else:
+                    # 系统没有标准输入终端，那么从stdin中读取信息
+                    #  not sys.stdin.isatty()
+                    stdinCommand = ""
+                    if not sys.stdin.isatty():
+                        for line in sys.stdin:
+                            stdinCommand = stdinCommand + "\n" + line
+                    self.DoCommand(text=stdinCommand)
             except TestCliException:
                 raise EOFError
             self.DoCommand(text='_exit')
