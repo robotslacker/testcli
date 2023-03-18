@@ -171,7 +171,7 @@ class MonitorWorker(threading.Thread):
             taskName = task["taskName"]
             if param["TAG"] == "cpu_count":
                 self.appendTestResult(
-                    monitorTime= time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
+                    monitorTime=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
                     taskId=taskId,
                     taskName=taskName,
                     monitorItem="cpu_count",
@@ -180,7 +180,7 @@ class MonitorWorker(threading.Thread):
                 continue
             elif param["TAG"] == "cpu_count_physical":
                 self.appendTestResult(
-                    monitorTime= time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
+                    monitorTime=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
                     taskId=taskId,
                     taskName=taskName,
                     monitorItem="cpu_count_physical",
@@ -189,13 +189,22 @@ class MonitorWorker(threading.Thread):
                 continue
             elif param["TAG"] == "cpu_times":
                 cpu_times = psutil.cpu_times()
-                if 'win32' in str(sys.platform).lower():
+                if 'win32' == str(sys.platform).lower():
                     monitorValue = {
                         "user": cpu_times.user,
                         "system": cpu_times.system,
                         "idle": cpu_times.idle,
                         "interrupt": cpu_times.interrupt,
                         "dpc": cpu_times.dpc,
+                    }
+                elif 'darwin' == str(sys.platform).lower():
+                    monitorValue = {
+                        "user": cpu_times.user,
+                        "system": cpu_times.system,
+                        "idle": cpu_times.idle,
+                        "count": cpu_times.count,
+                        "index": cpu_times.index,
+                        "nice": cpu_times.nice,
                     }
                 else:
                     monitorValue = {
@@ -208,7 +217,7 @@ class MonitorWorker(threading.Thread):
                         "steal": cpu_times.steal
                     }
                 self.appendTestResult(
-                    monitorTime= time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
+                    monitorTime=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
                     taskId=taskId,
                     taskName=taskName,
                     monitorItem="cpu_time",
@@ -221,7 +230,7 @@ class MonitorWorker(threading.Thread):
                     "ratio": cpu_percent,
                 }
                 self.appendTestResult(
-                    monitorTime= time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
+                    monitorTime=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
                     taskId=taskId,
                     taskName=taskName,
                     monitorItem="cpu_percent",
@@ -237,7 +246,7 @@ class MonitorWorker(threading.Thread):
                     "percent": memoryStatis.percent,
                 }]
                 self.appendTestResult(
-                    monitorTime= time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
+                    monitorTime=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
                     taskId=taskId,
                     taskName=taskName,
                     monitorItem="memory",
@@ -271,7 +280,7 @@ class MonitorWorker(threading.Thread):
                                 }
                             ]
                             self.appendTestResult(
-                                monitorTime= time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
+                                monitorTime=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
                                 taskId=taskId,
                                 taskName=taskName,
                                 monitorItem="network",
@@ -293,7 +302,7 @@ class MonitorWorker(threading.Thread):
                         "netout": bytes2human(networkStatis2.bytes_sent - networkStatis1.bytes_sent),
                     }]
                     self.appendTestResult(
-                        monitorTime= time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
+                        monitorTime=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
                         taskId=taskId,
                         taskName=taskName,
                         monitorItem="network",
@@ -324,7 +333,7 @@ class MonitorWorker(threading.Thread):
                                 "write_speed": bytes2human(diskStatis2.write_bytes - diskStatis1.write_bytes) + "/s",
                             }]
                             self.appendTestResult(
-                                monitorTime= time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
+                                monitorTime=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
                                 taskId=taskId,
                                 taskName=taskName,
                                 monitorItem="disk",
@@ -346,7 +355,7 @@ class MonitorWorker(threading.Thread):
                         "write_speed": bytes2human(diskStatis2.write_bytes - diskStatis1.write_bytes) + "/s",
                     }]
                     self.appendTestResult(
-                        monitorTime= time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
+                        monitorTime=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
                         taskId=taskId,
                         taskName=taskName,
                         monitorItem="disk",
@@ -449,7 +458,7 @@ class MonitorWorker(threading.Thread):
                             "mem_percent": proc.memory_percent(),
                         }]
                         self.appendTestResult(
-                            monitorTime= time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
+                            monitorTime=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
                             taskId=taskId,
                             taskName=taskName,
                             monitorItem="process",

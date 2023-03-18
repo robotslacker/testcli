@@ -41,9 +41,9 @@ setup(
     long_description_content_type='text/markdown',
     platforms='any',
     install_requires=['JPype1', 'setproctitle', 'urllib3<1.27',
-                      'click', 'prompt_toolkit',  'paramiko', 'antlr4-python3-runtime',
+                      'click', 'prompt_toolkit',  'paramiko', 'antlr4-python3-runtime==4.11.1',
                       'hdfs', 'fs', "psutil",
-                      "rich", "python-multipart",
+                      "python-multipart",
                       "pytest", 'fastapi', 'uvicorn', "pytest-xdist",
                       "coloredlogs", "robotframework", "beautifulsoup4", "lxml"
                       ],
