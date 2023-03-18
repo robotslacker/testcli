@@ -117,6 +117,12 @@ class TestCli(object):
         self.db_service = None                          # 数据库连接服务
         self.db_parameters = None                       # 数据库连接额外参数
 
+        # 如果没有标准输出和标准错误输出，则不输出。不报错
+        if not sys.stdout.isatty():
+            sys.stdout = open(os.devnull, mode="w")
+        if not sys.stderr.isatty():
+            sys.stderr = open(os.devnull, mode="w")
+
         # NLS处理，设置字符集
         if clientCharset is not None:                   # 客户端脚本字符集
             self.testOptions.set("SCRIPT_ENCODING", clientCharset)

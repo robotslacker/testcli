@@ -108,7 +108,7 @@ helpMessage = [
         "synatx":
             '''
                _JOB MANAGER [ON | OOF]
-               _JOB WAIT [<job name> | ALL] 
+               _JOB WAIT [<job name> | ALL] { <option Name> = <optionValue>} 
                _JOB SHOW [<job name> | ALL] 
                _JOB START [<job name> | ALL]  
                _JOB ABORT [<job name> | ALL]
@@ -117,27 +117,32 @@ helpMessage = [
                _JOB SET <job name> { <option Name> = <optionValue>}
                _JOB REGISTER WORKER TO <job name>
                _JOB DEREGISTER WORKER
+
+               Job Option [Wait]:
+                   timeout                  ：  Optional. The timeout limit (second) of wait jobs, 
+                                                default value is 0, which means no limit.
                
-               Job Option:
-               script                   ：  Required. The script name of the background job.    
-               tag                      ：  Required. All worker processes with the same tag will be synchronized when 
-                                            judging the aggregation point.
-               parallel                 ：  Optional. Number of background jobs at same time, default is 1. 
-               loop                     ：  Optional. Number of cycles, default is 1.
-               timeout                  ：  Optional. The timeout limit (second) of background jobs, 
-                                            default value is 0, which means no limit.
-               starter_maxprocess       ：  Optional. To reduce the load pressure of the first start, we don't start all 
-                                            jobs in a single batch. This parameter is meaningful only when the job first 
-                                            started. The default is 9999, which means no limit.
-                                            For example: parallel is 10, and starter_maxprocess is 2.
-                                                         two jobs are started each "starter_interval" time until the 
-                                                         parallel requirements(10) are met.
-               starter_interval         ：  Optional. Referring to the previous description, starter_interval define the 
-                                            interval time when job first start. default is 0, it means no wait.
-               think_time               ：  Optional. After each job completed, the time interval required to start the 
-                                            next job. Default is 0, which means no think, start next job immediate.
-               blowout_threshold_count  ：  Optional. The failure threshold value. If threshold has reached, we think 
-                                            following jobs are unnecessary to run.  The default is 0, that is, no limit.  
+               Job Option [Set]:
+                   script                   ：  Required. The script name of the background job.    
+                   tag                      ：  Required. All worker processes with the same tag will be synchronized 
+                                                when judging the aggregation point.
+                   parallel                 ：  Optional. Number of background jobs at same time, default is 1. 
+                   loop                     ：  Optional. Number of cycles, default is 1.
+                   timeout                  ：  Optional. The timeout limit (second) of background jobs, 
+                                                default value is 0, which means no limit.
+                   starter_maxprocess       ：  Optional. To reduce the load pressure of the first start, we don't start 
+                                                all jobs in a single batch. This parameter is meaningful only when the  
+                                                job first started. The default is 9999, which means no limit.
+                                                For example: parallel is 10, and starter_maxprocess is 2.
+                                                             two jobs are started each "starter_interval" time until the 
+                                                             parallel requirements(10) are met.
+                   starter_interval         ：  Optional. Referring to the previous description, starter_interval define 
+                                                the interval time when job first start. default is 0, it means no wait.
+                   think_time               ：  Optional. After each job completed, the time interval required to start 
+                                                the next job. Default is 0, which means no think, start next immediate.
+                   blowout_threshold_count  ：  Optional. The failure threshold value. If threshold has reached, we  
+                                                think following jobs are unnecessary to run.  
+                                                The default is 0, that is, no limit.  
             ''',
     },
     {

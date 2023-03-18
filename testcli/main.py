@@ -105,7 +105,16 @@ def abortSignalHandler(signum, frame):
 if __name__ == "__main__":
     # 捕捉信号，处理服务中断的情况
     if platform.system().upper() == "LINUX":
+        # 通信管道中断，不处理中断信息，放弃后续数据
+        signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+        # 被操作系统KILL
         signal.signal(signal.SIGTERM, abortSignalHandler)
+
+    # 如果没有标准输出和标准错误输出，则不输出。不报错
+    if not sys.stdout.isatty():
+        sys.stdout = open(os.devnull, mode="w")
+    if not sys.stderr.isatty():
+        sys.stderr = open(os.devnull, mode="w")
 
     # 根据cli的结果退出，如果意外，退出返回值为255
     try:

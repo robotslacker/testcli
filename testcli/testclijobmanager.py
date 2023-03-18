@@ -590,6 +590,10 @@ class JOB:
         self.workers[p_WorkerHandlerID].ProcessID = 0
         self.workers[p_WorkerHandlerID].Finished_Status = ""
 
+        # Worker已经超时退出
+        if p_Worker_ExitCode is None:
+            p_Worker_ExitCode = -1
+
         # 在数据库中记录相关信息
         m_db_cursor = p_MetaConn.cursor()
         m_SQL = "Insert Into TESTCLI_WORKERS_HISTORY(JOB_ID,JOB_Name,JOB_TAG," \
@@ -1028,7 +1032,7 @@ class JOBManager(object):
                                           m_Job.getJobName() + "#" + str(m_WorkerStarter) + "-" +
                                           str(m_JOB_Sequence+1)
                                       }
-                            xlogPath = str(self.getProcessContextInfo("xlog"))
+                            xlogPath = self.getProcessContextInfo("xlog")
                             if xlogPath is None:
                                 m_args["xlog"] = None
                             else:
@@ -1856,7 +1860,7 @@ class JOBManager(object):
         except TestCliException as te:
             yield {
                 "type": "error",
-                "message": "Unexpected internal error: " + str(te) + "",
+                "message": str(te)
             }
             return
 
