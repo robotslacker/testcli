@@ -238,6 +238,18 @@ def executeSshRequest(requestObject):
                             consoleOutputBytes = consoleOutputBytes + readByte
                     else:
                         break
+
+                # 处理回显的最后一行没有回车换行的情况
+                if len(consoleOutputBytes) != 0:
+                    yield {
+                        "type": "result",
+                        "title": None,
+                        "rows": None,
+                        "headers": None,
+                        "columnTypes": None,
+                        "status": consoleOutputBytes.decode(encoding='utf-8')
+                    }
+
                 # 获得命令的返回状态
                 ret = channel.recv_exit_status()
                 # 关闭SSH访问

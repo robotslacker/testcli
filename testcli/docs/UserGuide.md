@@ -212,7 +212,13 @@ Options:
   --readme                 Show README doc and exit.
   --suitename TEXT         Test suite name.
   --casename TEXT          Test case name.
-  --help                   Show this message and exit.  
+  --silent                 Run script in silent mode, no console output.
+                           Default is false.
+  --daemon                 Run script in daemon mode. Default is false.
+  --pidfile TEXT           Set pid file path and filename. Default is no pid
+                           control.
+  --help                   Show this message and exit.
+    
 ```
 
 #### --version 
@@ -494,6 +500,16 @@ Disconnected.
 
 #### --casename      
 指定测试用例的名称，这个通常用于记录在扩展日志，或者完成测试报告的时候协助统计分析测试结果使用  
+
+### --silent
+指定是否为静默方式调用，如果是静默方式，则屏幕上不会输出任何信息
+
+### --daemon
+指定是否为后台进程方式运行（只针对非Windows平台）  
+后台方式下由于无法输入，所以只能用指定脚本方式来运行  
+
+### --pidfile
+是否打印PID信息到指定的文件中，默认是不打印  
 
 #### --help          
 显示本帮助信息并退出  

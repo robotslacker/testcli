@@ -16,6 +16,7 @@ appExitValue = 0
 # 主程序句柄
 appHandler = None
 
+
 @click.command()
 @click.option("--version", is_flag=True, help="Show TestCli version.")
 @click.option("--logon", type=str, help="SQL logon user name and password. user/pass",)
@@ -27,12 +28,15 @@ appHandler = None
 @click.option("--xlogoverwrite", is_flag=True, help="Overwrite extended log if old file exists. Default is false")
 @click.option("--clientcharset", type=str, help="Set client charset. Default is UTF-8.")
 @click.option("--resultcharset", type=str, help="Set result charset. Default is same to clientCharset.")
-@click.option("--profile", type=str, help="Startup profile.")
-@click.option("--scripttimeout", type=int, help="Script timeout(seconds).")
+@click.option("--profile", type=str, help="Startup profile. Default is none.")
+@click.option("--scripttimeout", type=int, help="Script timeout(seconds). Default is -1, means no limit.")
 @click.option("--namespace", type=str, help="Command default name space(SQL|API). Default is depend on file suffix.")
 @click.option("--selftest", is_flag=True, help="Run self test and exit.")
 @click.option("--suitename", type=str, help="Test suite name.")
 @click.option("--casename", type=str, help="Test case name.")
+@click.option("--silent", is_flag=True, help="Run script in silent mode, no console output. Default is false.")
+@click.option("--daemon", is_flag=True, help="Run script in daemon mode. Default is false.")
+@click.option("--pidfile", type=str, help="Set pid file path and filename. Default is no pid control.")
 def cli(
         version,
         logon,
@@ -49,8 +53,41 @@ def cli(
         namespace,
         selftest,
         suitename,
-        casename
+        casename,
+        silent,
+        daemon,
+        pidfile
 ):
+    # 如果需要运行在Daemon模式，则直接运行到后台
+    if daemon:
+        if platform.system().upper() in ["LINUX", "DARWIN"]:
+            # fork子进程
+            currentPwd = os.getcwd()
+            try:
+                pid = os.fork()
+                if pid > 0:
+                    sys.exit(0)
+            except OSError as oe:
+                click.secho(repr(oe), err=True, fg="red")
+                sys.exit(1)
+
+            # 修改子进程工作目录
+            os.chdir(currentPwd)
+            os.setsid()
+            os.umask(0)
+
+            # 创建孙子进程，而后子进程退出
+            try:
+                pid = os.fork()
+                if pid > 0:
+                    sys.exit(0)
+            except OSError as oe:
+                click.secho(repr(oe), err=True, fg="red")
+                sys.exit(1)
+        else:
+            # 非Linux平台不支持daemon模式运行, 即使设置了Daemon参数，也会忽略
+            pass
+
     if version:
         print("Version:", __version__)
         return
@@ -70,7 +107,20 @@ def cli(
     if not scripttimeout:
         scripttimeout = -1
 
-    global  appHandler
+    # 如果需要的话，写入PID文件
+    if pidfile:
+        try:
+            with open(file=pidfile, mode="w") as fp:
+                fp.write(str(os.getpid()))
+        except OSError as oe:
+            click.secho(
+                "pid file [" + pidfile + "] create failed." + repr(oe),
+                err=True,
+                fg="red"
+            )
+            sys.exit(1)
+
+    global appHandler
     appHandler = TestCli(
         logfilename=logfile,
         logon=logon,
@@ -85,7 +135,8 @@ def cli(
         scripttimeout=scripttimeout,
         namespace=namespace,
         suitename=suitename,
-        casename=casename
+        casename=casename,
+        headlessMode=silent
     )
 
     # 运行主程序
@@ -104,7 +155,7 @@ def abortSignalHandler(signum, frame):
 
 if __name__ == "__main__":
     # 捕捉信号，处理服务中断的情况
-    if platform.system().upper() == "LINUX":
+    if platform.system().upper() in ["LINUX", "DARWIN"]:
         # 通信管道中断，不处理中断信息，放弃后续数据
         signal.signal(signal.SIGPIPE, signal.SIG_DFL)
         # 被操作系统KILL
