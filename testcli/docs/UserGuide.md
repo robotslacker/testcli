@@ -943,30 +943,20 @@ Database disconnected.
 ```
 
 ### 执行数据库测试
-在数据库连接成功后，我们就可以执行我们需要的SQL语句了，对于不同的SQL语句我们有不同的语法格式要求。  
-* 对于SQL语句块的格式要求：  
-  SQL语句块是指用来创建存储过程、SQL函数等较长的SQL语句  
-  SQL语句块的判断依据是：
-```
-     CREATE | REPLACE ******   FUNCTION|PROCEDURE **** | DECLARE ****
-     这里并没有完整描述，具体的信息可以从代码文件中查阅
-```
-
-***
 #### 连接数据库
 在TestCli命令行里头，可以通过connect命令来连接到具体的数据库  
 执行数据库的连接，前提是你的程序处于SQL的命名空间下
 ```
 (base) TestCli 
-SQL*Cli Release 0.0.32
-SQL> connect user/pass@jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名] 
+TestCli Release 0.0.11
+SQL> _connect user/pass@jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名] 
 Database connected.
 SQL> 
 能够成功执行connect的前提是： 数据库驱动已经放置到jlib下，并且在conf中正确配置
 
 如果已经在环境变量中指定了TestCli_CONNECTION_URL，连接可以简化为
 (base) TestCli 
-TestCli Release 0.0.32
+TestCli Release 0.0.11
 SQL> _CONNECT user/pass
 Database connected.
 SQL> 
@@ -999,15 +989,17 @@ ClickHouse:
     _CONNECT default/""@jdbc:clickhouse:tcp://IP:Port/DatabaseName
 LinkoopDB:
     _CONNECT username/password@jdbc:linkoopdb:tcp://IP:Port/Service_Name
+连接Oracle的Sysdba用户：
+    _CONNECT username/password@jdbc:oracle:tcp://IP:Port/Service_Name?internal_logon=sysdba
 ```
 
 #### 断开数据库连接
 ```
 (base) TestCli 
-TestCli Release 0.0.32
-SQL> connect user/pass@jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名] 
+TestCli Release 0.0.11
+SQL> _connect user/pass@jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名] 
 Database connected.
-SQL> disconnect
+SQL> _disconnect
 Database disconnected.
 ```
 ***
@@ -1275,9 +1267,42 @@ Request-URI为请求的地址，地址可能包含请求参数。 如果请求�
 
 ```
 
-#### 脚本中使用变量：
-API脚本中使用变量的方法和SQL脚本、其他脚本中使用方法并无区别，均支持{{var}}的表达方式
+***
+### 脚本中使用变量：
+测试脚本中支持使用变量，便于灵活的运行测试。  
+变量的表示方法为：  {{var}}  
+如： 如下的SQL语句中将查询的表名作为一个变量来表达：
+```
+   SQL>  Select * from {{TAB_NAME}}
+```
+以及，如下的API语句中将请求的内容用一个变量来表达：
+```
+   ### GET请求，多行表达
+    GET http://{{SERVER_IP}}:8080/api/get/html?  HTTP/1.1
+        firstname={{FIRST_NAME}}&
+        lastname=Doe&
+        planet=Tatooine&
+        town=Freetown   
+   
+   ###
+```
+变量的来源可以为：  
+1： 主机环境的环境变量， 如Linux下，通过export设置的环境变量信息  
+2： 内置脚本中的变量名称， 如
+```
+   <%  SERVER_IP="127.0.0.1" %>
+   <%  FIRST_NAME="John" %>
+   ### GET请求，多行表达
+   GET http://{{SERVER_IP}}:8080/api/get/html?  HTTP/1.1
+       firstname={{FIRST_NAME}}&
+       lastname=Doe&
+       planet=Tatooine&
+       town=Freetown   
+   
+   ###
+```
 
+***
 ### 定义TestCli的初始化文件
 ```
     TestCli在执行的时候可以指定初始化文件，初始化文件会在真正的脚本执行之前被执行
