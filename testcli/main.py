@@ -84,6 +84,14 @@ def cli(
             except OSError as oe:
                 click.secho(repr(oe), err=True, fg="red")
                 sys.exit(1)
+
+            # 不再保留当前终端的文件描述符
+            sys.stdout.flush()
+            sys.stderr.flush()
+            with open('/dev/null') as read_null, open('/dev/null', 'w') as write_null:
+                os.dup2(read_null.fileno(), sys.stdin.fileno())
+                os.dup2(write_null.fileno(), sys.stdout.fileno())
+                os.dup2(write_null.fileno(), sys.stderr.fileno())
         else:
             # 非Linux平台不支持daemon模式运行, 即使设置了Daemon参数，也会忽略
             pass

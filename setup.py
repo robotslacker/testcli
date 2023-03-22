@@ -59,7 +59,8 @@ setup(
         'conf/*', 'profile/*',
         'antlrgen/*', 'commands/*',
         'test/*',
-        'docs/UserGuide.md'
+        'docs/UserGuide.md',
+        'docs/robotslacker.jpg',
     ]},
     python_requires='>=3.6',
     entry_points={

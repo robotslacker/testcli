@@ -4,7 +4,6 @@
 
 TestCli 是一个主要用Python完成的，基于命令行下运行的，精致的测试工具。    
 目前能够全面的覆盖SQL测试，简单的覆盖API测试。  
-后续将考虑覆盖更多的测试种类。  
 
 ### 概要
 #### 设计目的：  
@@ -31,10 +30,6 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
   * 使用ASSERT来判断运行的结果
 
 *** 
-#### License许可问题
-不要问我什么License的问题。如果问，那答案就是： 免费！ FREE！  完全的FREE！  
-实际上，我很高兴你如果感兴趣这个项目，如果你能参与到完善这个项目中，我将更加不信感激！  
-即使你不能亲自参与，如果遇到了什么问题，你都可以发邮件给我，发issue到开源网站，我会处理的。  
 
 ***
 #### TestCli目前支持的数据库  
@@ -2153,33 +2148,43 @@ SQL> _JOB timer slave_finished;
    采集的结果包括：
    ``` 
         ratio:           CPU使用率比例（百分比）
-   ```
-   9. CPU使用率统计
-统计CPU使用率的百分比
-3. CPU时间统计  
-      以下是一个采集CPU时间的例子：
-      ```
-          _MONITOR CREATE TASK task1 TAG=cpu_times FREQ=10;
-      ```
-   依赖不同的操作系统，统计指标会所有不同。后期处理需要格外小心。  
-   Linux下：
-   ```
-     user:          用户态进程占据时间
-     system:        核心态进程占据时间
-     idle:          系统空闲时间
-     iowait:        系统IO等待时间
-     irq:           系统硬中断时间
-     softirq:       系统软中断时间
-     steal:         CPU排队时间（只发生在虚拟机中，物理CPU资源不足，导致虚拟CPU必须等待的情况）
-   ```
-   Windows下：
-   ```
-     user:          用户态进程占据时间
-     system:        核心态进程占据时间
-     idle:          系统空闲时间
-     interrupt:     系统中断时间
-     dpc:           延迟系统调用时间（系统核心中断无法提供服务，排队中)
-   ```
+   ```   
+   9. CPU时间统计  
+          以下是一个采集CPU时间的例子：
+          ```
+              _MONITOR CREATE TASK task1 TAG=cpu_times FREQ=10;
+          ```
+       依赖不同的操作系统，统计指标会所有不同。后期处理需要格外小心。  
+       Linux下：
+       ```
+         user:          用户态进程占据时间
+         system:        核心态进程占据时间
+         idle:          系统空闲时间
+         iowait:        系统IO等待时间
+         irq:           系统硬中断时间
+         softirq:       系统软中断时间
+         steal:         CPU排队时间（只发生在虚拟机中，物理CPU资源不足，导致虚拟CPU必须等待的情况）
+       ```
+       Windows下：
+       ```
+         user:          用户态进程占据时间
+         system:        核心态进程占据时间
+         idle:          系统空闲时间
+         interrupt:     系统中断时间
+         dpc:           延迟系统调用时间（系统核心中断无法提供服务，排队中)
+       ```
+       MACOS下：
+       ```
+         user:          用户态进程占据时间
+         system:        核心态进程占据时间
+         idle:          系统空闲时间
+         count:         cpu_times.count,
+         index:         cpu_times.index,
+         nice:          cpu_times.nice       
+         interrupt:     系统中断时间
+         dpc:           延迟系统调用时间（系统核心中断无法提供服务，排队中)
+       ```
+   
    
 *** 
 ### 程序退出
