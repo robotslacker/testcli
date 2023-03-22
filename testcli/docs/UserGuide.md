@@ -4,7 +4,7 @@
 
 TestCli 是一个主要用Python完成的，基于命令行下运行的，精致的测试工具。    
 目前能够全面的覆盖SQL测试，简单的覆盖API测试。  
-
+***
 ### 概要
 #### 设计目的：  
 * 能够作为一个日常小工具，进行数据库的日常操作，进行数据查询、更新等。      
@@ -28,7 +28,6 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
   * 支持在程序中捕捉返回的上下文信息，利用前面执行的结果来影响后续的执行逻辑
   * 支持在程序中使用LOOP，IF等循环、条件判断表达式，来完成复杂的测试逻辑
   * 使用ASSERT来判断运行的结果
-
 *** 
 
 ***
@@ -83,12 +82,10 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
 ### 安装
 安装的前提有：
    * 有一个Python 3.6以上的环境
-   * 能够连接到互联网上， 便于下载必要的包
-   * 安装JDK8或者JDK11  （目前我的调试环境和测试环境均为JDK11，未对其他JDK环境进行验证） 
-   * 对于Windows平台，需要提前安装微软的C++编译器（jpype1使用了JNI技术，需要动态编译）  
-   * 对于Linux平台，  需要提前安装gcc编译器，以及Python3的开发包（原因同上）  
+   * 安装JDK8或者JDK11  （目前我的调试环境和测试环境均为JDK11，已知JDK8无问题，未对其他JDK环境进行验证） 
+   * 对于Windows平台，需要提前安装微软的C++编译器（或者CMake，未测试，原因是jpype1使用了JNI技术，需要动态编译）  
+   * 对于Linux平台，  需要提前安装gcc编译器
      yum install -y gcc-c++ gcc  
-     yum install python3<?>-devel(在Anaconda环境下，这一步不是必须的. ?是具体的Python版本，根据自己的环境决定)
    * 对于MAC平台，  需要提前安装gcc编译器    
      brew install gcc  
 
@@ -123,8 +120,8 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
 TestCli Release 0.0.7
 SQL>
 ```
-如果你这里看到了版本信息，那祝贺你，程序安装成功了
 
+尝试连接内置的数据库：
 ```
 (base) C:\>testcli
 TestCli Release 0.0.7
@@ -132,7 +129,7 @@ SQL> _connect /mem
 Database connected.
 SQL>
 ```
-如果你看到了Connected信息，那再一次祝贺你，你的程序基本工作正常。 
+如果你看到了Connected信息，那祝贺你，你的程序基本工作正常。 
 
 ***
 
@@ -496,14 +493,14 @@ Disconnected.
 #### --casename      
 指定测试用例的名称，这个通常用于记录在扩展日志，或者完成测试报告的时候协助统计分析测试结果使用  
 
-### --silent
+#### --silent
 指定是否为静默方式调用，如果是静默方式，则屏幕上不会输出任何信息
 
-### --daemon
+#### --daemon
 指定是否为后台进程方式运行（只针对非Windows平台）  
 后台方式下由于无法输入，所以只能用指定脚本方式来运行  
 
-### --pidfile
+#### --pidfile
 是否打印PID信息到指定的文件中，默认是不打印  
 
 #### --help          
@@ -923,49 +920,40 @@ TAB模式和LEGACY模式的区别：
    
 ```
 
-### 在SQL中使用Hint信息
-&emsp; &emsp; 在一些场景中，我们通过Hint隐含提示符来控制SQL的具体行为
+### 让程序休息一会
 ```
-    SQL> -- [Hint] Order
-    SQL> Select ID,Name From TestTab;
-    ....
-    加入这个提示符后，TestCli将会把随后的SQL语句进行排序输出，原程序的输出顺序被忽略
+(base) TestCli 
+TestCli Release 0.0.32
+SQL> _SLEEP 10
+SQL> _DISCONNECT
+Database disconnected.
+这里的10指的是10秒，通过这个命令可以让程序暂停10秒钟。
+Sleep的做法主要用在一些定期循环反复脚本的执行上
+```
 
-    SQL> -- [Hint] LogFilter  .*Error.*
-    SQL> Select ID,Name From TestTab;
-    ....
-    加入这个提示符后，TestCli将不再显示随后输出中任何包含Error字样的行
-    .*Error.* 是一个正则表达式写法
+### 执行主机的操作命令
+```
+(base) TestCli 
+TestCli Release 0.0.32
+SQL> _HOST date
+2020年 10月 29日 星期四 11:24:34 CST
+SQL> _DISCONNECT
+Database disconnected.
+这里的date是主机的命令，需要注意的是：在Windows和Linux上命令的不同，脚本可能因此无法跨平台执行
+```
 
-    SQL> -- [Hint] LogFilter  ^((?!Error).)*$
-    SQL> Select ID,Name From TestTab;
-    ....
-    加入这个提示符后，TestCli仅显示输出中包含Error字样的行
-
-    SQL> -- [Hint] LogMask  Password:.*=>Password:******
-    SQL> Select ID,Name From TestTab;
-    ....
-    加入这个提示符后，TestCli将把日志输出中所有符合Password:.*的内容替换成Password:*****
-
-    SQL> -- [Hint] SQL_PREPARE
-    SQL> Select ID,Name From TestTab;
-    ....
-    加入这个提示符后，随后的TestCli程序在执行的时候将首先解析SQL语句，随后再执行，
-    这是默认的方式
-
-    SQL> -- [Hint] SQL_DIRECT
-    SQL> Select ID,Name From TestTab;
-    ....
-    加入这个提示符后，随后的语句在TestCli执行中将跃过解析(PrepareStatement)层面
-    这不是默认方式，和之前的SQL_PREPARE相互斥的一个设置
-    在某些情况下，有的特殊SQL语句不支持PREPARE，这是一个可以绕开问题的办法
-    可以通过设置变量的方式来全局影响这个设置.
-    SQL> _SET SQL_EXECUTE PREPARE|DIRECT
-
+### 执行数据库测试
+在数据库连接成功后，我们就可以执行我们需要的SQL语句了，对于不同的SQL语句我们有不同的语法格式要求。  
+* 对于SQL语句块的格式要求：  
+  SQL语句块是指用来创建存储过程、SQL函数等较长的SQL语句  
+  SQL语句块的判断依据是：
+```
+     CREATE | REPLACE ******   FUNCTION|PROCEDURE **** | DECLARE ****
+     这里并没有完整描述，具体的信息可以从代码文件中查阅
 ```
 
 ***
-### 连接数据库
+#### 连接数据库
 在TestCli命令行里头，可以通过connect命令来连接到具体的数据库  
 执行数据库的连接，前提是你的程序处于SQL的命名空间下
 ```
@@ -1013,7 +1001,7 @@ LinkoopDB:
     _CONNECT username/password@jdbc:linkoopdb:tcp://IP:Port/Service_Name
 ```
 
-### 断开数据库连接
+#### 断开数据库连接
 ```
 (base) TestCli 
 TestCli Release 0.0.32
@@ -1024,58 +1012,7 @@ Database disconnected.
 ```
 ***
 
-### 会话的切换和保存
-通过_SESSION语句可以保存当前数据库会话，并切换到新的数据库会话上进行工作。  
-如果需要的话，还可以通过SESSION的语句切换回之前保留的会话。
-
-```
-    _SESSION [SAVE|RELEASE|RESTOR|SAVEURL|SHOW] <Session Name> 
-```
-```
-(base) TestCli 
-TestCli Release 0.0.32
-SQL> _CONNECT user/pass@jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名] 
-Database connected.
-SQL> _SESSION save sesssion1
-Session saved.
-# 这里会把当前会话信息保存到名字为session1的上下文中，session1为用户自定义的名字
-# 注意：这里并不会断开程序的Session1连接，当Restore的时候也不会重新连接
-SQL> _CONNECT user/pass@jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名]
-Database connected.
-# 连接到第一个会话
-SQL> _SESSION save sesssion2
-Session saved.
-# 这里会把当前会话信息保存到名字为session2的上下文中，session2为用户自定义的名字
-# 注意：这里并不会断开程序的Session2连接，当Restore的时候也不会重新连接
-SQL> _SESSION show
-+---------------+-----------+-----------------------------------------------+
-| Sesssion Name | User Name | URL                                           |
-+---------------+-----------+-----------------------------------------------+
-| session1      | xxxxx     | jdbc:xxxxx:xxx://xxx.xxx.xxx.xxx/xxxx         |
-| session2      | yyyyy     | jdbc:yyyy:xxx://xxx.xxx.xxx.xxx/yyyyy         |         
-+---------------+-----------+-----------------------------------------------+
-# 显示当前保存的所有会话信息
-
-SQL> _SESSION restore sesssion1
-Session stored.
-# 这里将恢复当前数据库连接为之前的会话1
-
-SQL> _SESSION restore sesssion2
-Session stored.
-# 这里将恢复当前数据库连接为之前的会话2
-
-SQL> _SESSION saveurl sesssion3
-Session saved.
-# 这里会把当前会话信息的URL保存到名字为session3的上下文中，session3为用户自定义的名字
-# 注意：这里并不会保持程序的Session3连接，仅仅记录了URL信息，当Restore的时候程序会自动重新连接
-
-SQL> _SESSION release sesssion3
-Session released.
-# 这里将释放之前保存的数据库连接，和针对具体一个连接的DisConnect类似
-```
-***
-
-### 从脚本中执行SQL语句
+#### 从脚本中执行SQL语句
 我们可以把语句保存在一个SQL文件中，并通过执行SQL文件的方式来执行具体的SQL  
 语法格式为：
 ```
@@ -1091,41 +1028,8 @@ SQL> _DISCONNECT
 这里将执行aa.sql
 如果有多个文件，可以依次填写，如SQL> _START aa.api bb.sql ....
 
-# 以下内容尚未来得及更新，请等等哈
-
-
-```
-### 让程序休息一会
-```
-(base) TestCli 
-TestCli Release 0.0.32
-SQL> _SLEEP 10
-SQL> _DISCONNECT
-Database disconnected.
-这里的10指的是10秒，通过这个命令可以让程序暂停10秒钟。
-Sleep的做法主要用在一些定期循环反复脚本的执行上
 ```
 
-### 执行主机的操作命令
-```
-(base) TestCli 
-TestCli Release 0.0.32
-SQL> _HOST date
-2020年 10月 29日 星期四 11:24:34 CST
-SQL> _DISCONNECT
-Database disconnected.
-这里的date是主机的命令，需要注意的是：在Windows和Linux上命令的不同，脚本可能因此无法跨平台执行
-```
-
-### 执行数据库SQL语句
-在数据库连接成功后，我们就可以执行我们需要的SQL语句了，对于不同的SQL语句我们有不同的语法格式要求。  
-* 对于SQL语句块的格式要求：  
-  SQL语句块是指用来创建存储过程、SQL函数等较长的SQL语句  
-  SQL语句块的判断依据是：
-```
-     CREATE | REPLACE ******   FUNCTION|PROCEDURE **** | DECLARE ****
-     这里并没有完整描述，具体的信息可以从代码文件中查阅
-```
 #### 执行SQL语句块
 &emsp; SQL语句块的结束符为【/】，且【/】必须出现在具体一行语句的开头  比如：
 ```
@@ -1184,8 +1088,101 @@ Database disconnected.
        >   */
        > );
     SQL> 
-
 ```  
+
+#### 在SQL中使用Hint信息
+&emsp; &emsp; 在一些场景中，我们通过Hint隐含提示符来控制SQL的具体行为
+```
+    SQL> -- [Hint] Order
+    SQL> Select ID,Name From TestTab;
+    ....
+    加入这个提示符后，TestCli将会把随后的SQL语句进行排序输出，原程序的输出顺序被忽略
+
+    SQL> -- [Hint] LogFilter  .*Error.*
+    SQL> Select ID,Name From TestTab;
+    ....
+    加入这个提示符后，TestCli将不再显示随后输出中任何包含Error字样的行
+    .*Error.* 是一个正则表达式写法
+
+    SQL> -- [Hint] LogFilter  ^((?!Error).)*$
+    SQL> Select ID,Name From TestTab;
+    ....
+    加入这个提示符后，TestCli仅显示输出中包含Error字样的行
+
+    SQL> -- [Hint] LogMask  Password:.*=>Password:******
+    SQL> Select ID,Name From TestTab;
+    ....
+    加入这个提示符后，TestCli将把日志输出中所有符合Password:.*的内容替换成Password:*****
+
+    SQL> -- [Hint] SQL_PREPARE
+    SQL> Select ID,Name From TestTab;
+    ....
+    加入这个提示符后，随后的TestCli程序在执行的时候将首先解析SQL语句，随后再执行，
+    这是默认的方式
+
+    SQL> -- [Hint] SQL_DIRECT
+    SQL> Select ID,Name From TestTab;
+    ....
+    加入这个提示符后，随后的语句在TestCli执行中将跃过解析(PrepareStatement)层面
+    这不是默认方式，和之前的SQL_PREPARE相互斥的一个设置
+    在某些情况下，有的特殊SQL语句不支持PREPARE，这是一个可以绕开问题的办法
+    可以通过设置变量的方式来全局影响这个设置.
+    SQL> _SET SQL_EXECUTE PREPARE|DIRECT
+
+```
+
+#### 数据库会话的切换和保存
+通过_SESSION语句可以保存当前数据库会话，并切换到新的数据库会话上进行工作。  
+如果需要的话，还可以通过SESSION的语句切换回之前保留的会话。
+
+```
+    _SESSION [SAVE|RELEASE|RESTOR|SAVEURL|SHOW] <Session Name> 
+```
+```
+(base) TestCli 
+TestCli Release 0.0.32
+SQL> _CONNECT user/pass@jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名] 
+Database connected.
+SQL> _SESSION save sesssion1
+Session saved.
+# 这里会把当前会话信息保存到名字为session1的上下文中，session1为用户自定义的名字
+# 注意：这里并不会断开程序的Session1连接，当Restore的时候也不会重新连接
+SQL> _CONNECT user/pass@jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名]
+Database connected.
+# 连接到第一个会话
+SQL> _SESSION save sesssion2
+Session saved.
+# 这里会把当前会话信息保存到名字为session2的上下文中，session2为用户自定义的名字
+# 注意：这里并不会断开程序的Session2连接，当Restore的时候也不会重新连接
+SQL> _SESSION show
++---------------+-----------+-----------------------------------------------+
+| Sesssion Name | User Name | URL                                           |
++---------------+-----------+-----------------------------------------------+
+| session1      | xxxxx     | jdbc:xxxxx:xxx://xxx.xxx.xxx.xxx/xxxx         |
+| session2      | yyyyy     | jdbc:yyyy:xxx://xxx.xxx.xxx.xxx/yyyyy         |         
++---------------+-----------+-----------------------------------------------+
+# 显示当前保存的所有会话信息
+
+SQL> _SESSION restore sesssion1
+Session stored.
+# 这里将恢复当前数据库连接为之前的会话1
+
+SQL> _SESSION restore sesssion2
+Session stored.
+# 这里将恢复当前数据库连接为之前的会话2
+
+SQL> _SESSION saveurl sesssion3
+Session saved.
+# 这里会把当前会话信息的URL保存到名字为session3的上下文中，session3为用户自定义的名字
+# 注意：这里并不会保持程序的Session3连接，仅仅记录了URL信息，当Restore的时候程序会自动重新连接
+
+SQL> _SESSION release sesssion3
+Session released.
+# 这里将释放之前保存的数据库连接，和针对具体一个连接的DisConnect类似
+```
+***
+
+
 ### 执行API测试
 在切换到API命名空间后，你就可以使用REST API的语法来书写测试脚本了。  
 REST API的语法结构，这个文档里不会详细描述，具体可以参考网上资料。  
