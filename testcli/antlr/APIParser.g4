@@ -18,7 +18,11 @@ command:
       ;
 
 apiset
-       : APISET APISET_PROXY APISET_EXPRESSION  (APISET_SEMICOLON)?
+       : APISET
+         (
+            (APISET_PROXY APISET_EXPRESSION) |
+            (APISET_HTTPSVERIFY (APISET_ON | APISET_OFF)) |
+         ) (APISET_SEMICOLON)?
        ;
 
 /**

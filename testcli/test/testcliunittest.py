@@ -1688,9 +1688,39 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(isFinished)
         self.assertEqual(
             {
-                'name': 'SET',
+                'name': 'HTTPSET',
                 'option': 'PROXY',
                 'value': 'http://127.0.0.1:9001'
+            },
+            ret_CommandSplitResult
+        )
+
+        script = "SET HTTPS_VERIFY ON"
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = APIAnalyze(script)
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {
+                'name': 'HTTPSET',
+                'option': 'HTTPS_VERIFY',
+                'value': 'ON'
+            },
+            ret_CommandSplitResult
+        )
+
+        script = "SET HTTPS_VERIFY OFF"
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = APIAnalyze(script)
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {
+                'name': 'HTTPSET',
+                'option': 'HTTPS_VERIFY',
+                'value': 'OFF'
             },
             ret_CommandSplitResult
         )

@@ -4,7 +4,6 @@ import sys
 import traceback
 import re
 import time
-from xml.sax import saxutils
 import sqlite3
 import setproctitle
 import click
@@ -13,6 +12,7 @@ import unicodedata
 import itertools
 import urllib3
 from time import strftime, localtime
+from xml.sax import saxutils
 
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.shortcuts import PromptSession
@@ -83,9 +83,10 @@ class TestCli(object):
 
         self.db_saved_conn = {}                         # 数据库Session对象，可能存在多个Session，并存在切换需要
         self.api_saved_conn = {}                        # HTTP请求Session对象，可能存在多个Session，并存在切换需要
+
         self.cmdMappingHandler = CmdMapping()           # 函数句柄，处理SQLMapping信息
         self.cmdExecuteHandler = CmdExecute()           # 函数句柄，具体来执行语句
-        self.httpHandler = None                         # Http请求线程池，用于处理API请求，根据实际需要来初始化
+
         self.testOptions = TestOptions()                # 程序运行中各种参数
         self.HdfsHandler = HDFSWrapper()                # HDFS文件操作
         self.JobHandler = JOBManager()                  # 并发任务管理器
@@ -116,6 +117,16 @@ class TestCli(object):
         self.db_port = None                             # 数据库连接端口
         self.db_service = None                          # 数据库连接服务
         self.db_parameters = None                       # 数据库连接额外参数
+
+        # 当前Http请求的信息
+        self.httpSessionName = "DEFAULT"                # 当前Http会话的名称
+
+        # HTTP请求Session对象，可能存在多个Session，并存在切换需要
+        self.api_saved_conn = {
+            self.httpSessionName: { "https_verify": None, "http_proxy": None}
+        }
+        # 禁用urllib3的各种告警信息
+        urllib3.disable_warnings()
 
         # 如果没有标准输出和标准错误输出，则不输出。不报错
         if not sys.stdout.isatty():

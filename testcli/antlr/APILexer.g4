@@ -140,6 +140,9 @@ HttpMessageBodyChar
 mode APISetMode;
 APISET_SPACE           : [ \t]+ -> channel (HIDDEN);
 APISET_PROXY           : 'PROXY';
+APISET_HTTPSVERIFY     : 'HTTPS_VERIFY';
+APISET_ON              : 'ON';
+APISET_OFF             : 'OFF';
 APISET_EXPRESSION      : (OBS_TEXT | UNRESERVED | SUBDELIMS | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' | '@' | '{' | '}' | '%')+;
 APISET_SEMICOLON       : ';';
 APISET_CRLF            : CRLF -> popMode;

@@ -1381,10 +1381,10 @@ class APIVisitor(APIParserVisitor):
         self.errorMsg = errorMsg
 
     """
-        处理SET命令
+        处理APISET命令
     """
     def visitApiset(self, ctx: APIParser.ApisetContext):
-        parsedObject = {'name': 'SET'}
+        parsedObject = {'name': 'HTTPSET'}
 
         if ctx.APISET_PROXY() is not None:
             parsedObject.update({'option': 'PROXY'})
@@ -1397,6 +1397,12 @@ class APIVisitor(APIParserVisitor):
                 parsedObject.update({'value': proxyAddress})
             else:
                 parsedObject.update({'value': ""})
+        if ctx.APISET_HTTPSVERIFY() is not None:
+            parsedObject.update({'option': 'HTTPS_VERIFY'})
+            if ctx.APISET_ON() is not None:
+                parsedObject.update({'value': "ON"})
+            if ctx.APISET_OFF() is not None:
+                parsedObject.update({'value': "OFF"})
 
         # 获取错误代码
         errorCode = 0

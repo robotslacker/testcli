@@ -168,6 +168,15 @@ class TestOptions(object):
                                     "Comments": 'ON|OFF',
                                     "Hidden": False})
 
+        self.testOptionList.append({"Name": "API_HTTPSVERIFY",
+                                    "Value": "OFF",
+                                    "Comments": 'ON|OFF (Default)',
+                                    "Hidden": False})
+        self.testOptionList.append({"Name": "API_HTTPPROXY",
+                                    "Value": "",
+                                    "Comments": 'Proxy address of http request. (Default)',
+                                    "Hidden": False})
+
         # 如果DEBUG选项设置为TRUE，需要处理
         for pos in range(0, len(self.testOptionList)):
             # 如果环境变量中未设置TESTCLI_DEBUG，则用参数的值去设置

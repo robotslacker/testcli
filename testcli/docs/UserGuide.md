@@ -614,6 +614,8 @@ SQL> _help compare
     |     33 | RESULT_ENCODING      | UTF-8                |                                            |
     |     34 | NAMESPACE            | SQL                  | Script Namespace, SQL|API                  |
     |     35 | MONITORMANAGER       | OFF                  | ON|OFF                                     |
+    |     36 | API_HTTPSVERIFY      | OFF                  | ON|OFF (Default)                           |
+    |     37 | API_HTTPPROXY        |                      | Proxy address of http request. (Default)   |    
     +--------+----------------------+----------------------+--------------------------------------------+
     
     没有任何参数的set命令将会列出程序所有的配置情况。
@@ -917,6 +919,33 @@ TAB模式和LEGACY模式的区别：
    注意（非常重要）： 
    当发生SQL超时中断后，程序将会启动调用数据库的cancel机制来回退当前运行状态，但不是每个数据库都能支持cancel机制
    所以，不要对超时退出后，数据库的连接状态有所预期，可能（非常可能）会导致后续的所有SQL执行失败
+
+   说明：
+   这里的超时判断不是一个精确时间，只是一个相对时间，程序存在检查点问题，实际中存在可能实际运行时间会略微超过此处控制时间的可能
+   不要把精准的时间判断寄希望于这个TIMEOUT设置   
+```
+
+#### 控制参数  API_HTTPSVERIFY
+```
+   设置API默认的情况下请求是否验证远程的HTTPS签名。 可选值为ON或者OFF
+   默认值为OFF，即不验证
+   如果设置为ON，且没有合适的HTTPS证书信息，访问请求将失败
+   
+   需要注意：这里的配置只是一个默认值。
+   如果在API空间内，用户用脚本设置了当前会话的这个参数(SET HTTPS_VERIFY ON|OFF)，则默认值将失效
+   
+```
+
+#### 控制参数  API_HTTPPROXY
+```
+   设置API的代理地址。 
+   合法有效的格式是： http://<ip address>:<port>
+   例如： http://127.0.0.1:8000 
+
+   默认值为空，即不需要代理
+   
+   需要注意：这里的配置只是一个默认值。
+   如果在API空间内，用户用脚本设置了当前会话的这个参数(SET HTTPS_PROXY ....)，则默认值将失效
    
 ```
 
@@ -1265,6 +1294,28 @@ Request-URI为请求的地址，地址可能包含请求参数。 如果请求�
     < ./input.txt --boundary--
    ###
 
+```
+
+#### 设置当前用户是否需要进行HTTPS签名认证
+```
+   如果不设置，则是否需要验证的配置来源于程序的全局默认参数 API_HTTPSVERIFY
+   
+   如果设置，则以当前会话为准，忽略系统的默认配置
+   SET HTTPS_VERIFY ON|OFF 
+   
+   ON    启用HTTPS签名验证
+   OFF   关闭HTTPS签名验证
+```
+
+#### 设置HTTP请求代理
+```
+   如果不设置，则HTTP地址来源于系统的全局默认参数 API_HTTPPROXY
+   
+   如果设置，则以当前会话为准，忽略系统的默认配置
+   SET HTTP_PROXY http://<ip address>:<port> 
+   
+   例如：
+   SET HTTP_PROXY http://127.0.0.1:8000
 ```
 
 ***

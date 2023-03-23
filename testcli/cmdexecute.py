@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
 import time
-
 import json
 import os
 import re
@@ -40,6 +39,7 @@ from .commands.helper import showHelp
 from .commands.data import executeDataRequest
 from .commands.monitor import executeMonitorRequest
 from .commands.apiExecute import executeAPIStatement
+from .commands.apiExecute import executeAPISet
 from .commands.sqlExecute import executeSQLStatement
 from .common import rewriteHintStatement
 from .common import rewriteSQLStatement
@@ -1274,6 +1274,12 @@ class CmdExecute(object):
                     if result["type"] == "error":
                         lastCommandResult["message"] = result["message"]
                         lastCommandResult["errorCode"] = 1
+                    yield result
+            elif parseObject["name"] in ["HTTPSET"]:
+                for result in executeAPISet(
+                        cls=self.cliHandler,
+                        apiSetRequest=parseObject
+                ):
                     yield result
             elif parseObject["name"] in ["HOST"]:
                 # 执行主机操作系统命令

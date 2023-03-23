@@ -4,18 +4,35 @@ import copy
 import re
 import json
 import os
+import ssl
 from json import JSONDecodeError
 
 
-'''
+def executeAPISet(cls, apiSetRequest):
+    if apiSetRequest["option"] == "PROXY":
+        cls.api_saved_conn[cls.httpSessionName]["http_proxy"] = apiSetRequest["value"]
+    if apiSetRequest["option"] == "HTTPS_VERIFY":
+        cls.api_saved_conn[cls.httpSessionName]["https_verify"] = apiSetRequest["value"]
+    yield {
+        "type": "result",
+        "title": None,
+        "rows": None,
+        "headers": [],
+        "columnTypes": None,
+        "status": "Change(" + cls.httpSessionName + ") HTTP request setting: " +
+                  "[" + apiSetRequest["option"] + "]=[" + apiSetRequest["value"] + "] successful."
+    }
+    return
+
+
+def executeAPIStatement(cls, apiRequest, apiHints):
+    """
     执行指定的API请求
 
     输入：
         apiRequest             JSON对象，请求的内容
         apiHints               提示信息
-'''
-def executeAPIStatement(cls, apiRequest, apiHints):
-    """
+
     返回内容：
         错误情况下：
         {
@@ -32,9 +49,35 @@ def executeAPIStatement(cls, apiRequest, apiHints):
             "status": content
         }
     """
-    if cls.cliHandler.httpHandler is None:
-        cls.cliHandler.httpHandler = urllib3.PoolManager()
-    httpHandler = cls.cliHandler.httpHandler
+
+    # 查看是否需要进行HTTPS的签名验证
+    https_verify = cls.cliHandler.api_saved_conn[cls.cliHandler.httpSessionName]["https_verify"]
+    if https_verify is None:
+        # 如果保存的会话中没有设置HTTPVERIFY，则按照默认值来获得
+        https_verify = cls.testOptions.get("API_HTTPSVERIFY")
+    else:
+        # 如果保存的会话中设置了HTTPVERIFY，则按照会话中设置的来
+        https_verify = str(https_verify).strip().upper()
+
+    # 查看是否设置了代理
+    http_proxy = cls.cliHandler.api_saved_conn[cls.cliHandler.httpSessionName]["http_proxy"]
+    if http_proxy is None:
+        # 如果保存的会话中没有设置代理，则按照默认值来获得
+        http_proxy = cls.testOptions.get("API_HTTPPROXY")
+    else:
+        # 如果保存的会话中设置了代理，则按照会话中设置的来
+        http_proxy = str(http_proxy).strip()
+
+    if https_verify == "OFF":
+        if http_proxy != "":
+            httpHandler = urllib3.ProxyManager(proxy_url=http_proxy, cert_reqs=ssl.CERT_NONE)
+        else:
+            httpHandler = urllib3.PoolManager(cert_reqs=ssl.CERT_NONE)
+    else:
+        if http_proxy != "":
+            httpHandler = urllib3.ProxyManager(proxy_url=http_proxy, cert_reqs=ssl.CERT_REQUIRED)
+        else:
+            httpHandler = urllib3.PoolManager(cert_reqs=ssl.CERT_REQUIRED)
 
     httpMethod = apiRequest["httpMethod"]
     httpRequestTarget = apiRequest["httpRequestTarget"]
@@ -194,12 +237,14 @@ def executeAPIStatement(cls, apiRequest, apiHints):
             "url": httpRequestTarget,
             "fields": fields,
             "headers": headers,
-            "timeout": timeoutLimit,
+            "timeout": timeoutLimit
         }
         if body is not None:
             args["body"] = body
         if multiPartBoundary is not None:
             args["multipart_boundary"] = multiPartBoundary
+
+        # ret = httpHandler.request(**args)
         ret = httpHandler.request(**args)
         result = {"status": ret.status}
         if outputTarget is not None:
