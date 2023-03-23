@@ -14,9 +14,10 @@ HTTP_OPEN   : '###' .*? CRLF ->pushMode(HttpMode);
 COMMENT1     :  '//' .*? (CRLF | EOF) ->channel(HIDDEN);
 COMMENT2     :  '--' .*? (CRLF | EOF) ->channel(HIDDEN);
 
-/**
- * Http请求模式
- */
+// 设置系统参数
+APISET       : 'SET' -> pushMode(APISetMode);
+
+// Http请求模式
 mode HttpMode;
 HTTP_COMMENT: '//' .*? CRLF ->channel(COMMENT_CHANNEL);
 HTTP_CRLF: CRLF->type(CRLF);
@@ -135,3 +136,10 @@ BODY_STRING
 HttpMessageBodyChar
       : .->type(String)
       ;
+
+mode APISetMode;
+APISET_SPACE           : [ \t]+ -> channel (HIDDEN);
+APISET_PROXY           : 'PROXY';
+APISET_EXPRESSION      : (OBS_TEXT | UNRESERVED | SUBDELIMS | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' | '@' | '{' | '}' | '%')+;
+APISET_SEMICOLON       : ';';
+APISET_CRLF            : CRLF -> popMode;

@@ -14,6 +14,18 @@ from ..test.testmockserver import stopServer
 from ..test.testmockserver import waitServerRunning
 
 
+def isPortOpen(ip, port):
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.settimeout(3 * 1000)
+        s.connect((ip, int(port)))
+        s.shutdown(socket.SHUT_RDWR)
+        return True
+    except (socket.timeout, ConnectionRefusedError):
+        return False
+
+
 class TestSynatx(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -33,136 +45,136 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_Connect(self):
-        # # connect with local h2 mem
-        # (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-        #     = SQLAnalyze("_connect SYSDBA/Dameng123:62310jdbc:dm://10.15.1.19:6231/")
-        # self.assertTrue(isFinished)
-        # self.assertEqual({'name': 'CONNECT', 'password': 'Dameng123', 'username': 'SYSDBA'}, ret_CommandSplitResult)
-        # self.assertEqual(1, ret_errorCode)
-        # self.assertEqual("line1:25  mismatched input ':62310' expecting <EOF> ", ret_errorMsg)
-        #
-        # # connect with local h2 mem
-        # (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-        #     = SQLAnalyze("_connect /mem")
-        # self.assertTrue(isFinished)
-        # self.assertEqual({'localService': 'mem', 'name': 'CONNECT'}, ret_CommandSplitResult)
-        # self.assertEqual(0, ret_errorCode)
-        # self.assertEqual(None, ret_errorMsg)
-        #
-        # # Connect with testcli metadata
-        # (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-        #     = SQLAnalyze("_connect /metadata")
-        # self.assertTrue(isFinished)
-        # self.assertEqual({'localService': 'metadata', 'name': 'CONNECT'}, ret_CommandSplitResult)
-        # self.assertEqual(0, ret_errorCode)
-        # self.assertEqual(None, ret_errorMsg)
-        #
-        # # connect without server url
-        # (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-        #     = SQLAnalyze("_connect admin/123456")
-        # self.assertTrue(isFinished)
-        # self.assertEqual({'name': 'CONNECT',
-        #                   'password': '123456',
-        #                   'username': 'admin'
-        #                   }, ret_CommandSplitResult)
-        # self.assertEqual(0, ret_errorCode)
-        # self.assertEqual(None, ret_errorMsg)
-        #
-        # # Connect with Oracle8
-        # (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-        #     = SQLAnalyze("_connect \"工具人1号\"/123456@jdbc:oracle:thin://192.168.1.72:1521:xe")
-        # self.assertTrue(isFinished)
-        # self.assertEqual({'driver': 'jdbc',
-        #                   'driverSchema': 'oracle',
-        #                   'driverType': 'thin',
-        #                   'host': '192.168.1.72',
-        #                   'name': 'CONNECT',
-        #                   'password': '123456',
-        #                   'port': 1521,
-        #                   'username': '"工具人1号"',
-        #                   'service': 'xe'
-        #                   }, ret_CommandSplitResult)
-        # self.assertEqual(0, ret_errorCode)
-        # self.assertEqual(None, ret_errorMsg)
-        #
-        # # Connect with Oracle11
-        # (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-        #     = SQLAnalyze("_connect system/123456@jdbc:oracle:thin://192.168.1.72:1521/xe")
-        # self.assertTrue(isFinished)
-        # self.assertEqual({'driver': 'jdbc',
-        #                   'driverSchema': 'oracle',
-        #                   'driverType': 'thin',
-        #                   'host': '192.168.1.72',
-        #                   'name': 'CONNECT',
-        #                   'password': '123456',
-        #                   'port': 1521,
-        #                   'service': 'xe',
-        #                   'username': 'system'}, ret_CommandSplitResult)
-        # self.assertEqual(0, ret_errorCode)
-        # self.assertEqual(None, ret_errorMsg)
-        #
-        # # connect with teradata
-        # # teradata与众不同，其没有serviceName的存在
-        # (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-        #     = SQLAnalyze("_connect testdblink/testdblink@jdbc:teradata://192.168.1.136/testbase")
-        # self.assertTrue(isFinished)
-        # self.assertEqual({'driver': 'jdbc',
-        #                   'driverSchema': 'teradata',
-        #                   'host': '192.168.1.136',
-        #                   'name': 'CONNECT',
-        #                   'password': 'testdblink',
-        #                   'service': 'testbase',
-        #                   'username': 'testdblink'}, ret_CommandSplitResult)
-        # self.assertEqual(0, ret_errorCode)
-        # self.assertEqual(None, ret_errorMsg)
-        #
-        # # Connect with named h2 session
-        # (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-        #     = SQLAnalyze("_connect sa/sa@jdbc:h2tcp:tcp://127.0.0.1:19091/mem:test")
-        # self.assertTrue(isFinished)
-        # self.assertEqual({'driver': 'jdbc',
-        #                   'driverSchema': 'h2tcp',
-        #                   'driverType': 'tcp',
-        #                   'host': '127.0.0.1',
-        #                   'name': 'CONNECT',
-        #                   'password': 'sa',
-        #                   'port': 19091,
-        #                   'service': 'mem:test',
-        #                   'username': 'sa'}, ret_CommandSplitResult)
-        # self.assertEqual(0, ret_errorCode)
-        # self.assertEqual(None, ret_errorMsg)
-        #
-        # # Connect with IPV6
-        # (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-        #     = SQLAnalyze("_connect sa/sa@jdbc:h2tcp:tcp://[0:0:0:0:0:ffff:192.1.56.10]:19091/mem:test")
-        # self.assertTrue(isFinished)
-        # self.assertEqual({'driver': 'jdbc',
-        #                   'driverSchema': 'h2tcp',
-        #                   'driverType': 'tcp',
-        #                   'host': '[0:0:0:0:0:ffff:192.1.56.10]',
-        #                   'name': 'CONNECT',
-        #                   'password': 'sa',
-        #                   'port': 19091,
-        #                   'service': 'mem:test',
-        #                   'username': 'sa'}, ret_CommandSplitResult)
-        # self.assertEqual(0, ret_errorCode)
-        # self.assertEqual(None, ret_errorMsg)
-        #
-        # # Connect with IPV6
-        # (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-        #     = SQLAnalyze("_connect sa/sa@jdbc:h2tcp:tcp://[FE80::5689:98FF:FE14]:19091/mem:test")
-        # self.assertTrue(isFinished)
-        # self.assertEqual({'driver': 'jdbc',
-        #                   'driverSchema': 'h2tcp',
-        #                   'driverType': 'tcp',
-        #                   'host': '[FE80::5689:98FF:FE14]',
-        #                   'name': 'CONNECT',
-        #                   'password': 'sa',
-        #                   'port': 19091,
-        #                   'service': 'mem:test',
-        #                   'username': 'sa'}, ret_CommandSplitResult)
-        # self.assertEqual(0, ret_errorCode)
-        # self.assertEqual(None, ret_errorMsg)
+        # connect with local h2 mem
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect SYSDBA/Dameng123:62310jdbc:dm://10.15.1.19:6231/")
+        self.assertTrue(isFinished)
+        self.assertEqual({'name': 'CONNECT', 'password': 'Dameng123', 'username': 'SYSDBA'}, ret_CommandSplitResult)
+        self.assertEqual(1, ret_errorCode)
+        self.assertEqual("line1:25  mismatched input ':62310' expecting <EOF> ", ret_errorMsg)
+
+        # connect with local h2 mem
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect /mem")
+        self.assertTrue(isFinished)
+        self.assertEqual({'localService': 'mem', 'name': 'CONNECT'}, ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        # Connect with testcli metadata
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect /metadata")
+        self.assertTrue(isFinished)
+        self.assertEqual({'localService': 'metadata', 'name': 'CONNECT'}, ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        # connect without server url
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect admin/123456")
+        self.assertTrue(isFinished)
+        self.assertEqual({'name': 'CONNECT',
+                          'password': '123456',
+                          'username': 'admin'
+                          }, ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        # Connect with Oracle8
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect \"工具人1号\"/123456@jdbc:oracle:thin://192.168.1.72:1521:xe")
+        self.assertTrue(isFinished)
+        self.assertEqual({'driver': 'jdbc',
+                          'driverSchema': 'oracle',
+                          'driverType': 'thin',
+                          'host': '192.168.1.72',
+                          'name': 'CONNECT',
+                          'password': '123456',
+                          'port': 1521,
+                          'username': '"工具人1号"',
+                          'service': 'xe'
+                          }, ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        # Connect with Oracle11
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect system/123456@jdbc:oracle:thin://192.168.1.72:1521/xe")
+        self.assertTrue(isFinished)
+        self.assertEqual({'driver': 'jdbc',
+                          'driverSchema': 'oracle',
+                          'driverType': 'thin',
+                          'host': '192.168.1.72',
+                          'name': 'CONNECT',
+                          'password': '123456',
+                          'port': 1521,
+                          'service': 'xe',
+                          'username': 'system'}, ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        # connect with teradata
+        # teradata与众不同，其没有serviceName的存在
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect testdblink/testdblink@jdbc:teradata://192.168.1.136/testbase")
+        self.assertTrue(isFinished)
+        self.assertEqual({'driver': 'jdbc',
+                          'driverSchema': 'teradata',
+                          'host': '192.168.1.136',
+                          'name': 'CONNECT',
+                          'password': 'testdblink',
+                          'service': 'testbase',
+                          'username': 'testdblink'}, ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        # Connect with named h2 session
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect sa/sa@jdbc:h2tcp:tcp://127.0.0.1:19091/mem:test")
+        self.assertTrue(isFinished)
+        self.assertEqual({'driver': 'jdbc',
+                          'driverSchema': 'h2tcp',
+                          'driverType': 'tcp',
+                          'host': '127.0.0.1',
+                          'name': 'CONNECT',
+                          'password': 'sa',
+                          'port': 19091,
+                          'service': 'mem:test',
+                          'username': 'sa'}, ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        # Connect with IPV6
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect sa/sa@jdbc:h2tcp:tcp://[0:0:0:0:0:ffff:192.1.56.10]:19091/mem:test")
+        self.assertTrue(isFinished)
+        self.assertEqual({'driver': 'jdbc',
+                          'driverSchema': 'h2tcp',
+                          'driverType': 'tcp',
+                          'host': '[0:0:0:0:0:ffff:192.1.56.10]',
+                          'name': 'CONNECT',
+                          'password': 'sa',
+                          'port': 19091,
+                          'service': 'mem:test',
+                          'username': 'sa'}, ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        # Connect with IPV6
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect sa/sa@jdbc:h2tcp:tcp://[FE80::5689:98FF:FE14]:19091/mem:test")
+        self.assertTrue(isFinished)
+        self.assertEqual({'driver': 'jdbc',
+                          'driverSchema': 'h2tcp',
+                          'driverType': 'tcp',
+                          'host': '[FE80::5689:98FF:FE14]',
+                          'name': 'CONNECT',
+                          'password': 'sa',
+                          'port': 19091,
+                          'service': 'mem:test',
+                          'username': 'sa'}, ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
 
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_connect aa/bb@jdbc:dm://10.10.10.10:6231?autocommit=false&dd=yy")
@@ -1273,7 +1285,15 @@ class TestSynatx(unittest.TestCase):
         tcpServer = jpype.JClass("org.h2.tools.Server").\
             createTcpServer("-tcp", "-tcpAllowOthers", "-tcpPort", str(19091))
         tcpServer.start()
-        time.sleep(2)
+
+        # 最多等待10秒钟，来等待端口打开
+        for _ in range(0, 10):
+            if isPortOpen("127.0.0.1", "19091"):
+                break
+            else:
+                time.sleep(1)
+
+        # 等待3秒钟后再进行连接
         os.environ["SQLCLI_CONNECTION_URL"] = "jdbc:h2tcp:tcp://127.0.0.1:19091/mem:test"
 
         scriptFile = "testsqlwithurl.sql"
@@ -1659,6 +1679,22 @@ class TestSynatx(unittest.TestCase):
                     print(line)
         self.assertTrue(compareResult)
 
+    def test_APIAnalyze_Set(self):
+        script = "SET PROXY http://127.0.0.1:9001"
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = APIAnalyze(script)
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {
+                'name': 'SET',
+                'option': 'PROXY',
+                'value': 'http://127.0.0.1:9001'
+            },
+            ret_CommandSplitResult
+        )
+
     def test_APIExecute_Get(self):
         from ..testcli import TestCli
 
@@ -1785,11 +1821,15 @@ class TestSynatx(unittest.TestCase):
             file2=fullRefFile,
             CompareIgnoreTailOrHeadBlank=True
         )
+        msg = "\n"
         if not compareResult:
             for line in compareReport:
                 if line.startswith("-") or line.startswith("+"):
-                    print(line)
-        self.assertTrue(compareResult)
+                    msg = msg + line + "\n"
+        self.assertTrue(
+            expr=compareResult,
+            msg=msg
+        )
 
     def test_compare(self):
         from ..testcli import TestCli

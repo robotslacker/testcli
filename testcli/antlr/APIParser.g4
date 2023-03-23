@@ -8,12 +8,18 @@ options {
 
 prog: command EOF;
 
+
 // 以下命令中除http外都是公用命令，即非APIParser特色命令
 command:
       baseCommand
+      | apiset
       | http
       | EOF
       ;
+
+apiset
+       : APISET APISET_PROXY APISET_EXPRESSION  (APISET_SEMICOLON)?
+       ;
 
 /**
  * 17: API语句

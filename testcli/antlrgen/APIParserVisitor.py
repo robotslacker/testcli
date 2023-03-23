@@ -19,6 +19,11 @@ class APIParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by APIParser#apiset.
+    def visitApiset(self, ctx:APIParser.ApisetContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by APIParser#http.
     def visitHttp(self, ctx:APIParser.HttpContext):
         return self.visitChildren(ctx)

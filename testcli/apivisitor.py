@@ -660,7 +660,7 @@ class APIVisitor(APIParserVisitor):
         elif ctx.SFTP_CHMOD() is not None:
             parsedObject.update({"action": "sftp_chmod"})
             fileName = str(ctx.SSH_EXPRESSION()[0].getText())
-            fileMod = str(ctx.SSH_INT()[0].getText())
+            fileMod = str(ctx.INT()[0].getText())
             parsedObject.update({"fileName": fileName})
             parsedObject.update({"fileMod": fileMod})
         elif ctx.SFTP_GETCWD() is not None:
@@ -671,12 +671,12 @@ class APIVisitor(APIParserVisitor):
         elif ctx.SFTP_MKDIR() is not None:
             parsedObject.update({"action": "sftp_mkdir"})
             parsedObject.update({"dir": str(ctx.SSH_EXPRESSION()[0].getText())})
-            parsedObject.update({"dirMod": str(ctx.SSH_INT()[0].getText())})
+            parsedObject.update({"dirMod": str(ctx.INT()[0].getText())})
         elif ctx.SFTP_CHOWN() is not None:
             parsedObject.update({"action": "sftp_chown"})
             fileName = str(ctx.SSH_EXPRESSION()[0].getText())
-            uid = int(ctx.SSH_INT()[0].getText())
-            gid = int(ctx.SSH_INT()[1].getText())
+            uid = int(ctx.INT()[0].getText())
+            gid = int(ctx.INT()[1].getText())
             parsedObject.update({"fileName": fileName})
             parsedObject.update({"uid": uid})
             parsedObject.update({"gid": gid})
@@ -701,7 +701,7 @@ class APIVisitor(APIParserVisitor):
         elif ctx.SFTP_TRUNCATE() is not None:
             parsedObject.update({"action": "sftp_truncate"})
             parsedObject.update({"file": str(ctx.SSH_EXPRESSION()[0].getText())})
-            fileSize = int(ctx.SSH_INT()[0].getText())
+            fileSize = int(ctx.INT()[0].getText())
             parsedObject.update({"fileSize": fileSize})
 
         # 处理错误信息
@@ -1288,6 +1288,9 @@ class APIVisitor(APIParserVisitor):
 
         return originScript, errorCode, errorMsg
 
+    """
+        处理帮助命令
+    """
     def visitHelp(self, ctx: APIParser.HelpContext):
         parsedObject = {'name': 'HELP'}
 
@@ -1306,6 +1309,9 @@ class APIVisitor(APIParserVisitor):
         self.errorCode = errorCode
         self.errorMsg = errorMsg
 
+    """
+        处理性能监控命令
+    """
     def visitMonitor(self, ctx: APIParser.MonitorContext):
         parsedObject = {'name': 'MONITOR'}
 
@@ -1362,6 +1368,35 @@ class APIVisitor(APIParserVisitor):
             parsedObject.update({"taskName": taskName})
         if ctx.MONITOR_LIST() is not None:
             parsedObject.update({"action": "listTask"})
+
+        # 获取错误代码
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = -1
+            errorMsg = ctx.exception.message
+
+        self.parsedObject = parsedObject
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
+
+    """
+        处理SET命令
+    """
+    def visitApiset(self, ctx: APIParser.ApisetContext):
+        parsedObject = {'name': 'SET'}
+
+        if ctx.APISET_PROXY() is not None:
+            parsedObject.update({'option': 'PROXY'})
+            if ctx.APISET_EXPRESSION() is not None:
+                proxyAddress = str(ctx.APISET_EXPRESSION().getText()).strip()
+                if proxyAddress.startswith('"') and proxyAddress.endswith('"'):
+                    proxyAddress = proxyAddress[1:-1]
+                elif proxyAddress.startswith("'") and proxyAddress.endswith("'"):
+                    proxyAddress = proxyAddress[1:-1]
+                parsedObject.update({'value': proxyAddress})
+            else:
+                parsedObject.update({'value': ""})
 
         # 获取错误代码
         errorCode = 0

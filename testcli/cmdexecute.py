@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 import datetime
 import time
-from json import JSONDecodeError
 
-import click
 import json
 import os
 import re
@@ -11,11 +9,8 @@ import platform
 import binascii
 import decimal
 import traceback
-import urllib3
-import copy
 from .sqlclijdbc import SQLCliJDBCException
 from .sqlclijdbc import SQLCliJDBCLargeObject
-from .sqlclijdbc import SQLCliJDBCTimeOutException
 from .sqlparse import SQLAnalyze
 from .apiparse import APIAnalyze
 from .sqlparse import SQLFormatWithPrefix
@@ -25,7 +20,7 @@ from .commands.load import loadPlugin
 from .commands.load import loadJDBCDriver
 from .commands.load import loadMap
 from .commands.exit import exitApplication
-from .commands.session import sessionManage
+from .commands.sqlsession import sqlSessionManage
 from .commands.assertExpression import assertExpression
 from .commands.assertExpression import evalExpression
 from .commands.embeddScript import executeEmbeddScript
@@ -44,7 +39,8 @@ from .commands.compare import executeCompareRequest
 from .commands.helper import showHelp
 from .commands.data import executeDataRequest
 from .commands.monitor import executeMonitorRequest
-
+from .commands.apiExecute import executeAPIStatement
+from .commands.sqlExecute import executeSQLStatement
 from .common import rewriteHintStatement
 from .common import rewriteSQLStatement
 from .common import rewriteAPIStatement
@@ -108,59 +104,6 @@ class CmdExecute(object):
 
     def getStartTime(self):
         return self.startTime
-
-    def jqparse(self, obj, path='.'):
-        class DecimalEncoder(json.JSONEncoder):
-            def default(self, o):
-                if isinstance(o, decimal.Decimal):
-                    return float(o)
-                super(DecimalEncoder, self).default(o)
-
-        if self is None:
-            pass
-        if obj is None:
-            if "TESTCLI_DEBUG" in os.environ:
-                click.secho("[DEBUG] JQ Parse Error: obj is None")
-            return "****"
-        try:
-            obj = json.loads(obj) if isinstance(obj, str) else obj
-            find_str, find_map = '', ['["%s"]', '[%s]', '%s', '.%s']
-            for im in path.split('.'):
-                if not im:
-                    continue
-                if obj is None:
-                    if "TESTCLI_DEBUG" in os.environ:
-                        click.secho("[DEBUG] JQ Parse Error: obj is none")
-                    return "****"
-                if isinstance(obj, (list, tuple, str)):
-                    if im.startswith('[') and im.endswith(']'):
-                        im = im[1:-1]
-                    if ':' in im:
-                        slice_default = [0, len(obj), 1]
-                        obj, quota = obj[slice(
-                            *[int(sli) if sli else slice_default[i] for i, sli in
-                              enumerate(im.split(':'))])], 1
-                    else:
-                        obj, quota = obj[int(im)], 1
-                else:
-                    if im in obj:
-                        obj, quota = obj.get(im), 0
-                    elif im.endswith('()'):
-                        obj, quota = list(getattr(obj, im[:-2])()), 3
-                    else:
-                        if im.isdigit():
-                            obj, quota = obj[int(im)], 1
-                        else:
-                            raise KeyError(im)
-                find_str += find_map[quota] % im
-            return obj if isinstance(obj, str) else json.dumps(obj,
-                                                               sort_keys=True,
-                                                               ensure_ascii=False,
-                                                               cls=DecimalEncoder)
-        except (IndexError, KeyError, ValueError) as je:
-            if "TESTCLI_DEBUG" in os.environ:
-                click.secho("[DEBUG] JQ Parse Error: " + repr(je))
-            return "****"
 
     def getcommandResult(self, cursor, rowcount):
         """
@@ -391,465 +334,432 @@ class CmdExecute(object):
             status = None
         return title, result, headers, columnTypes, status, fetchStatus, rowcount, cursor.warnings
 
-    '''
-        执行指定的API请求
+    """
+        解析命令语句
+        传入参数：
+             statement         需要解析的语句
+             nameSpace         当前语句所在的命名空间
+        返回结果：
+            返回结果为一个三元组
+            ret_CommandSplitResults                 解析后的结果，用list表示的json数组，即parsedObject[]
+            ret_CommandSplitResultsWithComments     包含注释信息的解析原文
+            ret_CommandHints                        被提取出来的命令行注释
+    """
+    def parseStatement(self, statement: str, nameSpace: str = None):
+        # 将所有的语句分拆开，按照行，依次投喂给解析器，以获得被Antlr分拆后的运行结果
+        ret_CommandSplitResults = []
+        ret_CommandSplitResultsWithComments = []
+        ret_CommandHints = []
 
-        输入：
-            apiRequest             JSON对象，请求的内容
-            apiHints               提示信息            
-    '''
-    def executeAPIStatement(self, apiRequest, apiHints):
-        """
-        返回内容：
-            错误情况下：
-            {
-                "type": "error",
-                "message": apiErrorMessage
-            }
-            正确情况下：
-            {
-                "type": "result",
-                "title": None,
-                "rows": None,
-                "headers": None,
-                "columnTypes": None,
-                "status": content
-            }
-        """
-        httpHandler = self.cliHandler.httpHandler
-
-        httpMethod = apiRequest["httpMethod"]
-        httpRequestTarget = apiRequest["httpRequestTarget"]
-
-        headers = {}
-        fields = {}
-        operator = None
-        outputTarget = None
-        contentFrom = None
-
-        if "headers" in apiRequest:
-            headers = apiRequest["headers"]
-        if "httpFields" in apiRequest:
-            # fields字段需要复制下来
-            # 因为后续会不断更新fields的内容，甚至包括二进制的内容（以file文件上传的时候）
-            # 这些二进制的内容没有必要（也做不到）记录到扩展日志中
-            fields = copy.copy(apiRequest["httpFields"])
-
-        multiPartBoundary = None
-        if "multipart" in apiRequest:
-            if "Content-Type" in headers.keys() and headers["Content-Type"] is not None:
-                contentType = str(headers["Content-Type"])
-                contentTypeList = contentType.split(';')
-                for contentType in contentTypeList:
-                    contentType = str(contentType).strip()
-                    if contentType.startswith("boundary"):
-                        multiPartBoundary = re.sub(r"boundary(\s+)?=(\s+)?", "", contentType).strip()
+        currentStatement = None
+        currentStatementWithComments = None
+        currentHints = []
+        statementLines = statement.split('\n')
+        for nPos in range(0, len(statementLines)):
+            statementLine = statementLines[nPos]
+            # 将上次没有结束的行和当前行放在一起, 再次看是否已经结束
+            if currentStatement is None:
+                currentStatement = statementLine
             else:
-                yield {
-                    "type": "error",
-                    "message": "Testcli-0000: " +
-                               "Missed part Content-Disposition:name in multiPart header."
-                }
-                return
-            if multiPartBoundary is None:
-                yield {
-                    "type": "error",
-                    "message": "Testcli-0000: " +
-                               "Missed multiPart boundary in header."
-                }
-                return
-            for multiPart in apiRequest["multipart"]:
-                if "headers" in multiPart.keys() and multiPart["headers"] is not None:
-                    multiPartHeader = multiPart["headers"]
-                    if "Content-Disposition" in multiPartHeader.keys() \
-                            and multiPartHeader["Content-Disposition"] is not None:
-                        contentDisposition = multiPartHeader["Content-Disposition"]
-                        contentDispositions = contentDisposition.split(";")
-                        contentDispositionName = None
-                        contentDispositionFileName = None
-                        for contentDisposition in contentDispositions:
-                            contentDisposition = str(contentDisposition).strip()
-                            if str(contentDisposition).startswith("filename"):
-                                contentDispositionFileName = \
-                                    re.sub(r"filename(\s+)?=(\s+)?", "", contentDisposition).strip()
-                                if contentDispositionFileName.startswith('"') and \
-                                        contentDispositionFileName.endswith('"'):
-                                    contentDispositionFileName = contentDispositionFileName[1:-1]
-                                if contentDispositionFileName.startswith("'") and \
-                                        contentDispositionFileName.endswith("'"):
-                                    contentDispositionFileName = contentDispositionFileName[1:-1]
-                            if str(contentDisposition).startswith("name"):
-                                contentDispositionName = \
-                                    re.sub(r"name(\s+)?=(\s+)?", "", contentDisposition).strip()
-                                if contentDispositionName.startswith('"') and \
-                                        contentDispositionName.endswith('"'):
-                                    contentDispositionName = contentDispositionName[1:-1]
-                                if contentDispositionName.startswith("'") and \
-                                        contentDispositionName.endswith("'"):
-                                    contentDispositionName = contentDispositionName[1:-1]
-                        if contentDispositionName is None:
-                            yield {
-                                "type": "error",
-                                "message": "Testcli-0000: " +
-                                           "Missed part Content-Disposition:name in multiPart header."
-                            }
-                            return
-                        if contentDispositionFileName is None:
-                            # 上传的内容是一个文本内容
-                            multiPartContent = "".join(multiPart["contents"])
-                            fields[contentDispositionName] = (None, multiPartContent)
+                currentStatement = currentStatement + '\n' + statementLine
+            if currentStatementWithComments is None:
+                currentStatementWithComments = statementLine
+            else:
+                currentStatementWithComments = currentStatementWithComments + '\n' + statementLine
+
+            # 调用解析器解析语句
+            if self.testOptions.get("NAMESPACE") == "SQL":
+                (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+                    = SQLAnalyze(currentStatement)
+            elif self.testOptions.get("NAMESPACE") == "API":
+                (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+                    = APIAnalyze(currentStatement)
+            else:
+                raise TestCliException("不支持的运行空间【" + str(nameSpace) + "】")
+
+            # 如果发生了语句解析错误，且错误信息是缺少EOF，则是认为语句没有结束导致，不是正常的错误
+            if ret_errorCode != 0:
+                missedSQLSlash = False
+                if re.search(pattern=r'missing.*<EOF>', string=ret_errorMsg):
+                    # 语句没有结束
+                    isFinished = False
+                if re.search(pattern=r'missing.*SQL_SLASH', string=ret_errorMsg):
+                    # 语句没有结束
+                    missedSQLSlash = True
+                    isFinished = False
+                if re.search(pattern=r'expecting.*<EOF>', string=ret_errorMsg):
+                    # 语句没有结束
+                    isFinished = False
+                if not isFinished and self.testOptions.get("NAMESPACE") == "SQL":
+                    statementFinished = False
+                    if nPos == (len(statementLines) - 1):
+                        # 都已经到最后一行了，不需要继续等待了
+                        statementFinished = True
+                    if not currentStatement.strip().startswith("_") and \
+                            currentStatement.strip().endswith(';') and \
+                            not missedSQLSlash:
+                        # 遇到了分号，且不是复合语句，那么直接结束
+                        statementFinished = True
+                    if currentStatement.strip().endswith("\n/"):
+                        # 遇到了顶行的/，不管是不是复合语句，直接结束
+                        statementFinished = True
+                    if statementFinished:
+                        if currentStatement.strip().startswith("_"):
+                            # 内部语句，且语句已经结束
+                            ret_CommandSplitResults.append(
+                                {'name': 'PARSE_ERROR',
+                                 'statement': currentStatement,
+                                 'reason': ret_errorMsg}
+                            )
+                            # 解析前的语句
+                            ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+                            # 所有的提示信息
+                            ret_CommandHints.append(currentHints)
+                            # 清空语句的变量
+                            currentHints = []
+                            currentStatement = None
+                            currentStatementWithComments = None
                         else:
-                            # 上传的内容是一个文件
-                            contentFrom = None
-                            if "operate" in multiPart.keys() and multiPart["operate"] is not None:
-                                if len(multiPart["operate"]) == 1:
-                                    multiPartOperate = multiPart["operate"][0]
-                                    if "content" in multiPartOperate.keys():
-                                        contentFrom = multiPartOperate["content"].strip()
-                            if contentFrom is None:
-                                # 将当前的文本作为上传数据的一部分
-                                multiPartContent = "".join(multiPart["contents"])
-                                body = multiPartContent.encode(self.testOptions.get("SCRIPT_ENCODING"))
-                                fields[contentDispositionName] = (contentDispositionFileName, body)
+                            if currentStatement.strip().endswith("\n/"):
+                                currentStatement = currentStatement[:-2]
+                            elif currentStatement.strip().endswith(";"):
+                                currentStatement = currentStatement[:-1]
+                            ret_CommandSplitResults.append(
+                                {'name': 'SQL_UNKNOWN',
+                                 'statement': currentStatement,
+                                 'reason': ret_errorMsg}
+                            )
+                            # 解析前的语句
+                            ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+                            # 所有的提示信息
+                            ret_CommandHints.append(currentHints)
+                            # 清空语句的变量
+                            currentHints = []
+                            currentStatement = None
+                            currentStatementWithComments = None
+                    continue
+
+            # 如果语句没有结束，则需要等待下一句输入
+            if not isFinished:
+                # 如果到了文件末尾，就没有必要继续等待，直接返回
+                if nPos == (len(statementLines) - 1):
+                    if self.testOptions.get("NAMESPACE") == "SQL":
+                        ret_CommandSplitResults.append(
+                            {'name': 'SQL_UNKNOWN',
+                             'statement': currentStatement,
+                             'reason': ret_errorMsg}
+                        )
+                    elif self.testOptions.get("NAMESPACE") == "API":
+                        ret_CommandSplitResults.append(
+                            {'name': 'API_UNKNOWN',
+                             'statement': currentStatement,
+                             'reason': ret_errorMsg}
+                        )
+                    # 解析前的语句
+                    ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+                    # 所有的提示信息
+                    ret_CommandHints.append(currentHints)
+                    # 清空语句的变量
+                    currentHints = []
+                    currentStatement = None
+                    currentStatementWithComments = None
+                continue
+
+            # 语句已经结束, 但是输入的内容有错误信息
+            if isFinished and ret_errorCode != 0:
+                ret_CommandSplitResults.append(
+                    {'name': 'PARSE_ERROR',
+                     'statement': currentStatement,
+                     'reason': ret_errorMsg}
+                )
+                # 解析前的语句
+                ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+                # 所有的提示信息
+                ret_CommandHints.append(currentHints)
+                # 清空语句的变量
+                currentHints = []
+                currentStatement = None
+                currentStatementWithComments = None
+                continue
+
+            # 语句已经结束，没有任何错误，但解析的结果为空
+            if ret_CommandSplitResult is None:
+                # 空行，可能包含注释，保留注释内容，带到下一个有意义的段落
+                # Hint的两种写法
+                # 1.  -- [Hint]  hintsomething
+                # 2.  -- [hitsomething]
+                pattern = r"^(\s+)?([-/][-/])(\s+)?\[(\s+)?Hint(\s+)?\](.*)"
+                matchObj = re.match(pattern, statementLine, re.IGNORECASE)
+                if matchObj:
+                    currentHints.append(matchObj.group(6).strip())
+                else:
+                    pattern = r"^(\s+)?([-/][-/])(\s+)?\[(.*)\].*"
+                    matchObj = re.match(pattern, statementLine, re.IGNORECASE)
+                    if matchObj:
+                        currentHints.append(matchObj.group(4).strip())
+                # 解析后的语句
+                ret_CommandSplitResults.append(None)
+                # 解析前的语句
+                ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+                # 对于非有效语句，Hint不在当前语句中体现，而是要等到下次有意义的语句进行处理
+                ret_CommandHints.append([])
+                # 清空除了Hint以外的其他语句变量
+                currentStatement = None
+                currentStatementWithComments = None
+                continue
+
+            # 切换解析的命名空间
+            if ret_CommandSplitResult["name"] == "USE":
+                self.testOptions.set("NAMESPACE", ret_CommandSplitResult["nameSpace"])
+
+            # 对于SQL的CONNECT命令做特殊处理， 以支持外部环境变量带来的问题
+            if self.testOptions.get("NAMESPACE") == "SQL":
+                if ret_CommandSplitResult["name"] == "CONNECT":
+                    # 对于数据库连接命令，如果没有给出连接详细信息，并且指定了环境变量，附属环境变量到连接命令后
+                    if "driver" not in ret_CommandSplitResult:
+                        connectionURL = None
+                        if "SQLCLI_CONNECTION_URL" in os.environ:
+                            connectionURL = str(os.environ["SQLCLI_CONNECTION_URL"]).strip('"').strip("'").strip()
+                        elif "TESTCLI_CONNECTION_URL" in os.environ:
+                            connectionURL = str(os.environ["TESTCLI_CONNECTION_URL"]).strip('"').strip("'").strip()
+                        if connectionURL is not None:
+                            # 拼接链接字符串后重新解析
+                            (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+                                = SQLAnalyze(currentStatement + "@" + connectionURL)
+
+            # 语句正常结束，且其中包含了正式的内容
+            ret_CommandSplitResults.append(ret_CommandSplitResult)
+            # 解析前的语句
+            ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
+            # 所有的提示信息
+            ret_CommandHints.append(currentHints)
+            # 清空语句的变量
+            currentHints = []
+            currentStatement = None
+            currentStatementWithComments = None
+            continue
+
+        return ret_CommandSplitResults, ret_CommandSplitResultsWithComments, ret_CommandHints
+
+    """
+        处理命令行提示信息
+        传入参数：
+             result            命令执行结果
+             commandHints      命令提示信息
+        返回结果：
+            没有单独的返回，将直接重写传入的result内容
+            分别处理result中的:
+                 rows           结果集
+                 status         返回状态
+                 message        错误消息
+            目前处理的提示包括：  
+                 Order          对返回结果集再排序，仅针对rows
+                 LogFilter      对返回结果集，返回状态信息，错误提示进行过滤（状态信息，错误提示如果包含多行，则逐行过滤）
+                 LogMask        对返回结果集，返回状态信息，错误提示进行掩码（状态信息，错误提示如果包含多行，则逐行掩码）
+    """
+    @staticmethod
+    def processCommandHint(result, commandHints: dict):
+        if result is None:
+            return
+
+        rows = None
+        if "rows" in result.keys():
+            rows = result["rows"]
+        # 处理结果集中的信息
+        if rows is not None:
+            # 如果Hints中有order字样，对结果进行排序后再输出
+            if "Order" in commandHints.keys():
+                if "TESTCLI_DEBUG" in os.environ:
+                    print("[DEBUG] Will sort this result accoring to [Order] hint ...")
+                # 不能用sorted函数，需要考虑None出现在列表中特定元素的问题
+                # l =  [(-32767,), (32767,), (None,), (0,)]
+                sortresult(rows)
+
+            # 如果Hint中存在LogFilter，则结果集中过滤指定的输出信息
+            if "LogFilter" in commandHints.keys():
+                for logfilter in commandHints["LogFilter"]:
+                    for item in rows[:]:
+                        # 将所有列用空格分隔来合并为一行
+                        combinedRow = ""
+                        for cell in item:
+                            if combinedRow == "":
+                                combinedRow = str(cell)
                             else:
-                                # 如果指定了数据从文件中获取，则不再分析contents的内容
-                                if not os.path.exists(contentFrom):
-                                    yield {
-                                        "type": "error",
-                                        "message": "Testcli-0000: " + "File [" + str(contentFrom) + "] does not exist."
-                                    }
-                                    return
-                                with open(contentFrom, mode="rb") as f:
-                                    body = f.read()
-                                fields[contentDispositionName] = (contentDispositionFileName, body)
-                            pass
-                    else:
-                        yield {
-                            "type": "error",
-                            "message": "Testcli-0000: " + "Missed part Content-Disposition in multiPart content."
-                        }
-                        return
-                else:
-                    yield {
-                        "type": "error",
-                        "message": "Testcli-0000: " + "Missed part header in multiPart content."
-                    }
-                    return
-
-        if "operate" in apiRequest.keys() and apiRequest["operate"] is not None:
-            if len(apiRequest["operate"]) == 1:
-                operate = apiRequest["operate"][0]
-                operator = operate["operator"]
-                if operator in [">", ">>"]:
-                    outputTarget = operate["content"].strip()
-                if operator in ["<"]:
-                    contentFrom = operate["content"].strip()
-
-        if contentFrom is not None:
-            # 如果指定了数据从文件中获取，则不再分析contents的内容
-            with open(contentFrom, mode="rb") as f:
-                body = f.read()
-        else:
-            if "contents" in apiRequest:
-                body = "".join(apiRequest["contents"])
-            else:
-                body = ""
-            if len(fields) != 0:
-                # 如果填写了fields字段，且body中仅仅包含一个换行符，则标记body为空字符串
-                # Python的urllib3不容许同时出现fields和body内容
-                if body.strip() == "":
-                    body = None
-            if body is not None:
-                body = body.encode(self.testOptions.get("SCRIPT_ENCODING"))
-                # 重置Header的Content-Length
-                headers["Content-Length"] = len(body)
-            else:
-                # 重置Header的Content-Length
-                headers["Content-Length"] = 0
-        try:
-            if self.timeout == -1:
-                timeoutLimit = None
-            else:
-                timeoutLimit = self.timeout
-            args = {
-                "method": httpMethod,
-                "url": httpRequestTarget,
-                "fields": fields,
-                "headers": headers,
-                "timeout": timeoutLimit,
-            }
-            if body is not None:
-                args["body"] = body
-            if multiPartBoundary is not None:
-                args["multipart_boundary"] = multiPartBoundary
-            ret = httpHandler.request(**args)
-            result = {"status": ret.status}
-            if outputTarget is not None:
-                result["content"] = None
-                # 将API执行结果输出到文件中
-                mode = None
-                if operator == ">":
-                    mode = "wb"
-                if operator == ">>":
-                    mode = "ab"
-                with open(outputTarget, mode=mode) as f:
-                    f.write(ret.data)
-            else:
-                data = ret.data.decode('utf-8')
-                try:
-                    data = json.loads(data)
-                except JSONDecodeError:
-                    # 返回的对象不是一个JSON
-                    pass
-                result["content"] = data
-            result = json.dumps(obj=result,
-                                sort_keys=True,
-                                indent=4,
-                                separators=(',', ': '),
-                                ensure_ascii=False)
-            yield {
-                "type": "result",
-                "title": None,
-                "rows": None,
-                "headers": None,
-                "columnTypes": None,
-                "status": result
-            }
-            return
-        except urllib3.exceptions.MaxRetryError as ue:
-            if self.timeOutMode == "COMMAND":
-                if self.testOptions.get("API_TIMEOUT") != "-1":
-                    message = "Request timeout limit command threshold [" + \
-                              str(self.testOptions.get("API_TIMEOUT")) + "] reached."
-                else:
-                    message = str(ue)
-            else:
-                if self.testOptions.get("SCRIPT_TIMEOUT") != "-1":
-                    message = "Request timeout limit script threshold [" + \
-                              str(self.testOptions.get("SCRIPT_TIMEOUT")) + "] reached."
-                else:
-                    message = str(ue)
-            yield {
-                "type": "error",
-                "message": "Testcli-0000: " + message
-            }
-            return
-        except Exception as ex:
-            yield {
-                "type": "error",
-                "message": "Testcli-0000: " + str(ex)
-            }
-            return
-
-    def executeSQLStatement(self, sql: str, sqlHints):
-        """
-        返回内容：
-            错误情况下：
-            {
-                "type": "error",
-                "message": sqlErrorMessage
-            }
-            正确情况下：
-            {
-                "type": "result",
-                "title": title,
-                "rows": result,
-                "headers": headers,
-                "columnTypes": columnTypes,
-                "status": status
-            }
-        """
-
-        # 进入到SQL执行阶段, 开始执行SQL语句
-        if self.sqlConn:
-            # 打开游标
-            self.sqlCursor = self.sqlConn.cursor()
-        else:
-            # 进入到SQL执行阶段，不是特殊命令, 数据库连接也不存在, 直接报错
-            if self.testOptions.get("WHENEVER_ERROR") == "EXIT":
-                raise TestCliException("Not Connected. ")
-            else:
-                yield {
-                    "type": "error",
-                    "message": "Not connected. "
-                }
-
-        # 执行正常的SQL语句
-        if self.sqlCursor is not None:
-            try:
-                # 执行数据库的SQL语句
-                if "SQL_DIRECT" in sqlHints.keys():
-                    self.sqlCursor.execute_direct(sql, TimeOutLimit=self.timeout)
-                elif "SQL_PREPARE" in sqlHints.keys():
-                    self.sqlCursor.execute(sql, TimeOutLimit=self.timeout)
-                else:
-                    if self.testOptions.get("SQL_EXECUTE").upper() == "DIRECT":
-                        self.sqlCursor.execute_direct(sql, TimeOutLimit=self.timeout)
-                    else:
-                        self.sqlCursor.execute(sql, TimeOutLimit=self.timeout)
-
-                rowcount = 0
-                sqlStatus = 0
-                while True:
-                    (title, result, headers, columnTypes, status,
-                     fetchStatus, fetchedRowCount, sqlWarnings) = \
-                        self.getcommandResult(self.sqlCursor, rowcount)
-                    rowcount = fetchedRowCount
-                    if "TESTCLI_DEBUG" in os.environ:
-                        print("[DEBUG] headers=" + str(headers))
-                        if result is not None:
-                            for rowPos in range(0, len(result)):
-                                for cellPos in range(0, len(result[rowPos])):
-                                    print("[DEBUG] Cell[" + str(rowPos) + ":" +
-                                          str(cellPos) + "]=[" + str(result[rowPos][cellPos]) + "]")
-
-                    sqlErrorMessage = ""
-                    # 如果Hints中有order字样，对结果进行排序后再输出
-                    if "Order" in sqlHints.keys() and result is not None:
+                                combinedRow = combinedRow + " " + str(cell)
                         if "TESTCLI_DEBUG" in os.environ:
-                            print("[DEBUG] Apply Sort for this result 2.")
-                        # 不能用sorted函数，需要考虑None出现在列表中特定元素的问题
-                        # l =  [(-32767,), (32767,), (None,), (0,)]
-                        sortresult(result)
+                            print("[DEBUG] Will apply filter: [" + combinedRow + "] with " + logfilter)
+                        if re.match(pattern=logfilter, string=combinedRow, flags=re.IGNORECASE):
+                            rows.remove(item)
+                            continue
 
-                    # 如果Hint中存在LogFilter，则结果集中过滤指定的输出信息
-                    if "LogFilter" in sqlHints.keys() and result is not None:
-                        for sqlFilter in sqlHints["LogFilter"]:
-                            for item in result[:]:
+            # 如果Hint中存在LogMask,则掩码指定的输出信息
+            if "LogMask" in commandHints.keys():
+                for i in range(0, len(rows)):
+                    rowResult = list(rows[i])
+                    bDataChanged = False
+                    for j in range(0, len(rowResult)):
+                        if rowResult[j] is None:
+                            continue
+                        output = str(rowResult[j])
+                        for sqlMaskListString in commandHints["LogMask"]:
+                            sqlMaskList = sqlMaskListString.split("=>")
+                            if len(sqlMaskList) == 2:
+                                sqlMaskPattern = sqlMaskList[0]
+                                sqlMaskTarget = sqlMaskList[1]
                                 if "TESTCLI_DEBUG" in os.environ:
-                                    print("[DEBUG] Apply Filter: [" + str(''.join(str(item))) + "] with " + sqlFilter)
-                                if re.match(pattern=sqlFilter, string=''.join(str(item)), flags=re.IGNORECASE):
-                                    result.remove(item)
-                                    continue
+                                    print("[DEBUG] Will apply mask:" + output +
+                                          " with " + sqlMaskPattern + "=>" + sqlMaskTarget)
+                                try:
+                                    beforeReplace = str(rowResult[j])
+                                    nIterCount = 0
+                                    while True:
+                                        # 循环多次替代，一直到没有可替代为止
+                                        afterReplace = re.sub(sqlMaskPattern, sqlMaskTarget,
+                                                              beforeReplace, re.IGNORECASE)
+                                        if afterReplace == beforeReplace or nIterCount > 99:
+                                            newOutput = afterReplace
+                                            break
+                                        beforeReplace = afterReplace
+                                        nIterCount = nIterCount + 1
+                                    if newOutput != output:
+                                        bDataChanged = True
+                                        rowResult[j] = newOutput
+                                except re.error:
+                                    if "TESTCLI_DEBUG" in os.environ:
+                                        print('[DEBUG] traceback.print_exc():\n%s'
+                                              % traceback.print_exc())
+                                        print('[DEBUG] traceback.format_exc():\n%s'
+                                              % traceback.format_exc())
+                            else:
+                                if "TESTCLI_DEBUG" in os.environ:
+                                    print("[DEBUG] LogMask Hint Error: " + commandHints["LogMask"])
+                    if bDataChanged:
+                        rows[i] = tuple(rowResult)
 
-                    # 如果Hint中存在LogMask,则掩码指定的输出信息
-                    if "LogMask" in sqlHints.keys() and result is not None:
-                        for i in range(0, len(result)):
-                            rowResult = list(result[i])
-                            bDataChanged = False
-                            for j in range(0, len(rowResult)):
-                                if rowResult[j] is None:
-                                    continue
-                                output = str(rowResult[j])
-                                for sqlMaskListString in sqlHints["LogMask"]:
-                                    sqlMaskList = sqlMaskListString.split("=>")
-                                    if len(sqlMaskList) == 2:
-                                        sqlMaskPattern = sqlMaskList[0]
-                                        sqlMaskTarget = sqlMaskList[1]
-                                        if "TESTCLI_DEBUG" in os.environ:
-                                            print("[DEBUG] Apply Mask: " + output +
-                                                  " with " + sqlMaskPattern + "=>" + sqlMaskTarget)
-                                        try:
-                                            beforeReplace = str(rowResult[j])
-                                            nIterCount = 0
-                                            while True:
-                                                # 循环多次替代，一直到没有可替代为止
-                                                afterReplace = re.sub(sqlMaskPattern, sqlMaskTarget,
-                                                                      beforeReplace, re.IGNORECASE)
-                                                if afterReplace == beforeReplace or nIterCount > 99:
-                                                    newOutput = afterReplace
-                                                    break
-                                                beforeReplace = afterReplace
-                                                nIterCount = nIterCount + 1
-                                            if newOutput != output:
-                                                bDataChanged = True
-                                                rowResult[j] = newOutput
-                                        except re.error:
-                                            if "TESTCLI_DEBUG" in os.environ:
-                                                print('[DEBUG] traceback.print_exc():\n%s'
-                                                      % traceback.print_exc())
-                                                print('[DEBUG] traceback.format_exc():\n%s'
-                                                      % traceback.format_exc())
-                                    else:
-                                        if "TESTCLI_DEBUG" in os.environ:
-                                            print("[DEBUG] LogMask Hint Error: " + sqlHints["LogMask"])
-                            if bDataChanged:
-                                result[i] = tuple(rowResult)
-
-                    # 返回SQL结果
-                    if sqlStatus == 1:
-                        yield {
-                            "type": "error",
-                            "message": sqlErrorMessage
-                        }
-                    else:
-                        yield {
-                            "type": "result",
-                            "title": title,
-                            "rows": result,
-                            "headers": headers,
-                            "columnTypes": columnTypes,
-                            "status": status
-                        }
-                    if not fetchStatus:
-                        break
-            except SQLCliJDBCTimeOutException:
-                # 处理超时时间问题
-                if sql.upper() not in ["_EXIT", "_QUIT"]:
-                    if self.timeOutMode == "SCRIPT":
-                        sqlErrorMessage = "Testcli-0000: Script Timeout " \
-                                             "(" + str(self.scriptTimeOut) + \
-                                             ") expired. Abort this command."
-                    else:
-                        sqlErrorMessage = "Testcli-0000: SQL Timeout " \
-                                             "(" + str(self.sqlTimeOut) + \
-                                             ") expired. Abort this command."
-                    yield {"type": "error", "message": sqlErrorMessage}
-            except (SQLCliJDBCException, Exception) as je:
-                sqlErrorMessage = str(je).strip()
-                for errorPrefix in ["java.util.concurrent.ExecutionException:", ]:
-                    if sqlErrorMessage.startswith(errorPrefix):
-                        sqlErrorMessage = sqlErrorMessage[len(errorPrefix):].strip()
-                for errorPrefix in ['java.sql.SQLSyntaxErrorException:',
-                                    "java.sql.SQLException:",
-                                    "java.sql.SQLInvalidAuthorizationSpecException:",
-                                    "java.sql.SQLDataException:",
-                                    "java.sql.SQLTransactionRollbackException:",
-                                    "java.sql.SQLTransientConnectionException:",
-                                    "java.sql.SQLFeatureNotSupportedException",
-                                    "com.microsoft.sqlserver.jdbc.",
-                                    "org.h2.jdbc.JdbcSQLSyntaxErrorException:",
-                                    "dm.jdbc.driver.DMException:",
-                                    ]:
-                    if sqlErrorMessage.startswith(errorPrefix):
-                        sqlErrorMessage = sqlErrorMessage[len(errorPrefix):].strip()
-
-                # 如果Hint中存在LogFilter，则输出的消息中过滤指定的输出信息
-                if "LogFilter" in sqlHints.keys():
-                    sqlMultiLineErrorMessage = sqlErrorMessage.split('\n')
-                    bErrorMessageHasChanged = False
-                    for sqlFilter in sqlHints["LogFilter"]:
-                        for item in sqlMultiLineErrorMessage[:]:
-                            if re.match(sqlFilter, ''.join(str(item)), re.IGNORECASE):
-                                sqlMultiLineErrorMessage.remove(item)
-                                bErrorMessageHasChanged = True
-                                continue
-                    if bErrorMessageHasChanged:
-                        sqlErrorMessage = "\n".join(sqlMultiLineErrorMessage)
-
-                # 如果Hint中存在LogMask,则掩码指定的输出信息
-                if "LogMask" in sqlHints.keys():
-                    sqlMultiLineErrorMessage = sqlErrorMessage.split('\n')
-                    bErrorMessageHasChanged = False
-                    for sqlMaskListString in sqlHints["LogMask"]:
+        # 处理状态消息中的信息
+        status = None
+        if "status" in result.keys():
+            status = result["status"]
+        if status is not None:
+            statusLineList = status.splitlines(keepends=False)
+            # 如果Hint中存在LogFilter，则结果集中过滤指定的输出信息
+            if "LogFilter" in commandHints.keys():
+                for logFilter in commandHints["LogFilter"]:
+                    for line in statusLineList:
+                        if "TESTCLI_DEBUG" in os.environ:
+                            print("[DEBUG] Will apply filter: [" + line + "] with " + logFilter)
+                        if re.match(pattern=logFilter, string=line, flags=re.IGNORECASE):
+                            statusLineList.remove(line)
+                            continue
+                result["status"] = "\n".join(statusLineList)
+            # 如果Hint中存在LogMask,则掩码指定的输出信息
+            if "LogMask" in commandHints.keys():
+                for i in range(0, len(statusLineList)):
+                    line = statusLineList[i]
+                    for sqlMaskListString in commandHints["LogMask"]:
                         sqlMaskList = sqlMaskListString.split("=>")
                         if len(sqlMaskList) == 2:
                             sqlMaskPattern = sqlMaskList[0]
                             sqlMaskTarget = sqlMaskList[1]
-                            for pos2 in range(0, len(sqlMultiLineErrorMessage)):
-                                newOutput = re.sub(sqlMaskPattern, sqlMaskTarget,
-                                                   sqlMultiLineErrorMessage[pos2],
-                                                   re.IGNORECASE)
-                                if newOutput != sqlMultiLineErrorMessage[pos2]:
-                                    bErrorMessageHasChanged = True
-                                    sqlMultiLineErrorMessage[pos2] = newOutput
+                            if "TESTCLI_DEBUG" in os.environ:
+                                print("[DEBUG] Will apply mask:" + line +
+                                      " with " + sqlMaskPattern + "=>" + sqlMaskTarget)
+                            try:
+                                beforeReplace = line
+                                nIterCount = 0
+                                bDataChanged = False
+                                while True:
+                                    # 循环多次替代，一直到没有可替代为止
+                                    afterReplace = re.sub(sqlMaskPattern, sqlMaskTarget,
+                                                          beforeReplace, re.IGNORECASE)
+                                    if afterReplace == beforeReplace or nIterCount > 99:
+                                        newLine = afterReplace
+                                        break
+                                    beforeReplace = afterReplace
+                                    nIterCount = nIterCount + 1
+                                if newLine != line:
+                                    bDataChanged = True
+                                    line = newLine
+                                if bDataChanged:
+                                    statusLineList[i] = newLine
+                            except re.error:
+                                if "TESTCLI_DEBUG" in os.environ:
+                                    print('[DEBUG] traceback.print_exc():\n%s'
+                                          % traceback.print_exc())
+                                    print('[DEBUG] traceback.format_exc():\n%s'
+                                          % traceback.format_exc())
                         else:
                             if "TESTCLI_DEBUG" in os.environ:
-                                raise TestCliException("LogMask Hint Error: " + sqlHints["LogMask"])
-                    if bErrorMessageHasChanged:
-                        sqlErrorMessage = "\n".join(sqlMultiLineErrorMessage)
-                yield {"type": "error", "message": sqlErrorMessage}
+                                print("[DEBUG] LogMask Hint Error: " + commandHints["LogMask"])
+                result["status"] = "\n".join(statusLineList)
 
+        message = None
+        if "message" in result.keys():
+            message = result["message"]
+        if message is not None:
+            messageLineList = message.splitlines(keepends=False)
+            # 如果Hint中存在LogFilter，则结果集中过滤指定的输出信息
+            if "LogFilter" in commandHints.keys():
+                for logFilter in commandHints["LogFilter"]:
+                    for line in messageLineList:
+                        if "TESTCLI_DEBUG" in os.environ:
+                            print("[DEBUG] Will apply filter: [" + line + "] with " + logFilter)
+                        if re.match(pattern=logFilter, string=line, flags=re.IGNORECASE):
+                            messageLineList.remove(line)
+                            continue
+                result["message"] = "\n".join(messageLineList)
+            # 如果Hint中存在LogMask,则掩码指定的输出信息
+            if "LogMask" in commandHints.keys():
+                for i in range(0, len(messageLineList)):
+                    line = messageLineList[i]
+                    for sqlMaskListString in commandHints["LogMask"]:
+                        sqlMaskList = sqlMaskListString.split("=>")
+                        if len(sqlMaskList) == 2:
+                            sqlMaskPattern = sqlMaskList[0]
+                            sqlMaskTarget = sqlMaskList[1]
+                            if "TESTCLI_DEBUG" in os.environ:
+                                print("[DEBUG] Will apply mask:" + line +
+                                      " with " + sqlMaskPattern + "=>" + sqlMaskTarget)
+                            try:
+                                beforeReplace = line
+                                nIterCount = 0
+                                bDataChanged = False
+                                while True:
+                                    # 循环多次替代，一直到没有可替代为止
+                                    afterReplace = re.sub(sqlMaskPattern, sqlMaskTarget,
+                                                          beforeReplace, re.IGNORECASE)
+                                    if afterReplace == beforeReplace or nIterCount > 99:
+                                        newLine = afterReplace
+                                        break
+                                    beforeReplace = afterReplace
+                                    nIterCount = nIterCount + 1
+                                if newLine != line:
+                                    bDataChanged = True
+                                    line = newLine
+                                if bDataChanged:
+                                    messageLineList[i] = newLine
+                            except re.error:
+                                if "TESTCLI_DEBUG" in os.environ:
+                                    print('[DEBUG] traceback.print_exc():\n%s'
+                                          % traceback.print_exc())
+                                    print('[DEBUG] traceback.format_exc():\n%s'
+                                          % traceback.format_exc())
+                        else:
+                            if "TESTCLI_DEBUG" in os.environ:
+                                print("[DEBUG] LogMask Hint Error: " + commandHints["LogMask"])
+                result["message"] = "\n".join(messageLineList)
+
+    """
+        执行命令语句
+        传入参数：
+             statement            需要执行的语句
+             commandScriptFile    文件来自于那个文件，如果是控制台输入，则为Console。否则应该是脚本文名
+                                  文件名称主要用于命令行映射，日志的输出等
+             nameSpace            需要执行的命名空间                     
+        返回结果：
+            无return结果
+            用yield的方式分批次返回执行的结果，根据执行语句不通，返回内容也会有所不通
+    """
     def runStatement(self, statement: str,
                      commandScriptFile: str = "Console",
                      nameSpace: str = None):
@@ -874,212 +784,22 @@ class CmdExecute(object):
             elif nameSpace == "API":
                 print("[DEBUG] API Command=[" + str(statement) + "]")
 
-        # 开始解析语句
         try:
-            ret_CommandSplitResults = []
-            ret_CommandSplitResultsWithComments = []
-            ret_CommandHints = []
-
             # 解析前要保留用户的nameSpace，解析后要把这个内容还原
             # 主要是考虑了执行脚本中，脚本内部含有的nameSpace切换不应该影响到外部的脚本
             defaultNameSpace = self.testOptions.get("NAMESPACE")
 
-            # 将所有的语句分拆开，按照行，依次投喂给解析器，以获得被Antlr分拆后的运行结果
-            currentStatement = None
-            currentStatementWithComments = None
-            currentHints = []
-            statementLines = statement.split('\n')
-            for nPos in range(0, len(statementLines)):
-                statementLine = statementLines[nPos]
-                # 将上次没有结束的行和当前行放在一起, 再次看是否已经结束
-                if currentStatement is None:
-                    currentStatement = statementLine
-                else:
-                    currentStatement = currentStatement + '\n' + statementLine
-                if currentStatementWithComments is None:
-                    currentStatementWithComments = statementLine
-                else:
-                    currentStatementWithComments = currentStatementWithComments + '\n' + statementLine
+            # 开始解析语句
+            ret_CommandSplitResults, ret_CommandSplitResultsWithComments, ret_CommandHints = \
+                self.parseStatement(statement=statement, nameSpace=nameSpace)
 
-                # 调用解析器解析语句
-                if self.testOptions.get("NAMESPACE") == "SQL":
-                    (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-                        = SQLAnalyze(currentStatement)
-                elif self.testOptions.get("NAMESPACE") == "API":
-                    (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-                        = APIAnalyze(currentStatement)
-                else:
-                    raise TestCliException("不支持的运行空间【" + str(nameSpace) + "】")
-
-                # 如果发生了语句解析错误，且错误信息是缺少EOF，则是认为语句没有结束导致，不是正常的错误
-                if ret_errorCode != 0:
-                    missedSQLSlash = False
-                    if re.search(pattern=r'missing.*<EOF>', string=ret_errorMsg):
-                        # 语句没有结束
-                        isFinished = False
-                    if re.search(pattern=r'missing.*SQL_SLASH', string=ret_errorMsg):
-                        # 语句没有结束
-                        missedSQLSlash = True
-                        isFinished = False
-                    if re.search(pattern=r'expecting.*<EOF>', string=ret_errorMsg):
-                        # 语句没有结束
-                        isFinished = False
-                    if not isFinished and self.testOptions.get("NAMESPACE") == "SQL":
-                        statementFinished = False
-                        if nPos == (len(statementLines) - 1):
-                            # 都已经到最后一行了，不需要继续等待了
-                            statementFinished = True
-                        if not currentStatement.strip().startswith("_") and \
-                                currentStatement.strip().endswith(';') and \
-                                not missedSQLSlash:
-                            # 遇到了分号，且不是复合语句，那么直接结束
-                            statementFinished = True
-                        if currentStatement.strip().endswith("\n/"):
-                            # 遇到了顶行的/，不管是不是复合语句，直接结束
-                            statementFinished = True
-                        if statementFinished:
-                            if currentStatement.strip().startswith("_"):
-                                # 内部语句，且语句已经结束
-                                ret_CommandSplitResults.append(
-                                    {'name': 'PARSE_ERROR',
-                                     'statement': currentStatement,
-                                     'reason': ret_errorMsg}
-                                )
-                                # 解析前的语句
-                                ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
-                                # 所有的提示信息
-                                ret_CommandHints.append(currentHints)
-                                # 清空语句的变量
-                                currentHints = []
-                                currentStatement = None
-                                currentStatementWithComments = None
-                            else:
-                                if currentStatement.strip().endswith("\n/"):
-                                    currentStatement = currentStatement[:-2]
-                                elif currentStatement.strip().endswith(";"):
-                                    currentStatement = currentStatement[:-1]
-                                ret_CommandSplitResults.append(
-                                    {'name': 'SQL_UNKNOWN',
-                                     'statement': currentStatement,
-                                     'reason': ret_errorMsg}
-                                )
-                                # 解析前的语句
-                                ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
-                                # 所有的提示信息
-                                ret_CommandHints.append(currentHints)
-                                # 清空语句的变量
-                                currentHints = []
-                                currentStatement = None
-                                currentStatementWithComments = None
-                        continue
-
-                # 如果语句没有结束，则需要等待下一句输入
-                if not isFinished:
-                    # 如果到了文件末尾，就没有必要继续等待，直接返回
-                    if nPos == (len(statementLines) - 1):
-                        if self.testOptions.get("NAMESPACE") == "SQL":
-                            ret_CommandSplitResults.append(
-                                {'name': 'SQL_UNKNOWN',
-                                 'statement': currentStatement,
-                                 'reason': ret_errorMsg}
-                            )
-                        elif self.testOptions.get("NAMESPACE") == "API":
-                            ret_CommandSplitResults.append(
-                                {'name': 'API_UNKNOWN',
-                                 'statement': currentStatement,
-                                 'reason': ret_errorMsg}
-                            )
-                        # 解析前的语句
-                        ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
-                        # 所有的提示信息
-                        ret_CommandHints.append(currentHints)
-                        # 清空语句的变量
-                        currentHints = []
-                        currentStatement = None
-                        currentStatementWithComments = None
-                    continue
-
-                # 语句已经结束, 但是输入的内容有错误信息
-                if isFinished and ret_errorCode != 0:
-                    ret_CommandSplitResults.append(
-                        {'name': 'PARSE_ERROR',
-                         'statement': currentStatement,
-                         'reason': ret_errorMsg}
-                    )
-                    # 解析前的语句
-                    ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
-                    # 所有的提示信息
-                    ret_CommandHints.append(currentHints)
-                    # 清空语句的变量
-                    currentHints = []
-                    currentStatement = None
-                    currentStatementWithComments = None
-                    continue
-
-                # 语句已经结束，没有任何错误，但解析的结果为空
-                if ret_CommandSplitResult is None:
-                    # 空行，可能包含注释，保留注释内容，带到下一个有意义的段落
-                    # Hint的两种写法
-                    # 1.  -- [Hint]  hintsomething
-                    # 2.  -- [hitsomething]
-                    pattern = r"^(\s+)?([-/][-/])(\s+)?\[(\s+)?Hint(\s+)?\](.*)"
-                    matchObj = re.match(pattern, statementLine, re.IGNORECASE)
-                    if matchObj:
-                        currentHints.append(matchObj.group(6).strip())
-                    else:
-                        pattern = r"^(\s+)?([-/][-/])(\s+)?\[(.*)\].*"
-                        matchObj = re.match(pattern, statementLine, re.IGNORECASE)
-                        if matchObj:
-                            currentHints.append(matchObj.group(4).strip())
-                    # 解析后的语句
-                    ret_CommandSplitResults.append(None)
-                    # 解析前的语句
-                    ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
-                    # 对于非有效语句，Hint不在当前语句中体现，而是要等到下次有意义的语句进行处理
-                    ret_CommandHints.append([])
-                    # 清空除了Hint以外的其他语句变量
-                    currentStatement = None
-                    currentStatementWithComments = None
-                    continue
-
-                # 切换解析的命名空间
-                if ret_CommandSplitResult["name"] == "USE":
-                    self.testOptions.set("NAMESPACE", ret_CommandSplitResult["nameSpace"])
-
-                # 对于SQL的CONNECT命令做特殊处理， 以支持外部环境变量带来的问题
-                if self.testOptions.get("NAMESPACE") == "SQL":
-                    if ret_CommandSplitResult["name"] == "CONNECT":
-                        # 对于数据库连接命令，如果没有给出连接详细信息，并且指定了环境变量，附属环境变量到连接命令后
-                        if "driver" not in ret_CommandSplitResult:
-                            connectionURL = None
-                            if "SQLCLI_CONNECTION_URL" in os.environ:
-                                connectionURL = str(os.environ["SQLCLI_CONNECTION_URL"]).strip('"').strip("'").strip()
-                            elif "TESTCLI_CONNECTION_URL" in os.environ:
-                                connectionURL = str(os.environ["TESTCLI_CONNECTION_URL"]).strip('"').strip("'").strip()
-                            if connectionURL is not None:
-                                # 拼接链接字符串后重新解析
-                                (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-                                    = SQLAnalyze(currentStatement + "@" + connectionURL)
-
-                # 语句正常结束，且其中包含了正式的内容
-                ret_CommandSplitResults.append(ret_CommandSplitResult)
-                # 解析前的语句
-                ret_CommandSplitResultsWithComments.append(currentStatementWithComments)
-                # 所有的提示信息
-                ret_CommandHints.append(currentHints)
-                # 清空语句的变量
-                currentHints = []
-                currentStatement = None
-                currentStatementWithComments = None
-                continue
+            # 解析过程中设置的NAMESPACE，解析后要还原，好保证执行的正确
+            self.testOptions.set("NAMESPACE", defaultNameSpace)
         except Exception:
             if "TESTCLI_DEBUG" in os.environ:
                 print('traceback.print_exc():\n%s' % traceback.print_exc())
                 print('traceback.format_exc():\n%s' % traceback.format_exc())
             raise TestCliException("TestCli-000 Internal error. Parse failed.")
-
-        # 解析过程中设置的NAMESPACE，解析后要还原，好保证执行的正确
-        self.testOptions.set("NAMESPACE", defaultNameSpace)
 
         # 开始执行语句
         pos = 0
@@ -1361,9 +1081,15 @@ class CmdExecute(object):
                     }
 
                 # 执行SQL语句
-                for result in self.executeSQLStatement(
+                for result in executeSQLStatement(
+                        cls=self,
                         sql=sqlCommand,
                         sqlHints=commandHintList):
+
+                    # 处理命令行的提示信息
+                    self.processCommandHint(result=result, commandHints=commandHintList)
+
+                    # 保留上一次的执行结果
                     if result["type"] == "result":
                         lastCommandResult["rows"] = result["rows"]
                         lastCommandResult["headers"] = result["headers"]
@@ -1415,7 +1141,7 @@ class CmdExecute(object):
                         lastCommandResult["errorCode"] = 1
                     yield commandResult
             elif parseObject["name"] in ["SESSION"]:
-                for commandResult in sessionManage(
+                for commandResult in sqlSessionManage(
                         cls=self.cliHandler,
                         action=parseObject["action"],
                         sessionName=parseObject["sessionName"]
@@ -1535,7 +1261,8 @@ class CmdExecute(object):
                     }
 
                 # 执行HTTP请求
-                for result in self.executeAPIStatement(
+                for result in executeAPIStatement(
+                        cls=self,
                         apiRequest=parseObject,
                         apiHints=commandHintList):
                     if result["type"] == "result":
@@ -1623,10 +1350,12 @@ class CmdExecute(object):
                         "rewrotedCommand": rewrotedCommandList,
                         "script": commandScriptFile
                     }
-
                 for result in executeSshRequest(
                         requestObject=parseObject,
                 ):
+                    # 处理命令行的提示信息
+                    self.processCommandHint(result=result, commandHints=commandHintList)
+
                     yield result
             elif parseObject["name"] in ["JOB"]:
                 for result in self.cliHandler.JobHandler.processRequest(

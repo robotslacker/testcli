@@ -81,11 +81,11 @@ class TestCli(object):
     ):
         self.Version = __version__                      # 当前程序版本
 
-        self.db_saved_conn = {}                         # 数据库Session备份
-
+        self.db_saved_conn = {}                         # 数据库Session对象，可能存在多个Session，并存在切换需要
+        self.api_saved_conn = {}                        # HTTP请求Session对象，可能存在多个Session，并存在切换需要
         self.cmdMappingHandler = CmdMapping()           # 函数句柄，处理SQLMapping信息
         self.cmdExecuteHandler = CmdExecute()           # 函数句柄，具体来执行语句
-        self.httpHandler = urllib3.PoolManager()        # Http请求线程池，用于处理API请求
+        self.httpHandler = None                         # Http请求线程池，用于处理API请求，根据实际需要来初始化
         self.testOptions = TestOptions()                # 程序运行中各种参数
         self.HdfsHandler = HDFSWrapper()                # HDFS文件操作
         self.JobHandler = JOBManager()                  # 并发任务管理器
