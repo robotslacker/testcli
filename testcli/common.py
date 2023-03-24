@@ -5,6 +5,7 @@ import re
 from .sqlparse import SQLFormatWithPrefix
 from .apiparse import APIRequestObjectFormatWithPrefix
 from .commands.assertExpression import evalExpression
+from .testcliexception import TestCliException
 
 
 def sortresult(result):
@@ -69,8 +70,11 @@ def rewiteStatement(cls, statement: str, commandScriptFile: str):
                 if varName != evalResult:
                     statement = statement.replace(searchResult, str(evalResult))
             except NameError:
-                # 非环境变量
+                # 非本地变量
                 pass
+            except Exception as ex:
+                raise TestCliException("evalExpression Error [" + varName + "]: [" + repr(ex) + "].")
+
             # 尝试环境变量
             if varName in os.environ:
                 statement = statement.replace(searchResult, os.environ[varName])

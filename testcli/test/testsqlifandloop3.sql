@@ -1,6 +1,5 @@
 _use sql;
 _connect /MEM
-_SET TIMING ON
 create  table test_singleloop(num int);
 insert into test_singleloop values(1);
 insert into test_singleloop values(2);

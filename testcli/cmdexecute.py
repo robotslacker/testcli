@@ -628,6 +628,7 @@ class CmdExecute(object):
 
         # 开始执行语句
         pos = 0
+        startTime = None
         while True:
             if pos == len(ret_CommandSplitResults):
                 break
@@ -635,7 +636,8 @@ class CmdExecute(object):
             # 记录命令开始时间
             if self.singleLoopMode and self.singleLoopIter != 0:
                 # 单句循环模式下，只有第一句记录开始运行时间，以后都不再修改开始时间
-                pass
+                if startTime is None:
+                    startTime = time.time()
             else:
                 startTime = time.time()
 
@@ -784,100 +786,43 @@ class CmdExecute(object):
                            "DROP", "COMMIT", "ROLLBACK",
                            "PROCEDURE", "DECLARE", "BEGIN",
                            "SQL_UNKNOWN"]
-            if parseObject["name"] == "HELP":
-                # 显示帮助信息
-                for commandResult in showHelp(
-                        topicName=parseObject["topic"],
-                ):
-                    yield commandResult
-            elif parseObject["name"] == "ECHO":
-                # 将后续内容回显到指定的文件中
-                for commandResult in echo_input(
-                        cls=self.cliHandler,
-                        fileName=parseObject["param"],
-                        block=parseObject["block"],
-                ):
-                    yield commandResult
-            elif parseObject["name"] == "START":
-                # 执行脚本前记录当前执行的脚本名称
-                savedExecuteScript = self.cliHandler.executeScript
-                self.cliHandler.executeScript = parseObject["script"]
-                # 执行脚本文件
-                for commandResult in executeFile(
-                        cls=self.cliHandler,
-                        scriptFile=parseObject["script"],
-                        argv=parseObject["argv"],
-                ):
-                    yield commandResult
-                # 执行脚本后还原当前执行脚本的名称
-                self.cliHandler.executeScript = savedExecuteScript
-            elif parseObject["name"] in ["EXIT", "QUIT"]:
-                # 执行脚本文件
-                if "exitValue" in parseObject.keys():
-                    exitValue = parseObject["exitValue"]
-                else:
-                    exitValue = 0
-                for commandResult in exitApplication(
-                        cls=self.cliHandler,
-                        exitValue=exitValue
-                ):
-                    if commandResult["type"] == "result":
-                        lastCommandResult.clear()
-                        lastCommandResult["status"] = commandResult["status"]
-                        lastCommandResult["errorCode"] = 0
-                    if commandResult["type"] == "error":
-                        lastCommandResult["status"] = commandResult["message"]
-                        lastCommandResult["errorCode"] = 1
-                    yield commandResult
-            elif parseObject["name"] == "CONNECT":
-                # 根据语句中的变量或者其他定义信息来重写当前语句
-                connectRequestObject, rewrotedCommandList = rewriteConnectRequest(
-                    cls=self.cliHandler,
-                    connectRequestObject=parseObject,
-                    commandScriptFile=commandScriptFile
-                )
-                if len(rewrotedCommandList) != 0:
-                    # 如果命令被发生了改写，要打印改写记录
-                    yield {
-                        "type": "parse",
-                        "rawCommand": None,
-                        "formattedCommand": None,
-                        "rewrotedCommand": rewrotedCommandList,
-                        "script": commandScriptFile
-                    }
-
-                # 执行CONNECT命令
-                for commandResult in connectDb(
-                        cls=self.cliHandler,
-                        connectProperties=connectRequestObject
-                ):
-                    if commandResult["type"] == "result":
-                        lastCommandResult.clear()
-                        lastCommandResult["status"] = commandResult["status"]
-                        lastCommandResult["errorCode"] = 0
-                    if commandResult["type"] == "error":
-                        lastCommandResult["message"] = commandResult["message"]
-                        lastCommandResult["errorCode"] = 1
-                    yield commandResult
-            elif parseObject["name"] == "SET":
-                # 执行SET命令
-                for commandResult in setOptions(
-                        cls=self.cliHandler,
-                        options=parseObject
-                ):
-                    if commandResult["type"] == "result":
-                        lastCommandResult.clear()
-                        lastCommandResult["status"] = commandResult["status"]
-                        lastCommandResult["errorCode"] = 0
-                    if commandResult["type"] == "error":
-                        lastCommandResult["status"] = commandResult["message"]
-                        lastCommandResult["errorCode"] = 1
-                    yield commandResult
-            elif parseObject["name"] == "DISCONNECT":
-                # 执行DISCONNECT命令
-                if self.testOptions.get("NAMESPACE") == "SQL":
-                    for commandResult in disconnectDb(
-                            cls=self.cliHandler
+            try:
+                if parseObject["name"] == "HELP":
+                    # 显示帮助信息
+                    for commandResult in showHelp(
+                            topicName=parseObject["topic"],
+                    ):
+                        yield commandResult
+                elif parseObject["name"] == "ECHO":
+                    # 将后续内容回显到指定的文件中
+                    for commandResult in echo_input(
+                            cls=self.cliHandler,
+                            fileName=parseObject["param"],
+                            block=parseObject["block"],
+                    ):
+                        yield commandResult
+                elif parseObject["name"] == "START":
+                    # 执行脚本前记录当前执行的脚本名称
+                    savedExecuteScript = self.cliHandler.executeScript
+                    self.cliHandler.executeScript = parseObject["script"]
+                    # 执行脚本文件
+                    for commandResult in executeFile(
+                            cls=self.cliHandler,
+                            scriptFile=parseObject["script"],
+                            argv=parseObject["argv"],
+                    ):
+                        yield commandResult
+                    # 执行脚本后还原当前执行脚本的名称
+                    self.cliHandler.executeScript = savedExecuteScript
+                elif parseObject["name"] in ["EXIT", "QUIT"]:
+                    # 执行脚本文件
+                    if "exitValue" in parseObject.keys():
+                        exitValue = parseObject["exitValue"]
+                    else:
+                        exitValue = 0
+                    for commandResult in exitApplication(
+                            cls=self.cliHandler,
+                            exitValue=exitValue
                     ):
                         if commandResult["type"] == "result":
                             lastCommandResult.clear()
@@ -887,406 +832,472 @@ class CmdExecute(object):
                             lastCommandResult["status"] = commandResult["message"]
                             lastCommandResult["errorCode"] = 1
                         yield commandResult
-                else:
-                    yield {
-                        "type": "error",
-                        "message": "Non-SQL namespace does not support DISCONNECT command.",
-                        "script": commandScriptFile
-                    }
-            elif parseObject["name"] in sqlKeyWords:
-                if self.ifMode and not self.ifCondition:
-                    pos = pos + 1
-                    continue
-                sqlCommand = parseObject["statement"]
-                # 根据语句中的变量或者其他定义信息来重写当前语句
-                sqlCommand, rewrotedCommandList = rewriteSQLStatement(
-                    cls=self.cliHandler,
-                    statement=sqlCommand,
-                    commandScriptFile=commandScriptFile
-                )
-                if len(rewrotedCommandList) != 0:
-                    # 如果命令被发生了改写，要打印改写记录
-                    yield {
-                        "type": "parse",
-                        "rawCommand": None,
-                        "formattedCommand": None,
-                        "rewrotedCommand": rewrotedCommandList,
-                        "script": commandScriptFile
-                    }
+                elif parseObject["name"] == "CONNECT":
+                    # 根据语句中的变量或者其他定义信息来重写当前语句
+                    connectRequestObject, rewrotedCommandList = rewriteConnectRequest(
+                        cls=self.cliHandler,
+                        connectRequestObject=parseObject,
+                        commandScriptFile=commandScriptFile
+                    )
+                    if len(rewrotedCommandList) != 0:
+                        # 如果命令被发生了改写，要打印改写记录
+                        yield {
+                            "type": "parse",
+                            "rawCommand": None,
+                            "formattedCommand": None,
+                            "rewrotedCommand": rewrotedCommandList,
+                            "script": commandScriptFile
+                        }
 
-                # 执行SQL语句
-                for result in executeSQLStatement(
-                        cls=self,
-                        sql=sqlCommand,
-                        sqlHints=commandHintList):
-
-                    # 处理命令行的提示信息
-                    self.processCommandHint(result=result, commandHints=commandHintList)
-
-                    # 保留上一次的执行结果
-                    if result["type"] == "result":
-                        lastCommandResult["rows"] = result["rows"]
-                        lastCommandResult["headers"] = result["headers"]
-                        lastCommandResult["status"] = result["status"]
-                        lastCommandResult["errorCode"] = 0
-                    if result["type"] == "error":
-                        lastCommandResult["rows"] = []
-                        lastCommandResult["headers"] = []
-                        lastCommandResult["status"] = result["message"]
-                        lastCommandResult["errorCode"] = 1
-                    if self.singleLoopMode:
-                        matchCondition = evalExpression(self.cliHandler, self.singleLoopExpression)
-                        if matchCondition or (
-                            self.singleLoopMaxIter != -1 and self.singleLoopIter >= self.singleLoopMaxIter
+                    # 执行CONNECT命令
+                    for commandResult in connectDb(
+                            cls=self.cliHandler,
+                            connectProperties=connectRequestObject
+                    ):
+                        if commandResult["type"] == "result":
+                            lastCommandResult.clear()
+                            lastCommandResult["status"] = commandResult["status"]
+                            lastCommandResult["errorCode"] = 0
+                        if commandResult["type"] == "error":
+                            lastCommandResult["message"] = commandResult["message"]
+                            lastCommandResult["errorCode"] = 1
+                        yield commandResult
+                elif parseObject["name"] == "SET":
+                    # 执行SET命令
+                    for commandResult in setOptions(
+                            cls=self.cliHandler,
+                            options=parseObject
+                    ):
+                        if commandResult["type"] == "result":
+                            lastCommandResult.clear()
+                            lastCommandResult["status"] = commandResult["status"]
+                            lastCommandResult["errorCode"] = 0
+                        if commandResult["type"] == "error":
+                            lastCommandResult["status"] = commandResult["message"]
+                            lastCommandResult["errorCode"] = 1
+                        yield commandResult
+                elif parseObject["name"] == "DISCONNECT":
+                    # 执行DISCONNECT命令
+                    if self.testOptions.get("NAMESPACE") == "SQL":
+                        for commandResult in disconnectDb(
+                                cls=self.cliHandler
                         ):
-                            # 符合条件，退出单语句循环
-                            self.singleLoopMode = False
-                            self.singleLoopExpression = None
-                            self.singleLoopInterval = 0
-                            self.singleLoopIter = 0
-                            self.singleLoopMaxIter = -1
-                        else:
-                            # 不符合条件，需要下次继续执行该语句，pos不能加1
-                            time.sleep(self.singleLoopInterval)
-                            self.singleLoopIter = self.singleLoopIter + 1
-                    if not self.singleLoopMode:
-                        # 如果不符合最终判断条件，即仍然处于循环模式，则不输出任何内容
-                        yield result
-                if self.singleLoopMode:
-                    # 如果当前还处于单句循环中，则重复执行语句，即POS位置不能加1
-                    continue
-            elif parseObject["name"] in ["USE"]:
-                for commandResult in userNameSpace(
+                            if commandResult["type"] == "result":
+                                lastCommandResult.clear()
+                                lastCommandResult["status"] = commandResult["status"]
+                                lastCommandResult["errorCode"] = 0
+                            if commandResult["type"] == "error":
+                                lastCommandResult["status"] = commandResult["message"]
+                                lastCommandResult["errorCode"] = 1
+                            yield commandResult
+                    else:
+                        yield {
+                            "type": "error",
+                            "message": "Non-SQL namespace does not support DISCONNECT command.",
+                            "script": commandScriptFile
+                        }
+                elif parseObject["name"] in sqlKeyWords:
+                    if self.ifMode and not self.ifCondition:
+                        pos = pos + 1
+                        continue
+                    sqlCommand = parseObject["statement"]
+                    # 根据语句中的变量或者其他定义信息来重写当前语句
+                    sqlCommand, rewrotedCommandList = rewriteSQLStatement(
                         cls=self.cliHandler,
-                        nameSpace=parseObject["nameSpace"]
-                ):
-                    if commandResult["type"] == "result":
-                        lastCommandResult.clear()
-                        lastCommandResult["status"] = commandResult["status"]
-                        lastCommandResult["errorCode"] = 0
-                    if commandResult["type"] == "error":
-                        lastCommandResult["status"] = commandResult["message"]
-                        lastCommandResult["errorCode"] = 1
-                    yield commandResult
-            elif parseObject["name"] in ["SLEEP"]:
-                for commandResult in cliSleep(
-                        cls=self.cliHandler,
-                        sleepTime=parseObject["sleepTime"]
-                ):
-                    if commandResult["type"] == "result":
-                        lastCommandResult.clear()
-                        lastCommandResult["status"] = commandResult["status"]
-                        lastCommandResult["errorCode"] = 0
-                    if commandResult["type"] == "error":
-                        lastCommandResult["status"] = commandResult["message"]
-                        lastCommandResult["errorCode"] = 1
-                    yield commandResult
-            elif parseObject["name"] in ["SPOOL"]:
-                for commandResult in spool(
-                        cls=self.cliHandler,
-                        fileName=parseObject["file"]
-                ):
-                    if commandResult["type"] == "result":
-                        lastCommandResult.clear()
-                        lastCommandResult["status"] = commandResult["status"]
-                        lastCommandResult["errorCode"] = 0
-                    if commandResult["type"] == "error":
-                        lastCommandResult["status"] = commandResult["message"]
-                        lastCommandResult["errorCode"] = 1
-                    yield commandResult
-            elif parseObject["name"] in ["SESSION"]:
-                for commandResult in sqlSessionManage(
-                        cls=self.cliHandler,
-                        action=parseObject["action"],
-                        sessionName=parseObject["sessionName"]
-                ):
-                    if commandResult["type"] == "result":
-                        lastCommandResult.clear()
-                        lastCommandResult["status"] = commandResult["status"]
-                        lastCommandResult["errorCode"] = 0
-                    if commandResult["type"] == "error":
-                        lastCommandResult["status"] = commandResult["message"]
-                        lastCommandResult["errorCode"] = 1
-                    yield commandResult
-            elif parseObject["name"] in ["SCRIPT"]:
-                for commandResult in executeEmbeddScript(
-                        cls=self.cliHandler,
-                        block=parseObject["block"]
-                ):
-                    if commandResult["type"] == "result":
-                        lastCommandResult.clear()
-                        lastCommandResult["status"] = commandResult["status"]
-                        lastCommandResult["errorCode"] = 0
-                    if commandResult["type"] == "error":
-                        lastCommandResult["status"] = commandResult["message"]
-                        lastCommandResult["errorCode"] = 1
-                    yield commandResult
-            elif parseObject["name"] in ["ASSERT"]:
-                for commandResult in assertExpression(
-                        cls=self.cliHandler,
-                        expression=parseObject["expression"],
-                        assertName=parseObject["assertName"]
-                ):
-                    if commandResult["type"] == "result":
-                        lastCommandResult.clear()
-                        lastCommandResult["status"] = commandResult["status"]
-                        lastCommandResult["errorCode"] = 0
-                    if commandResult["type"] == "error":
-                        lastCommandResult["status"] = commandResult["message"]
-                        lastCommandResult["errorCode"] = 1
-                    yield commandResult
-            elif parseObject["name"] in ["LOAD"]:
-                if parseObject["option"] == "PLUGIN":
-                    for commandResult in loadPlugin(
-                            cls=self.cliHandler,
-                            pluginFile=parseObject["pluginFile"]
-                    ):
-                        if commandResult["type"] == "result":
-                            lastCommandResult.clear()
-                            lastCommandResult["status"] = commandResult["status"]
-                            lastCommandResult["errorCode"] = 0
-                        if commandResult["type"] == "error":
-                            lastCommandResult["status"] = commandResult["message"]
-                            lastCommandResult["errorCode"] = 1
-                        yield commandResult
-                elif parseObject["option"] == "JDBCDRIVER":
-                    driverName = None
-                    driverClass = None
-                    driverFile = None
-                    driverURL = None
-                    driverProps = None
-                    if "driverName" in parseObject:
-                        driverName = parseObject["driverName"]
-                    if "driverClass" in parseObject:
-                        driverClass = parseObject["driverClass"]
-                    if "driverFile" in parseObject:
-                        driverFile = parseObject["driverFile"]
-                    if "driverURL" in parseObject:
-                        driverURL = parseObject["driverURL"]
-                    if "driverProps" in parseObject:
-                        driverProps = parseObject["driverProps"]
-                    for commandResult in loadJDBCDriver(
-                            cls=self.cliHandler,
-                            driverName=driverName,
-                            driverClass=driverClass,
-                            driverFile=driverFile,
-                            driverURL=driverURL,
-                            driverProps=driverProps
-                    ):
-                        if commandResult["type"] == "result":
-                            lastCommandResult.clear()
-                            lastCommandResult["status"] = commandResult["status"]
-                            lastCommandResult["errorCode"] = 0
-                        if commandResult["type"] == "error":
-                            lastCommandResult["status"] = commandResult["message"]
-                            lastCommandResult["errorCode"] = 1
-                        yield commandResult
-                elif parseObject["option"] == "MAP":
-                    for commandResult in loadMap(
-                            cls=self.cliHandler,
-                            mapFile=parseObject["mapFile"]
-                    ):
-                        if commandResult["type"] == "result":
-                            lastCommandResult.clear()
-                            lastCommandResult["status"] = commandResult["status"]
-                            lastCommandResult["errorCode"] = 0
-                        if commandResult["type"] == "error":
-                            lastCommandResult["status"] = commandResult["message"]
-                            lastCommandResult["errorCode"] = 1
-                        yield commandResult
-            elif parseObject["name"] in ["HTTP"]:
-                if self.ifMode and not self.ifCondition:
-                    pos = pos + 1
-                    continue
-                # 根据语句中的变量或者其他定义信息来重写当前语句
-                httpRequestTarget, rewrotedCommandList = rewriteAPIStatement(
-                    cls=self.cliHandler,
-                    requestObject=parseObject,
-                    commandScriptFile=commandScriptFile
-                )
-                if len(rewrotedCommandList) != 0:
-                    # 如果命令被发生了改写，要打印改写记录
-                    yield {
-                        "type": "parse",
-                        "rawCommand": None,
-                        "formattedCommand": None,
-                        "rewrotedCommand": rewrotedCommandList,
-                        "script": commandScriptFile
-                    }
+                        statement=sqlCommand,
+                        commandScriptFile=commandScriptFile
+                    )
+                    if len(rewrotedCommandList) != 0:
+                        # 如果命令被发生了改写，要打印改写记录
+                        yield {
+                            "type": "parse",
+                            "rawCommand": None,
+                            "formattedCommand": None,
+                            "rewrotedCommand": rewrotedCommandList,
+                            "script": commandScriptFile
+                        }
 
-                # 执行HTTP请求
-                for result in executeAPIStatement(
-                        cls=self,
-                        apiRequest=parseObject,
-                        apiHints=commandHintList):
-                    if result["type"] == "result":
-                        lastCommandResult.clear()
-                        data = json.loads(result["status"])
-                        lastCommandResult["content"] = data["content"]
-                        lastCommandResult["status"] = data["status"]
-                        lastCommandResult["errorCode"] = 0
-                    if result["type"] == "error":
-                        lastCommandResult["message"] = result["message"]
-                        lastCommandResult["errorCode"] = 1
-                    if self.singleLoopMode:
-                        matchCondition = evalExpression(self.cliHandler, self.singleLoopExpression)
-                        if matchCondition or (
+                    # 执行SQL语句
+                    for result in executeSQLStatement(
+                            cls=self,
+                            sql=sqlCommand,
+                            sqlHints=commandHintList):
+
+                        # 处理命令行的提示信息
+                        self.processCommandHint(result=result, commandHints=commandHintList)
+
+                        # 保留上一次的执行结果
+                        if result["type"] == "result":
+                            lastCommandResult["rows"] = result["rows"]
+                            lastCommandResult["headers"] = result["headers"]
+                            lastCommandResult["status"] = result["status"]
+                            lastCommandResult["errorCode"] = 0
+                        if result["type"] == "error":
+                            lastCommandResult["rows"] = []
+                            lastCommandResult["headers"] = []
+                            lastCommandResult["status"] = result["message"]
+                            lastCommandResult["errorCode"] = 1
+                        if self.singleLoopMode:
+                            matchCondition = evalExpression(self.cliHandler, self.singleLoopExpression)
+                            if matchCondition or (
                                 self.singleLoopMaxIter != -1 and self.singleLoopIter >= self.singleLoopMaxIter
+                            ):
+                                # 符合条件，退出单语句循环
+                                self.singleLoopMode = False
+                                self.singleLoopExpression = None
+                                self.singleLoopInterval = 0
+                                self.singleLoopIter = 0
+                                self.singleLoopMaxIter = -1
+                            else:
+                                # 不符合条件，需要下次继续执行该语句，pos不能加1
+                                time.sleep(self.singleLoopInterval)
+                                self.singleLoopIter = self.singleLoopIter + 1
+                        if not self.singleLoopMode:
+                            # 如果不符合最终判断条件，即仍然处于循环模式，则不输出任何内容
+                            yield result
+                    if self.singleLoopMode:
+                        # 如果当前还处于单句循环中，则重复执行语句，即POS位置不能加1
+                        continue
+                elif parseObject["name"] in ["USE"]:
+                    for commandResult in userNameSpace(
+                            cls=self.cliHandler,
+                            nameSpace=parseObject["nameSpace"]
+                    ):
+                        if commandResult["type"] == "result":
+                            lastCommandResult.clear()
+                            lastCommandResult["status"] = commandResult["status"]
+                            lastCommandResult["errorCode"] = 0
+                        if commandResult["type"] == "error":
+                            lastCommandResult["status"] = commandResult["message"]
+                            lastCommandResult["errorCode"] = 1
+                        yield commandResult
+                elif parseObject["name"] in ["SLEEP"]:
+                    for commandResult in cliSleep(
+                            cls=self.cliHandler,
+                            sleepTime=parseObject["sleepTime"]
+                    ):
+                        if commandResult["type"] == "result":
+                            lastCommandResult.clear()
+                            lastCommandResult["status"] = commandResult["status"]
+                            lastCommandResult["errorCode"] = 0
+                        if commandResult["type"] == "error":
+                            lastCommandResult["status"] = commandResult["message"]
+                            lastCommandResult["errorCode"] = 1
+                        yield commandResult
+                elif parseObject["name"] in ["SPOOL"]:
+                    for commandResult in spool(
+                            cls=self.cliHandler,
+                            fileName=parseObject["file"]
+                    ):
+                        if commandResult["type"] == "result":
+                            lastCommandResult.clear()
+                            lastCommandResult["status"] = commandResult["status"]
+                            lastCommandResult["errorCode"] = 0
+                        if commandResult["type"] == "error":
+                            lastCommandResult["status"] = commandResult["message"]
+                            lastCommandResult["errorCode"] = 1
+                        yield commandResult
+                elif parseObject["name"] in ["SESSION"]:
+                    for commandResult in sqlSessionManage(
+                            cls=self.cliHandler,
+                            action=parseObject["action"],
+                            sessionName=parseObject["sessionName"]
+                    ):
+                        if commandResult["type"] == "result":
+                            lastCommandResult.clear()
+                            lastCommandResult["status"] = commandResult["status"]
+                            lastCommandResult["errorCode"] = 0
+                        if commandResult["type"] == "error":
+                            lastCommandResult["status"] = commandResult["message"]
+                            lastCommandResult["errorCode"] = 1
+                        yield commandResult
+                elif parseObject["name"] in ["SCRIPT"]:
+                    for commandResult in executeEmbeddScript(
+                            cls=self.cliHandler,
+                            block=parseObject["block"]
+                    ):
+                        if commandResult["type"] == "result":
+                            lastCommandResult.clear()
+                            lastCommandResult["status"] = commandResult["status"]
+                            lastCommandResult["errorCode"] = 0
+                        if commandResult["type"] == "error":
+                            lastCommandResult["status"] = commandResult["message"]
+                            lastCommandResult["errorCode"] = 1
+                        yield commandResult
+                elif parseObject["name"] in ["ASSERT"]:
+                    for commandResult in assertExpression(
+                            cls=self.cliHandler,
+                            expression=parseObject["expression"],
+                            assertName=parseObject["assertName"]
+                    ):
+                        if commandResult["type"] == "result":
+                            lastCommandResult.clear()
+                            lastCommandResult["status"] = commandResult["status"]
+                            lastCommandResult["errorCode"] = 0
+                        if commandResult["type"] == "error":
+                            lastCommandResult["status"] = commandResult["message"]
+                            lastCommandResult["errorCode"] = 1
+                        yield commandResult
+                elif parseObject["name"] in ["LOAD"]:
+                    if parseObject["option"] == "PLUGIN":
+                        for commandResult in loadPlugin(
+                                cls=self.cliHandler,
+                                pluginFile=parseObject["pluginFile"]
                         ):
-                            # 符合条件，退出单语句循环
-                            self.singleLoopMode = False
-                            self.singleLoopExpression = None
-                            self.singleLoopInterval = 0
-                            self.singleLoopIter = 0
-                            self.singleLoopMaxIter = -1
-                        else:
-                            # 不符合条件，需要下次继续执行该语句，pos不能加1
-                            time.sleep(self.singleLoopInterval)
-                            self.singleLoopIter = self.singleLoopIter + 1
-                    if not self.singleLoopMode:
-                        # 如果不符合最终判断条件，即仍然处于循环模式，则不输出任何内容
-                        yield result
-                if self.singleLoopMode:
-                    # 如果当前还处于单句循环中，则重复执行语句，即POS位置不能加1
-                    continue
-            elif parseObject["name"] in ["HTTPSET"]:
-                for result in executeAPISet(
-                        cls=self.cliHandler,
-                        apiSetRequest=parseObject
-                ):
-                    yield result
-            elif parseObject["name"] in ["HOST"]:
-                # 执行主机操作系统命令
-                for result in executeLocalCommand(
-                        cls=self.cliHandler,
-                        command=parseObject["script"]
-                ):
-                    yield result
-            elif parseObject["name"] in ["ENDIF"]:
-                self.ifMode = False
-                self.ifCondition = False
-            elif parseObject["name"] in ["IF"]:
-                expression = parseObject["expression"]
-                try:
-                    ret = evalExpression(self.cliHandler, expression)
-                    if type(ret) == bool:
-                        self.ifMode = True
-                        if ret:
-                            self.ifCondition = True
-                        else:
-                            self.ifCondition = False
-                    else:
-                        yield {
-                            "type": "error",
-                            "message": "Set condition fail. SyntaxError =>[not a bool expression]"
-                        }
-                except (SyntaxError, NameError) as ae:
-                    yield {
-                        "type": "error",
-                        "message": "Set condition fail. SyntaxError =>[" + str(ae) + "]"
-                    }
-            elif parseObject["name"] in ["LOOP"]:
-                if parseObject["rule"] == "END":
-                    if not self.loopCondition:
-                        self.loopMode = False
-                    else:
-                        pos = self.loopStartPos
+                            if commandResult["type"] == "result":
+                                lastCommandResult.clear()
+                                lastCommandResult["status"] = commandResult["status"]
+                                lastCommandResult["errorCode"] = 0
+                            if commandResult["type"] == "error":
+                                lastCommandResult["status"] = commandResult["message"]
+                                lastCommandResult["errorCode"] = 1
+                            yield commandResult
+                    elif parseObject["option"] == "JDBCDRIVER":
+                        driverName = None
+                        driverClass = None
+                        driverFile = None
+                        driverURL = None
+                        driverProps = None
+                        if "driverName" in parseObject:
+                            driverName = parseObject["driverName"]
+                        if "driverClass" in parseObject:
+                            driverClass = parseObject["driverClass"]
+                        if "driverFile" in parseObject:
+                            driverFile = parseObject["driverFile"]
+                        if "driverURL" in parseObject:
+                            driverURL = parseObject["driverURL"]
+                        if "driverProps" in parseObject:
+                            driverProps = parseObject["driverProps"]
+                        for commandResult in loadJDBCDriver(
+                                cls=self.cliHandler,
+                                driverName=driverName,
+                                driverClass=driverClass,
+                                driverFile=driverFile,
+                                driverURL=driverURL,
+                                driverProps=driverProps
+                        ):
+                            if commandResult["type"] == "result":
+                                lastCommandResult.clear()
+                                lastCommandResult["status"] = commandResult["status"]
+                                lastCommandResult["errorCode"] = 0
+                            if commandResult["type"] == "error":
+                                lastCommandResult["status"] = commandResult["message"]
+                                lastCommandResult["errorCode"] = 1
+                            yield commandResult
+                    elif parseObject["option"] == "MAP":
+                        for commandResult in loadMap(
+                                cls=self.cliHandler,
+                                mapFile=parseObject["mapFile"]
+                        ):
+                            if commandResult["type"] == "result":
+                                lastCommandResult.clear()
+                                lastCommandResult["status"] = commandResult["status"]
+                                lastCommandResult["errorCode"] = 0
+                            if commandResult["type"] == "error":
+                                lastCommandResult["status"] = commandResult["message"]
+                                lastCommandResult["errorCode"] = 1
+                            yield commandResult
+                elif parseObject["name"] in ["HTTP"]:
+                    if self.ifMode and not self.ifCondition:
+                        pos = pos + 1
                         continue
-                elif parseObject["rule"] == "BREAK":
-                    if self.ifCondition and self.ifMode:
-                        self.loopCondition = False
-                elif parseObject["rule"] == "CONTINUE":
-                    if self.ifCondition and self.ifMode:
-                        pos = self.loopStartPos
-                        continue
-                elif parseObject["rule"] == "BEGIN":
-                    # block循环
-                    try:
-                        self.loopCondition = not evalExpression(self.cliHandler, parseObject["until"])
-                        self.loopMode = True
-                        self.loopStartPos = pos
-                    except Exception as ex:
-                        self.loopMode = False
-                        yield {
-                            "type": "error",
-                            "message": "Loop condition expression error.. SyntaxError =>[" + str(ex) + "]"
-                        }
-                elif parseObject["rule"] == "UNTIL":
-                    # 但语句循环
-                    self.singleLoopExpression = parseObject["until"]
-                    self.singleLoopInterval = parseObject["interval"]
-                    self.singleLoopMaxIter = parseObject["limit"]
-                    self.singleLoopMode = True
-                    self.singleLoopIter = 0
-            elif parseObject["name"] in ["WHENEVER"]:
-                for result in setWheneverAction(
-                        cls=self.cliHandler,
-                        action=parseObject["action"],
-                        exitCode=parseObject["exitCode"]
-                ):
-                    yield result
-            elif parseObject["name"] in ["SSH"]:
-                parseObject, rewrotedCommandList = rewriteSshRequest(
-                    cls=self.cliHandler,
-                    requestObject=parseObject,
-                    commandScriptFile=commandScriptFile
-                )
-                if len(rewrotedCommandList) != 0:
-                    # 如果命令被发生了改写，要打印改写记录
-                    yield {
-                        "type": "parse",
-                        "rawCommand": None,
-                        "formattedCommand": None,
-                        "rewrotedCommand": rewrotedCommandList,
-                        "script": commandScriptFile
-                    }
-                for result in executeSshRequest(
-                        requestObject=parseObject,
-                ):
-                    # 处理命令行的提示信息
-                    self.processCommandHint(result=result, commandHints=commandHintList)
-
-                    yield result
-            elif parseObject["name"] in ["JOB"]:
-                for result in self.cliHandler.JobHandler.processRequest(
-                        cls=self.cliHandler,
-                        requestObject=parseObject,
-                ):
-                    yield result
-            elif parseObject["name"] in ["COMPARE"]:
-                for result in executeCompareRequest(
+                    # 根据语句中的变量或者其他定义信息来重写当前语句
+                    httpRequestTarget, rewrotedCommandList = rewriteAPIStatement(
                         cls=self.cliHandler,
                         requestObject=parseObject,
                         commandScriptFile=commandScriptFile
-                ):
-                    yield result
-            elif parseObject["name"] in ["DATA"]:
-                for result in executeDataRequest(
+                    )
+                    if len(rewrotedCommandList) != 0:
+                        # 如果命令被发生了改写，要打印改写记录
+                        yield {
+                            "type": "parse",
+                            "rawCommand": None,
+                            "formattedCommand": None,
+                            "rewrotedCommand": rewrotedCommandList,
+                            "script": commandScriptFile
+                        }
+
+                    # 执行HTTP请求
+                    for result in executeAPIStatement(
+                            cls=self,
+                            apiRequest=parseObject,
+                            apiHints=commandHintList):
+                        if result["type"] == "result":
+                            lastCommandResult.clear()
+                            data = json.loads(result["status"])
+                            lastCommandResult["content"] = data["content"]
+                            lastCommandResult["status"] = data["status"]
+                            lastCommandResult["errorCode"] = 0
+                        if result["type"] == "error":
+                            lastCommandResult["message"] = result["message"]
+                            lastCommandResult["errorCode"] = 1
+                        if self.singleLoopMode:
+                            matchCondition = evalExpression(self.cliHandler, self.singleLoopExpression)
+                            if matchCondition or (
+                                    self.singleLoopMaxIter != -1 and self.singleLoopIter >= self.singleLoopMaxIter
+                            ):
+                                # 符合条件，退出单语句循环
+                                self.singleLoopMode = False
+                                self.singleLoopExpression = None
+                                self.singleLoopInterval = 0
+                                self.singleLoopIter = 0
+                                self.singleLoopMaxIter = -1
+                            else:
+                                # 不符合条件，需要下次继续执行该语句，pos不能加1
+                                time.sleep(self.singleLoopInterval)
+                                self.singleLoopIter = self.singleLoopIter + 1
+                        if not self.singleLoopMode:
+                            # 如果不符合最终判断条件，即仍然处于循环模式，则不输出任何内容
+                            yield result
+                    if self.singleLoopMode:
+                        # 如果当前还处于单句循环中，则重复执行语句，即POS位置不能加1
+                        continue
+                elif parseObject["name"] in ["HTTPSET"]:
+                    for result in executeAPISet(
+                            cls=self.cliHandler,
+                            apiSetRequest=parseObject
+                    ):
+                        yield result
+                elif parseObject["name"] in ["HOST"]:
+                    # 执行主机操作系统命令
+                    for result in executeLocalCommand(
+                            cls=self.cliHandler,
+                            command=parseObject["script"]
+                    ):
+                        yield result
+                elif parseObject["name"] in ["ENDIF"]:
+                    self.ifMode = False
+                    self.ifCondition = False
+                elif parseObject["name"] in ["IF"]:
+                    expression = parseObject["expression"]
+                    try:
+                        ret = evalExpression(self.cliHandler, expression)
+                        if type(ret) == bool:
+                            self.ifMode = True
+                            if ret:
+                                self.ifCondition = True
+                            else:
+                                self.ifCondition = False
+                        else:
+                            yield {
+                                "type": "error",
+                                "message": "Set condition fail. SyntaxError =>[not a bool expression]"
+                            }
+                    except (SyntaxError, NameError) as ae:
+                        yield {
+                            "type": "error",
+                            "message": "Set condition fail. SyntaxError =>[" + str(ae) + "]"
+                        }
+                elif parseObject["name"] in ["LOOP"]:
+                    if parseObject["rule"] == "END":
+                        if not self.loopCondition:
+                            self.loopMode = False
+                        else:
+                            pos = self.loopStartPos
+                            continue
+                    elif parseObject["rule"] == "BREAK":
+                        if self.ifCondition and self.ifMode:
+                            self.loopCondition = False
+                    elif parseObject["rule"] == "CONTINUE":
+                        if self.ifCondition and self.ifMode:
+                            pos = self.loopStartPos
+                            continue
+                    elif parseObject["rule"] == "BEGIN":
+                        # block循环
+                        try:
+                            self.loopCondition = not evalExpression(self.cliHandler, parseObject["until"])
+                            self.loopMode = True
+                            self.loopStartPos = pos
+                        except Exception as ex:
+                            self.loopMode = False
+                            yield {
+                                "type": "error",
+                                "message": "Loop condition expression error.. SyntaxError =>[" + str(ex) + "]"
+                            }
+                    elif parseObject["rule"] == "UNTIL":
+                        # 但语句循环
+                        self.singleLoopExpression = parseObject["until"]
+                        self.singleLoopInterval = parseObject["interval"]
+                        self.singleLoopMaxIter = parseObject["limit"]
+                        self.singleLoopMode = True
+                        self.singleLoopIter = 0
+                elif parseObject["name"] in ["WHENEVER"]:
+                    for result in setWheneverAction(
+                            cls=self.cliHandler,
+                            action=parseObject["action"],
+                            exitCode=parseObject["exitCode"]
+                    ):
+                        yield result
+                elif parseObject["name"] in ["SSH"]:
+                    # SSH的命令输出，由于控制台的反馈存在多行的问题，所以需要合并返回内容到一行，再放到lastCommandResult中
+                    consoleOutput = []
+                    parseObject, rewrotedCommandList = rewriteSshRequest(
                         cls=self.cliHandler,
                         requestObject=parseObject,
-                ):
-                    yield result
-            elif parseObject["name"] in ["PARSE_ERROR"]:
-                yield {"type": "error",
-                       "message": "TestCli parse error:  " + str(parseObject["reason"])}
-            elif parseObject["name"] in ["MONITOR"]:
-                for result in executeMonitorRequest(
-                        cls=self.cliHandler,
-                        requestObject=parseObject,
-                ):
-                    if result["type"] == "result":
-                        lastCommandResult["rows"] = result["rows"]
-                        lastCommandResult["headers"] = result["headers"]
-                        lastCommandResult["status"] = result["status"]
+                        commandScriptFile=commandScriptFile
+                    )
+                    if len(rewrotedCommandList) != 0:
+                        # 如果命令被发生了改写，要打印改写记录
+                        yield {
+                            "type": "parse",
+                            "rawCommand": None,
+                            "formattedCommand": None,
+                            "rewrotedCommand": rewrotedCommandList,
+                            "script": commandScriptFile
+                        }
+                    for result in executeSshRequest(
+                            requestObject=parseObject,
+                    ):
+                        # 处理命令行的提示信息
+                        self.processCommandHint(result=result, commandHints=commandHintList)
+                        if "status" in result.keys():
+                            consoleOutput.append(result["status"])
+                        lastCommandResult["status"] = "\n".join(consoleOutput)
                         lastCommandResult["errorCode"] = 0
-                    if result["type"] == "error":
-                        lastCommandResult["rows"] = []
-                        lastCommandResult["headers"] = []
-                        lastCommandResult["status"] = result["message"]
-                        lastCommandResult["errorCode"] = 1
-                    yield result
-            else:
-                raise TestCliException("TestCli parse error:  unknown parseObject [" + str(parseObject) + "]")
+                        yield result
+                elif parseObject["name"] in ["JOB"]:
+                    for result in self.cliHandler.JobHandler.processRequest(
+                            cls=self.cliHandler,
+                            requestObject=parseObject,
+                    ):
+                        yield result
+                elif parseObject["name"] in ["COMPARE"]:
+                    for result in executeCompareRequest(
+                            cls=self.cliHandler,
+                            requestObject=parseObject,
+                            commandScriptFile=commandScriptFile
+                    ):
+                        yield result
+                elif parseObject["name"] in ["DATA"]:
+                    for result in executeDataRequest(
+                            cls=self.cliHandler,
+                            requestObject=parseObject,
+                    ):
+                        yield result
+                elif parseObject["name"] in ["PARSE_ERROR"]:
+                    yield {"type": "error",
+                           "message": "TestCli parse error:  " + str(parseObject["reason"])}
+                elif parseObject["name"] in ["MONITOR"]:
+                    for result in executeMonitorRequest(
+                            cls=self.cliHandler,
+                            requestObject=parseObject,
+                    ):
+                        if result["type"] == "result":
+                            lastCommandResult["rows"] = result["rows"]
+                            lastCommandResult["headers"] = result["headers"]
+                            lastCommandResult["status"] = result["status"]
+                            lastCommandResult["errorCode"] = 0
+                        if result["type"] == "error":
+                            lastCommandResult["rows"] = []
+                            lastCommandResult["headers"] = []
+                            lastCommandResult["status"] = result["message"]
+                            lastCommandResult["errorCode"] = 1
+                        yield result
+                else:
+                    raise TestCliException("TestCli parse error:  unknown parseObject [" + str(parseObject) + "]")
+            except TestCliException as clie:
+                yield {"type": "error",
+                       "message": str(clie)}
 
             # 如果需要，打印语句执行时间
             endTime = time.time()
