@@ -1,0 +1,64 @@
+SQL> _start testsqlifandloop2.sql
+SQL> _connect /mem
+Database connected.
+SQL> create table aaa (id int);
+0 row affected.
+SQL>
+SQL> > {% i=1 %}
+SQL> _loop Begin UNTIL {% i>=10 %}
+SQL> insert into aaa values(10);
+1 row affected.
+SQL> select * from aaa;
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 | 10 |
++--------+----+
+1 row selected.
+SQL> _IF {% len(lastCommandResult["rows"]) == 3 %}
+SQL>     _LOOP BREAK
+SQL> _ENDIF
+SQL> > {% i=i+1 %}
+SQL> _loop end;
+SQL> _loop Begin UNTIL {% i>=10 %}
+SQL> insert into aaa values(10);
+1 row affected.
+SQL> select * from aaa;
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 | 10 |
+|      2 | 10 |
++--------+----+
+2 rows selected.
+SQL> _IF {% len(lastCommandResult["rows"]) == 3 %}
+SQL>     _LOOP BREAK
+SQL> _ENDIF
+SQL> > {% i=i+1 %}
+SQL> _loop end;
+SQL> _loop Begin UNTIL {% i>=10 %}
+SQL> insert into aaa values(10);
+1 row affected.
+SQL> select * from aaa;
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 | 10 |
+|      2 | 10 |
+|      3 | 10 |
++--------+----+
+3 rows selected.
+SQL> _IF {% len(lastCommandResult["rows"]) == 3 %}
+SQL>     _LOOP BREAK
+SQL> _loop end;
+SQL> select * from aaa order by 1;
++--------+----+
+|   ##   | ID |
++--------+----+
+|      1 | 10 |
+|      2 | 10 |
+|      3 | 10 |
++--------+----+
+3 rows selected.
+SQL> _exit
+Disconnected.

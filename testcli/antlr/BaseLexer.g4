@@ -155,6 +155,8 @@ LOOP_SEMICOLON  : ';';
 LOOP_SPACE      : [ \t]+ -> channel (HIDDEN);
 LOOP_BEGIN      : 'BEGIN';
 LOOP_UNTIL      : 'UNTIL';
+LOOP_INTERVAL   : 'INTERVAL';
+LOOP_INT        : INT;
 LOOP_OPEN       : '{%';
 LOOP_CLOSE      : '%}';
 LOOP_BREAK      : 'BREAK';

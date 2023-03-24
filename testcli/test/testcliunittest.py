@@ -621,7 +621,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertTrue(isFinished)
         self.assertEqual(
-            {'UNTIL': 'i>=3', 'name': 'LOOP', 'rule': 'BEGIN'},
+            {'until': 'i>=3', 'name': 'LOOP', 'rule': 'BEGIN'},
             ret_CommandSplitResult)
 
     def test_SQLAnalyze_Whenever(self):
@@ -1292,6 +1292,7 @@ class TestSynatx(unittest.TestCase):
                 break
             else:
                 time.sleep(1)
+        time.sleep(2)  # 端口可用后再等待2秒钟
 
         # 等待3秒钟后再进行连接
         os.environ["SQLCLI_CONNECTION_URL"] = "jdbc:h2tcp:tcp://127.0.0.1:19091/mem:test"
@@ -1321,10 +1322,11 @@ class TestSynatx(unittest.TestCase):
             file2=fullRefFile,
             CompareIgnoreTailOrHeadBlank=True
         )
+        msg = "\n"
         if not compareResult:
             for line in compareReport:
                 if line.startswith("-") or line.startswith("+"):
-                    print(line)
+                    msg = msg + line + "\n"
         self.assertTrue(compareResult)
 
     def test_SQLSleep(self):
@@ -1433,34 +1435,39 @@ class TestSynatx(unittest.TestCase):
     def test_SQLIfAndLoopCondition(self):
         from ..testcli import TestCli
 
-        scriptFile = "testsqlifandloop.sql"
+        scriptFileList = ["testsqlifandloop.sql", "testsqlifandloop2.sql", "testsqlifandloop3.sql"]
 
-        scriptBaseFile = os.path.splitext(scriptFile)[0]
-        fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
-        fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
-        fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
+        for scriptFile in scriptFileList:
+            scriptBaseFile = os.path.splitext(scriptFile)[0]
+            fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
+            fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
+            fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
 
-        # 运行测试程序，开启无头模式(不在控制台上显示任何内容),同时不打印Logo
-        testcli = TestCli(
-            logfilename=fullLogFile,
-            headlessMode=True,
-            script=fullScriptFile
-        )
-        retValue = testcli.run_cli()
-        self.assertEqual(0, retValue)
+            # 运行测试程序，开启无头模式(不在控制台上显示任何内容),同时不打印Logo
+            testcli = TestCli(
+                logfilename=fullLogFile,
+                headlessMode=True,
+                script=fullScriptFile
+            )
+            retValue = testcli.run_cli()
+            self.assertEqual(0, retValue)
 
-        # 对文件进行比对，判断返回结果是否吻合
-        compareHandler = POSIXCompare()
-        compareResult, compareReport = compareHandler.compare_text_files(
-            file1=fullLogFile,
-            file2=fullRefFile,
-            CompareIgnoreTailOrHeadBlank=True
-        )
-        if not compareResult:
-            for line in compareReport:
-                if line.startswith("-") or line.startswith("+"):
-                    print(line)
-        self.assertTrue(compareResult)
+            # 对文件进行比对，判断返回结果是否吻合
+            compareHandler = POSIXCompare()
+            compareResult, compareReport = compareHandler.compare_text_files(
+                file1=fullLogFile,
+                file2=fullRefFile,
+                CompareIgnoreTailOrHeadBlank=True
+            )
+            msg = "Script: " + scriptFile + "\n"
+            if not compareResult:
+                for line in compareReport:
+                    if line.startswith("-") or line.startswith("+"):
+                        msg = msg + line + "\n"
+            self.assertTrue(
+                expr=compareResult,
+                msg=msg
+            )
 
     def test_SQLLoadPlugin(self):
         from ..testcli import TestCli

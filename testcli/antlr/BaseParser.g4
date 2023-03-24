@@ -71,7 +71,13 @@ host    : HOST HOST_EXPRESSION (SEMICOLON)? CRLF?;
 
 // 循环处理操作
 loop    : LOOP
-          (LOOP_BREAK | LOOP_END | LOOP_CONTINUE | LOOP_BEGIN LOOP_UNTIL LOOP_EXPRESSION) (LOOP_SEMICOLON)? CRLF?
+          (
+            LOOP_BREAK |
+            LOOP_END |
+            LOOP_CONTINUE |
+            (LOOP_BEGIN LOOP_UNTIL LOOP_EXPRESSION) |
+            ((LOOP_INT)? LOOP_UNTIL LOOP_EXPRESSION LOOP_INTERVAL LOOP_INT)
+           ) (LOOP_SEMICOLON)? CRLF?
         ;
 
 // IF条件表达式

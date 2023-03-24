@@ -499,10 +499,19 @@ class SQLVisitor(SQLParserVisitor):
             parsedObject.update({"rule": "BREAK"})
         elif ctx.LOOP_CONTINUE():
             parsedObject.update({"rule": "CONTINUE"})
-        elif ctx.LOOP_BEGIN():
-            parsedObject.update({"rule": "BEGIN"})
-        else:
-            parsedObject.update({"rule": "UNTIL"})
+        elif ctx.LOOP_UNTIL():
+            if ctx.LOOP_BEGIN() is not None:
+                parsedObject.update({"rule": "BEGIN"})
+            else:
+                parsedObject.update({"rule": "UNTIL"})
+                # 如果有两个INT，则第一个是最大循环次数，第二个是循环间隔
+                # 如果只有一个INT，则第一个是循环间隔，没有最大循环次数
+                if len(list(ctx.LOOP_INT())) == 2:
+                    parsedObject.update({"interval": int(ctx.LOOP_INT()[1].getText())})
+                    parsedObject.update({"limit": int(ctx.LOOP_INT()[0].getText())})
+                else:
+                    parsedObject.update({"interval": int(ctx.LOOP_INT()[0].getText())})
+                    parsedObject.update({"limit": -1})
         if ctx.LOOP_EXPRESSION() is not None:
             expression = str(ctx.LOOP_EXPRESSION().getText())
             if expression.startswith("{%"):
@@ -510,7 +519,7 @@ class SQLVisitor(SQLParserVisitor):
             if expression.endswith("%}"):
                 expression = expression[:-2]
             expression = expression.strip()
-            parsedObject.update({"UNTIL": expression})
+            parsedObject.update({"until": expression})
 
         # 处理错误信息
         errorCode = 0

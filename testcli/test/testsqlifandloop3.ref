@@ -1,0 +1,34 @@
+SQL> _start testsqlifandloop3.sql
+SQL> _use sql;
+Current NameSpace: SQL.
+SQL> _connect /MEM
+Database connected.
+SQL> _SET TIMING ON
+Running time elapsed:      0.00 seconds
+SQL> create  table test_singleloop(num int);
+0 row affected.
+Running time elapsed:      0.00 seconds
+SQL> insert into test_singleloop values(1);
+1 row affected.
+Running time elapsed:      0.00 seconds
+SQL> insert into test_singleloop values(2);
+1 row affected.
+Running time elapsed:      0.00 seconds
+SQL> _LOOP 2 UNTIL {% len(lastCommandResult["rows"]) == 3 %}  INTERVAL 3;
+Running time elapsed:      0.00 seconds
+SQL> select * from test_singleloop order by 1;
++--------+-----+
+|   ##   | NUM |
++--------+-----+
+|      1 |   1 |
+|      2 |   2 |
++--------+-----+
+2 rows selected.
+Running time elapsed:      6.01 seconds
+SQL>
+SQL> _ASSERT {% 9> lastCommandResult["elapsed"] > 6 %}
+Assert successful.
+Running time elapsed:      0.00 seconds
+Running time elapsed:      6.02 seconds
+SQL> _exit
+Disconnected.

@@ -1,15 +1,9 @@
 # -*- coding: utf-8 -*-
-import datetime
 import time
 import json
 import os
 import re
-import platform
-import binascii
-import decimal
 import traceback
-from .sqlclijdbc import SQLCliJDBCException
-from .sqlclijdbc import SQLCliJDBCLargeObject
 from .sqlparse import SQLAnalyze
 from .apiparse import APIAnalyze
 from .sqlparse import SQLFormatWithPrefix
@@ -89,250 +83,28 @@ class CmdExecute(object):
         # 数据库连接
         self.sqlConn = None
         self.sqlCursor = None
-        self.apiConn = None
 
         # 记录语句是否当前处于条件表达式判定中
         self.ifMode = False
         self.ifCondition = False
-        # 记录语句是否在循环过程中
+
+        # 记录语句在Block循环过程中的相关信息
         self.loopMode = False
         self.loopCondition = False
         self.loopStartPos = 0
+
+        # 记录语句在单句循环中的相关信息
+        self.singleLoopMode = False              # 是否处于单句循环中
+        self.singleLoopExpression = None         # 单句循环的判断表达式
+        self.singleLoopInterval = 0              # 每次检查的时间间隔
+        self.singleLoopIter = 0                  # 循环次数计数
+        self.singleLoopMaxIter = -1              # 最大循环次数, -1表示不判断次数
 
     def setStartTime(self, startTime):
         self.startTime = startTime
 
     def getStartTime(self):
         return self.startTime
-
-    def getcommandResult(self, cursor, rowcount):
-        """
-            返回的内容：
-                title           输出的前提示信息
-                result          结果数据集
-                headers         表头信息
-                columnTypes     结果字段类型
-                status          输出的后提示信息
-                FetchStatus     是否输出完成
-                rowcount        共返回记录行数
-                Warning         警告信息
-        """
-        title = headers = None
-        fetchStatus = True
-
-        def format_column(p_column, p_columntype):
-            if type(p_column) == float:
-                return self.testOptions.get("FLOAT_FORMAT") % p_column
-            elif type(p_column) in (bool, str, int):
-                return p_column
-            elif type(p_column) == list:
-                return p_column
-            elif type(p_column) == datetime.date:
-                columnFormat = self.testOptions.get("DATE_FORMAT")
-                if platform.system().lower() in ['windows', 'darwin']:
-                    columnFormat = columnFormat.replace("%04Y", "%Y")
-                else:
-                    columnFormat = columnFormat.replace("%Y", "%04Y")
-                return p_column.strftime(columnFormat)
-            elif type(p_column) == datetime.datetime:
-                if p_columntype in ["TIMESTAMP WITH TIME ZONE",
-                                    "TIMESTAMP WITH LOCAL TIME ZONE"]:
-                    columnFormat = self.testOptions.get("DATETIME-TZ_FORMAT")
-                else:
-                    columnFormat = self.testOptions.get("DATETIME_FORMAT")
-                if platform.system().lower() in ['windows', 'darwin']:
-                    columnFormat = columnFormat.replace("%04Y", "%Y")
-                else:
-                    columnFormat = columnFormat.replace("%Y", "%04Y")
-                return p_column.strftime(columnFormat)
-            elif type(p_column) == datetime.time:
-                return p_column.strftime(self.testOptions.get("TIME_FORMAT"))
-            elif type(p_column) == bytearray:
-                if p_columntype == "BLOB":
-                    columnTrimedLength = int(self.testOptions.get("LOB_LENGTH"))
-                    bColumnFullOutput = True
-                    if len(p_column) > columnTrimedLength:
-                        bColumnFullOutput = False
-                        p_column = p_column[:columnTrimedLength]
-                    # 转换为16进制，并反算成ASCII
-                    p_column = binascii.b2a_hex(p_column)
-                    p_column = p_column.decode()
-                    if not bColumnFullOutput:
-                        # 用...的方式提醒输出没有结束，只是由于格式控制导致不显示
-                        return "0x" + p_column + "..."
-                    else:
-                        return "0x" + p_column
-                else:
-                    # 转换为16进制，并反算成ASCII
-                    p_column = binascii.b2a_hex(p_column)
-                    p_column = p_column.decode()
-                    return "0x" + p_column
-            elif type(p_column) == decimal.Decimal:
-                if self.testOptions.get("DECIMAL_FORMAT") != "":
-                    return self.testOptions.get("DECIMAL_FORMAT") % p_column
-                else:
-                    return p_column
-            elif type(p_column) == SQLCliJDBCLargeObject:
-                trimedLength = int(self.testOptions.get("LOB_LENGTH"))
-                if trimedLength < 4:
-                    trimedLength = 4
-                if trimedLength > p_column.getObjectLength():
-                    if p_column.getColumnTypeName().upper().find("CLOB") != -1:
-                        dataValue = p_column.getData(1, p_column.getObjectLength())
-                        return dataValue
-                    elif p_column.getColumnTypeName().upper().find("BLOB") != -1:
-                        dataValue = p_column.getData(1, p_column.getObjectLength())
-                        if dataValue is not None:
-                            dataValue = binascii.b2a_hex(dataValue)
-                            dataValue = dataValue.decode()
-                            return "0x" + dataValue
-                        else:
-                            return None
-                else:
-                    if p_column.getColumnTypeName().upper().find("CLOB") != -1:
-                        dataValue = "Len:" + str(p_column.getObjectLength()) + ";" + \
-                                      "Content:[" + \
-                                      p_column.getData(1, trimedLength - 3) + "..." + \
-                                      p_column.getData(p_column.getObjectLength() - 2, 3) + \
-                                      "]"
-                        return dataValue
-                    elif p_column.getColumnTypeName().upper().find("BLOB") != -1:
-                        dataValue = "Len:" + str(p_column.getObjectLength()) + ";" + \
-                                      "Content:0x[" + \
-                                      binascii.b2a_hex(p_column.getData(1, trimedLength - 3)).decode() + "..." + \
-                                      binascii.b2a_hex(p_column.getData(p_column.getObjectLength() - 2, 3)).decode() + \
-                                      "]"
-                        return dataValue
-            elif isinstance(p_column, type(None)):
-                return p_column
-            else:
-                # 其他类型直接返回
-                raise SQLCliJDBCException("TestCli-0000: Unknown column type [" +
-                                          str(p_columntype) + ":" + str(type(p_column)) +
-                                          "] in format_column")
-
-        # cursor.description is not None for queries that return result sets,
-        # e.g. SELECT.
-        result = []
-        columnTypes = []
-        if cursor.description is not None:
-            headers = [x[0] for x in cursor.description]
-            columnTypes = [x[1] for x in cursor.description]
-            if cursor.warnings is not None:
-                status = "{0} row{1} selected with warnings."
-            else:
-                status = "{0} row{1} selected."
-            arraySize = int(self.testOptions.get("SQL_FETCHSIZE"))
-            rowset = cursor.fetchmany(arraySize)
-            for row in rowset:
-                collatedRow = []
-                for nColumnPos in range(0, len(row)):
-                    column = row[nColumnPos]
-                    columntype = columnTypes[nColumnPos]
-                    # 对于空值直接返回
-                    if column is None:
-                        collatedRow.append(None)
-                        continue
-
-                    # 处理各种数据类型
-                    if columnTypes[nColumnPos] == "STRUCT":
-                        columnValue = "STRUCTURE("
-                        for pos in range(0, len(column)):
-                            m_ColumnType = str(type(column[pos]))
-                            if pos == 0:
-                                if type(column[pos]) == str:
-                                    columnValue = columnValue + "'" + str(column[pos]) + "'"
-                                elif type(column[pos]) == datetime.date:
-                                    columnValue = columnValue + "DATE '" + \
-                                                    format_column(column[pos], m_ColumnType) + "'"
-                                elif type(column[pos]) == datetime.datetime:
-                                    columnValue = columnValue + "TIMESTAMP '" + \
-                                                    format_column(column[pos], m_ColumnType) + "'"
-                                elif isinstance(column[pos], type(None)):
-                                    columnValue = columnValue + "<null>"
-                                else:
-                                    columnValue = columnValue + \
-                                                    str(format_column(column[pos], m_ColumnType))
-                            else:
-                                if type(column[pos]) == str:
-                                    columnValue = columnValue + ",'" + str(column[pos]) + "'"
-                                elif type(column[pos]) == datetime.date:
-                                    columnValue = columnValue + ",DATE '" + \
-                                                    format_column(column[pos], m_ColumnType) + "'"
-                                elif type(column[pos]) == datetime.datetime:
-                                    columnValue = columnValue + ",TIMESTAMP '" + \
-                                                    format_column(column[pos], m_ColumnType) + "'"
-                                elif isinstance(column[pos], type(None)):
-                                    columnValue = columnValue + ",<null>"
-                                else:
-                                    columnValue = columnValue + "," + \
-                                                    str(format_column(column[pos], m_ColumnType))
-                        columnValue = columnValue + ")"
-                        collatedRow.append(columnValue)
-                    elif columnTypes[nColumnPos] == "ARRAY":
-                        columnValue = "ARRAY["
-                        if self.testOptions.get('OUTPUT_SORT_ARRAY') == "ON":
-                            # 保证Array的输出每次都一样顺序
-                            # 需要注意可能有NULL值导致字符数组无法排序的情况, column是一个一维数组
-                            column.sort(key=lambda x: (x is None, x))
-                        for pos in range(0, len(column)):
-                            m_ColumnType = str(type(column[pos]))
-                            if pos == 0:
-                                if type(column[pos]) == str:
-                                    columnValue = columnValue + "'" + str(column[pos]) + "'"
-                                elif type(column[pos]) == datetime.date:
-                                    columnValue = columnValue + "DATE '" + \
-                                                    format_column(column[pos], m_ColumnType) + "'"
-                                elif type(column[pos]) == datetime.datetime:
-                                    columnValue = columnValue + "TIMESTAMP '" + \
-                                                    format_column(column[pos], m_ColumnType) + "'"
-                                elif isinstance(column[pos], type(None)):
-                                    columnValue = columnValue + "<null>"
-                                else:
-                                    columnValue = columnValue + \
-                                                    str(format_column(column[pos], m_ColumnType))
-                            else:
-                                if type(column[pos]) == str:
-                                    columnValue = columnValue + ",'" + str(column[pos]) + "'"
-                                elif type(column[pos]) == datetime.date:
-                                    columnValue = columnValue + ",DATE '" + \
-                                                    format_column(column[pos], m_ColumnType) + "'"
-                                elif type(column[pos]) == datetime.datetime:
-                                    columnValue = columnValue + ",TIMESTAMP '" + \
-                                                    format_column(column[pos], m_ColumnType) + "'"
-                                elif isinstance(column[pos], type(None)):
-                                    columnValue = columnValue + ",<null>"
-                                else:
-                                    columnValue = columnValue + "," + \
-                                                    str(format_column(column[pos], m_ColumnType))
-                        columnValue = columnValue + "]"
-                        collatedRow.append(columnValue)
-                    else:
-                        collatedRow.append(format_column(column, columntype))
-                collatedRow = tuple(collatedRow)
-                result.append(collatedRow)
-            rowcount = rowcount + len(rowset)
-            if len(rowset) < arraySize:
-                # 已经没有什么可以取的了, 游标结束
-                fetchStatus = False
-        else:
-            if cursor.warnings is not None:
-                status = "{0} row{1} affected with warnings."
-            else:
-                status = "{0} row{1} affected."
-            rowcount = 0 if cursor.rowcount == -1 else cursor.rowcount
-            result = None
-            fetchStatus = False
-
-        # 只要不是最后一次打印，不再返回status内容
-        if fetchStatus:
-            status = None
-
-        if self.testOptions.get('FEEDBACK').upper() == 'ON' and status is not None:
-            status = status.format(rowcount, "" if rowcount in [0, 1] else "s")
-        else:
-            status = None
-        return title, result, headers, columnTypes, status, fetchStatus, rowcount, cursor.warnings
 
     """
         解析命令语句
@@ -758,7 +530,60 @@ class CmdExecute(object):
              nameSpace            需要执行的命名空间                     
         返回结果：
             无return结果
-            用yield的方式分批次返回执行的结果，根据执行语句不通，返回内容也会有所不通
+            
+            用yield的方式分批次返回执行的结果，JSON格式，根据执行语句不同，返回内容也会有所不同
+            
+            执行错误的语句，返回内容为：
+                {
+                    "type":     "error"
+                    "message":  错误消息
+                }
+            对于命令语句解析，返回内容为：
+                {
+                    "type":             "parse"
+                    "rawCommand":       用数组表示的解析前的语句，包括注释信息
+                    "formattedCommand": 对语句进行解析后的结果，包含了格式化后的内容信息
+                    "rewrotedCommand":  语句重写机制的提示信息
+                    "script":           执行该语句的脚本文件名
+                }
+            对于数据库语句执行结果，返回内容为：
+                {
+                    "type":        "result"
+                    "title":        输出内容的标题信息,
+                    "rows":         结果数据集，用一个二维的元组信息表示，((1,2),(3,4),(5,6),...)
+                                    每一行数据被记录在一个元组中，所有行的记录再被记录到整个的元组中
+                    "headers":      表头信息
+                                    数组。其维数一定和列数相同。 如["COL1", "COL2"]
+                    "columnTypes":  结果字段类型
+                                    数组。其维数一定和列数相同。 如["VARCHAR", "INTEGER"]
+                                    具体列表参考： sqlclijdbc.py中的_DEFAULT_CONVERTERS中信息
+                    "status":       输出的后提示信息，字符串格式
+                }
+            对于API语句执行结果，返回内容为：
+                {
+                    "type":        "result"
+                    "title":       恒定为None
+                    "rows":        恒定为None
+                    "headers":     恒定为None
+                    "columnTypes": 恒定为None
+                    "status":      JSON格式，内容为：
+                                   "status"     HTTP请求响应结果
+                                   "content"    可能为字符串格式（如果可以被解析为JSON格式，则返回JSON格式）
+                }
+            对于语句执行统计信息，返回内容为：
+                    "type":             "statistics",
+                    "startedTime":      语句开始执行时间。 UNIX时间秒单位
+                    "elapsed":          语句累计执行时间，浮点数，单位为秒
+                    "processName":      当前执行语句进程名称
+                    "rawCommand":       原始语句信息（包含注释等）
+                    "commandType":      语句类型，字符串，如SQL，HTTP, SLEEP，....
+                    "command":          解析后的语句，JSON格式表达
+                    "commandStatus":    命令执行后提示信息
+                    "errorCode":        错误代码
+                    "scenarioId":       测试场景ID
+                    "scenarioName":     测试场景名称
+            
+            任何语句执行，包括API，包括SQL，总是会用三段返回， 即解析内容、结果内容、统计内容
     """
     def runStatement(self, statement: str,
                      commandScriptFile: str = "Console",
@@ -808,7 +633,12 @@ class CmdExecute(object):
                 break
 
             # 记录命令开始时间
-            startTime = time.time()
+            if self.singleLoopMode and self.singleLoopIter != 0:
+                # 单句循环模式下，只有第一句记录开始运行时间，以后都不再修改开始时间
+                pass
+            else:
+                startTime = time.time()
+
             try:
                 self.sqlTimeOut = int(self.testOptions.get("SQL_TIMEOUT"))
             except ValueError:
@@ -853,13 +683,17 @@ class CmdExecute(object):
                     continue
 
             # 返回Command的解析信息
-            yield {
-                "type": "parse",
-                "rawCommand": ret_CommandSplitResults[pos],
-                "formattedCommand": formattedCommand,
-                "rewrotedCommand": [],
-                "script": commandScriptFile
-            }
+            if self.singleLoopMode and self.singleLoopIter != 0:
+                # 单句循环模式下，只在第一次打印语句解析结果，之后都不再打印
+                pass
+            else:
+                yield {
+                    "type": "parse",
+                    "rawCommand": ret_CommandSplitResults[pos],
+                    "formattedCommand": formattedCommand,
+                    "rewrotedCommand": [],
+                    "script": commandScriptFile
+                }
 
             # 处理超时时间问题
             if self.scriptTimeOut > 0:
@@ -1056,7 +890,7 @@ class CmdExecute(object):
                 else:
                     yield {
                         "type": "error",
-                        "message": "affadsfsad",
+                        "message": "Non-SQL namespace does not support DISCONNECT command.",
                         "script": commandScriptFile
                     }
             elif parseObject["name"] in sqlKeyWords:
@@ -1100,7 +934,27 @@ class CmdExecute(object):
                         lastCommandResult["headers"] = []
                         lastCommandResult["status"] = result["message"]
                         lastCommandResult["errorCode"] = 1
-                    yield result
+                    if self.singleLoopMode:
+                        matchCondition = evalExpression(self.cliHandler, self.singleLoopExpression)
+                        if matchCondition or (
+                            self.singleLoopMaxIter != -1 and self.singleLoopIter >= self.singleLoopMaxIter
+                        ):
+                            # 符合条件，退出单语句循环
+                            self.singleLoopMode = False
+                            self.singleLoopExpression = None
+                            self.singleLoopInterval = 0
+                            self.singleLoopIter = 0
+                            self.singleLoopMaxIter = -1
+                        else:
+                            # 不符合条件，需要下次继续执行该语句，pos不能加1
+                            time.sleep(self.singleLoopInterval)
+                            self.singleLoopIter = self.singleLoopIter + 1
+                    if not self.singleLoopMode:
+                        # 如果不符合最终判断条件，即仍然处于循环模式，则不输出任何内容
+                        yield result
+                if self.singleLoopMode:
+                    # 如果当前还处于单句循环中，则重复执行语句，即POS位置不能加1
+                    continue
             elif parseObject["name"] in ["USE"]:
                 for commandResult in userNameSpace(
                         cls=self.cliHandler,
@@ -1274,7 +1128,27 @@ class CmdExecute(object):
                     if result["type"] == "error":
                         lastCommandResult["message"] = result["message"]
                         lastCommandResult["errorCode"] = 1
-                    yield result
+                    if self.singleLoopMode:
+                        matchCondition = evalExpression(self.cliHandler, self.singleLoopExpression)
+                        if matchCondition or (
+                                self.singleLoopMaxIter != -1 and self.singleLoopIter >= self.singleLoopMaxIter
+                        ):
+                            # 符合条件，退出单语句循环
+                            self.singleLoopMode = False
+                            self.singleLoopExpression = None
+                            self.singleLoopInterval = 0
+                            self.singleLoopIter = 0
+                            self.singleLoopMaxIter = -1
+                        else:
+                            # 不符合条件，需要下次继续执行该语句，pos不能加1
+                            time.sleep(self.singleLoopInterval)
+                            self.singleLoopIter = self.singleLoopIter + 1
+                    if not self.singleLoopMode:
+                        # 如果不符合最终判断条件，即仍然处于循环模式，则不输出任何内容
+                        yield result
+                if self.singleLoopMode:
+                    # 如果当前还处于单句循环中，则重复执行语句，即POS位置不能加1
+                    continue
             elif parseObject["name"] in ["HTTPSET"]:
                 for result in executeAPISet(
                         cls=self.cliHandler,
@@ -1319,13 +1193,16 @@ class CmdExecute(object):
                         pos = self.loopStartPos
                         continue
                 elif parseObject["rule"] == "BREAK":
-                    self.loopCondition = False
+                    if self.ifCondition and self.ifMode:
+                        self.loopCondition = False
                 elif parseObject["rule"] == "CONTINUE":
-                    pos = self.loopStartPos
-                    continue
+                    if self.ifCondition and self.ifMode:
+                        pos = self.loopStartPos
+                        continue
                 elif parseObject["rule"] == "BEGIN":
+                    # block循环
                     try:
-                        self.loopCondition = not evalExpression(self.cliHandler, parseObject["UNTIL"])
+                        self.loopCondition = not evalExpression(self.cliHandler, parseObject["until"])
                         self.loopMode = True
                         self.loopStartPos = pos
                     except Exception as ex:
@@ -1334,6 +1211,13 @@ class CmdExecute(object):
                             "type": "error",
                             "message": "Loop condition expression error.. SyntaxError =>[" + str(ex) + "]"
                         }
+                elif parseObject["rule"] == "UNTIL":
+                    # 但语句循环
+                    self.singleLoopExpression = parseObject["until"]
+                    self.singleLoopInterval = parseObject["interval"]
+                    self.singleLoopMaxIter = parseObject["limit"]
+                    self.singleLoopMode = True
+                    self.singleLoopIter = 0
             elif parseObject["name"] in ["WHENEVER"]:
                 for result in setWheneverAction(
                         cls=self.cliHandler,

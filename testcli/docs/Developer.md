@@ -86,7 +86,7 @@ TestCli
 ```
 
 #### 线程安全性
-目前程序在设计上，是充分考虑到了线程安全性的。
+目前程序在设计上，是考虑到了线程安全性的。但未充分测试这部分。
 
 #### 从源代码中启动应用程序
 ```
@@ -102,13 +102,20 @@ TestCli
 
 ```
 
-#### 开发插件要求
+#### Pycharm中IDE运行-开发插件要求
 ```
    以下是IDEA的插件为说明。
    必须安装的插件为：
       ANTLR v4
-   请注意插件的版本，其版本应该和testcli\antlr\antlr-4.x.x-complete.jar想对应
+   请注意插件的版本，其版本应该和testcli\antlr\antlr-4.x.x-complete.jar相对应
 ```
+
+#### Pycharm中IDE运行-工程配置
+```
+   由于使用了大量的相对引用，所以必须用模块的方式来运行，而不能执行运行main.py中代码
+   Prompt_ToolKit需要控制台的一些设置以保证正确运行
+```
+![PyCharm运行配置](PyCharm运行配置.png)
 
 #### 调试Antlr语法定义
 ```
@@ -140,32 +147,80 @@ TestCli
 ```
 
 #### 从应用程序的角度直接调用该程序
-TestCli是一个控制台应用，但是你也可以直接绕过控制台应用来直接调用    
-例子1（结果会用yield的方式非阻塞性逐行返回，包括统计信息、提示信息等）：
+TestCli是一个控制台应用，但是你也可以直接绕过控制台应用来直接调用      
+结果会用yield的方式非阻塞性逐行返回，包括统计信息、提示信息等：
+返回信息的详细解释：
 ```
-        testcliHandler = TestCli(HeadlessMode=True, namespace='SQL')
-        for result in testcliHandler.cmdExecuteHandler.runStatement(
-                statement="_Connect admin/123456@jdbc:linkoopdb:tcp://192.168.10.74:9105/ldb\nselect 1+3 from dual;"
-        ):
-            if result['type'] in ['parse', 'statistics']:
-                continue
-            if result['type'] == 'error':
-                print("error message: " + str(result['message']))
-                break
-            print("result = " + str(result))
+    执行错误的语句，返回内容为：
+        {
+            "type":     "error"
+            "message":  错误消息
+        }
+    对于命令语句解析，返回内容为：
+        {
+            "type":             "parse"
+            "rawCommand":       用数组表示的解析前的语句，包括注释信息
+            "formattedCommand": 对语句进行解析后的结果，包含了格式化后的内容信息
+            "rewrotedCommand":  语句重写机制的提示信息
+            "script":           执行该语句的脚本文件名
+        }
+    对于数据库语句执行结果，返回内容为：
+        {
+            "type":        "result"
+            "title":        输出内容的标题信息,
+            "rows":         结果数据集，用一个二维的元组信息表示，((1,2),(3,4),(5,6),...)
+                            每一行数据被记录在一个元组中，所有行的记录再被记录到整个的元组中
+            "headers":      表头信息
+                            数组。其维数一定和列数相同。 如["COL1", "COL2"]
+            "columnTypes":  结果字段类型
+                            数组。其维数一定和列数相同。 如["VARCHAR", "INTEGER"]
+                            具体列表参考： sqlclijdbc.py中的_DEFAULT_CONVERTERS中信息
+            "status":       输出的后提示信息，字符串格式
+        }
+    对于API语句执行结果，返回内容为：
+        {
+            "type":        "result"
+            "title":       恒定为None
+            "rows":        恒定为None
+            "headers":     恒定为None
+            "columnTypes": 恒定为None
+            "status":      JSON格式，内容为：
+                           "status"     HTTP请求响应结果
+                           "content"    可能为字符串格式（如果可以被解析为JSON格式，则返回JSON格式）
+        }
+    对于语句执行统计信息，返回内容为：
+            "type":             "statistics",
+            "startedTime":      语句开始执行时间。 UNIX时间秒单位
+            "elapsed":          语句累计执行时间，整形，单位为秒
+            "processName":      当前执行语句进程名称
+            "rawCommand":       原始语句信息（包含注释等）
+            "commandType":      语句类型，字符串，如SQL，HTTP, SLEEP，....
+            "command":          解析后的语句，JSON格式表达
+            "commandStatus":    命令执行后提示信息
+            "errorCode":        错误代码
+            "scenarioId":       测试场景ID
+            "scenarioName":     测试场景名称
+    
+    任何语句执行，包括API，包括SQL，总是会用三段返回， 即解析内容、结果内容、统计内容 
+```
+例子：
+```
+    testcliHandler = TestCli(HeadlessMode=True, namespace='SQL')
+    for result in testcliHandler.cmdExecuteHandler.runStatement(
+            statement="_Connect admin/123456@jdbc:linkoopdb:tcp://192.168.10.74:9105/ldb\nselect 1+3 from dual;"
+    ):
+        if result['type'] in ['parse', 'statistics']:
+            continue
+        if result['type'] == 'error':
+            print("error message: " + str(result['message']))
+            break
+        print("result = " + str(result))
 
 ```
 例子2（结果会一次性返回，不会包含统计信息、提示信息等）：
 ```
-        testcliHandler = TestCli(HeadlessMode=True, namespace='SQL')
-        command = "_Connect admin/123456@jdbc:linkoopdb:tcp://192.168.10.74:9105/ldb\nselect 1+3 from dual;"
-        testcliHandler.DoCommand(command)
-        print("rsult = " + str(testcliHandler.getLastCommandResult()))
-```
-
-#### 打包发布
-```
-   一段时间后可以将程序打包后上传到pypi.org网站中，上传办法：
-   > uploadpypi.bat
-   执行完成后可以在testcli\dist目录下找到打包后的whl文件      
+    testcliHandler = TestCli(HeadlessMode=True, namespace='SQL')
+    command = "_Connect admin/123456@jdbc:linkoopdb:tcp://192.168.10.74:9105/ldb\nselect 1+3 from dual;"
+    testcliHandler.DoCommand(command)
+    print("rsult = " + str(testcliHandler.getLastCommandResult()))
 ```

@@ -36,7 +36,10 @@ def showHelp(topicName: str):
                            "Use \"_HELP\" to list all commands."
             }
             return
-        status = "  Command:"
+        if helpTopic["nameSpace"].upper() == "ALL":
+            status = "  Command (ALL namespace):"
+        else:
+            status = "  Command (" + helpTopic["nameSpace"].upper() + " namespace only):"
         status = status + "\n    " + str(topicName).upper()
         status = status + "\n"
         status = status + "\n" + "  Summary:"

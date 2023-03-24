@@ -662,7 +662,7 @@ def get_final_string(p_row_struct):
     return m_Result
 
 
-class fileHandler:
+class FileHandler:
     def __init__(self):
         self.fp = None
 
@@ -682,7 +682,7 @@ class fileHandler:
         self.fp.close()
 
 
-class memHandler:
+class MemHandler:
     def __init__(self):
         self.fp = None
         self.fs = None
@@ -705,8 +705,8 @@ class memHandler:
 
 
 fsImplemention = {
-    "MEM": memHandler,
-    "FS": fileHandler
+    "MEM": MemHandler,
+    "FS": FileHandler
 }
 
 

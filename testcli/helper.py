@@ -231,6 +231,44 @@ helpMessage = [
             ''',
     },
     {
+        "topic": 'MONITOR',
+        "summary": "Monitor system perference.",
+        "nameSpace": "ALL",
+        "synatx":
+            '''
+        _MONITOR MANAGER ON [WOKERS <int>]
+        _MONITOR MANAGER OFF
+        _MONITOR CREATE TASK <taskName> TAG=<taskTag> <taskPara1>=<taskValue1> <taskPara2>=<taskValue2> ...
+        _MONITOR START TASK [ <taskName> | ALL ]
+        _MONITOR STOP TASK [ <taskName> | ALL ]
+        _MONITOR REPORT TASK [ <taskName> | ALL ]
+        _MONITOR LIST TASK
+
+        Example:
+            _MONITOR MONITORMANAGER ON WORKERS 3;
+
+            _MONITOR CREATE TASK task1 TAG=cpu_count;
+            _MONITOR CREATE TASK task2 TAG=memory FREQ=10;
+            _MONITOR CREATE TASK task3 TAG=network NAME='eth0' FREQ=10;
+            _MONITOR CREATE TASK task4 TAG=disk NAME='.*' FREQ=10;
+            _MONITOR CREATE TASK task5 TAG=process USERNAME='ldb' EXE='.*grassland-launcher';
+            _MONITOR START TASK ALL;
+            _SLEEP 10;
+            _MONITOR LIST TASK;
+            _MONITOR REPORT TASK ALL;
+
+        Supported tags:
+            cpu_count                
+            cpu_count_physical
+            cpu_times
+            cpu_percent
+            memory
+            network
+            disk
+            process
+            ''',
+    },
+    {
         "topic": 'SPOOL',
         "summary": "Print subsequent run commands and results to the specified file.",
         "nameSpace": "ALL",
@@ -240,6 +278,30 @@ helpMessage = [
                 <command1 ...>
                 <command2 ...>
                 _SPOOL OFF
+            ''',
+    },
+    {
+        "topic": 'IF',
+        "summary": "Conditional statement.",
+        "nameSpace": "ALL",
+        "synatx":
+            '''
+                _IF {% <expression> %}                
+                _ENDIF
+            ''',
+    },
+    {
+        "topic": 'LOOP',
+        "summary": "LOOP statement.",
+        "nameSpace": "ALL",
+        "synatx":
+            '''
+               _LOOP BEGIN UNTIL {% <expression> %}
+               _LOOP BREAK
+               _LOOP CONTINUE
+               _LOOP END
+               
+               _LOOP [<maxRetriedTime>] UNTIL {% <expression> %} INTERVAL <loop interval time>
             ''',
     },
     {
@@ -260,42 +322,18 @@ helpMessage = [
             ''',
     },
     {
-        "topic": 'MONITOR',
-        "summary": "Monitor system perference.",
-        "nameSpace": "ALL",
+        "topic": 'HTTPSET',
+        "summary": "Set http request behavior.",
+        "nameSpace": "API",
         "synatx":
             '''
-        _MONITOR MANAGER ON [WOKERS <int>]
-        _MONITOR MANAGER OFF
-        _MONITOR CREATE TASK <taskName> TAG=<taskTag> <taskPara1>=<taskValue1> <taskPara2>=<taskValue2> ...
-        _MONITOR START TASK [ <taskName> | ALL ]
-        _MONITOR STOP TASK [ <taskName> | ALL ]
-        _MONITOR REPORT TASK [ <taskName> | ALL ]
-        _MONITOR LIST TASK
+        SET HTTPS_VERIFY <ON|OFF>;
+        SET HTTP_RPXOY <proxy_address, like http://127.0.0.1:8080>
         
+    
         Example:
-            _MONITOR MONITORMANAGER ON WORKERS 3;
-            
-            _MONITOR CREATE TASK task1 TAG=cpu_count;
-            _MONITOR CREATE TASK task2 TAG=memory FREQ=10;
-            _MONITOR CREATE TASK task3 TAG=network FILTER='eth0' FREQ=10;
-            _MONITOR CREATE TASK task4 TAG=disk FILTER='.*' FREQ=10;
-            _MONITOR CREATE TASK task5 TAG=process USERNAME='ldb' EXE='.*grassland-launcher';
-            _MONITOR START TASK ALL;
-            _SLEEP 10;
-            _MONITOR LIST TASK;
-            _MONITOR REPORT TASK ALL;
-
-        Supported tags:
-            cpu_count                
-            cpu_count_physical
-            cpu_times
-            cpu_percent
-            memory
-            network
-            disk
-            process
+            N/A
             ''',
-
     }
+
 ]

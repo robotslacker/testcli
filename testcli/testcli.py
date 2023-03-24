@@ -123,7 +123,7 @@ class TestCli(object):
 
         # HTTP请求Session对象，可能存在多个Session，并存在切换需要
         self.api_saved_conn = {
-            self.httpSessionName: { "https_verify": None, "http_proxy": None}
+            self.httpSessionName: {"https_verify": None, "http_proxy": None}
         }
         # 禁用urllib3的各种告警信息
         urllib3.disable_warnings()
