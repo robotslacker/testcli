@@ -322,6 +322,22 @@ helpMessage = [
             ''',
     },
     {
+        "topic": 'SQLSESSION',
+        "summary": "SQL session management.",
+        "nameSpace": "SQL",
+        "synatx":
+            '''
+        _SESSION SAVE <sessonName>
+        _SESSION RELEASE
+        _SESSION RESTORE <sessonName>
+        _SESSION SAVEURL [<sessonName>]
+        _SESSION SHOW [<sessonName>]
+
+        Example:
+            N/A
+            ''',
+    },
+    {
         "topic": 'HTTPSET',
         "summary": "Set http request behavior.",
         "nameSpace": "API",
@@ -334,6 +350,20 @@ helpMessage = [
         Example:
             N/A
             ''',
+    },
+    {
+        "topic": 'HTTPSESSION',
+        "summary": "Http session management.",
+        "nameSpace": "API",
+        "synatx":
+            '''
+           _SESSION SAVE <sessonName>
+           _SESSION RELEASE
+           _SESSION RESTORE <sessonName>
+           _SESSION SHOW [<sessonName>]
+        
+        Example:
+            N/A
+            ''',
     }
-
 ]

@@ -17,6 +17,9 @@ COMMENT2     :  '--' .*? (CRLF | EOF) ->channel(HIDDEN);
 // 设置系统参数
 APISET       : 'SET' -> pushMode(APISetMode);
 
+// HTTP会话管理
+SESSION: '_SESSION' -> pushMode(SessionMode);
+
 // Http请求模式
 mode HttpMode;
 HTTP_COMMENT: '//' .*? CRLF ->channel(COMMENT_CHANNEL);
@@ -146,3 +149,13 @@ APISET_OFF             : 'OFF';
 APISET_EXPRESSION      : (OBS_TEXT | UNRESERVED | SUBDELIMS | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' | '@' | '{' | '}' | '%')+;
 APISET_SEMICOLON       : ';';
 APISET_CRLF            : CRLF -> popMode;
+
+mode SessionMode;
+SESSION_SPACE          : [ \t]+ -> channel(HIDDEN);
+SESSION_SAVE           : 'SAVE';
+SESSION_RELEASE        : 'RELEASE';
+SESSION_RESTORE        : 'RESTORE';
+SESSION_SHOW           : 'SHOW';
+SESSION_NAME           : (OBS_TEXT | UNRESERVED | SUBDELIMS | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' | '@' | '{' | '}' | '%')+;
+SESSION_SEMICOLON      : ';';
+SESSION_CRLF           : CRLF -> popMode;

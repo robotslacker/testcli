@@ -30,7 +30,7 @@ def sqlSessionManage(cls, action: str, sessionName: str = None):
         else:
             yield {
                 "type": "result",
-                "title": "Saved Sessions:",
+                "title": "Saved sessions:",
                 "rows": result,
                 "headers": ["Session", "Sesssion Name", "User Name", "Password", "URL"],
                 "columnTypes": None,
@@ -80,7 +80,7 @@ def sqlSessionManage(cls, action: str, sessionName: str = None):
                 "Session [" + sessionName + "] does not exist. Please save it first.")
     else:
         raise TestCliException(
-            "Wrong argument : " + "Session save/restore [session name]")
+            "Wrong argument : " + "Session save|restore <sessionName>.")
     if action.strip().lower() == 'save':
         yield {
             "type": "result",
@@ -88,7 +88,7 @@ def sqlSessionManage(cls, action: str, sessionName: str = None):
             "rows": None,
             "headers": None,
             "columnTypes": None,
-            "status": "Session saved Successful."
+            "status": "Session saved successful."
         }
     if action.strip().lower() == 'release':
         yield {
@@ -97,7 +97,7 @@ def sqlSessionManage(cls, action: str, sessionName: str = None):
             "rows": None,
             "headers": None,
             "columnTypes": None,
-            "status": "Session release Successful."
+            "status": "Session release successful."
         }
     if action.strip().lower() == 'restore':
         cls.testOptions.set("CONNURL", cls.db_url)
@@ -107,5 +107,5 @@ def sqlSessionManage(cls, action: str, sessionName: str = None):
             "rows": None,
             "headers": None,
             "columnTypes": None,
-            "status": "Session restored Successful."
+            "status": "Session restored successful."
         }

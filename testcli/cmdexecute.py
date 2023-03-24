@@ -32,6 +32,7 @@ from .commands.compare import executeCompareRequest
 from .commands.helper import showHelp
 from .commands.data import executeDataRequest
 from .commands.monitor import executeMonitorRequest
+from .commands.apiSession import apiSessionManage
 from .commands.apiExecute import executeAPIStatement
 from .commands.apiExecute import executeAPISet
 from .commands.sqlExecute import executeSQLStatement
@@ -1156,6 +1157,13 @@ class CmdExecute(object):
                     for result in executeAPISet(
                             cls=self.cliHandler,
                             apiSetRequest=parseObject
+                    ):
+                        yield result
+                elif parseObject["name"] in ["HTTPSESSION"]:
+                    for result in apiSessionManage(
+                            cls=self.cliHandler,
+                            action=parseObject["action"],
+                            sessionName=parseObject["sessionName"]
                     ):
                         yield result
                 elif parseObject["name"] in ["HOST"]:

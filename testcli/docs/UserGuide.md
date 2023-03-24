@@ -29,6 +29,7 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
   * 支持在程序中使用LOOP，IF等循环、条件判断表达式，来完成复杂的测试逻辑
   * 使用ASSERT来判断运行的结果
   * 使用SESSION来完成多个数据库会话客户端的切换和状态保存
+  * 使用SESSION来完成多个API会话客户端的切换和状态保存
 *** 
 
 ***
@@ -1317,6 +1318,30 @@ Request-URI为请求的地址，地址可能包含请求参数。 如果请求�
    
    例如：
    SET HTTP_PROXY http://127.0.0.1:8000
+```
+
+#### API会话的切换和保存
+通过_SESSION语句可以保存当前API会话，并切换到新的API会话上进行工作。  
+如果需要的话，还可以通过SESSION的语句切换回之前保留的会话。
+
+```
+   _SESSION SAVE <sessonName>
+   _SESSION RELEASE
+   _SESSION RESTORE <sessonName>
+   _SESSION SHOW [<sessonName>]
+   
+   SAVE:
+     保存当前会话，并给它起名
+   
+   RELEASE
+     释放当前会话，并清空之前保存的内容
+    
+   RESTORE
+     切换当前会话到指定的会话中
+
+   SHOW
+     显示所有会话信息，或者指定的会话信息     
+ 
 ```
 
 ***

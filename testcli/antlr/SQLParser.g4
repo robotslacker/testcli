@@ -96,7 +96,14 @@ disconnect
         ;
 
 session
-        : SESSION (SESSION_SAVE|SESSION_RELEASE|SESSION_RESTORE|SESSION_SAVEURL|SESSION_SHOW) SESSION_NAME? SESSION_END?
+        : SESSION
+        (
+               SESSION_SAVE|
+               SESSION_RELEASE|
+               SESSION_RESTORE|
+               SESSION_SAVEURL|
+               SESSION_SHOW
+        ) SESSION_NAME? SESSION_END? CRLF?
         ;
 
 

@@ -13,6 +13,7 @@ prog: command EOF;
 command:
       baseCommand
       | apiset
+      | session
       | http
       | EOF
       ;
@@ -24,6 +25,16 @@ apiset
             (APISET_HTTPSVERIFY (APISET_ON | APISET_OFF)) |
          ) (APISET_SEMICOLON)?
        ;
+
+session
+        : SESSION
+        (
+            (SESSION_SAVE SESSION_NAME) |
+            (SESSION_RELEASE) |
+            (SESSION_RESTORE SESSION_NAME) |
+            (SESSION_SHOW SESSION_NAME?)
+        ) SESSION_SEMICOLON?
+        ;
 
 /**
  * 17: API语句

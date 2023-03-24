@@ -1732,6 +1732,62 @@ class TestSynatx(unittest.TestCase):
             ret_CommandSplitResult
         )
 
+    def test_APIAnalyze_SESSION(self):
+        script = "_SESSION SHOW"
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = APIAnalyze(script)
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'SHOW', 'name': 'HTTPSESSION', 'sessionName': ''},
+            ret_CommandSplitResult
+        )
+
+        script = "_SESSION SHOW XXX"
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = APIAnalyze(script)
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'SHOW', 'name': 'HTTPSESSION', 'sessionName': 'XXX'},
+            ret_CommandSplitResult
+        )
+
+        script = "_SESSION SAVE XXX"
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = APIAnalyze(script)
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'SAVE', 'name': 'HTTPSESSION', 'sessionName': 'XXX'},
+            ret_CommandSplitResult
+        )
+
+        script = "_SESSION RELEASE"
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = APIAnalyze(script)
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'RELEASE', 'name': 'HTTPSESSION', 'sessionName': ''},
+            ret_CommandSplitResult
+        )
+
+        script = "_SESSION RESTORE XXX"
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = APIAnalyze(script)
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'action': 'RESTORE', 'name': 'HTTPSESSION', 'sessionName': 'XXX'},
+            ret_CommandSplitResult
+        )
+
     def test_APIExecute_Get(self):
         from ..testcli import TestCli
 
@@ -1825,11 +1881,52 @@ class TestSynatx(unittest.TestCase):
             file2=fullRefFile,
             CompareIgnoreTailOrHeadBlank=True
         )
+        msg = "\n"
         if not compareResult:
             for line in compareReport:
                 if line.startswith("-") or line.startswith("+"):
-                    print(line)
-        self.assertTrue(compareResult)
+                    msg = msg + line + "\n"
+        self.assertTrue(
+            expr=compareResult,
+            msg=msg
+        )
+
+    def test_APISessionManager(self):
+        from ..testcli import TestCli
+
+        scriptFile = "testapisession.sql"
+
+        scriptBaseFile = os.path.splitext(scriptFile)[0]
+        fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
+        fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
+        fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
+
+        # 运行测试程序，开启无头模式(不在控制台上显示任何内容),同时不打印Logo
+        testcli = TestCli(
+            logfilename=fullLogFile,
+            headlessMode=True,
+            script=fullScriptFile
+        )
+        retValue = testcli.run_cli()
+        self.assertEqual(0, retValue)
+
+        # 对文件进行比对，判断返回结果是否吻合
+        compareHandler = POSIXCompare()
+
+        compareResult, compareReport = compareHandler.compare_text_files(
+            file1=fullLogFile,
+            file2=fullRefFile,
+            CompareIgnoreTailOrHeadBlank=True
+        )
+        msg = "\n"
+        if not compareResult:
+            for line in compareReport:
+                if line.startswith("-") or line.startswith("+"):
+                    msg = msg + line + "\n"
+        self.assertTrue(
+            expr=compareResult,
+            msg=msg
+        )
 
     def test_lastcommandresult(self):
         from ..testcli import TestCli

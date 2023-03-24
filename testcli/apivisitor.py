@@ -1414,3 +1414,39 @@ class APIVisitor(APIParserVisitor):
         self.parsedObject = parsedObject
         self.errorCode = errorCode
         self.errorMsg = errorMsg
+
+    """
+        处理API的SESSION命令
+    """
+    def visitSession(self, ctx: APIParser.SessionContext):
+        parsedObject = {'name': 'HTTPSESSION'}
+
+        if ctx.SESSION_SAVE() is not None:
+            parsedObject.update({'action': "SAVE"})
+        if ctx.SESSION_SHOW() is not None:
+            parsedObject.update({'action': "SHOW"})
+        if ctx.SESSION_RELEASE() is not None:
+            parsedObject.update({'action': "RELEASE"})
+        if ctx.SESSION_RESTORE() is not None:
+            parsedObject.update({'action': "RESTORE"})
+        if ctx.SESSION_NAME() is not None:
+            sessionName = ctx.SESSION_NAME().getText()
+            if sessionName.startswith('"') and sessionName.endswith('"'):
+                sessionName = sessionName[1:-1]
+            elif sessionName.startswith("'") and sessionName.endswith("'"):
+                sessionName = sessionName[1:-1]
+            parsedObject.update({'sessionName': sessionName})
+        else:
+            parsedObject.update({'sessionName': ""})
+
+        # 获取错误代码
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = -1
+            errorMsg = ctx.exception.message
+
+        self.parsedObject = parsedObject
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
+

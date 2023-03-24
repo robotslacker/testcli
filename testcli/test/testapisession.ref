@@ -1,0 +1,81 @@
+SQL> _start testapisession.sql
+SQL> _use api
+Current NameSpace: API.
+API> -- 只有DEFAULT一列
+API> _SESSION SHOW;
+Saved sessions:
++--------+-------------+--------------------------------------------+
+|   ##   | SessionName |                 Properties                 |
++--------+-------------+--------------------------------------------+
+|      1 | *DEFAULT    | {'https_verify': None, 'http_proxy': None} |
++--------+-------------+--------------------------------------------+
+Total 1 saved sesssions.
+API>
+API> -- 保存当前会话
+API> _SESSION SAVE mySession;
+API> -- 重新查看时候应该为两列
+API> _SESSION SHOW;
+Saved sessions:
++--------+-------------+--------------------------------------------+
+|   ##   | SessionName |                 Properties                 |
++--------+-------------+--------------------------------------------+
+|      1 |  DEFAULT    | {'https_verify': None, 'http_proxy': None} |
+|      2 | *mySession  | {'https_verify': None, 'http_proxy': None} |
++--------+-------------+--------------------------------------------+
+Total 2 saved sesssions.
+API>
+API> -- 设置HTTPS_VERIFY
+API> SET HTTPS_VERIFY ON
+Change(mySession) HTTP request setting: [HTTPS_VERIFY]=[ON] successful.
+API> -- 重新查看时应该被选择项的选项已经被设置
+API> _SESSION SHOW;
+Saved sessions:
++--------+-------------+--------------------------------------------+
+|   ##   | SessionName |                 Properties                 |
++--------+-------------+--------------------------------------------+
+|      1 |  DEFAULT    | {'https_verify': None, 'http_proxy': None} |
+|      2 | *mySession  | {'https_verify': 'ON', 'http_proxy': None} |
++--------+-------------+--------------------------------------------+
+Total 2 saved sesssions.
+API>
+API> -- RELEASE连接
+API> _SESSION RELEASE;
+API> -- 重新查看时应该只有默认连接
+API> _SESSION SHOW;
+Saved sessions:
++--------+-------------+--------------------------------------------+
+|   ##   | SessionName |                 Properties                 |
++--------+-------------+--------------------------------------------+
+|      1 | *DEFAULT    | {'https_verify': None, 'http_proxy': None} |
++--------+-------------+--------------------------------------------+
+Total 1 saved sesssions.
+API>
+API> -- 保存当前会话
+API> _SESSION SAVE mySession2;
+API> -- 设置HTTPS_VERIFY
+API> SET PROXY http://127.0.0.1:8000
+Change(mySession2) HTTP request setting: [PROXY]=[http://127.0.0.1:8000] successful.
+API> -- 重新查看时应该被选择项的选项已经被设置
+API> _SESSION SHOW;
+Saved sessions:
++--------+-------------+---------------------------------------------------------------+
+|   ##   | SessionName |                           Properties                          |
++--------+-------------+---------------------------------------------------------------+
+|      1 |  DEFAULT    | {'https_verify': None, 'http_proxy': None}                    |
+|      2 | *mySession2 | {'https_verify': None, 'http_proxy': 'http://127.0.0.1:8000'} |
++--------+-------------+---------------------------------------------------------------+
+Total 2 saved sesssions.
+API>
+API> -- RELEASE连接
+API> _SESSION RELEASE;
+API> -- 重新查看时应该只有默认连接
+API> _SESSION SHOW;
+Saved sessions:
++--------+-------------+--------------------------------------------+
+|   ##   | SessionName |                 Properties                 |
++--------+-------------+--------------------------------------------+
+|      1 | *DEFAULT    | {'https_verify': None, 'http_proxy': None} |
++--------+-------------+--------------------------------------------+
+Total 1 saved sesssions.
+API> _exit
+Disconnected.
