@@ -1,0 +1,43 @@
+_use api
+
+### 获取Token
+GET http://127.0.0.1:8000/jsonfiltertest HTTP/1.1
+Content-Type: application/json
+
+###
+
+-- [Hint] JsonFilter  data1
+### 获取Token
+GET http://127.0.0.1:8000/jsonfiltertest HTTP/1.1
+Content-Type: application/json
+
+###
+
+-- [Hint] JsonFilter  data4.subdata4
+### 获取Token
+GET http://127.0.0.1:8000/jsonfiltertest HTTP/1.1
+Content-Type: application/json
+
+###
+
+-- [Hint] JsonFilter  {"data1": "data1", "dataX": "data3"}
+### 获取Token
+GET http://127.0.0.1:8000/jsonfiltertest HTTP/1.1
+Content-Type: application/json
+
+###
+
+-- [Hint] JsonFilter  {"info": ("data5")}
+### 获取Token
+GET http://127.0.0.1:8000/jsonfiltertest HTTP/1.1
+Content-Type: application/json
+
+###
+
+
+-- [Hint] JsonFilter   {'names': ('data5', ['data51'])}
+### 获取Token
+GET http://127.0.0.1:8000/jsonfiltertest HTTP/1.1
+Content-Type: application/json
+
+###

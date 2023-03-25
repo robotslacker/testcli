@@ -42,9 +42,8 @@ setup(
     platforms='any',
     install_requires=['JPype1', 'setproctitle', 'urllib3<1.27',
                       'click', 'prompt_toolkit',  'paramiko', 'antlr4-python3-runtime==4.11.1',
-                      'hdfs', 'fs', "psutil",
-                      "python-multipart",
-                      "pytest", 'fastapi', 'uvicorn', "pytest-xdist",
+                      'fs', "psutil", "glom",
+                      "python-multipart","pytest-xdist","pytest", 'fastapi', 'uvicorn',
                       "coloredlogs", "robotframework", "beautifulsoup4", "lxml"
                       ],
 

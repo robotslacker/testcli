@@ -346,7 +346,7 @@ def parseAPIHints(commandHints: list):
             r"^LogFilter(\s+)(.*)", commandHint, re.IGNORECASE | re.DOTALL)
         if match_obj:
             # 可能有多个Filter信息
-            sqlFilter = match_obj.group(5).strip()
+            sqlFilter = match_obj.group(2).strip()
             if "LogFilter" in commandHintList:
                 commandHintList["LogFilter"].append(sqlFilter)
             else:
@@ -357,11 +357,22 @@ def parseAPIHints(commandHints: list):
         match_obj = re.search(
             r"^LogMask(\s+)(.*)", commandHint, re.IGNORECASE | re.DOTALL)
         if match_obj:
-            sqlMask = match_obj.group(5).strip()
+            sqlMask = match_obj.group(2).strip()
             if "LogMask" in commandHintList:
                 commandHintList["LogMask"].append(sqlMask)
             else:
                 commandHintList["LogMask"] = [sqlMask]
+            continue
+
+        # [Hint] JsonFilter   -- 如果输出结果为Json格式，则按照Json的格式过滤，这对于API测试比较有用
+        match_obj = re.search(
+            r"^JsonFilter(\s+)(.*)", commandHint, re.IGNORECASE | re.DOTALL)
+        if match_obj:
+            sqlMask = match_obj.group(2).strip()
+            if "JsonFilter" in commandHintList:
+                commandHintList["JsonFilter"].append(sqlMask)
+            else:
+                commandHintList["JsonFilter"] = [sqlMask]
             continue
 
     return commandHintList

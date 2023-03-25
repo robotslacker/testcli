@@ -322,6 +322,29 @@ helpMessage = [
             ''',
     },
     {
+        "topic": 'SQL',
+        "summary": "Execute sql statement.",
+        "nameSpace": "SQL",
+        "synatx":
+            '''
+        Write any valid sql statement.
+        
+        For single line sql statement, end with semicolon;
+        For multiline statements, end with a slash;
+        
+        Example:
+            Drop Table If Exists Col1;
+
+            Create Table TestTab(Col1 Int);
+
+            Declare
+            Begin
+                Insert Into TestTab Values(1);
+            End;
+            /
+            ''',
+    },
+    {
         "topic": 'SQLSESSION',
         "summary": "SQL session management.",
         "nameSpace": "SQL",
@@ -349,6 +372,75 @@ helpMessage = [
     
         Example:
             N/A
+            ''',
+    },
+    {
+        "topic": 'HTTP',
+        "summary": "Execute http statement.",
+        "nameSpace": "API",
+        "synatx":
+            '''
+        Execute http request.
+
+        To compose an HTTP request in TestCli, use the following general syntax:            
+            ### RequestName
+            Method Request-URI HTTP-Version
+            Header-field: Header-value
+
+            Request-Body
+            ###
+            
+        Use comments in HTTP requests:
+            -- Comment Here.
+            GET http://example.com/a/
+
+        Use multipart/form-data content type:
+            POST http://example.com/api/upload HTTP/1.1
+            Content-Type: multipart/form-data; boundary=boundary
+            
+            --boundary
+            Content-Disposition: form-data; name="first"; filename="input.txt"
+            
+            // The 'input.txt' file will be uploaded
+            < ./input.txt
+            
+            --boundary
+            Content-Disposition: form-data; name="second"; filename="input-second.txt"
+            
+            // A temporary 'input-second.txt' file with the 'Text' content will be created and uploaded
+            Text
+            --boundary
+            Content-Disposition: form-data; name="third";
+            
+            // The 'input.txt' file contents will be sent as plain text.
+            < ./input.txt --boundary--
+            
+        Example:
+            ### basic request 1
+            -- A basic request
+            GET http://example.com/a/  HTTP/1.1
+
+            ###
+
+            ### basic request 2
+            -- A basic request
+            GET http://example.com:8080  HTTP/1.1
+                /api
+                /html
+                /get
+                ?id=123
+                &value=content
+    
+            ###
+
+            ### basic request 3
+            POST http://example.com:8080/api/html/post HTTP/1.1
+            Content-Type: application/json
+            Cookie: key=first-value
+            
+            { "key" : "value", "list": [1, 2, 3] }
+            ###
+
             ''',
     },
     {

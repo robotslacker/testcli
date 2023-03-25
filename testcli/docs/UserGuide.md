@@ -3,7 +3,8 @@
 # TestCli 快速说明
 
 TestCli 是一个主要用Python完成的，基于命令行下运行的，精致的测试工具。    
-目前能够全面的覆盖SQL测试，简单的覆盖API测试。  
+目前比较全面的覆盖了SQL测试，基本的覆盖了API测试  
+
 ***
 ### 概要
 #### 设计目的：  
@@ -15,8 +16,8 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
   * 在API测试中上传或者下载数据文件
 * 为了方便测试需要，工具内置了一些方便的功能，比如：
   * 方便地用来生成随机数据文件的工具。 
-  * 使用提示（Hint）信息来过滤或者掩码输出结果。
-  * 使用TermOut，FeedBack，ECHO来控制显示输出的内容。
+  * 使用提示（Hint）信息来过滤或者掩码输出结果
+  * 使用TermOut，FeedBack，ECHO来控制显示输出的内容
   * 使用ECHO来生成一些临时性的测试文件
   * 使用COMPARE来进行文件级别的内容比对，比对过程中支持了正则表达过滤，正则表达掩码
   * 使用SSH来完成远程主机命令的操作，文件的上传和下载
@@ -76,9 +77,13 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
 
 ### 这个工具不能做什么
 这个工具的存在目的不是为了替代各种数据库的命令行工具，如Oracle的SQLPlus，MYSQL的mysql等  
-这个工具的存在目的不是为了替代PostMan，JMeter等测试工具。  
 这个工具的存在目的是在尽可能地兼容这些命令行工具的同时提供测试工作需要的相关特性。    
 选择了Python作为开发工具，工具本身部署的复杂性和对环境的依赖性决定了这个工具无法作为产品的功能之一交付给客户。  
+这个工具的存在目的不是为了替代PostMan，JMeter等测试工具。
+
+虽然可以用作压力测试，但是这个工具的并发机制是基于多进程，而不是多线程。  
+这句话的意思是：在非常高地并发下，由于多进程的资源消耗，测试工具本身成了资源消耗重点。  
+所以： 工具本身不适合非常高地并发压力，比如并发超过100或者更高。
 
 ***
 ### 安装
@@ -93,16 +98,29 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
 
 依赖的第三方安装包：  
    * 这些安装包会在robotslacker-testcli安装的时候自动随带安装
-   * click                    : Python的命令行参数处理
-   * hdfs                     : HDFS类库，支持对HDFS文件操作
-   * fs                       : 构建虚拟文件系统，用来支撑随机数据文件的生成
-   * JPype1                   : Python的Java请求封装，用于完成运行时JDBC请求调用  
-   * paramiko                 : Python的SSH协议支持，用于完成远程主机操作  
-   * prompt_toolkit           : 用于提供交互式命令行和终端应用程序
-   * setproctitle             : Python通过setproctitle来设置进程名称，从而在多进程并发时候给调试人员以帮助
-   * urllib3                  : HTTP客户端请求操作
-   * psutil                   : Python的监控管理
-   * antlr4-python3-runtime   : Antlr4运行时引用
+   ```
+   JPype1                   : Python的Java请求封装，用于完成运行时JDBC请求调用  
+   setproctitle             : Python通过setproctitle来设置进程名称，从而在多进程并发时候给调试人员以帮助
+   urllib3                  : HTTP客户端请求操作
+   click                    : Python的命令行参数处理
+   prompt_toolkit           : 用于提供交互式命令行和终端应用程序
+   paramiko                 : Python的SSH协议支持，用于完成远程主机操作  
+   fs                       : 构建虚拟文件系统，用来支撑随机数据文件的生成
+   psutil                   : Python的监控管理
+   glom                     : 用于API返回结果中的过滤
+   antlr4-python3-runtime   : Antlr4运行时引用
+   python-multipart         : urllib用来完成多段API请求
+   
+   pytest-xdist             ：程序自身的测试需要，并不是运行必须项
+   pytest                   ：程序自身的测试需要，并不是运行必须项
+   fastapi                  ：程序自身的测试需要，并不是运行必须项
+   uvicorn                  ：程序自身的测试需要，并不是运行必须项
+   
+   coloredlogs              : 颜色化的日志输出，testRobot需要
+   robotframework           : Python命令行驱动测试框架，testRobot需要
+   beautifulsoup4           : 测试报告格式化输出，testRobot需要
+   lxml                     : 测试报告结果处理，testRobot需要
+   ```
 
 利用pip来安装：
 ```
@@ -203,7 +221,6 @@ Options:
   --scripttimeout INTEGER  Script timeout(seconds).
   --namespace TEXT         Command default name space(SQL|API). Default is depend on file suffix.
   --selftest               Run self test and exit.
-  --readme                 Show README doc and exit.
   --suitename TEXT         Test suite name.
   --casename TEXT          Test case name.
   --silent                 Run script in silent mode, no console output.
@@ -223,7 +240,15 @@ Version: 0.0.7
 ```
 
 #### --logon  
-用来输入连接数据的的用户名和口令
+用来输入连接数据的的连接字符串
+使用完成的连接字符串：
+``` 
+(base) C:\>testcli --logon user/pass@jdbc:mysql://127.0.0.1:3306/testdb
+TestCli Release 0.0.7
+SQL> Database connected.
+SQL>
+```
+也可以在设置了TESTCLI_CONNECTION_URL后省略连接字符串后面部分：
 ```
 (base) C:\>testcli --logon admin/123456
 TestCli Release 0.0.7
@@ -485,10 +510,6 @@ Disconnected.
 运行自测脚本并退出  
 这个选项仅仅用于测试当前环境下是否已经正确安装了本工具。  
 
-#### --readme        
-在控制台上显示本帮助文档并退出.  
-需要注意的是：不同的终端对于富文本字体的处置规则并不相同，所以不能苛求显示的完全正确性和美观性。  
-
 #### --suitename     
 指定测试套件的名称，这个通常用于记录在扩展日志，或者完成测试报告的时候协助统计分析测试结果使用
 
@@ -503,7 +524,7 @@ Disconnected.
 后台方式下由于无法输入，所以只能用指定脚本方式来运行  
 
 #### --pidfile
-是否打印PID信息到指定的文件中，默认是不打印  
+是否打印PID信息到指定的文件中，默认是不打印，即不产生pidfile文件  
 
 #### --help          
 显示本帮助信息并退出  
@@ -537,7 +558,7 @@ SQL> _help
 +--------+---------+----------------------------------------------------------------------------+
 Use "_HELP <command>" to get detail help messages.
 ```
-这里显示的是TestCli自身支持的命令，不包括SQL语句，API执行语句部分。  
+这里显示的是TestCli自身支持的命令(示例，并不是全部语句)，不包括SQL语句，API执行语句部分。  
 具体SQL语句的写法参考具体数据库对SQL的要求；    
 具体API语句的写法参考HTTP协议报文要求；  
 
@@ -973,6 +994,25 @@ Database disconnected.
 这里的date是主机的命令，需要注意的是：在Windows和Linux上命令的不同，脚本可能因此无法跨平台执行
 ```
 
+### 从脚本中执行其他脚本
+我们可以把语句保存在一个其他文件中，在当前控制台或当前脚本中进行调用  
+语法格式为：
+```
+    _START <script1.sql>,<script2.sql> ...    <para1> <para2> ... <paran>
+```
+例如：
+```
+(base) TestCli 
+TestCli Release 0.0.32
+SQL> _START aa.api
+SQL> ....
+SQL> _DISCONNECT
+这里将执行aa.api
+如果有多个文件，可以依次填写，中间用逗号分隔, 如SQL> _START aa.api,bb.sql ....
+
+para1, para2, paran 是子程序的运行参数。具体处理逻辑由子脚本处理.
+```
+
 ### 执行数据库测试
 #### 连接数据库
 在TestCli命令行里头，可以通过connect命令来连接到具体的数据库  
@@ -1034,24 +1074,6 @@ SQL> _disconnect
 Database disconnected.
 ```
 ***
-
-#### 从脚本中执行SQL语句
-我们可以把语句保存在一个SQL文件中，并通过执行SQL文件的方式来执行具体的SQL  
-语法格式为：
-```
-    _START <script1.sql> <script2.sql> ...
-```
-例如：
-```
-(base) TestCli 
-TestCli Release 0.0.32
-SQL> _START aa.api
-SQL> ....
-SQL> _DISCONNECT
-这里将执行aa.sql
-如果有多个文件，可以依次填写，如SQL> _START aa.api bb.sql ....
-
-```
 
 #### 执行SQL语句块
 &emsp; SQL语句块的结束符为【/】，且【/】必须出现在具体一行语句的开头  比如：
@@ -1127,7 +1149,7 @@ SQL> _DISCONNECT
     加入这个提示符后，TestCli将不再显示随后输出中任何包含Error字样的行
     .*Error.* 是一个正则表达式写法
 
-    SQL> -- [Hint] LogFilter  ^((?!Error).)*$
+    SQL> -- [Hint] LogFilter  ^!^Error.*$
     SQL> Select ID,Name From TestTab;
     ....
     加入这个提示符后，TestCli仅显示输出中包含Error字样的行
@@ -1342,6 +1364,80 @@ Request-URI为请求的地址，地址可能包含请求参数。 如果请求�
    SHOW
      显示所有会话信息，或者指定的会话信息     
  
+```
+
+#### 在API请求中使用Hint信息
+&emsp; &emsp; 在一些场景中，我们通过Hint隐含提示符来控制SQL的具体行为
+```    
+    JsonFilter：
+    如果返回结果是Json格式，则可以使用JsonFilter来过滤指定指定
+    这里的Filter格式为glom格式，具体格式要求可以参考glom的格式写法
+    
+    我们这里假设http://127.0.0.1:8000/jsonfiltertest的正常返回结果是：
+    {
+        "content": {
+            "data1": "data1XXXX",
+            "data2": "data2XXXX",
+            "data3": "data3XXXX",
+            "data4": {
+                "subdata4": "subdata4XXX"
+            },
+            "data5": [
+                {
+                    "data51": {
+                        "subdata51": "subdata51XXX"
+                    }
+                },
+                {
+                    "data51": {
+                        "subdata52": "subdata52XXX"
+                    }
+                }
+            ]
+        },
+        "status": 200
+    }
+    
+    API> -- [Hint] JsonFilter  data1
+    API> ### 样例API
+    API> GET http://127.0.0.1:8000/jsonfiltertest HTTP/1.1
+    API> Content-Type: application/json
+    API> 
+    API> ###
+    上述例子过滤结果集，并保留data1下来，过滤后的结果是：
+    {
+        "content": "data1XXXX",
+        "status": 200
+    }    
+    
+    API> -- [Hint] JsonFilter  data4.subdata4
+    API> ### 样例API
+       > GET http://127.0.0.1:8000/jsonfiltertest HTTP/1.1
+       > Content-Type: application/json
+       >
+       > ###
+    上述例子过滤结果集，并保留data1.data4下来，过滤后的结果是：
+    {
+        "content": "subdata4XXX",
+        "status": 200
+    }
+
+    API> -- [Hint] JsonFilter  {"data1": "data1", "dataX": "data3"}
+    API> ### 样例API
+       > GET http://127.0.0.1:8000/jsonfiltertest HTTP/1.1
+       > Content-Type: application/json
+       >
+       > ###
+    上述例子过滤结果集，并重新构建结果集，重新构建后的结果是：
+    {
+        "content": {
+            "data1": "data1XXXX",
+            "dataX": "data3XXXX"
+        },
+        "status": 200
+    }
+    
+    glom格式非常强大，这里不能列出所有的可能性，建议阅读glom文档
 ```
 
 ***

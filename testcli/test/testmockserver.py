@@ -80,6 +80,19 @@ def fileUpload(my_file: UploadFile = File(...)):
     return {"status": "OK"}
 
 
+@mockApp.get('/jsonfiltertest')
+def health():
+    return {
+        "data1": "data1XXXX",
+        "data2": "data2XXXX",
+        "data3": "data3XXXX",
+        "data4": {
+            "subdata4": "subdata4XXX"
+        },
+        "data5": [{"data51": {"subdata51": "subdata51XXX"}},{"data51": {"subdata52": "subdata52XXX"}}]
+    }
+
+
 @mockApp.get('/timeoutTest')
 def timeoutTest():
     # 休息10秒后再回应
