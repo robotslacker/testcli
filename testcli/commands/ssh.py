@@ -104,9 +104,15 @@ def rewriteSshRequest(cls, requestObject, commandScriptFile: str):
             if "keyFile" in requestObject:
                 rewrotedCommand = rewrotedCommand + " KEYFILE " + requestObject["keyFile"]
         if requestObject["action"] == "execute":
-            rewrotedCommand = \
-                rewrotedCommand + "_SSH EXECUTE " + requestObject["command"]
-    return requestObject, [rewrotedCommand, ]
+            commandSplits = str(requestObject["command"]).split('\n')
+            rewrotedCommand = rewrotedCommand + " _SSH EXECUTE " + commandSplits[0]
+            if len(commandSplits) > 1:
+                for nIter in range(1, len(commandSplits)):
+                    rewrotedCommand = rewrotedCommand + "\nREWROTED    > " + commandSplits[nIter]
+    if len(rewrotedCommand) == 0:
+        return requestObject, []
+    else:
+        return requestObject, [rewrotedCommand, ]
 
 
 def executeSshRequest(requestObject):
@@ -140,7 +146,7 @@ def executeSshRequest(requestObject):
             sshContext.setSshTransport(sshHandler._transport)
 
             sftpHandler = sshHandler.open_sftp()
-            # 如果不适用chdir，则第一次getcwd永远返回的都是None
+            # 如果不使用chdir，则第一次getcwd永远返回的都是None
             sftpHandler.chdir(".")
             sshContext.setSftpHandler(sftpHandler)
 

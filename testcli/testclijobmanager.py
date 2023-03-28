@@ -862,7 +862,7 @@ class JOBManager(object):
 
     @staticmethod
     def runSQLCli(p_args):
-        from .main import TestCli
+        from .testcli import TestCli
 
         # 运行子进程的时候，不需要启动JOBManager
         sqlcliHandler = TestCli(

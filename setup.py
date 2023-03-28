@@ -42,9 +42,8 @@ setup(
     platforms='any',
     install_requires=['JPype1', 'setproctitle', 'urllib3<1.27',
                       'click', 'prompt_toolkit',  'paramiko', 'antlr4-python3-runtime==4.11.1',
-                      'hdfs', 'fs', "psutil",
-                      "python-multipart",
-                      "pytest", 'fastapi', 'uvicorn', "pytest-xdist",
+                      'fs', "psutil", "glom",
+                      "python-multipart", "pytest-xdist", "pytest", 'fastapi', 'uvicorn',
                       "coloredlogs", "robotframework", "beautifulsoup4", "lxml"
                       ],
 
@@ -56,15 +55,22 @@ setup(
     packages=['testcli'],
     package_data={'testcli': [
         'jlib/*',
-        'conf/*', 'profile/*',
-        'antlrgen/*', 'commands/*',
+        'conf/*',
+        'profile/*',
+        'antlr/*.g4',
+        'antlrgen/*',
+        'commands/*',
+        'plugin/*',
         'test/*',
-        'docs/UserGuide.md',
-        'docs/robotslacker.jpg',
+        'docs/*'
     ]},
     python_requires='>=3.6',
     entry_points={
-        "console_scripts": ["testcli = testcli.main:cli"],
+        "console_scripts": [
+            "testcli = testcli.cliconsole:cli",
+            "testclicomp = testcli.clicomp:cli",
+            "testclirobot = testcli.clirobot:cli",
+        ],
         "distutils.commands": ["lint = tasks:lint", "test = tasks:test"],
     },
 )

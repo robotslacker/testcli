@@ -4,6 +4,8 @@ import json
 import os
 import re
 import traceback
+import glom
+import ast
 from .sqlparse import SQLAnalyze
 from .apiparse import APIAnalyze
 from .sqlparse import SQLFormatWithPrefix
@@ -315,31 +317,24 @@ class CmdExecute(object):
         return ret_CommandSplitResults, ret_CommandSplitResultsWithComments, ret_CommandHints
 
     """
-        处理命令行提示信息
+        根据提示信息改写返回结果中的结果集
         传入参数：
              result            命令执行结果
              commandHints      命令提示信息
-        返回结果：
-            没有单独的返回，将直接重写传入的result内容
-            分别处理result中的:
-                 rows           结果集
-                 status         返回状态
-                 message        错误消息
-            目前处理的提示包括：  
+        返回结果：             
+            处理result中的Rows对象. 没有单独的返回，将直接重写传入的result内容.
+            目前处理的提示包括：
                  Order          对返回结果集再排序，仅针对rows
-                 LogFilter      对返回结果集，返回状态信息，错误提示进行过滤（状态信息，错误提示如果包含多行，则逐行过滤）
-                 LogMask        对返回结果集，返回状态信息，错误提示进行掩码（状态信息，错误提示如果包含多行，则逐行掩码）
+                 LogFilter      对返回结果集进行过滤
+                 LogMask        对返回结果集进行掩码
     """
     @staticmethod
-    def processCommandHint(result, commandHints: dict):
+    def processCommandHint_Rows(result, commandHints: dict):
         if result is None:
             return
 
-        rows = None
-        if "rows" in result.keys():
+        if "rows" in result.keys() and result["rows"] is not None:
             rows = result["rows"]
-        # 处理结果集中的信息
-        if rows is not None:
             # 如果Hints中有order字样，对结果进行排序后再输出
             if "Order" in commandHints.keys():
                 if "TESTCLI_DEBUG" in os.environ:
@@ -350,8 +345,8 @@ class CmdExecute(object):
 
             # 如果Hint中存在LogFilter，则结果集中过滤指定的输出信息
             if "LogFilter" in commandHints.keys():
-                for logfilter in commandHints["LogFilter"]:
-                    for item in rows[:]:
+                for logFilter in commandHints["LogFilter"]:
+                    for item in rows[::-1]:
                         # 将所有列用空格分隔来合并为一行
                         combinedRow = ""
                         for cell in item:
@@ -359,11 +354,16 @@ class CmdExecute(object):
                                 combinedRow = str(cell)
                             else:
                                 combinedRow = combinedRow + " " + str(cell)
-                        if "TESTCLI_DEBUG" in os.environ:
-                            print("[DEBUG] Will apply filter: [" + combinedRow + "] with " + logfilter)
-                        if re.match(pattern=logfilter, string=combinedRow, flags=re.IGNORECASE):
+                        if re.match(pattern=logFilter, string=combinedRow, flags=re.IGNORECASE):
+                            if "TESTCLI_DEBUG" in os.environ:
+                                print("[DEBUG] Will apply filter: [" + combinedRow +
+                                      "] with " + logFilter + ". Matched.")
                             rows.remove(item)
                             continue
+                        else:
+                            if "TESTCLI_DEBUG" in os.environ:
+                                print("[DEBUG] Will apply filter: [" + combinedRow +
+                                      "] with " + logFilter + ". Not matched.")
 
             # 如果Hint中存在LogMask,则掩码指定的输出信息
             if "LogMask" in commandHints.keys():
@@ -409,21 +409,41 @@ class CmdExecute(object):
                     if bDataChanged:
                         rows[i] = tuple(rowResult)
 
+    """
+        根据提示信息改写返回结果中的状态信息
+        传入参数：
+             result            命令执行结果
+             commandHints      命令提示信息
+        返回结果：             
+            处理result中的Status对象. 没有单独的返回，将直接重写传入的result内容.
+            目前处理的提示包括：
+                 LogFilter      对返回状态信息，错误提示进行过滤（状态信息，错误提示如果包含多行，则逐行过滤）
+                 LogMask        对返回状态信息，错误提示进行掩码（状态信息，错误提示如果包含多行，则逐行掩码）
+    """
+    @staticmethod
+    def processCommandHint_Status(result, commandHints: dict):
+        if result is None:
+            return
+
         # 处理状态消息中的信息
-        status = None
-        if "status" in result.keys():
+        if "status" in result.keys() and result["status"] is not None:
             status = result["status"]
-        if status is not None:
             statusLineList = status.splitlines(keepends=False)
             # 如果Hint中存在LogFilter，则结果集中过滤指定的输出信息
             if "LogFilter" in commandHints.keys():
                 for logFilter in commandHints["LogFilter"]:
-                    for line in statusLineList:
-                        if "TESTCLI_DEBUG" in os.environ:
-                            print("[DEBUG] Will apply filter: [" + line + "] with " + logFilter)
+                    # 从后往前删除，以避免漏掉一些东西
+                    for line in statusLineList[::-1]:
                         if re.match(pattern=logFilter, string=line, flags=re.IGNORECASE):
+                            if "TESTCLI_DEBUG" in os.environ:
+                                print("[DEBUG] Will apply filter: [" + line +
+                                      "] with " + logFilter + ". Matched.")
                             statusLineList.remove(line)
                             continue
+                        else:
+                            if "TESTCLI_DEBUG" in os.environ:
+                                print("[DEBUG] Will apply filter: [" + line +
+                                      "] with " + logFilter + ". Not matched.")
                 result["status"] = "\n".join(statusLineList)
             # 如果Hint中存在LogMask,则掩码指定的输出信息
             if "LogMask" in commandHints.keys():
@@ -466,21 +486,36 @@ class CmdExecute(object):
                                 print("[DEBUG] LogMask Hint Error: " + commandHints["LogMask"])
                 result["status"] = "\n".join(statusLineList)
 
-        message = None
-        if "message" in result.keys():
+    """
+        根据提示信息改写返回结果中的错误信息
+        传入参数：
+             result            命令执行结果
+             commandHints      命令提示信息
+        返回结果：             
+            处理result中的Message对象. 没有单独的返回，将直接重写传入的result内容.
+            目前处理的提示包括：
+                 LogFilter      对错误提示进行过滤，如果存在多行，则逐行过滤
+                 LogMask        对错误提示进行掩码，如果存在多行，则逐行过滤
+    """
+    @staticmethod
+    def processCommandHint_Message(result, commandHints: dict):
+        if result is None:
+            return
+
+        if "message" in result.keys() and result["message"] is not None:
             message = result["message"]
-        if message is not None:
             messageLineList = message.splitlines(keepends=False)
             # 如果Hint中存在LogFilter，则结果集中过滤指定的输出信息
             if "LogFilter" in commandHints.keys():
                 for logFilter in commandHints["LogFilter"]:
-                    for line in messageLineList:
+                    for line in messageLineList[::-1]:
                         if "TESTCLI_DEBUG" in os.environ:
                             print("[DEBUG] Will apply filter: [" + line + "] with " + logFilter)
                         if re.match(pattern=logFilter, string=line, flags=re.IGNORECASE):
                             messageLineList.remove(line)
                             continue
                 result["message"] = "\n".join(messageLineList)
+
             # 如果Hint中存在LogMask,则掩码指定的输出信息
             if "LogMask" in commandHints.keys():
                 for i in range(0, len(messageLineList)):
@@ -521,6 +556,54 @@ class CmdExecute(object):
                             if "TESTCLI_DEBUG" in os.environ:
                                 print("[DEBUG] LogMask Hint Error: " + commandHints["LogMask"])
                 result["message"] = "\n".join(messageLineList)
+
+    """
+        根据提示信息改写返回结果中的Content信息
+        传入参数：
+             result            命令执行结果
+             commandHints      命令提示信息
+        返回结果：             
+            处理result["Status"]中的Content对象. 没有单独的返回，将直接重写传入的result内容.
+            Content信息为API语句执行结果，多半为JSON表达式
+            目前处理的提示包括：
+                 JsonFilter     对回应的JSON格式进行glom表达式过滤
+    """
+    @staticmethod
+    def processCommandHint_Contents(result, commandHints: dict):
+        if "JsonFilter" in commandHints.keys():
+            if "status" in result.keys() and result["status"] is not None:
+                status = result["status"]
+                try:
+                    jsonStatus = json.loads(status)
+                except json.decoder.JSONDecodeError:
+                    # 传递的对象不是一个JSON组合体，不适用JsonFilter
+                    return
+                # 查看status是否为JSON格式，如果不是，则跳过
+                if "content" in jsonStatus.keys() and jsonStatus["content"] is not None:
+                    content = jsonStatus["content"]
+                    for spec in commandHints["JsonFilter"]:
+                        try:
+                            # 此处不使用eval，而使用literal_eval, 是因为eval可能会把一些规则中的内容进行进行非预期的数据运算
+                            spec = ast.literal_eval(spec)
+                        except (SyntaxError, ValueError) as ex:
+                            # 传递的信息并不是一个字典结构，那就按照字符串传递给glom
+                            if "TESTCLI_DEBUG" in os.environ:
+                                print("[DEBUG] Bad glom (1) expression =[" + str(spec) + "]" + repr(ex))
+                        # 尝试使用glom进行解析
+                        try:
+                            content = glom.glom(target=content, spec=spec)
+                        except glom.core.GlomError as ex:
+                            #  无法解析的glob表达式
+                            if "TESTCLI_DEBUG" in os.environ:
+                                print("[DEBUG] Bad glom (2) expression =[" + str(spec) + "]" + repr(ex))
+                    jsonStatus["content"] = content
+                result["status"] = json.dumps(
+                    obj=jsonStatus,
+                    sort_keys=True,
+                    indent=4,
+                    separators=(',', ': '),
+                    ensure_ascii=False
+                )
 
     """
         执行命令语句
@@ -925,7 +1008,9 @@ class CmdExecute(object):
                             sqlHints=commandHintList):
 
                         # 处理命令行的提示信息
-                        self.processCommandHint(result=result, commandHints=commandHintList)
+                        self.processCommandHint_Rows(result=result, commandHints=commandHintList)
+                        self.processCommandHint_Status(result=result, commandHints=commandHintList)
+                        self.processCommandHint_Message(result=result, commandHints=commandHintList)
 
                         # 保留上一次的执行结果
                         if result["type"] == "result":
@@ -938,6 +1023,7 @@ class CmdExecute(object):
                             lastCommandResult["headers"] = []
                             lastCommandResult["status"] = result["message"]
                             lastCommandResult["errorCode"] = 1
+
                         if self.singleLoopMode:
                             matchCondition = evalExpression(self.cliHandler, self.singleLoopExpression)
                             if matchCondition or (
@@ -954,10 +1040,10 @@ class CmdExecute(object):
                                 time.sleep(self.singleLoopInterval)
                                 self.singleLoopIter = self.singleLoopIter + 1
                         if not self.singleLoopMode:
-                            # 如果不符合最终判断条件，即仍然处于循环模式，则不输出任何内容
+                            # 最后一次执行，要输出结果
                             yield result
                     if self.singleLoopMode:
-                        # 如果当前还处于单句循环中，则重复执行语句，即POS位置不能加1
+                        # 如果当前还处于单句循环中，则重复执行语句，即POS位置保持不变
                         continue
                 elif parseObject["name"] in ["USE"]:
                     for commandResult in userNameSpace(
@@ -1123,6 +1209,13 @@ class CmdExecute(object):
                             cls=self,
                             apiRequest=parseObject,
                             apiHints=commandHintList):
+
+                        # 处理命令行的提示信息
+                        self.processCommandHint_Contents(result=result, commandHints=commandHintList)
+                        self.processCommandHint_Status(result=result, commandHints=commandHintList)
+                        self.processCommandHint_Message(result=result, commandHints=commandHintList)
+
+                        # 保留上一次的处理结果
                         if result["type"] == "result":
                             lastCommandResult.clear()
                             data = json.loads(result["status"])
@@ -1132,6 +1225,8 @@ class CmdExecute(object):
                         if result["type"] == "error":
                             lastCommandResult["message"] = result["message"]
                             lastCommandResult["errorCode"] = 1
+
+                        # 判断是否处于单语句循环模式
                         if self.singleLoopMode:
                             matchCondition = evalExpression(self.cliHandler, self.singleLoopExpression)
                             if matchCondition or (
@@ -1148,7 +1243,7 @@ class CmdExecute(object):
                                 time.sleep(self.singleLoopInterval)
                                 self.singleLoopIter = self.singleLoopIter + 1
                         if not self.singleLoopMode:
-                            # 如果不符合最终判断条件，即仍然处于循环模式，则不输出任何内容
+                            # 最后一次执行，返回结果
                             yield result
                     if self.singleLoopMode:
                         # 如果当前还处于单句循环中，则重复执行语句，即POS位置不能加1
@@ -1257,7 +1352,7 @@ class CmdExecute(object):
                             requestObject=parseObject,
                     ):
                         # 处理命令行的提示信息
-                        self.processCommandHint(result=result, commandHints=commandHintList)
+                        self.processCommandHint_Status(result=result, commandHints=commandHintList)
                         if "status" in result.keys():
                             consoleOutput.append(result["status"])
                         lastCommandResult["status"] = "\n".join(consoleOutput)
