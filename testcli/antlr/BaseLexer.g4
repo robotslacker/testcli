@@ -24,7 +24,6 @@ SPACE               : [ \t]+ ->channel(HIDDEN);
 
 EXIT                : '_EXIT';
 QUIT                : '_QUIT';
-SPOOL               : '_SPOOL';
 SLEEP               : '_SLEEP';
 
 // 切换应用模式
@@ -57,6 +56,9 @@ ENDIF               : '_ENDIF';
 
 // 设置系统参数
 SET                 : '_SET' -> pushMode(SetMode);
+
+// 输出到指定文件
+SPOOL               : '_SPOOL' -> pushMode(SpoolMode);
 
 // 循环执行
 LOOP                : '_LOOP' -> pushMode(LoopMode);
@@ -173,6 +175,13 @@ WHENEVER_SEMICOLON  : ';';
 WHENEVER_CONTINUE   : 'CONTINUE';
 WHENEVER_EXIT       : 'EXIT';
 WHENEVER_CRLF       : CRLF -> popMode;
+
+mode SpoolMode;
+SPOOL_SPACE           : [ \t]+ -> channel (HIDDEN);
+SPOOL_EXPRESSION      : (OBS_TEXT | UNRESERVED | SUBDELIMS | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' | '@' | '{' | '}' | '%')+;
+SPOOL_SEMICOLON       : ';';
+SPOOL_OFF             : 'OFF';
+SPOOL_CRLF            : CRLF -> popMode;
 
 mode SetMode;
 SET_SPACE           : [ \t]+ -> channel (HIDDEN);

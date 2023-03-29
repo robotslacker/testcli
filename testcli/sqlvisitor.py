@@ -1161,9 +1161,21 @@ class SQLVisitor(SQLParserVisitor):
         self.errorMsg = errorMsg
 
     def visitSpool(self, ctx: SQLParser.SpoolContext):
-        content = ctx.String().getText()
-        
-        parsedObject = {'name': 'SPOOL', 'file': content}
+        if ctx.SPOOL_EXPRESSION() is not None:
+            content = str(ctx.SPOOL_EXPRESSION().getText()).strip()
+            if content.startswith("'") and content.endswith("'"):
+                content = content[1:-1]
+            elif content.startswith('"') and content.endswith('"'):
+                content = content[1:-1]
+        else:
+            content = ""
+
+        if ctx.SPOOL_OFF() is not None:
+            content = "OFF"
+        parsedObject = {
+            'name': 'SPOOL',
+            'file': content
+        }
 
         # 获取错误代码
         errorCode = 0

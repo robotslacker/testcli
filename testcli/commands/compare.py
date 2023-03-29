@@ -3,7 +3,7 @@ import copy
 import os
 import re
 from collections import namedtuple
-from ..common import rewiteStatement
+from ..common import rewriteStatement
 
 # 默认的比较选项
 compareDefaultOption = {
@@ -588,8 +588,8 @@ def executeCompareRequest(cls, requestObject, commandScriptFile: str):
         referenceFile = str(requestObject["referenceFile"])
 
         # 处理targetFile和referenceFile的变量替换
-        targetFile = rewiteStatement(cls=cls, statement=targetFile, commandScriptFile=commandScriptFile)
-        referenceFile = rewiteStatement(cls=cls, statement=referenceFile, commandScriptFile=commandScriptFile)
+        targetFile = rewriteStatement(cls=cls, statement=targetFile, commandScriptFile=commandScriptFile)
+        referenceFile = rewriteStatement(cls=cls, statement=referenceFile, commandScriptFile=commandScriptFile)
         compareHandler = POSIXCompare()
         try:
             compareResult, compareReport = \

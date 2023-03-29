@@ -47,7 +47,7 @@ def sortresult(result):
                 result[j], result[i] = result[i], result[j]
 
 
-def rewiteStatement(cls, statement: str, commandScriptFile: str):
+def rewriteStatement(cls, statement: str, commandScriptFile: str):
     # 随后尝试被替换内容是否为当前应用变量，环境变量
     while True:
         # 替换脚本中的变量信息
@@ -73,7 +73,8 @@ def rewiteStatement(cls, statement: str, commandScriptFile: str):
                 # 非本地变量
                 pass
             except Exception as ex:
-                raise TestCliException("evalExpression Error [" + varName + "]: [" + repr(ex) + "].")
+                if "TESTCLI_DEBUG" in os.environ:
+                    raise TestCliException("evalExpression Error [" + varName + "]: [" + repr(ex) + "].")
 
             # 尝试环境变量
             if varName in os.environ:
@@ -96,7 +97,7 @@ def rewriteHintStatement(cls, statement: str, commandScriptFile: str):
     rawStatement = statement
 
     # 开始替换
-    statement = rewiteStatement(cls=cls, statement=statement, commandScriptFile=commandScriptFile)
+    statement = rewriteStatement(cls=cls, statement=statement, commandScriptFile=commandScriptFile)
 
     if rawStatement != statement:
         # 记录被变量信息改写的命令
@@ -113,7 +114,7 @@ def rewriteSQLStatement(cls, statement: str, commandScriptFile: str):
     rawStatement = statement
 
     # 开始替换
-    statement = rewiteStatement(cls=cls, statement=statement, commandScriptFile=commandScriptFile)
+    statement = rewriteStatement(cls=cls, statement=statement, commandScriptFile=commandScriptFile)
 
     # 语句发生了变化
     if rawStatement != statement:
@@ -134,7 +135,7 @@ def rewriteConnectRequest(cls, connectRequestObject, commandScriptFile: str):
     for keyword in ["username", "password", "driver", "driverSchema", "driverType", "host", "port", "service"]:
         if keyword in connectRequestObject:
             oldType = type(connectRequestObject[keyword])
-            newValue = rewiteStatement(
+            newValue = rewriteStatement(
                 cls=cls, statement=str(connectRequestObject[keyword]),
                 commandScriptFile=commandScriptFile)
             newValue = oldType(newValue)
@@ -175,7 +176,7 @@ def rewriteAPIStatement(cls, requestObject: [], commandScriptFile: str):
     rawRequestObject = copy.copy(requestObject)
 
     # 替换请求目标的信息
-    httpRequestTarget = rewiteStatement(
+    httpRequestTarget = rewriteStatement(
         cls=cls,
         statement=rawRequestObject["httpRequestTarget"],
         commandScriptFile=commandScriptFile)
@@ -185,7 +186,7 @@ def rewriteAPIStatement(cls, requestObject: [], commandScriptFile: str):
         httpRequestContents = copy.copy(rawRequestObject["contents"])
         # 开始替换
         for nPos in range(0, len(httpRequestContents)):
-            newHttpRequestContent = rewiteStatement(
+            newHttpRequestContent = rewriteStatement(
                 cls=cls,
                 statement=httpRequestContents[nPos],
                 commandScriptFile=commandScriptFile)
@@ -202,14 +203,14 @@ def rewriteAPIStatement(cls, requestObject: [], commandScriptFile: str):
         httpRequestFields = copy.copy(rawRequestObject["httpFields"])
         for key, value in httpRequestFields.items():
             originFieldName = key
-            key = rewiteStatement(
+            key = rewriteStatement(
                 cls=cls,
                 statement=originFieldName,
                 commandScriptFile=commandScriptFile)
             if originFieldName != key:
                 # 替换Fields中的Field字段
                 del httpRequestFields[originFieldName]
-            value = rewiteStatement(
+            value = rewriteStatement(
                 cls=cls,
                 statement=value,
                 commandScriptFile=commandScriptFile)
@@ -223,7 +224,7 @@ def rewriteAPIStatement(cls, requestObject: [], commandScriptFile: str):
         operateList = []
         for operate in rawRequestObject["operate"]:
             content = operate["content"]
-            content = rewiteStatement(
+            content = rewriteStatement(
                 cls=cls,
                 statement=content,
                 commandScriptFile=commandScriptFile)

@@ -3,7 +3,7 @@ import time
 import paramiko
 import io
 import copy
-from ..common import rewiteStatement
+from ..common import rewriteStatement
 
 sshSession = {}
 sshCurrentSessionName = "NONAME"
@@ -73,22 +73,22 @@ def rewriteSshRequest(cls, requestObject, commandScriptFile: str):
 
     if "host" in requestObject:
         statement = requestObject["host"]
-        newStatement = rewiteStatement(cls=cls, statement=statement, commandScriptFile=commandScriptFile)
+        newStatement = rewriteStatement(cls=cls, statement=statement, commandScriptFile=commandScriptFile)
         if statement != newStatement:
             requestObject.update({"host": newStatement})
     if "user" in requestObject:
         statement = requestObject["user"]
-        newStatement = rewiteStatement(cls=cls, statement=statement, commandScriptFile=commandScriptFile)
+        newStatement = rewriteStatement(cls=cls, statement=statement, commandScriptFile=commandScriptFile)
         if statement != newStatement:
             requestObject.update({"user": newStatement})
     if "password" in requestObject:
         statement = requestObject["password"]
-        newStatement = rewiteStatement(cls=cls, statement=statement, commandScriptFile=commandScriptFile)
+        newStatement = rewriteStatement(cls=cls, statement=statement, commandScriptFile=commandScriptFile)
         if statement != newStatement:
             requestObject.update({"password": newStatement})
     if "command" in requestObject:
         statement = requestObject["command"]
-        newStatement = rewiteStatement(cls=cls, statement=statement, commandScriptFile=commandScriptFile)
+        newStatement = rewriteStatement(cls=cls, statement=statement, commandScriptFile=commandScriptFile)
         if statement != newStatement:
             requestObject.update({"command": newStatement})
 

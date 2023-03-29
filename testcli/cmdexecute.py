@@ -4,7 +4,10 @@ import json
 import os
 import re
 import traceback
-import glom
+try:
+    import glom
+except:
+    pass
 import ast
 from .sqlparse import SQLAnalyze
 from .apiparse import APIAnalyze
@@ -38,6 +41,7 @@ from .commands.apiSession import apiSessionManage
 from .commands.apiExecute import executeAPIStatement
 from .commands.apiExecute import executeAPISet
 from .commands.sqlExecute import executeSQLStatement
+from .common import rewriteStatement
 from .common import rewriteHintStatement
 from .common import rewriteSQLStatement
 from .common import rewriteAPIStatement
@@ -845,23 +849,25 @@ class CmdExecute(object):
                     )
                     if len(rewrotedCommandHintValueList) != 0:
                         commandHintList[commandHintKey] = commandHintNewValue
-                        yield {
-                            "type": "parse",
-                            "rawCommand": None,
-                            "formattedCommand": None,
-                            "rewrotedCommand":
-                                ["REWROTED Hint> " + str(commandHintKey) + ":" + str(commandHintNewValue), ],
-                            "script": commandScriptFile
-                        }
-            if "ScenarioName" in commandHintList:
-                scenarioName = str(commandHintList["ScenarioName"])
+
+            # 处理ScenarioId和ScenarioName, 他们总是成对出现
+            if "ScenarioId" in commandHintList:
                 scenarioId = str(commandHintList["ScenarioId"])
+                scenarioName = str(commandHintList["ScenarioName"])
                 if scenarioName.strip().upper() == 'END':
                     self.scenarioName = ""
                     self.scenarioId = ""
                 else:
                     self.scenarioName = scenarioName
                     self.scenarioId = scenarioId
+                rewrotedHint = "REWROTED Hint> --[Scenario:" + scenarioId + ":" + scenarioName + "]"
+                yield {
+                    "type": "parse",
+                    "rawCommand": None,
+                    "formattedCommand": None,
+                    "rewrotedCommand": [rewrotedHint, ],
+                    "script": commandScriptFile
+                }
 
             # 处理各种命令
             if "TESTCLI_DEBUG" in os.environ:
@@ -1072,9 +1078,25 @@ class CmdExecute(object):
                             lastCommandResult["errorCode"] = 1
                         yield commandResult
                 elif parseObject["name"] in ["SPOOL"]:
+                    # 根据语句中的变量或者其他定义信息来重写当前语句
+                    spoolFile = rewriteStatement(
+                        cls=self.cliHandler,
+                        statement=parseObject["file"],
+                        commandScriptFile=commandScriptFile
+                    )
+                    if spoolFile != parseObject["file"]:
+                        # 如果命令被发生了改写，要打印改写记录
+                        rewrotedHint = "REWROTED CMD> _SPOOL " + str(spoolFile)
+                        yield {
+                            "type": "parse",
+                            "rawCommand": None,
+                            "formattedCommand": None,
+                            "rewrotedCommand": [rewrotedHint,],
+                            "script": commandScriptFile
+                        }
                     for commandResult in spool(
                             cls=self.cliHandler,
-                            fileName=parseObject["file"]
+                            fileName=spoolFile
                     ):
                         if commandResult["type"] == "result":
                             lastCommandResult.clear()

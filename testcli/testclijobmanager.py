@@ -106,85 +106,80 @@ class TestCliMeta(object):
             # 初始化Meta数据库表
             m_db_cursor = self.dbConn.cursor()
 
-            m_SQL = "Create Table IF Not Exists TESTCLI_ServerInfo" \
-                    "(" \
-                    "ProcessID       Integer," \
-                    "ParentProcessID Integer," \
-                    "ProcessPath     VARCHAR(500)," \
-                    "StartTime       TimeStamp," \
-                    "EndTime         TimeStamp" \
+            m_SQL = "Create Table IF Not Exists TESTCLI_ServerInfo\n" \
+                    "(\n" \
+                    "    ProcessID       Integer,\n" \
+                    "    ParentProcessID Integer,\n" \
+                    "    ProcessPath     VARCHAR(500),\n" \
+                    "    StartTime       TimeStamp,\n" \
+                    "    EndTime         TimeStamp\n" \
                     ")"
             m_db_cursor.execute(m_SQL)
-            m_SQL = "CREATE TABLE IF Not Exists TESTCLI_JOBS" \
-                    "(" \
-                    "JOB_ID                     Integer," \
-                    "JOB_Name                   VARCHAR(500)," \
-                    "JOB_TAG                    VARCHAR(500)," \
-                    "Starter_Interval           Integer," \
-                    "Starter_Last_Active_Time   TimeStamp," \
-                    "Parallel                   Integer," \
-                    "Loop                       Integer," \
-                    "Started_JOBS               Integer," \
-                    "Failed_JOBS                Integer," \
-                    "Finished_JOBS              Integer," \
-                    "Active_JOBS                Integer," \
-                    "Error_Message              VARCHAR(500)," \
-                    "Script                     VARCHAR(500)," \
-                    "Script_FullName            VARCHAR(500)," \
-                    "Think_Time                 Integer," \
-                    "Timeout                    Integer," \
-                    "Submit_Time                TimeStamp," \
-                    "Start_Time                 TimeStamp," \
-                    "End_Time                   TimeStamp," \
-                    "Blowout_Threshold_Count    Integer," \
-                    "Status                     VARCHAR(500)" \
+            m_SQL = "CREATE TABLE IF Not Exists TESTCLI_JOBS\n" \
+                    "(\n" \
+                    "    JOB_ID                     Integer,\n" \
+                    "    JOB_Name                   VARCHAR(500),\n" \
+                    "    JOB_TAG                    VARCHAR(500),\n" \
+                    "    Starter_Interval           Integer,\n" \
+                    "    Starter_Last_Active_Time   TimeStamp,\n" \
+                    "    Parallel                   Integer,\n" \
+                    "    Loop                       Integer,\n" \
+                    "    Started_JOBS               Integer,\n" \
+                    "    Failed_JOBS                Integer,\n" \
+                    "    Finished_JOBS              Integer,\n" \
+                    "    Active_JOBS                Integer,\n" \
+                    "    Error_Message              VARCHAR(500),\n" \
+                    "    Script                     VARCHAR(500),\n" \
+                    "    Script_FullName            VARCHAR(500),\n" \
+                    "    Think_Time                 Integer,\n" \
+                    "    Timeout                    Integer,\n" \
+                    "    Submit_Time                TimeStamp,\n" \
+                    "    Start_Time                 TimeStamp,\n" \
+                    "    End_Time                   TimeStamp,\n" \
+                    "    Blowout_Threshold_Count    Integer,\n" \
+                    "    Status                     VARCHAR(500)\n" \
                     ")"
             m_db_cursor.execute(m_SQL)
-            m_SQL = "CREATE TABLE IF Not Exists TESTCLI_WORKERS" \
-                    "(" \
-                    "JOB_ID                     Integer," \
-                    "JOB_Name                   VARCHAR(500)," \
-                    "JOB_TAG                    VARCHAR(500)," \
-                    "WorkerHandler_ID           Integer," \
-                    "ProcessID                  Integer," \
-                    "start_time                 BIGINT," \
-                    "end_time                   BIGINT," \
-                    "exit_code                  Integer," \
-                    "Finished_Status            VARCHAR(500)," \
-                    "Timer_Point                VARCHAR(500)" \
+            m_SQL = "CREATE INDEX Idx_TESTCLI_JOBS_ID On TESTCLI_JOBS(JOB_ID)"
+            m_db_cursor.execute(m_SQL)
+            m_SQL = "CREATE INDEX Idx_TESTCLI_JOBS_TAG On TESTCLI_JOBS(JOB_TAG)"
+            m_db_cursor.execute(m_SQL)
+
+            m_SQL = "CREATE TABLE IF Not Exists TESTCLI_WORKERS\n" \
+                    "(\n" \
+                    "    JOB_ID                     Integer,\n" \
+                    "    JOB_Name                   VARCHAR(500),\n" \
+                    "    JOB_TAG                    VARCHAR(500),\n" \
+                    "    WorkerHandler_ID           Integer,\n" \
+                    "    ProcessID                  Integer,\n" \
+                    "    start_time                 BIGINT,\n" \
+                    "    end_time                   BIGINT,\n" \
+                    "    exit_code                  Integer,\n" \
+                    "    Finished_Status            VARCHAR(500),\n" \
+                    "    Timer_Point                VARCHAR(500)\n" \
                     ")"
             m_db_cursor.execute(m_SQL)
-            m_SQL = "CREATE TABLE IF Not Exists TESTCLI_WORKERS_HISTORY" \
-                    "(" \
-                    "JOB_ID                     Integer," \
-                    "JOB_Name                   VARCHAR(500)," \
-                    "JOB_TAG                    VARCHAR(500)," \
-                    "WorkerHandler_ID           Integer," \
-                    "ProcessID                  Integer," \
-                    "start_time                 BIGINT," \
-                    "end_time                   BIGINT," \
-                    "exit_code                  Integer," \
-                    "Finished_Status            VARCHAR(500)," \
-                    "Timer_Point                VARCHAR(500)" \
-                    ")"
+            m_SQL = "CREATE INDEX Idx_TESTCLI_WORKERS_ID On TESTCLI_WORKERS(JOB_ID)"
             m_db_cursor.execute(m_SQL)
-            m_SQL = "CREATE TABLE IF Not Exists TESTCLI_TRANSACTIONS" \
-                    "(" \
-                    "Transaction_Name           VARCHAR(500)," \
-                    "Transaction_StartTime      Integer," \
-                    "Transaction_EndTime        Integer,"\
-                    "Transaction_Status         Integer" \
-                    ")"
+            m_SQL = "CREATE INDEX Idx_TESTCLI_WORKERS_TAG On TESTCLI_WORKERS(JOB_TAG)"
             m_db_cursor.execute(m_SQL)
-            m_SQL = "CREATE TABLE IF Not Exists TESTCLI_TRANSACTIONS_STATISTICS" \
-                    "(" \
-                    "Transaction_Name           VARCHAR(500)," \
-                    "Max_Transaction_Time       Integer," \
-                    "Min_Transaction_Time       Integer," \
-                    "Sum_Transaction_Time       Integer," \
-                    "Transaction_Count          Integer," \
-                    "Transaction_Failed_Count   Integer," \
-                    "Transaction_Items          ARRAY default ARRAY[]" \
+            m_SQL = "CREATE INDEX Idx_TESTCLI_WORKERS_Process On TESTCLI_WORKERS(ProcessID)"
+            m_db_cursor.execute(m_SQL)
+            m_SQL = "CREATE INDEX Idx_TESTCLI_WORKERS_Name On TESTCLI_WORKERS(JOB_Name)"
+            m_db_cursor.execute(m_SQL)
+
+            m_SQL = "CREATE TABLE IF Not Exists TESTCLI_WORKERS_HISTORY\n" \
+                    "(\n" \
+                    "    JOB_ID                     Integer,\n" \
+                    "    JOB_Name                   VARCHAR(500),\n" \
+                    "    JOB_TAG                    VARCHAR(500),\n" \
+                    "    WorkerHandler_ID           Integer,\n" \
+                    "    ProcessID                  Integer,\n" \
+                    "    start_time                 BIGINT,\n" \
+                    "    end_time                   BIGINT,\n" \
+                    "    exit_code                  Integer,\n" \
+                    "    Finished_Status            VARCHAR(500),\n" \
+                    "    Timer_Point                VARCHAR(500)\n" \
                     ")"
             m_db_cursor.execute(m_SQL)
             m_db_cursor.close()
@@ -785,11 +780,11 @@ class JOBManager(object):
     def getJobByName(self, jobName):
         # 返回指定的Job信息，如果找不到，返回None
         m_SQL = "SELECT Job_ID,Job_Name,Starter_Interval, " \
-                "Starter_Last_Active_Time, Parallel, Loop, " \
-                "Started_JOBS, Failed_JOBS,Finished_JOBS,Active_JOBS,Error_Message, " \
-                "Script, Script_FullName, Think_Time, Timeout, " \
-                "Submit_Time, Start_Time, End_Time, " \
-                "Blowout_Threshold_Count, Status, JOB_TAG " \
+                "       Starter_Last_Active_Time, Parallel, Loop, " \
+                "       Started_JOBS, Failed_JOBS,Finished_JOBS,Active_JOBS,Error_Message, " \
+                "       Script, Script_FullName, Think_Time, Timeout, " \
+                "       Submit_Time, Start_Time, End_Time, " \
+                "       Blowout_Threshold_Count, Status, JOB_TAG " \
                 "FROM TESTCLI_JOBS WHERE JOB_NAME = '" + str(jobName) + "'"
         m_db_cursor = self.MetaConn.cursor()
         m_db_cursor.execute(m_SQL)
