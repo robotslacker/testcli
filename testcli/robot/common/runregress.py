@@ -114,29 +114,28 @@ class Regress(object):
             self.tests.append(test)
 
     def run(self):
-        self.logger.info("自动化回归测试开始 .....")
+        self.logger.info("Regress start .....")
 
         # 设置超时时间
         if self.scriptTimeout != -1:
-            self.logger.info("全局超时时间设置 :【" + str(self.scriptTimeout) + "】秒.")
+            self.logger.info("Global timeout :[" + str(self.scriptTimeout) + "] seconds.")
         else:
-            self.logger.info("全局超时时间设置 :【不限制】")
+            self.logger.info("Global timeout : [no limit].")
         if self.workerTimeout != -1:
-            self.logger.info("脚本超时时间设置 :【" + str(self.workerTimeout) + "】秒.")
+            self.logger.info("Task timeout :[" + str(self.workerTimeout) + "] seconds.")
         else:
-            self.logger.info("脚本超时时间设置 :【不限制】")
-        self.logger.info("最大进程并发设置 :【" + str(self.maxProcess) + "】路.")
+            self.logger.info("Task timeout : [no limit].")
 
         # 系统最大并发进程数
         if self.maxProcess is None:
             self.maxProcess = DEFAULT_Max_Process
-        self.logger.info("系统并发进程数: 【" + str(self.maxProcess) + "】")
+        self.logger.info("Test parallelism :[" + str(self.maxProcess) + "].")
 
         # 检索需要处理的测试文件
         # 第一次检索记录所有可能的文件
         robotFileList = []
         if self.jobList is not None:
-            self.logger.info("任务列表: ")
+            self.logger.info("Task list: ")
             for job in str(self.jobList).split(","):
                 self.logger.info(">>  " + job)
             # Job_List分隔符可以是换行符，也可以是逗号
@@ -146,30 +145,17 @@ class Regress(object):
                 if len(jobdir) == 0:
                     continue
                 if os.path.isfile(str(jobdir)):
-                    self.logger.info("检查文件有效性 : 【" + str(jobdir) + "】")
+                    self.logger.info("Checking file: [" + str(jobdir) + "].")
                     if str(jobdir).endswith(".robot"):
                         robotFileList.append(str(os.path.abspath(jobdir)))
                 elif os.path.isdir(str(jobdir)):
-                    self.logger.info("检查目录（包含子目录）有效性: 【" + str(jobdir) + "】")
+                    self.logger.info("Checking directory: [" + str(jobdir) + "].")
                     for root, dirs, files in os.walk(str(jobdir)):
                         for f in files:
                             if f.endswith(".robot"):
                                 robotFileList.append(os.path.abspath(
                                     os.path.join(root, str(f))))
-                elif os.path.isfile(os.path.join(os.environ["WORKSPACE"], str(jobdir))):
-                    self.logger.info("检查文件有效性 : 【" + os.path.join(os.environ["WORKSPACE"], str(jobdir)) + "】")
-                    if str(jobdir).endswith(".robot"):
-                        robotFileList.append(str(os.path.abspath(os.path.join(os.environ["WORKSPACE"], str(jobdir)))))
-                elif os.path.isdir(os.path.join(os.environ["WORKSPACE"], str(jobdir))):
-                    self.logger.info("检查目录（包含子目录）有效性: 【" +
-                                     os.path.join(os.environ["WORKSPACE"], str(jobdir)) + "】")
-                    for root, dirs, files in os.walk(os.path.join(os.environ["WORKSPACE"], str(jobdir))):
-                        for f in files:
-                            if f.endswith(".robot"):
-                                robotFileList.append(os.path.abspath(
-                                    os.path.join(root, str(f))))
                 else:
-                    self.logger.error(os.path.join(os.environ["WORKSPACE"], str(jobdir)))
                     self.logger.warning("[" + jobdir + "] is not valid file or directory. Ignore it.")
 
         # 记录所有的不重复的优先级信息, 并添加任务清单
@@ -232,12 +218,12 @@ class Regress(object):
                 "runLevel": runLevel,
                 "workingDirectory": workingFolderName
             })
-            self.logger.info("测试脚本 【" + str(robotFile) + "】 " +
-                             "中包含了【" + str(len(testCaseList.tests)) + "】个有效测试用例.")
+            self.logger.info("Task [" + str(robotFile) + "] " +
+                             "include [" + str(len(testCaseList.tests)) + "] valid test cases.")
 
         # 清理工作目录
         workDirectory = os.environ["T_WORK"]
-        self.logger.info("将清理工作目录 【" + workDirectory + "】， 该目录下所有文件都将会被清空...")
+        self.logger.info("WILL CLEAN ALL FILES UNDER DIRECTORY [" + workDirectory + "] !!!")
         if os.path.exists(workDirectory):
             files = os.listdir(workDirectory)
             for file in files:
@@ -333,17 +319,16 @@ class Regress(object):
             """ check_timeout """
 
         # 循环处理任务
-        self.logger.info("共有 【" + str(len(self.taskList)) + "】 个未完成任务在任务清单中 ...")
+        self.logger.info("Totally [" + str(len(self.taskList)) + "] in task TODO list ...")
         testStatistics = multiprocessing.Manager().list()
         lastPrintStatisticsTime = time.time()
         printStatisticsInterval = 120
-        self.logger.info("runLevels = [" + str(runLevels) + "]")
         runLevels.sort()
         if len(runLevels) != 1:
-            self.logger.info("系统定义了多个【" + str(len(runLevels)) + "】运行级别. 将按照运行级别运行测试用例.")
+            self.logger.info("You have defined multi runLevel [" + str(runLevels) + "], will run order by runlevel.")
         taskPos = 1
         for runLevel in runLevels:
-            self.logger.info("处理运行级别为【" + str(runLevel) + "】的测试...")
+            self.logger.info("Process tasks in runlevel [" + str(runLevel) + "] ...")
             for nPos in range(0, len(self.taskList)):
                 if self.taskList[nPos]["runLevel"] != runLevel:
                     continue
@@ -366,7 +351,7 @@ class Regress(object):
                     else:
                         break
 
-                self.logger.info("开始执行Robot测试 【" + str(taskPos) + "/" + str(len(self.taskList)) + "】 "
+                self.logger.info("Begin to execute robot test [" + str(taskPos) + "/" + str(len(self.taskList)) + "] "
                                  + self.taskList[nPos]["robotfile"] + " ...")
                 taskPos = taskPos + 1
                 processManagerContext = multiprocessing.get_context("spawn")
@@ -406,10 +391,10 @@ class Regress(object):
                     time.sleep(3)
                     # 检查是否有超时的进程，如果有，则处理
                     check_timeout()
-            self.logger.info("当前运行级别的所有测试均已经完成...")
+            self.logger.info("All tasks in run level [" + str(runLevel) + "] have completed.")
             print_statistics(testStatistics)
 
-        self.logger.info("所有测试任务已经完成.")
+        self.logger.info("All tasks have completed.")
         print_statistics(testStatistics)
 
         # 建立报告的保存目录

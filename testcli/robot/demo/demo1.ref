@@ -1,0 +1,12 @@
+SQL> _start demo1.sql
+SQL> _connect /mem
+Database connected.
+SQL> select 1+2 from dual;
++--------+---+
+|   ##   | 3 |
++--------+---+
+|      1 | 3 |
++--------+---+
+1 row selected.
+SQL> _exit
+Disconnected.

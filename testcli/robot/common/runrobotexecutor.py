@@ -178,7 +178,7 @@ def runRobotExecutor(args):
         workingDirectory = args["workingDirectory"]
 
         robotOptions = args["robotOptions"]
-        logger.info("开始执行测试 【" + robotFile + "】...")
+        logger.info("Begin to execute [" + robotFile + "] ...")
 
         # 准备一个新的工作目录，用来存放Case的结果，目录用case的名称加上6位随机数字
         # 6位随机数字的原因是有的Case可能会同名
@@ -212,8 +212,9 @@ def runRobotExecutor(args):
         # 记录当前的文件目录位置，切换工作目录到robot文件所在的目录
         oldDirectory = os.getcwd()
         os.chdir(os.path.dirname(robotFile))
-        os.environ['T_WORK'] = os.path.join(
-            os.getenv("T_WORK"), workingDirectory)
+
+        # 重置T_WORK到子目录下
+        os.environ['T_WORK'] = os.path.join(os.getenv("T_WORK"), workingDirectory)
 
         # 生成测试运行结果，根据Robot的解析情况，一律标记为NOT_STARTED
         # 随后会被正式的测试结果更新
@@ -263,8 +264,7 @@ def runRobotExecutor(args):
         logger.info("结束执行测试 [" + robotFile + "]. 返回代码 =[" + str(rc) + "]")
 
         # 根据XML文件生成一个测试数据的汇总JSON信息
-        xmlResultFile = os.path.abspath(os.path.join(
-            os.environ['T_WORK'], workingDirectory + ".xml"))
+        xmlResultFile = os.path.abspath(os.path.join(os.environ['T_WORK'], workingDirectory + ".xml"))
         try:
             ExecutionResult(xmlResultFile).suite
         except DataError:

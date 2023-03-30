@@ -243,15 +243,15 @@ class POSIXCompare:
         return compare_result, m_CompareDiffResult
 
     def compare_text_files(self, file1, file2,
-                           skipLines=None,
-                           maskLines=None,
-                           ignoreEmptyLine=False,
-                           CompareWithMask=None,
-                           CompareIgnoreCase=False,
-                           CompareIgnoreTailOrHeadBlank=False,
-                           CompareWorkEncoding='UTF-8',
-                           CompareRefEncoding='UTF-8',
-                           compareAlgorithm='MYERS'):
+                           skipLines: list = None,
+                           maskLines: dict = None,
+                           ignoreEmptyLine: bool = False,
+                           CompareWithMask: bool = True,
+                           CompareIgnoreCase: bool = False,
+                           CompareIgnoreTailOrHeadBlank: bool = False,
+                           CompareWorkEncoding: str = 'UTF-8',
+                           CompareRefEncoding: str = 'UTF-8',
+                           compareAlgorithm: str = 'MYERS'):
         if not os.path.isfile(file1):
             raise DiffException('ERROR: File %s does not exist!' % file1)
         if not os.path.isfile(file2):

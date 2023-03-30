@@ -304,7 +304,12 @@ class SQLVisitor(SQLParserVisitor):
     def visitConnectPassword(self, ctx: SQLParser.ConnectPasswordContext):
         parsedObject = {}
         if ctx.CONNECT_STRING() is not None:
-            parsedObject.update({'password': ctx.CONNECT_STRING().getText()})
+            password = str(ctx.CONNECT_STRING().getText()).strip()
+            if password.startswith('"') and password.endswith('"'):
+                password = password[1:-1]
+            elif password.startswith("'") and password.endswith("'"):
+                password = password[1:-1]
+            parsedObject.update({'password': password})
 
         # 获取错误代码
         errorCode = 0

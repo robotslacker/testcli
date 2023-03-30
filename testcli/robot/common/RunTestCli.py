@@ -145,15 +145,11 @@ class RunTestCli(object):
             # ExtendLog文件默认存放在log文件目录下
             if self.__enableExtendLog:
                 if "T_WORK" in os.environ:
-                    m_szPerfOutPutFileName = os.path.join(
-                        os.environ["T_WORK"],
-                        os.path.basename(p_szScript_FileName).split('.')[0] + ".xdb")
-                    xlogFullFileName = os.path.join(os.environ["T_WORK"], m_szPerfOutPutFileName)
+                    xlogFileName = os.path.basename(p_szScript_FileName).split('.')[0] + ".xdb"
+                    xlogFullFileName = os.path.join(os.environ["T_WORK"], xlogFileName)
                 else:
-                    m_szPerfOutPutFileName = os.path.join(
-                        os.getcwd(),
-                        os.path.basename(p_szScript_FileName).split('.')[0] + ".xdb")
-                    xlogFullFileName = os.path.join(os.getcwd(), m_szPerfOutPutFileName)
+                    xlogFileName = os.path.basename(p_szScript_FileName).split('.')[0] + ".xdb"
+                    xlogFullFileName = os.path.join(os.getcwd(), xlogFileName)
             else:
                 xlogFullFileName = None
 
@@ -204,7 +200,8 @@ class RunTestCli(object):
 
             # 如果存在之前的扩展日志，则先删除文件
             if os.path.exists(xlogFullFileName):
-                os.remove(xlogFullFileName)
+                os.unlink(xlogFullFileName)
+
             # 运行TestCli
             cli = TestCli(logon=logonString,
                           script=scriptFileName,

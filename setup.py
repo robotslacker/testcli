@@ -62,7 +62,8 @@ setup(
         'commands/*',
         'plugin/*',
         'test/*',
-        'docs/*'
+        'docs/*',
+        "robot/*", "robot/*/*", "robot/*/*", "robot/*/*/*", "robot/*/*/*/*",
     ]},
     python_requires='>=3.6',
     entry_points={

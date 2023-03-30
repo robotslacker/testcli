@@ -20,7 +20,6 @@ from prompt_toolkit.formatted_text import HTML
 
 from .cmdexecute import CmdExecute
 from .cmdmapping import CmdMapping
-from .hdfswrapper import HDFSWrapper
 from .testcliexception import TestCliException
 from .testclijobmanager import TestCliMeta
 from .testclijobmanager import JOBManager
@@ -88,7 +87,6 @@ class TestCli(object):
         self.cmdExecuteHandler = CmdExecute()           # 函数句柄，具体来执行语句
 
         self.testOptions = TestOptions()                # 程序运行中各种参数
-        self.HdfsHandler = HDFSWrapper()                # HDFS文件操作
         self.JobHandler = JOBManager()                  # 并发任务管理器
         self.MetaHandler = TestCliMeta()                # SQLCli元数据
         self.SpoolFileHandler = []                      # Spool文件句柄, 是一个数组，可能发生嵌套
@@ -760,6 +758,11 @@ class TestCli(object):
             self.logfile.flush()
             self.logfile.close()
             self.logfile = None
+
+        # 关闭扩展日志的句柄
+        if self.xlogFileHandle is not None:
+            self.xlogFileHandle.close()
+            self.xlogFileHandle = None
 
         # 还原进程标题
         setproctitle.setproctitle(cliProcessTitleBak)

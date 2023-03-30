@@ -45,6 +45,63 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
     def test_SQLAnalyze_Connect(self):
+        # connect with server url
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect user/password@jdbc:db:tcp://10.15.1.19:6231/xdb")
+        self.assertTrue(isFinished)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(
+            {
+                'driver': 'jdbc',
+                'driverSchema': 'db',
+                'driverType': 'tcp',
+                'host': '10.15.1.19',
+                'name': 'CONNECT',
+                'password': 'password',
+                'port': 6231,
+                'service': 'xdb',
+                'username': 'user'
+            }, ret_CommandSplitResult)
+
+        # connect with server url and quoted password
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect user/\"password\"@jdbc:db:tcp://10.15.1.19:6231/xdb")
+        self.assertTrue(isFinished)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(
+            {
+                'driver': 'jdbc',
+                'driverSchema': 'db',
+                'driverType': 'tcp',
+                'host': '10.15.1.19',
+                'name': 'CONNECT',
+                'password': 'password',
+                'port': 6231,
+                'service': 'xdb',
+                'username': 'user'
+            }, ret_CommandSplitResult)
+
+        # connect with server url and quoted password
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_connect user/'password'@jdbc:db:tcp://10.15.1.19:6231/xdb")
+        self.assertTrue(isFinished)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(
+            {
+                'driver': 'jdbc',
+                'driverSchema': 'db',
+                'driverType': 'tcp',
+                'host': '10.15.1.19',
+                'name': 'CONNECT',
+                'password': 'password',
+                'port': 6231,
+                'service': 'xdb',
+                'username': 'user'
+            }, ret_CommandSplitResult)
+
         # connect with local h2 mem
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_connect SYSDBA/Dameng123:62310jdbc:dm://10.15.1.19:6231/")
@@ -176,6 +233,7 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 
+        # Connect with connectProperties
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_connect aa/bb@jdbc:dm://10.10.10.10:6231?autocommit=false&dd=yy")
         self.assertTrue(isFinished)
