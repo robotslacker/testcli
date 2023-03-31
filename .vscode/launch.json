@@ -7,10 +7,16 @@
             "module": "testcli.cliconsole"
         },
         {
-            "name": "运行testrobot主程序",
+            "name": "运行testclirobot主程序",
             "type": "python",
             "request": "launch",
-            "module": "testrobot.runfarm"
+            "module": "testcli.clirobot"
+        },
+        {
+            "name": "运行testclicomp主程序",
+            "type": "python",
+            "request": "launch",
+            "module": "testcli.clicomp"
         }
     ]
 }
