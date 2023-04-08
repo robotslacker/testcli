@@ -1044,6 +1044,11 @@ class SQLVisitor(SQLParserVisitor):
             pluginFile = str((ctx.LOAD_EXPRESSION()[0].getText())).strip()
             pluginFile = pluginFile.strip('"').strip("'")
             parsedObject.update({"pluginFile": pluginFile})
+        if ctx.LOAD_SCRIPT() is not None:
+            parsedObject.update({"option": "SCRIPT"})
+            pluginFile = str((ctx.LOAD_EXPRESSION()[0].getText())).strip()
+            pluginFile = pluginFile.strip('"').strip("'")
+            parsedObject.update({"scriptFile": pluginFile})
         if ctx.LOAD_MAP() is not None:
             parsedObject.update({"option": "MAP"})
             mapFile = str((ctx.LOAD_EXPRESSION()[0].getText())).strip()
@@ -1560,6 +1565,39 @@ class SQLVisitor(SQLParserVisitor):
             parsedObject.update({"taskName": taskName})
         if ctx.MONITOR_LIST() is not None:
             parsedObject.update({"action": "listTask"})
+
+        # 获取错误代码
+        errorCode = 0
+        errorMsg = None
+        if ctx.exception is not None:
+            errorCode = -1
+            errorMsg = ctx.exception.message
+
+        self.parsedObject = parsedObject
+        self.errorCode = errorCode
+        self.errorMsg = errorMsg
+
+    def visitPlugin(self, ctx: SQLParser.PluginContext):
+        parsedObject = {'name': 'PLUGIN'}
+
+        pluginName = str(ctx.PLUGIN().getText()).strip()
+        if pluginName.startswith("_"):
+            pluginName = pluginName[1:]
+        parsedObject.update({"pluginName": pluginName})
+
+        pluginArgs = []
+        if ctx.PLUGIN_EXPRESSION() is not None:
+            for expression in ctx.PLUGIN_EXPRESSION():
+                if expression is not None:
+                    arg = str(expression.getText())
+                    if arg.startswith('"') and arg.endswith('"'):
+                        arg = arg[1:-1]
+                    elif arg.startswith("'") and arg.endswith("'"):
+                        arg = arg[1:-1]
+                    pluginArgs.append(arg)
+        parsedObject.update(
+            {"pluginArgs": pluginArgs}
+        )
 
         # 获取错误代码
         errorCode = 0

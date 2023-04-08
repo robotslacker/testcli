@@ -224,5 +224,10 @@ class APIParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by APIParser#plugin.
+    def visitPlugin(self, ctx:APIParser.PluginContext):
+        return self.visitChildren(ctx)
+
+
 
 del APIParser

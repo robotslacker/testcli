@@ -620,7 +620,7 @@ SQL> _help compare
     |     16 | OUTPUT_SORT_ARRAY    | ON                   | Print Array output with sort order. ON|OFF |
     |     17 | OUTPUT_PREFIX        |                      | Output Prefix                              |
     |     18 | OUTPUT_ERROR_PREFIX  |                      | Error Output Prefix                        |
-    |     19 | OUTPUT_FORMAT        | TAB                  | TAB|CSV|LEGACY                             |
+    |     19 | OUTPUT_FORMAT        | TAB                  | TAB|CSV                                    |
     |     20 | OUTPUT_CSV_HEADER    | OFF                  | ON|OFF                                     |
     |     21 | OUTPUT_CSV_DELIMITER | ,                    |                                            |
     |     22 | OUTPUT_CSV_QUOTECHAR |                      |                                            |
@@ -777,22 +777,11 @@ WHENEVER_ERROR不支持用SET命令来调整，如果需要调整，需要使用
 &emsp; 结果集显示格式， 默认是TAB
 &emsp; 目前支持的选项有：
 ```
-      LEGACY    |     显示格式为表格的格式(第三方工具提供，暂时保留，来作为兼容性) 
       CSV       |     显示格式为CSV文件的格式
       TAB       |     显示格式为表格的格式
 ```
 &emsp; 以下是一个例子：
 ```
-       SQL> _set output_format legacy
-       SQL> select * from test_tab;
-       +----+----------+
-       | ID | COL2     |
-       +----+----------+
-       | 1  | XYXYXYXY |
-       | 1  | XYXYXYXY |
-       +----+----------+
-       2 rows selected.
-      
        SQL> _set output_format csv
        SQL> select * from test_tab;
        "ID","COL2"
@@ -810,9 +799,6 @@ WHENEVER_ERROR不支持用SET命令来调整，如果需要调整，需要使用
        +--------+----+----------+
        2 rows selected.
 ```
-TAB模式和LEGACY模式的区别：  
-1. TAB模式会在每一行的输出前显示行号，LEGACY模式不会
-2. TAB模式下字符串默认输出是右对齐，整形模式输出是左对齐； LEGACY模式全部是右对齐；
 
 #### 控制参数解释-LOB_LENGTH
 &emsp; 控制LOB字段的输出长度，默认是20  
@@ -1627,7 +1613,7 @@ _assert {% end - start > 300 %}
 ```
 上述的语句中两次用python内嵌脚本获取了系统当前的时间，并最后用时间差判断这一段脚本执行是否超过了300秒。  
 理论上，我们用这种内嵌脚本的方式支持所有可能的python语法。  
-但是在实际的应用中，如果业务的逻辑比较复杂，建议将业务逻辑代码写成独立的Python文件，并通过插件（_LOAD PLUGIN)的方式来导入。  
+但是在实际的应用中，如果业务的逻辑比较复杂，建议将业务逻辑代码写成独立的Python文件，并通过脚本（_LOAD SCRIPT)或插件(_LOAD PLUGIN)的方式来导入。  
 通过插件导入的方式，将使得程序变得更容易复用，而且可读性有所提高。  
 
 需要注意的是： 在一个测试脚本运行的过程中，所有的python内嵌语法都拥有共同的变量空间。   
@@ -1867,16 +1853,16 @@ Disconnected.
 如果一个文件规则或者替换规则多次出现定义，则会发生多次匹配的现象。  
 
 *** 
-### 加载附加的外挂插件
-为了让测试框架能够支持更多的扩展，testcli支持你将自己写好的Python程序作为一个插件的方式放入到系统中。  
+### 加载附加的外挂脚本
+为了让测试框架能够支持更多的扩展，testcli支持你将自己写好的Python程序作为一个脚本的方式放入到系统中。脚本中可以包含自己的函数和模块。  
 虽然这是一个可能解决问题的近乎外能良药，但是这么做会导致一定的测试脚本可读性下降。需要你在使用的时候小心谨慎。  
 ```
-   _LOAD PLUGIN <插件文件的位置>   
+   _LOAD SCRIPT <脚本文件的位置>   
 ```
-这里的插件文件是一个有效的Python文件，python文件可能包含有类的定义，全局函数的定义等等。  
-以下是一个简单插件文件的例子：  
+这里的脚本文件是一个有效的Python文件，python文件可能包含有类的定义，全局函数的定义等等。  
+以下是一个简单脚本文件的例子：  
 ```
-(base) C:\>type testplugin.py
+(base) C:\>type testscript.py
 class cc:
     def welcome(self, message: str):
         if self:
@@ -1887,14 +1873,14 @@ class cc:
 def fun(b):
     return "b" + str(b)
 ```
-通过在testcli中执行LOAD PLUGIN命令可以完成对插件文件的加载
+通过在testcli中执行LOAD SCRIPT命令可以完成对插件文件的加载
 ```
 (base) C:\>testcli
 TestCli Release 0.0.8
-SQL> _load plugin testplugin.py
-Plugin module [cc] loaded successful.
-Plugin function [fun] loaded successful.
-Plugin file loaded successful.
+SQL> _load script testscript.py
+Script module [cc] loaded successful.
+Script function [fun] loaded successful.
+Script file loaded successful.
 ```
 加载成功后，我们就可以直接在测试脚本中使用插件文件中定义的内容，以下是一个例子：
 ```
@@ -1936,6 +1922,103 @@ SQL> _exit
 ```
 具体对于SessionConext的用法解释请参考文档的其他章节。  
 上面的例子中，我们在内置脚本中执行了插件中定义的类和方法，并完成了数据的处理和返回。  
+
+*** 
+### 加载附加的外挂脚本
+为了让测试框架能够支持更多的扩展，testcli支持你将自己来实现相关的命令。前提是你遵循相关的写法规则。  
+```
+   _LOAD PLUGIN <插件文件的位置>   
+```
+
+这里的插件文件是一个有效的Python文件，包含特定的变量和函数入口。  
+以下是一个简单插件文件的例子（石头，剪刀，布。 我和电脑玩了几次，发现我总是输掉。）：  
+```
+(base) C:\>type testplugin.py
+# -*- coding: utf-8 -*-
+import random
+
+COMMAND = "GAME"
+
+def cmdEntry(cmdArgs: list):
+    if len(cmdArgs) != 1:
+        # 至少有一个选择，剪刀，石头，布
+        yield {
+            "type": "error",
+            "message": "Please enter your choise [rock|paper|scissor].",
+        }
+        return
+
+    computer = random.choice(["rock", "paper", "scissor"])
+    user = str(cmdArgs[0])
+
+    # 必须是剪刀，石头，布的一个
+    if user.lower() not in ["rock", "paper", "scissor"]:
+        yield {
+            "type": "error",
+            "message": "Please enter correct choise [rock|paper|scissor].",
+        }
+        return
+
+    message = "opponent choice : {}".format(computer) + "\n"
+    if computer == user:
+        message = message + "Tie!"
+    elif computer == "paper" and user == "scissor":
+        message = message + "{0} cuts {1}. Congrats You win!".format(user, computer)
+    elif computer == "paper" and user == "rock":
+        message = message + "{1} covers {0}. Oops You lost!".format(user, computer)
+    elif computer == "scissor" and user == "paper":
+        message = message + "{1} cuts {0}. Oops You lost!".format(user, computer)
+    elif computer == "scissor" and user == "rock":
+        message = message + "{0} smashes {1}. Congrats You win!".format(user, computer)
+    elif computer == "rock" and user == "scissor":
+        message = message + "{1} smashes {0}. Oops You lost!".format(user, computer)
+    elif computer == "rock" and user == "paper":
+        message = message + "{0} covers {1}. Congrats You win!".format(user, computer)
+    yield {
+        "type": "result",
+        "title": None,
+        "rows": None,
+        "headers": None,
+        "columnTypes": None,
+        "status": message
+    }
+
+```
+通过在testcli中执行LOAD PLUGIN命令可以完成对插件文件的加载和运行。
+```
+(base) C:\>testcli
+TestCli Release 0.0.8
+Plugin [GAME] loaded successful.
+SQL> _GAME rock;
+opponent choice : scissor
+rock smashes scissor. Congrats You win!
+```
+
+扩展文件书写要求：
+* 插件的名称： 必须在插件文件中出现COMMAND的字符串变量定义，且字符串内容和内置关键字不能冲突。
+* 插件的命令执行入口： 必须在插件文件中定义cmdEntry函数，其接受List类型的参数列表，且输出结果
+* 对于正确的结果，输出格式要求为：
+```
+    {
+        "type":        "result"
+        "title":        输出内容的标题信息,
+        "rows":         结果数据集，用一个二维的元组信息表示，((1,2),(3,4),(5,6),...)
+                        每一行数据被记录在一个元组中，所有行的记录再被记录到整个的元组中
+        "headers":      表头信息
+                        数组。其维数一定和列数相同。 如["COL1", "COL2"]
+        "columnTypes":  结果字段类型
+                        数组。其维数一定和列数相同。 如["VARCHAR", "INTEGER"]
+                        具体列表参考： sqlclijdbc.py中的_DEFAULT_CONVERTERS中信息
+        "status":       输出的后提示信息，字符串格式
+    }
+```
+* 对于错误的结果，输出格式要求为：
+```
+    {
+        "type":     "error"
+        "message":  错误消息
+    }
+```
 
 *** 
 ### 加载数据库驱动
@@ -2614,14 +2697,36 @@ TestCli
 #### 线程安全性
 目前程序在设计上，是考虑到了线程安全性的。但未充分测试这部分。
 
-#### 从源代码中启动应用程序
+#### 从源代码中启动TestCli控制台
 ```
     # 进入到工程目录
     cd testcli
-    > python -m testcli.main
+    > python -m testcli.cliconsole
+```
+
+#### 从源代码中启动TestCli的文件比对功能
+```
+    # 进入到工程目录
+    cd testcli
+    > python -m testcli.clicomp
+```
+
+#### 从源代码中启动TestCli的Robot测试功能
+```
+    # 进入到工程目录
+    cd testcli
+    > python -m testcli.clirobot
 ```
 
 #### 程序调试
+从外部启用DEBUG
+```
+   export TESTCLI_DEBUG=1
+   testcli --....
+
+```
+
+从脚本内部启用DEBUG
 ```
    SQL> _set DEBUG ON
    打开DEBUG后，程序将会输出大量的调试信息，以及错误发生时的堆栈信息

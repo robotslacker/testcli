@@ -1,4 +1,4 @@
-_load plugin testplugin.py;
+_load script testloadscript.py;
 _connect /mem
 create table aaa (id int);
 insert into aaa values(10);

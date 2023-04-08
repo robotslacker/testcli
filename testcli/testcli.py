@@ -83,6 +83,7 @@ class TestCli(object):
         self.db_saved_conn = {}                         # 数据库Session对象，可能存在多个Session，并存在切换需要
         self.api_saved_conn = {}                        # HTTP请求Session对象，可能存在多个Session，并存在切换需要
 
+        self.plugin = {}                                # 程序的外挂插件
         self.cmdMappingHandler = CmdMapping()           # 函数句柄，处理SQLMapping信息
         self.cmdExecuteHandler = CmdExecute()           # 函数句柄，具体来执行语句
 
@@ -530,6 +531,11 @@ class TestCli(object):
 
         # 执行需要处理的语句
         try:
+            """
+                显示输出结果
+                
+                根据OFLAG决定哪些内容需要打印到哪里去，而不是全部打印
+            """
             def show_result(p_result):
                 # 输出显示结果
                 if "type" in p_result.keys():
@@ -580,12 +586,16 @@ class TestCli(object):
                         # headers 包含原有语句的列名
                         # cur 是语句的执行结果
                         # output_format 输出格式
-                        #   ascii              默认，即表格格式(第三方工具实现，暂时保留以避免不兼容现象)
-                        #   csv                csv格式显示
-                        #   tab                表格形式（用format_output_tab自己编写)
+                        #   csv                csv格式显示，自己实现
+                        #   tab                默认，表格形式（用format_output_tab自己编写)
+                        if "rowPos" in p_result.keys():
+                            rowPos = p_result["rowPos"]
+                        else:
+                            rowPos = 0
                         formatted = self.format_output(
                             title, cur, headers, columnTypes,
                             self.testOptions.get("OUTPUT_FORMAT").lower(),
+                            rowPos,
                             max_width
                         )
 
@@ -622,6 +632,7 @@ class TestCli(object):
                         statement=text,
                         commandScriptFile="Console",
                         nameSpace=self.nameSpace):
+
                 # 打印结果
                 show_result(result)
 
@@ -895,81 +906,7 @@ class TestCli(object):
                     m_row = m_row + m_csv_delimiter
             yield str(m_row)
 
-    def format_output_leagcy(self, headers, cur):
-        # 这个函数完全是为了兼容旧的tab格式
-        def wide_chars(s):
-            # 判断字符串中包含的中文字符数量
-            if isinstance(s, str):
-                # W  宽字符
-                # F  全角字符
-                # H  半角字符
-                # Na  窄字符
-                # A   不明确的
-                # N   正常字符
-                return sum(unicodedata.east_asian_width(x) in ['W', 'F'] for x in s)
-            else:
-                return 0
-
-        if self:
-            pass
-        # 将屏幕输出按照表格进行输出
-        # 记录每一列的最大显示长度
-        m_ColumnLength = []
-        # 首先将表头的字段长度记录其中
-        for m_Header in headers:
-            m_ColumnLength.append(len(m_Header) + wide_chars(m_Header))
-        # 查找列的最大字段长度
-        for m_Row in cur:
-            for pos in range(0, len(m_Row)):
-                if m_Row[pos] is None:
-                    # 空值打印为<null>
-                    if m_ColumnLength[pos] < len('<null>'):
-                        m_ColumnLength[pos] = len('<null>')
-                elif isinstance(m_Row[pos], str):
-                    m_PrintValue = m_Row[pos]
-                    m_PrintValue = m_PrintValue.replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
-                    if len(m_PrintValue) + wide_chars(m_PrintValue) > m_ColumnLength[pos]:
-                        # 为了保持长度一致，长度计算的时候扣掉中文的显示长度
-                        m_ColumnLength[pos] = len(m_PrintValue) + wide_chars(m_PrintValue)
-                else:
-                    if len(str(m_Row[pos])) + wide_chars(m_Row[pos]) > m_ColumnLength[pos]:
-                        m_ColumnLength[pos] = len(str(m_Row[pos])) + wide_chars(m_Row[pos])
-        # 打印表格上边框
-        # 计算表格输出的长度, 开头有一个竖线，随后每个字段内容前有一个空格，后有一个空格加上竖线
-        # 1 + [（字段长度+3） *]
-        m_TableBoxLine = '+'
-        for m_Length in m_ColumnLength:
-            m_TableBoxLine = m_TableBoxLine + (m_Length + 2) * '-' + '+'
-        yield m_TableBoxLine
-        # 打印表头以及表头下面的分割线
-        m_TableContentLine = '|'
-        for pos in range(0, len(headers)):
-            m_TableContentLine = m_TableContentLine + ' ' + \
-                                 str(headers[pos]).ljust(m_ColumnLength[pos] - wide_chars(headers[pos])) + ' |'
-        yield m_TableContentLine
-        yield m_TableBoxLine
-        # 打印字段内容
-        for m_Row in cur:
-            m_output = [m_Row]
-            for m_iter in m_output:
-                m_TableContentLine = '|'
-                for pos in range(0, len(m_iter)):
-                    if m_iter[pos] is None:
-                        m_PrintValue = '<null>'
-                    elif isinstance(m_iter[pos], str):
-                        m_PrintValue = m_Row[pos]
-                        m_PrintValue = m_PrintValue.replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
-                    else:
-                        m_PrintValue = str(m_iter[pos])
-                    # 所有内容字符串左对齐
-                    m_TableContentLine = \
-                        m_TableContentLine + ' ' + \
-                        m_PrintValue.ljust(m_ColumnLength[pos] - wide_chars(m_PrintValue)) + ' |'
-                yield m_TableContentLine
-        # 打印表格下边框
-        yield m_TableBoxLine
-
-    def format_output_tab(self, headers, columnTypes, cur):
+    def format_output_tab(self, headers, columnTypes, cur, startIter: int):
         def wide_chars(s):
             # 判断字符串中包含的中文字符数量
             if isinstance(s, str):
@@ -1013,6 +950,7 @@ class TestCli(object):
         for m_Length in m_ColumnLength:
             m_TableBoxLine = m_TableBoxLine + (m_Length + 2) * '-' + '+'
         yield m_TableBoxLine
+
         # 打印表头以及表头下面的分割线
         m_TableContentLine = '|   ##   |'
         for pos in range(0, len(headers)):
@@ -1022,7 +960,7 @@ class TestCli(object):
         yield m_TableContentLine
         yield m_TableBoxLine
         # 打印字段内容
-        m_RowNo = 0
+        m_RowNo = startIter
         for m_Row in cur:
             m_RowNo = m_RowNo + 1
             # 首先计算改行应该打印的高度（行中的内容可能右换行符号）
@@ -1066,7 +1004,8 @@ class TestCli(object):
                         m_PrintValue = str(m_iter[pos])
                     if columnTypes is not None:
                         if columnTypes[pos] in \
-                                ("VARCHAR", "LONGVARCHAR", "CHAR", "CLOB", "NCLOB", "STRUCT", "ARRAY", "DATE"):
+                                ("NVARCHAR", "NCHAR", "VARCHAR", "LONGVARCHAR", "CHAR",
+                                 "CLOB", "NCLOB", "STRUCT", "ARRAY", "DATE"):
                             # 字符串左对齐
                             m_TableContentLine = \
                                 m_TableContentLine + ' ' + \
@@ -1084,7 +1023,7 @@ class TestCli(object):
         # 打印表格下边框
         yield m_TableBoxLine
 
-    def format_output(self, title, cur, headers, columnTypes, p_format_name, max_width=None):
+    def format_output(self, title, cur, headers, columnTypes, p_format_name, startIter, max_width=None):
         output = []
 
         if title:  # Only print the title if it's not None.
@@ -1099,12 +1038,9 @@ class TestCli(object):
                 formatted = self.format_output_csv(headers, columnTypes, cur)
             elif p_format_name.upper() == 'TAB':
                 # 按照TAB格式输出查询结果
-                formatted = self.format_output_tab(headers, columnTypes, cur)
-            elif p_format_name.upper() == 'LEGACY':
-                # 按照TAB格式输出查询结果
-                formatted = self.format_output_leagcy(headers, cur)
+                formatted = self.format_output_tab(headers, columnTypes, cur, startIter)
             else:
-                raise TestCliException("SQLCLI-0000: Unknown output_format. CSV|TAB|LEGACY only")
+                raise TestCliException("SQLCLI-0000: Unknown output_format. CSV|TAB only")
             if isinstance(formatted, str):
                 formatted = formatted.splitlines()
             formatted = iter(formatted)

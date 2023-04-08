@@ -1,0 +1,12 @@
+SQL> _start testloadplugin.sql
+SQL> _load plugin rockPaperScissor.py;
+Plugin [GAME] loaded successful.
+SQL> _GAME rock;
+opponent choice : .*
+.*
+SQL>
+SQL> _GAME paper;
+opponent choice : .*
+.*
+SQL> _exit
+Disconnected.

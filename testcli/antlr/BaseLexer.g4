@@ -81,6 +81,10 @@ DATA                : '_DATA' ->pushMode(DataMode);
 // 执行主机监控任务
 MONITOR             : '_MONITOR'  ->pushMode(MonitorMode);
 
+// PLUGIN命令
+// 这个命令必须放在解析文件所有内置命令的最后，以保证不会对其他内置命令带来冲突
+PLUGIN              : '_'[A-Z]+ -> pushMode(PluginMode);
+
 INT                 : DIGIT+ ;
 DECIMAL             : DIGIT+ '.' DIGIT+ ;
 String              : (OBS_TEXT | UNRESERVED | SUBDELIMS | PCTENCODED | DoubleQuoteString | SingleQuoteString)+;
@@ -122,6 +126,7 @@ mode LoadMode;
 LOAD_SPACE          : [ \t]+ -> channel (HIDDEN);
 LOAD_EQUAL          : '=';
 LOAD_PLUGIN         : 'PLUGIN';
+LOAD_SCRIPT         : 'SCRIPT';
 LOAD_MAP            : 'MAP';
 LOAD_JDBCDRIVER     : 'JDBCDRIVER';
 LOAD_JDBCFILE       : 'FILE';
@@ -325,3 +330,11 @@ MONITOR_EXPRESSION    :
     (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString )+;
 MONITOR_CRLF          : CRLF -> popMode;
 MONITOR_SEMICOLON     : ';';
+
+mode PluginMode;
+PLUGIN_SPACE         : [ \t]+ -> channel (HIDDEN);
+PLUGIN_EXPRESSION    :
+    (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString )+;
+PLUGIN_CRLF          : CRLF -> popMode;
+PLUGIN_SEMICOLON     : ';';
+

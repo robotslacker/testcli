@@ -30,6 +30,7 @@ baseCommand:
       | data
       | help
       | monitor
+      | plugin
       ;
 
 // Exit
@@ -51,6 +52,7 @@ load    :
         LOAD
         (
           (LOAD_PLUGIN LOAD_EXPRESSION) |
+          (LOAD_SCRIPT LOAD_EXPRESSION) |
           (LOAD_MAP LOAD_EXPRESSION) |
           (LOAD_JDBCDRIVER
             (
@@ -61,7 +63,7 @@ load    :
               (LOAD_JDBCURL LOAD_EQUAL LOAD_EXPRESSION)
             )*
           )
-        ) LOAD_SEMICOLON? CRLF?;
+        ) LOAD_SEMICOLON? LOAD_CRLF?;
 
 // ASSERT判断
 assert  : ASSERT ASSERT_EXPRESSION ((ASSERT_COMMA)? ASSERT_NAME)? (ASSERT_SEMICOLON)? CRLF?;
@@ -205,3 +207,6 @@ monitor    :
                (MONITOR_LIST MONITOR_TASK)
            )
            (MONITOR_SEMICOLON)? MONITOR_CRLF?;
+
+plugin     :
+           PLUGIN (PLUGIN_EXPRESSION)+ (PLUGIN_SEMICOLON)? PLUGIN_CRLF?;

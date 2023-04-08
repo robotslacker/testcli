@@ -27,7 +27,7 @@ def getcommandResult(cls, rowcount):
             FetchStatus     是否输出完成。
                             True 输出已经完成
                             False  输出仍未完成
-            rowcount        共返回记录行数
+            rowcount        共返回记录行数（累计，不是当前记录集返回数量）
             Warning         警告信息
     """
     title = headers = None
@@ -259,12 +259,13 @@ def executeSQLStatement(cls, sql: str, sqlHints):
         }
         正确情况下：
         {
-            "type": "result",
-            "title": title,
-            "rows": result,
-            "headers": headers,
-            "columnTypes": columnTypes,
-            "status": status
+            "type": "result",                 固定字符串标志
+            "title": title,                   字符串，表示输出的标题信息
+            "rows": result,                   返回结果集
+            "rowPos": rowPos                  多段返回中，当前所在行在总体结果集中的开始位置
+            "headers": headers,               返回结果集的字段标题信息
+            "columnTypes": columnTypes,       返回结果集的字段类型信息
+            "status": status                  返回结果集的状态返回信息
         }
     """
 
@@ -298,6 +299,7 @@ def executeSQLStatement(cls, sql: str, sqlHints):
 
             rowcount = 0
             sqlStatus = 0
+            rowPos = 0    # 多段返回的结果集中，当前返回部分在多段结果集中的开始位置
             while True:
                 (title, result, headers, columnTypes, status,
                  fetchStatus, fetchedRowCount, sqlWarnings) = \
@@ -327,10 +329,13 @@ def executeSQLStatement(cls, sql: str, sqlHints):
                         "type": "result",
                         "title": title,
                         "rows": result,
+                        "rowPos": rowPos,
                         "headers": headers,
                         "columnTypes": columnTypes,
                         "status": status
                     }
+                    if result is not None:
+                        rowPos = rowPos + len(result)
                 if not fetchStatus:
                     break
         except SQLCliJDBCTimeOutException:

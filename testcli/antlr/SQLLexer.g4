@@ -32,7 +32,7 @@ SQL_CREATE_PROCEDURE: ('CREATE' | 'REPLACE' | 'ALTER'| ' '+ | 'OR')+ ('PROCEDURE
                              ->mode(SQLProcedureMode);
 
 /**
- * 链接模式
+ * 数据库连接模式
  */
 mode ConnectMode;
 

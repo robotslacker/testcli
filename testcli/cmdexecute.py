@@ -4,19 +4,14 @@ import json
 import os
 import re
 import traceback
-try:
-    import glom
-except:
-    pass
+import glom
 import ast
 from .sqlparse import SQLAnalyze
 from .apiparse import APIAnalyze
 from .sqlparse import SQLFormatWithPrefix
 from .apiparse import APIRequestStringFormatWithPrefix
 
-from .commands.load import loadPlugin
-from .commands.load import loadJDBCDriver
-from .commands.load import loadMap
+from .commands.load import executeLoadRequest
 from .commands.exit import exitApplication
 from .commands.sqlsession import sqlSessionManage
 from .commands.assertExpression import assertExpression
@@ -41,6 +36,7 @@ from .commands.apiSession import apiSessionManage
 from .commands.apiExecute import executeAPIStatement
 from .commands.apiExecute import executeAPISet
 from .commands.sqlExecute import executeSQLStatement
+from .commands.plugin import executePluginRequest
 from .common import rewriteStatement
 from .common import rewriteHintStatement
 from .common import rewriteSQLStatement
@@ -1091,7 +1087,7 @@ class CmdExecute(object):
                             "type": "parse",
                             "rawCommand": None,
                             "formattedCommand": None,
-                            "rewrotedCommand": [rewrotedHint,],
+                            "rewrotedCommand": [rewrotedHint, ],
                             "script": commandScriptFile
                         }
                     for commandResult in spool(
@@ -1148,64 +1144,18 @@ class CmdExecute(object):
                             lastCommandResult["errorCode"] = 1
                         yield commandResult
                 elif parseObject["name"] in ["LOAD"]:
-                    if parseObject["option"] == "PLUGIN":
-                        for commandResult in loadPlugin(
-                                cls=self.cliHandler,
-                                pluginFile=parseObject["pluginFile"]
-                        ):
-                            if commandResult["type"] == "result":
-                                lastCommandResult.clear()
-                                lastCommandResult["status"] = commandResult["status"]
-                                lastCommandResult["errorCode"] = 0
-                            if commandResult["type"] == "error":
-                                lastCommandResult["status"] = commandResult["message"]
-                                lastCommandResult["errorCode"] = 1
-                            yield commandResult
-                    elif parseObject["option"] == "JDBCDRIVER":
-                        driverName = None
-                        driverClass = None
-                        driverFile = None
-                        driverURL = None
-                        driverProps = None
-                        if "driverName" in parseObject:
-                            driverName = parseObject["driverName"]
-                        if "driverClass" in parseObject:
-                            driverClass = parseObject["driverClass"]
-                        if "driverFile" in parseObject:
-                            driverFile = parseObject["driverFile"]
-                        if "driverURL" in parseObject:
-                            driverURL = parseObject["driverURL"]
-                        if "driverProps" in parseObject:
-                            driverProps = parseObject["driverProps"]
-                        for commandResult in loadJDBCDriver(
-                                cls=self.cliHandler,
-                                driverName=driverName,
-                                driverClass=driverClass,
-                                driverFile=driverFile,
-                                driverURL=driverURL,
-                                driverProps=driverProps
-                        ):
-                            if commandResult["type"] == "result":
-                                lastCommandResult.clear()
-                                lastCommandResult["status"] = commandResult["status"]
-                                lastCommandResult["errorCode"] = 0
-                            if commandResult["type"] == "error":
-                                lastCommandResult["status"] = commandResult["message"]
-                                lastCommandResult["errorCode"] = 1
-                            yield commandResult
-                    elif parseObject["option"] == "MAP":
-                        for commandResult in loadMap(
-                                cls=self.cliHandler,
-                                mapFile=parseObject["mapFile"]
-                        ):
-                            if commandResult["type"] == "result":
-                                lastCommandResult.clear()
-                                lastCommandResult["status"] = commandResult["status"]
-                                lastCommandResult["errorCode"] = 0
-                            if commandResult["type"] == "error":
-                                lastCommandResult["status"] = commandResult["message"]
-                                lastCommandResult["errorCode"] = 1
-                            yield commandResult
+                    for commandResult in executeLoadRequest(
+                            cls=self.cliHandler,
+                            requestObject=parseObject
+                    ):
+                        if commandResult["type"] == "result":
+                            lastCommandResult.clear()
+                            lastCommandResult["status"] = commandResult["status"]
+                            lastCommandResult["errorCode"] = 0
+                        if commandResult["type"] == "error":
+                            lastCommandResult["status"] = commandResult["message"]
+                            lastCommandResult["errorCode"] = 1
+                        yield commandResult
                 elif parseObject["name"] in ["HTTP"]:
                     if self.ifMode and not self.ifCondition:
                         pos = pos + 1
@@ -1404,6 +1354,22 @@ class CmdExecute(object):
                            "message": "TestCli parse error:  " + str(parseObject["reason"])}
                 elif parseObject["name"] in ["MONITOR"]:
                     for result in executeMonitorRequest(
+                            cls=self.cliHandler,
+                            requestObject=parseObject,
+                    ):
+                        if result["type"] == "result":
+                            lastCommandResult["rows"] = result["rows"]
+                            lastCommandResult["headers"] = result["headers"]
+                            lastCommandResult["status"] = result["status"]
+                            lastCommandResult["errorCode"] = 0
+                        if result["type"] == "error":
+                            lastCommandResult["rows"] = []
+                            lastCommandResult["headers"] = []
+                            lastCommandResult["status"] = result["message"]
+                            lastCommandResult["errorCode"] = 1
+                        yield result
+                elif parseObject["name"] in ["PLUGIN"]:
+                    for result in executePluginRequest(
                             cls=self.cliHandler,
                             requestObject=parseObject,
                     ):

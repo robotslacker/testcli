@@ -1,8 +1,8 @@
-SQL> _start testplugin.sql
-SQL> _load plugin testplugin.py;
-Plugin module [cc] loaded successful.
-Plugin function [fun] loaded successful.
-Plugin file loaded successful.
+SQL> _start testloadscript.sql
+SQL> _load script testloadscript.py;
+Module [cc] loaded successful.
+Function [fun] loaded successful.
+Script file loaded successful.
 SQL> _connect /mem
 Database connected.
 SQL> create table aaa (id int);

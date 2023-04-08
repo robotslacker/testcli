@@ -30,6 +30,8 @@ helpMessage = [
             
             _LOAD PLUGIN <plugin file location> 
 
+            _LOAD SCRIPT <script file location> 
+
             _LOAD MAP <command mapping file location>
         ''',
     },

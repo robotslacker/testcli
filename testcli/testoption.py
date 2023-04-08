@@ -85,7 +85,7 @@ class TestOptions(object):
                                     "Hidden": False})
         self.testOptionList.append({"Name": "OUTPUT_FORMAT",
                                     "Value": "TAB",
-                                    "Comments": 'TAB|CSV|LEGACY',
+                                    "Comments": 'TAB|CSV',
                                     "Hidden": False
                                     })
         self.testOptionList.append({"Name": "OUTPUT_CSV_HEADER",

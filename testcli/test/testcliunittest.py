@@ -263,6 +263,13 @@ class TestSynatx(unittest.TestCase):
         self.assertEqual(None, ret_errorMsg)
 
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_load script aaa")
+        self.assertTrue(isFinished)
+        self.assertEqual({'name': 'LOAD', 'option': 'SCRIPT', 'scriptFile': 'aaa'}, ret_CommandSplitResult)
+        self.assertEqual(0, ret_errorCode)
+        self.assertEqual(None, ret_errorMsg)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_load jdbcdriver name=oracle "
                          "class=oracle.jdbc.driver.OracleDriver file='d:\\temp\\aa.txt' "
                          "url='jdbc:oracle:thin:@${host}:${port}/${service}' "
@@ -1265,6 +1272,25 @@ class TestSynatx(unittest.TestCase):
             },
             ret_CommandSplitResult)
 
+    def test_SQLAnalyze_Plugin(self):
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_myplugin xxx yyyy")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'name': 'PLUGIN', 'pluginArgs': ['xxx', 'yyyy'], 'pluginName': 'myplugin'},
+            ret_CommandSplitResult)
+
+        (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+            = SQLAnalyze("_myplugin 'xddd xx' yyyy")
+        self.assertEqual(None, ret_errorMsg)
+        self.assertEqual(0, ret_errorCode)
+        self.assertTrue(isFinished)
+        self.assertEqual(
+            {'name': 'PLUGIN', 'pluginArgs': ['xddd xx', 'yyyy'], 'pluginName': 'myplugin'},
+            ret_CommandSplitResult)
+
     def test_SQLExecuteSanity(self):
         from ..testcli import TestCli
 
@@ -1527,10 +1553,10 @@ class TestSynatx(unittest.TestCase):
                 msg=msg
             )
 
-    def test_SQLLoadPlugin(self):
+    def test_SQLLoadScript(self):
         from ..testcli import TestCli
 
-        scriptFile = "testplugin.sql"
+        scriptFile = "testloadscript.sql"
 
         scriptBaseFile = os.path.splitext(scriptFile)[0]
         fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
@@ -1553,11 +1579,15 @@ class TestSynatx(unittest.TestCase):
             file2=fullRefFile,
             CompareIgnoreTailOrHeadBlank=True
         )
+        msg = "\n"
         if not compareResult:
             for line in compareReport:
                 if line.startswith("-") or line.startswith("+"):
-                    print(line)
-        self.assertTrue(compareResult)
+                    msg = msg + line + "\n"
+        self.assertTrue(
+            expr=compareResult,
+            msg=msg
+        )
 
     def test_SQLWhenever(self):
         from ..testcli import TestCli
@@ -2027,6 +2057,43 @@ class TestSynatx(unittest.TestCase):
         from ..testcli import TestCli
 
         scriptFile = "testlastcommandresult.sql"
+
+        scriptBaseFile = os.path.splitext(scriptFile)[0]
+        fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
+        fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
+        fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
+
+        # 运行测试程序，开启无头模式(不在控制台上显示任何内容),同时不打印Logo
+        testcli = TestCli(
+            logfilename=fullLogFile,
+            headlessMode=True,
+            script=fullScriptFile
+        )
+        retValue = testcli.run_cli()
+        self.assertEqual(0, retValue)
+
+        # 对文件进行比对，判断返回结果是否吻合
+        compareHandler = POSIXCompare()
+
+        compareResult, compareReport = compareHandler.compare_text_files(
+            file1=fullLogFile,
+            file2=fullRefFile,
+            CompareIgnoreTailOrHeadBlank=True
+        )
+        msg = "\n"
+        if not compareResult:
+            for line in compareReport:
+                if line.startswith("-") or line.startswith("+"):
+                    msg = msg + line + "\n"
+        self.assertTrue(
+            expr=compareResult,
+            msg=msg
+        )
+
+    def test_loadplugin(self):
+        from ..testcli import TestCli
+
+        scriptFile = "testloadplugin.sql"
 
         scriptBaseFile = os.path.splitext(scriptFile)[0]
         fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
