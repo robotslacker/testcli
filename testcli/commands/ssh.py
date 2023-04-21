@@ -164,8 +164,8 @@ def executeSshRequest(requestObject):
             return
         if requestObject["action"] == "disconnect":
             sshConect = sshSession[sshCurrentSessionName]
-            if sshConect.getSshHandler() is not None:
-                sshConect.getSshHandler().close()
+            if sshConect.getSshTransport() is not None:
+                sshConect.getSshTransport().close()
             if sshConect.getSftpHandler() is not None:
                 sshConect.getSftpHandler().close()
             yield {

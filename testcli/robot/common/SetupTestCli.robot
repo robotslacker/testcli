@@ -15,7 +15,7 @@ TestCli Test Setup
 
     # 控制SQLCli在执行SQL语句中是否遇到错误，就立即终止后续的SQL执行
     # 默认是不终止，即使SQL有错误，整个SQL也会被执行完毕
-    TestCli_Break_When_Error            False
+    TestCli Break When Error            False
 
     # 控制TestCli是否记录扩展的日志，打开后，会在LOG目录下生成一个xlog文件
     # 这里设置为打开状态，即记录扩展信息

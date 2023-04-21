@@ -935,6 +935,16 @@ def _javaobj_to_pyobj(p_javaobj, p_objColumnSQLType=None):
                           month=p_javaobj.toLocalDate().getMonthValue(),
                           day=p_javaobj.toLocalDate().getDayOfMonth())
         return d
+    elif typeName.upper().find('STRUCT') != -1:
+        m_retVal = []
+        for java_item in p_javaobj.getAttributes():
+            m_retVal.append(_javaobj_to_pyobj(java_item))
+        return m_retVal
+    elif typeName.find('Object[]') != -1:
+        m_retVal = []
+        for java_item in p_javaobj:
+            m_retVal.append(_javaobj_to_pyobj(java_item))
+        return m_retVal
     elif typeName.upper().find('ARRAY') != -1:
         m_BaseTypeName = p_javaobj.getBaseTypeName()
         java_val = p_javaobj.getArray()

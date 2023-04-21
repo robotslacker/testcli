@@ -28,6 +28,28 @@ class RunTestCli(object):
     __enableExtendLog = False               # 是否打开扩展的日志记录，默认是不打开
     __CommandMapping = None                 # 映射文件列表
     __failWithAssertOrScriptError = False   # 是否在遇到Assert或者Script错误的时候，就认为脚本运行失败。默认不严格判断
+    __clientCharSet = "UTF-8"               # 设置客户端输入字符集
+    __resultCharSet = "UTF-8"               # 设置客户端输出字符集
+
+    def TestCli_Set_ClientCharset(self, p_ClientCharset):
+        """ 设置脚本执行时候的客户端输入字符集  """
+        """
+        输入参数：
+             p_ClientCharset:        任何有效的字符集，如UTF-8,GBK
+        返回值：
+            无
+        """
+        self.__clientCharSet = p_ClientCharset
+
+    def TestCli_Set_ResultCharset(self, p_ResultCharset):
+        """ 设置脚本执行时候的客户端输出字符集  """
+        """
+        输入参数：
+             p_ResultCharset:        任何有效的字符集，如UTF-8,GBK
+        返回值：
+            无
+        """
+        self.__resultCharSet = p_ResultCharset
 
     def TestCli_Break_When_Error(self, p_BreakWithError):
         """ 设置是否在遇到错误的时候中断该Case的后续运行  """
@@ -212,6 +234,8 @@ class RunTestCli(object):
                           logger=mylogger,
                           commandMap=self.__CommandMapping,
                           breakWithError=self.__BreakWithError,
+                          clientCharset=self.__clientCharSet,
+                          resultCharset=self.__resultCharSet,
                           xlog=xlogFullFileName,
                           xlogoverwrite=False,
                           suitename=m_SuiteName,

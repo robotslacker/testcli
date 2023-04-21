@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import copy
 
-from ..testcliexception import TestCliException
-
 
 # API会话管理
 def apiSessionManage(cls, action: str, sessionName: str = None):
