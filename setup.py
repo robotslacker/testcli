@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-
 import ast
 import re
+import platform
 from io import open
 from setuptools import setup
 
@@ -32,6 +32,15 @@ def open_file(filename):
 
 readme = open_file("testcli/docs/UserGuide.md")
 
+install_requires = ['JPype1', 'setproctitle', 'urllib3<1.27',
+                    'click', 'prompt_toolkit', 'paramiko', 'antlr4-python3-runtime==4.11.1',
+                    'fs', "psutil", "glom",
+                    "python-multipart", "pytest-xdist", "pytest", 'fastapi', 'uvicorn',
+                    "coloredlogs", "robotframework", "beautifulsoup4", "lxml"
+                    ]
+if platform.system() == "Windows":
+    install_requires.append("pywin32")
+
 setup(
     name='robotslacker-testcli',
     version=version,
@@ -40,13 +49,7 @@ setup(
     keywords='test command sql api',
     long_description_content_type='text/markdown',
     platforms='any',
-    install_requires=['JPype1', 'setproctitle', 'urllib3<1.27',
-                      'click', 'prompt_toolkit',  'paramiko', 'antlr4-python3-runtime==4.11.1',
-                      'fs', "psutil", "glom",
-                      "python-multipart", "pytest-xdist", "pytest", 'fastapi', 'uvicorn',
-                      "coloredlogs", "robotframework", "beautifulsoup4", "lxml"
-                      ],
-
+    install_requires=install_requires,
     author='RobotSlacker',
     author_email='184902652@qq.com',
     url='https://github.com/robotslacker/testcli.git',
