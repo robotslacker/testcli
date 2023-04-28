@@ -3,6 +3,7 @@ import random
 
 COMMAND = "GAME"
 
+
 def cmdEntry(cmdArgs: list):
     if len(cmdArgs) != 1:
         # 至少有一个选择，剪刀，石头，布

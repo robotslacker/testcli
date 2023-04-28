@@ -297,14 +297,21 @@ def AttachJVM(jars=None, libs=None):
             class_path.extend(jars)
         class_path.extend(_get_classpath())
         if class_path:
-            args.append('-Djava.class.path=%s' %
-                        os.path.pathsep.join(class_path))
+            # class_path 进行去重
+            class_path = list(set(class_path))
+            class_path = os.path.pathsep.join(class_path)
+            args.append('-Djava.class.path=%s' % class_path)
         if libs:
             # path to shared libraries
             libs_path = os.path.pathsep.join(libs)
             args.append('-Djava.library.path=%s' % libs_path)
         jvm_path = getattr(jpype, "getDefaultJVMPath")()
-        getattr(jpype, "startJVM")(jvm_path, *args, ignoreUnrecognized=True, convertStrings=True)
+        getattr(jpype, "startJVM")(
+            jvm_path,
+            *args,
+            ignoreUnrecognized=True,
+            convertStrings=True
+        )
         if "TESTCLI_DEBUG" in os.environ:
             print("JVM started: class.path=[" + jpype.java.lang.System.getProperty('java.class.path') + "]")
             print("JVM Version: [" + ".".join([str(x) for x in getattr(jpype, "getJVMVersion")()]) + "]")

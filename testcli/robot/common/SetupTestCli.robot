@@ -70,10 +70,6 @@ TestCli Test Setup
     # 记录所有环境变量信息到日志文件中，便于日后检查
     log environment variables
 
-    # 删除T_WORK下所有内容
-    Environment Variable Should Be Set    T_WORK
-    RecusiveRemove WorkDirectory          %{T_WORK}
-
 TestCli Test Clnup
     # 暂时空置
     Log to Console      "Test Completed."

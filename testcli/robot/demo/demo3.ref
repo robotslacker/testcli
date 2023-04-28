@@ -1,0 +1,13 @@
+SQL> _start demo3.sql
+SQL> _connect /mem
+Database connected.
+SQL> select 1+5 from dual;
++--------+---+
+|   ##   | 6 |
++--------+---+
+|      1 | 7 |
++--------+---+
+1 row selected.
+SQL> _sleep 15
+SQL> _exit
+Disconnected.

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import shutil
 import sys
 from robot.api import logger
 
@@ -30,33 +29,6 @@ class SetupTestCli(object):
     def SetupRoot_CD_CurrentDirectory(p_szDirectory):
         logger.write("Current directory: [" + str(os.path.dirname(p_szDirectory)) + "]")
         os.chdir(os.path.dirname(p_szDirectory))
-
-    def RecusiveRemove_WorkDirectory(self, p_szDirectoryPath):
-        if self.FirstTest:
-            logger.write("Will recusive remove work directory ...  [" + p_szDirectoryPath + "]")
-            self.FirstTest = False
-            if os.path.exists(p_szDirectoryPath):
-                files = os.listdir(p_szDirectoryPath)
-                for m_file in files:
-                    filepath = os.path.join(p_szDirectoryPath, m_file)
-                    if os.path.isdir(filepath):
-                        if not str(os.path.basename(filepath)) in ["profile", ".gitignore"]:
-                            shutil.rmtree(path=filepath, ignore_errors=True)
-                    else:
-                        # 删除具体某一个文件， 不会删除特定文件
-                        if os.path.basename(m_file).endswith("xml"):
-                            continue
-                        if os.path.basename(m_file).endswith("stdout"):
-                            continue
-                        if os.path.basename(m_file).endswith("stderr"):
-                            continue
-                        if os.path.basename(m_file).endswith("cases"):
-                            continue
-                        if os.path.basename(m_file) in [".gitignore", "farmregress-executor.log"]:
-                            continue
-                        os.remove(filepath)
-        else:
-            logger.write("Skip RecusiveRemove_WorkDirectory ... ")
 
     def __del__(self):
         try:
