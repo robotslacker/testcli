@@ -34,6 +34,7 @@ class TestCliMeta(object):
         self.MetaPort = 0
         self.JarList = None
         self.appOptions = None
+        self.agentErrorMessage = None
 
     def setJVMJarList(self, p_JarList):
         self.JarList = p_JarList
@@ -1074,7 +1075,7 @@ class JOBManager(object):
                 # 每0.5秒检查一次任务
                 time.sleep(3)
         except Exception as e:
-            click.secho("JobManager failed with [" + str(e) + "]. Quit JobManager Agent.", err=True, fg="red")
+            click.secho("JobManager failed with [" + repr(e) + "]. Quit JobManager Agent.", err=True, fg="red")
             self.isAgentStarted = False
 
     # 启动Agent进程
@@ -1088,14 +1089,15 @@ class JOBManager(object):
 
     # 退出Agent进程
     def unregisterAgent(self):
-        if self.getWorkerStatus() == "RUNNING":
-            self.setWorkerStatus("WAITINGFOR_STOP")
-            while True:
-                if self.getWorkerStatus() == "STOPPED":
-                    break
-                else:
-                    time.sleep(1)
-        self.isAgentStarted = False
+        if self.isAgentStarted:
+            if self.getWorkerStatus() == "RUNNING":
+                self.setWorkerStatus("WAITINGFOR_STOP")
+                while True:
+                    if self.getWorkerStatus() == "STOPPED":
+                        break
+                    else:
+                        time.sleep(1)
+            self.isAgentStarted = False
 
     def SaveJob(self, p_objJOB: JOB):
         if self.MetaLockHandler is None:
@@ -1445,9 +1447,6 @@ class JOBManager(object):
 
         # 检查是否为READY状态，如果是，则可以离开
         while True:
-            # 如果JobManager意外退出，也没有继续等待下去的意义
-            if not self.isAgentStarted:
-                raise TestCliException("Job agent unexpected lost. Job wait failed.")
             # 检查其他进程是否到达该检查点
             m_TimerPointAllArrived = False
             if (m_JobTag is None) or (m_JobTag == ""):

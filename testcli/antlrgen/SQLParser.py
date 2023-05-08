@@ -10,7 +10,7 @@ else:
 
 def serializedATN():
     return [
-        4,1,279,770,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,
+        4,1,280,770,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,
         7,6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,
         13,2,14,7,14,2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,2,
         20,7,20,2,21,7,21,2,22,7,22,2,23,7,23,2,24,7,24,2,25,7,25,2,26,7,
@@ -81,7 +81,7 @@ def serializedATN():
         80,82,84,86,88,90,92,94,96,98,100,102,104,106,108,110,0,14,1,0,60,
         61,2,0,70,71,73,73,1,0,80,84,3,0,20,20,22,30,57,57,1,0,11,12,1,0,
         160,161,2,0,152,152,154,154,1,1,17,17,1,0,206,207,2,0,216,217,220,
-        225,1,0,229,230,1,0,227,228,1,0,236,237,1,0,234,235,899,0,112,1,
+        225,1,0,230,231,1,0,227,229,1,0,237,238,1,0,235,236,899,0,112,1,
         0,0,0,2,121,1,0,0,0,4,125,1,0,0,0,6,130,1,0,0,0,8,134,1,0,0,0,10,
         163,1,0,0,0,12,168,1,0,0,0,14,170,1,0,0,0,16,172,1,0,0,0,18,174,
         1,0,0,0,20,176,1,0,0,0,22,178,1,0,0,0,24,180,1,0,0,0,26,182,1,0,
@@ -189,36 +189,36 @@ def serializedATN():
         388,386,1,0,0,0,388,389,1,0,0,0,389,392,1,0,0,0,390,388,1,0,0,0,
         391,364,1,0,0,0,391,366,1,0,0,0,391,368,1,0,0,0,391,370,1,0,0,0,
         392,394,1,0,0,0,393,395,5,119,0,0,394,393,1,0,0,0,394,395,1,0,0,
-        0,395,397,1,0,0,0,396,398,5,17,0,0,397,396,1,0,0,0,397,398,1,0,0,
-        0,398,77,1,0,0,0,399,400,5,38,0,0,400,405,5,103,0,0,401,403,5,105,
-        0,0,402,401,1,0,0,0,402,403,1,0,0,0,403,404,1,0,0,0,404,406,5,104,
-        0,0,405,402,1,0,0,0,405,406,1,0,0,0,406,408,1,0,0,0,407,409,5,106,
-        0,0,408,407,1,0,0,0,408,409,1,0,0,0,409,411,1,0,0,0,410,412,5,17,
-        0,0,411,410,1,0,0,0,411,412,1,0,0,0,412,79,1,0,0,0,413,414,5,41,
-        0,0,414,416,5,125,0,0,415,417,5,19,0,0,416,415,1,0,0,0,416,417,1,
-        0,0,0,417,419,1,0,0,0,418,420,5,17,0,0,419,418,1,0,0,0,419,420,1,
-        0,0,0,420,81,1,0,0,0,421,435,5,47,0,0,422,436,5,139,0,0,423,436,
-        5,140,0,0,424,436,5,141,0,0,425,426,5,133,0,0,426,427,5,134,0,0,
-        427,436,5,142,0,0,428,430,5,136,0,0,429,428,1,0,0,0,429,430,1,0,
-        0,0,430,431,1,0,0,0,431,432,5,134,0,0,432,433,5,142,0,0,433,434,
-        5,135,0,0,434,436,5,136,0,0,435,422,1,0,0,0,435,423,1,0,0,0,435,
-        424,1,0,0,0,435,425,1,0,0,0,435,429,1,0,0,0,436,438,1,0,0,0,437,
-        439,5,131,0,0,438,437,1,0,0,0,438,439,1,0,0,0,439,441,1,0,0,0,440,
-        442,5,17,0,0,441,440,1,0,0,0,441,442,1,0,0,0,442,83,1,0,0,0,443,
-        444,5,43,0,0,444,446,5,130,0,0,445,447,5,19,0,0,446,445,1,0,0,0,
-        446,447,1,0,0,0,447,449,1,0,0,0,448,450,5,17,0,0,449,448,1,0,0,0,
-        449,450,1,0,0,0,450,85,1,0,0,0,451,453,5,44,0,0,452,454,5,19,0,0,
-        453,452,1,0,0,0,453,454,1,0,0,0,454,456,1,0,0,0,455,457,5,17,0,0,
-        456,455,1,0,0,0,456,457,1,0,0,0,457,87,1,0,0,0,458,459,5,48,0,0,
-        459,463,5,146,0,0,460,464,5,148,0,0,461,462,5,149,0,0,462,464,5,
-        145,0,0,463,460,1,0,0,0,463,461,1,0,0,0,464,466,1,0,0,0,465,467,
-        5,147,0,0,466,465,1,0,0,0,466,467,1,0,0,0,467,469,1,0,0,0,468,470,
-        5,17,0,0,469,468,1,0,0,0,469,470,1,0,0,0,470,89,1,0,0,0,471,472,
-        5,46,0,0,472,474,7,6,0,0,473,475,5,153,0,0,474,473,1,0,0,0,474,475,
-        1,0,0,0,475,477,1,0,0,0,476,478,5,155,0,0,477,476,1,0,0,0,477,478,
-        1,0,0,0,478,91,1,0,0,0,479,480,5,36,0,0,480,482,5,98,0,0,481,483,
-        7,7,0,0,482,481,1,0,0,0,482,483,1,0,0,0,483,93,1,0,0,0,484,485,5,
-        37,0,0,485,487,5,97,0,0,486,488,5,17,0,0,487,486,1,0,0,0,487,488,
+        0,395,397,1,0,0,0,396,398,5,120,0,0,397,396,1,0,0,0,397,398,1,0,
+        0,0,398,77,1,0,0,0,399,400,5,38,0,0,400,405,5,103,0,0,401,403,5,
+        105,0,0,402,401,1,0,0,0,402,403,1,0,0,0,403,404,1,0,0,0,404,406,
+        5,104,0,0,405,402,1,0,0,0,405,406,1,0,0,0,406,408,1,0,0,0,407,409,
+        5,106,0,0,408,407,1,0,0,0,408,409,1,0,0,0,409,411,1,0,0,0,410,412,
+        5,17,0,0,411,410,1,0,0,0,411,412,1,0,0,0,412,79,1,0,0,0,413,414,
+        5,41,0,0,414,416,5,125,0,0,415,417,5,19,0,0,416,415,1,0,0,0,416,
+        417,1,0,0,0,417,419,1,0,0,0,418,420,5,17,0,0,419,418,1,0,0,0,419,
+        420,1,0,0,0,420,81,1,0,0,0,421,435,5,47,0,0,422,436,5,139,0,0,423,
+        436,5,140,0,0,424,436,5,141,0,0,425,426,5,133,0,0,426,427,5,134,
+        0,0,427,436,5,142,0,0,428,430,5,136,0,0,429,428,1,0,0,0,429,430,
+        1,0,0,0,430,431,1,0,0,0,431,432,5,134,0,0,432,433,5,142,0,0,433,
+        434,5,135,0,0,434,436,5,136,0,0,435,422,1,0,0,0,435,423,1,0,0,0,
+        435,424,1,0,0,0,435,425,1,0,0,0,435,429,1,0,0,0,436,438,1,0,0,0,
+        437,439,5,131,0,0,438,437,1,0,0,0,438,439,1,0,0,0,439,441,1,0,0,
+        0,440,442,5,17,0,0,441,440,1,0,0,0,441,442,1,0,0,0,442,83,1,0,0,
+        0,443,444,5,43,0,0,444,446,5,130,0,0,445,447,5,19,0,0,446,445,1,
+        0,0,0,446,447,1,0,0,0,447,449,1,0,0,0,448,450,5,17,0,0,449,448,1,
+        0,0,0,449,450,1,0,0,0,450,85,1,0,0,0,451,453,5,44,0,0,452,454,5,
+        19,0,0,453,452,1,0,0,0,453,454,1,0,0,0,454,456,1,0,0,0,455,457,5,
+        17,0,0,456,455,1,0,0,0,456,457,1,0,0,0,457,87,1,0,0,0,458,459,5,
+        48,0,0,459,463,5,146,0,0,460,464,5,148,0,0,461,462,5,149,0,0,462,
+        464,5,145,0,0,463,460,1,0,0,0,463,461,1,0,0,0,464,466,1,0,0,0,465,
+        467,5,147,0,0,466,465,1,0,0,0,466,467,1,0,0,0,467,469,1,0,0,0,468,
+        470,5,17,0,0,469,468,1,0,0,0,469,470,1,0,0,0,470,89,1,0,0,0,471,
+        472,5,46,0,0,472,474,7,6,0,0,473,475,5,153,0,0,474,473,1,0,0,0,474,
+        475,1,0,0,0,475,477,1,0,0,0,476,478,5,155,0,0,477,476,1,0,0,0,477,
+        478,1,0,0,0,478,91,1,0,0,0,479,480,5,36,0,0,480,482,5,98,0,0,481,
+        483,7,7,0,0,482,481,1,0,0,0,482,483,1,0,0,0,483,93,1,0,0,0,484,485,
+        5,37,0,0,485,487,5,97,0,0,486,488,5,17,0,0,487,486,1,0,0,0,487,488,
         1,0,0,0,488,95,1,0,0,0,489,493,5,45,0,0,490,492,5,157,0,0,491,490,
         1,0,0,0,492,495,1,0,0,0,493,491,1,0,0,0,493,494,1,0,0,0,494,497,
         1,0,0,0,495,493,1,0,0,0,496,498,5,158,0,0,497,496,1,0,0,0,497,498,
@@ -264,54 +264,54 @@ def serializedATN():
         615,588,1,0,0,0,615,590,1,0,0,0,615,592,1,0,0,0,615,596,1,0,0,0,
         615,605,1,0,0,0,616,618,1,0,0,0,617,619,5,191,0,0,618,617,1,0,0,
         0,618,619,1,0,0,0,619,621,1,0,0,0,620,622,5,17,0,0,621,620,1,0,0,
-        0,621,622,1,0,0,0,622,101,1,0,0,0,623,662,5,51,0,0,624,625,5,238,
-        0,0,625,629,5,238,0,0,626,628,7,9,0,0,627,626,1,0,0,0,628,631,1,
+        0,621,622,1,0,0,0,622,101,1,0,0,0,623,662,5,51,0,0,624,625,5,239,
+        0,0,625,629,5,239,0,0,626,628,7,9,0,0,627,626,1,0,0,0,628,631,1,
         0,0,0,629,627,1,0,0,0,629,630,1,0,0,0,630,663,1,0,0,0,631,629,1,
-        0,0,0,632,633,7,10,0,0,633,663,5,238,0,0,634,635,5,218,0,0,635,636,
-        5,238,0,0,636,637,5,212,0,0,637,663,5,238,0,0,638,639,5,219,0,0,
-        639,663,5,238,0,0,640,663,5,231,0,0,641,645,5,214,0,0,642,644,7,
+        0,0,0,632,633,7,10,0,0,633,663,5,239,0,0,634,635,5,218,0,0,635,636,
+        5,239,0,0,636,637,5,212,0,0,637,663,5,239,0,0,638,639,5,219,0,0,
+        639,663,5,239,0,0,640,663,5,232,0,0,641,645,5,214,0,0,642,644,7,
         9,0,0,643,642,1,0,0,0,644,647,1,0,0,0,645,643,1,0,0,0,645,646,1,
         0,0,0,646,663,1,0,0,0,647,645,1,0,0,0,648,649,5,214,0,0,649,651,
         5,226,0,0,650,652,7,11,0,0,651,650,1,0,0,0,652,653,1,0,0,0,653,651,
         1,0,0,0,653,654,1,0,0,0,654,663,1,0,0,0,655,656,5,214,0,0,656,657,
-        5,232,0,0,657,663,7,12,0,0,658,659,5,214,0,0,659,660,7,13,0,0,660,
-        661,5,233,0,0,661,663,5,238,0,0,662,624,1,0,0,0,662,632,1,0,0,0,
+        5,233,0,0,657,663,7,12,0,0,658,659,5,214,0,0,659,660,7,13,0,0,660,
+        661,5,234,0,0,661,663,5,239,0,0,662,624,1,0,0,0,662,632,1,0,0,0,
         662,634,1,0,0,0,662,638,1,0,0,0,662,640,1,0,0,0,662,641,1,0,0,0,
         662,648,1,0,0,0,662,655,1,0,0,0,662,658,1,0,0,0,663,665,1,0,0,0,
         664,666,5,211,0,0,665,664,1,0,0,0,665,666,1,0,0,0,666,668,1,0,0,
         0,667,669,5,17,0,0,668,667,1,0,0,0,668,669,1,0,0,0,669,103,1,0,0,
-        0,670,702,5,52,0,0,671,672,5,241,0,0,672,673,5,242,0,0,673,674,5,
-        243,0,0,674,676,5,253,0,0,675,677,5,240,0,0,676,675,1,0,0,0,676,
-        677,1,0,0,0,677,703,1,0,0,0,678,679,5,244,0,0,679,680,5,246,0,0,
-        680,681,5,245,0,0,681,682,5,253,0,0,682,684,5,250,0,0,683,685,5,
-        256,0,0,684,683,1,0,0,0,684,685,1,0,0,0,685,688,1,0,0,0,686,687,
-        5,247,0,0,687,689,5,248,0,0,688,686,1,0,0,0,688,689,1,0,0,0,689,
-        690,1,0,0,0,690,703,5,240,0,0,691,692,5,251,0,0,692,693,5,246,0,
-        0,693,694,5,245,0,0,694,695,5,253,0,0,695,696,5,252,0,0,696,697,
-        5,246,0,0,697,698,5,245,0,0,698,700,5,253,0,0,699,701,5,240,0,0,
+        0,670,702,5,52,0,0,671,672,5,242,0,0,672,673,5,243,0,0,673,674,5,
+        244,0,0,674,676,5,254,0,0,675,677,5,241,0,0,676,675,1,0,0,0,676,
+        677,1,0,0,0,677,703,1,0,0,0,678,679,5,245,0,0,679,680,5,247,0,0,
+        680,681,5,246,0,0,681,682,5,254,0,0,682,684,5,251,0,0,683,685,5,
+        257,0,0,684,683,1,0,0,0,684,685,1,0,0,0,685,688,1,0,0,0,686,687,
+        5,248,0,0,687,689,5,249,0,0,688,686,1,0,0,0,688,689,1,0,0,0,689,
+        690,1,0,0,0,690,703,5,241,0,0,691,692,5,252,0,0,692,693,5,247,0,
+        0,693,694,5,246,0,0,694,695,5,254,0,0,695,696,5,253,0,0,696,697,
+        5,247,0,0,697,698,5,246,0,0,698,700,5,254,0,0,699,701,5,241,0,0,
         700,699,1,0,0,0,700,701,1,0,0,0,701,703,1,0,0,0,702,671,1,0,0,0,
         702,678,1,0,0,0,702,691,1,0,0,0,703,705,1,0,0,0,704,706,5,17,0,0,
         705,704,1,0,0,0,705,706,1,0,0,0,706,105,1,0,0,0,707,709,5,42,0,0,
-        708,710,5,258,0,0,709,708,1,0,0,0,709,710,1,0,0,0,710,712,1,0,0,
-        0,711,713,5,260,0,0,712,711,1,0,0,0,712,713,1,0,0,0,713,715,1,0,
+        708,710,5,259,0,0,709,708,1,0,0,0,709,710,1,0,0,0,710,712,1,0,0,
+        0,711,713,5,261,0,0,712,711,1,0,0,0,712,713,1,0,0,0,713,715,1,0,
         0,0,714,716,5,17,0,0,715,714,1,0,0,0,715,716,1,0,0,0,716,107,1,0,
-        0,0,717,749,5,53,0,0,718,719,5,262,0,0,719,722,5,271,0,0,720,721,
-        5,263,0,0,721,723,5,273,0,0,722,720,1,0,0,0,722,723,1,0,0,0,723,
-        750,1,0,0,0,724,725,5,262,0,0,725,750,5,272,0,0,726,727,5,264,0,
-        0,727,729,5,265,0,0,728,730,5,273,0,0,729,728,1,0,0,0,729,730,1,
-        0,0,0,730,734,1,0,0,0,731,732,5,273,0,0,732,733,5,266,0,0,733,735,
-        5,273,0,0,734,731,1,0,0,0,735,736,1,0,0,0,736,734,1,0,0,0,736,737,
-        1,0,0,0,737,750,1,0,0,0,738,739,5,267,0,0,739,740,5,265,0,0,740,
-        750,5,273,0,0,741,742,5,268,0,0,742,743,5,265,0,0,743,750,5,273,
-        0,0,744,745,5,269,0,0,745,746,5,265,0,0,746,750,5,273,0,0,747,748,
-        5,270,0,0,748,750,5,265,0,0,749,718,1,0,0,0,749,724,1,0,0,0,749,
+        0,0,717,749,5,53,0,0,718,719,5,263,0,0,719,722,5,272,0,0,720,721,
+        5,264,0,0,721,723,5,274,0,0,722,720,1,0,0,0,722,723,1,0,0,0,723,
+        750,1,0,0,0,724,725,5,263,0,0,725,750,5,273,0,0,726,727,5,265,0,
+        0,727,729,5,266,0,0,728,730,5,274,0,0,729,728,1,0,0,0,729,730,1,
+        0,0,0,730,734,1,0,0,0,731,732,5,274,0,0,732,733,5,267,0,0,733,735,
+        5,274,0,0,734,731,1,0,0,0,735,736,1,0,0,0,736,734,1,0,0,0,736,737,
+        1,0,0,0,737,750,1,0,0,0,738,739,5,268,0,0,739,740,5,266,0,0,740,
+        750,5,274,0,0,741,742,5,269,0,0,742,743,5,266,0,0,743,750,5,274,
+        0,0,744,745,5,270,0,0,745,746,5,266,0,0,746,750,5,274,0,0,747,748,
+        5,271,0,0,748,750,5,266,0,0,749,718,1,0,0,0,749,724,1,0,0,0,749,
         726,1,0,0,0,749,738,1,0,0,0,749,741,1,0,0,0,749,744,1,0,0,0,749,
-        747,1,0,0,0,750,752,1,0,0,0,751,753,5,275,0,0,752,751,1,0,0,0,752,
-        753,1,0,0,0,753,755,1,0,0,0,754,756,5,274,0,0,755,754,1,0,0,0,755,
-        756,1,0,0,0,756,109,1,0,0,0,757,759,5,54,0,0,758,760,5,277,0,0,759,
+        747,1,0,0,0,750,752,1,0,0,0,751,753,5,276,0,0,752,751,1,0,0,0,752,
+        753,1,0,0,0,753,755,1,0,0,0,754,756,5,275,0,0,755,754,1,0,0,0,755,
+        756,1,0,0,0,756,109,1,0,0,0,757,759,5,54,0,0,758,760,5,278,0,0,759,
         758,1,0,0,0,760,761,1,0,0,0,761,759,1,0,0,0,761,762,1,0,0,0,762,
-        764,1,0,0,0,763,765,5,279,0,0,764,763,1,0,0,0,764,765,1,0,0,0,765,
-        767,1,0,0,0,766,768,5,278,0,0,767,766,1,0,0,0,767,768,1,0,0,0,768,
+        764,1,0,0,0,763,765,5,280,0,0,764,763,1,0,0,0,764,765,1,0,0,0,765,
+        767,1,0,0,0,766,768,5,279,0,0,767,766,1,0,0,0,767,768,1,0,0,0,768,
         111,1,0,0,0,109,121,125,128,137,146,151,155,157,161,166,185,202,
         204,209,211,215,220,223,226,231,243,248,253,258,263,268,273,278,
         283,288,313,317,320,323,327,330,333,338,341,346,349,355,358,361,
@@ -383,16 +383,16 @@ class SQLParser ( Parser ):
                      "'MASK'", "'NOMASK'", "'MASKLINE'", "'NOMASKLINE'", 
                      "'CASE'", "'NOCASE'", "'IGBLANK'", "'NOIGBLANK'", "'TRIM'", 
                      "'NOTRIM'", "'OUTPUT'", "'CONSOLE'", "'DIFFFILE'", 
-                     "'SKIPLINE'", "'NOSKIPLINE'", "'RESET'", "'ALGORITHM'", 
-                     "'ENCODING'", "'WORK'", "'REFERENCE'", "'LCS'", "'MYERS'", 
+                     "'HTMLFILE'", "'SKIPLINE'", "'NOSKIPLINE'", "'RESET'", 
+                     "'ALGORITHM'", "'ENCODING'", "'WORK'", "'REFERENCE'", 
+                     "'LCS'", "'MYERS'", "<INVALID>", "<INVALID>", "<INVALID>", 
+                     "<INVALID>", "'SEEDFILE'", "'DIR'", "<INVALID>", "<INVALID>", 
+                     "<INVALID>", "'ROWS'", "<INVALID>", "<INVALID>", "<INVALID>", 
+                     "'CONVERT'", "<INVALID>", "<INVALID>", "<INVALID>", 
                      "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
-                     "'SEEDFILE'", "'DIR'", "<INVALID>", "<INVALID>", "<INVALID>", 
-                     "'ROWS'", "<INVALID>", "<INVALID>", "<INVALID>", "'CONVERT'", 
-                     "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
-                     "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
-                     "<INVALID>", "<INVALID>", "'MONITORMANAGER'", "'WORKERS'", 
-                     "<INVALID>", "'TASK'", "<INVALID>", "<INVALID>", "'STOP'", 
-                     "'REPORT'", "'LIST'" ]
+                     "<INVALID>", "<INVALID>", "<INVALID>", "'MONITORMANAGER'", 
+                     "'WORKERS'", "<INVALID>", "'TASK'", "<INVALID>", "<INVALID>", 
+                     "'STOP'", "'REPORT'", "'LIST'" ]
 
     symbolicNames = [ "<INVALID>", "CONNECT", "SESSION", "DISCONNECT", "MINUS_MINUS_COMMENT", 
                       "SQL_CREATE", "SQL_INSERT", "SQL_UPDATE", "SQL_SELECT", 
@@ -450,22 +450,23 @@ class SQLParser ( Parser ):
                       "COMPARE_MASKLINE", "COMPARE_NOMASKLINE", "COMPARE_CASE", 
                       "COMPARE_NOCASE", "COMPARE_IGBLANK", "COMPARE_NOIGBLANK", 
                       "COMPARE_TRIM", "COMPARE_NOTRIM", "COMPARE_OUTPUT", 
-                      "COMPARE_CONSOLE", "COMPARE_DIFFFILE", "COMPARE_SKIPLINE", 
-                      "COMPARE_NOSKIPLINE", "COMPARE_RESET", "COMPARE_ALGORITHM", 
-                      "COMPARE_ENCODING", "COMPARE_WORK", "COMPARE_REFERENCE", 
-                      "COMPARE_LCS", "COMPARE_MYERS", "COMPARE_EXPRESSION", 
-                      "DATA_SPACE", "DATA_SEMICOLON", "DATA_SET", "DATA_SEEDFILE", 
-                      "DATA_DIR", "DATA_CREATE", "DATA_FILE", "DATA_FILETYPE", 
-                      "DATA_ROWS", "DATA_INT", "DATA_COMMA", "DATACOLUMN_OPEN", 
-                      "DATA_CONVERT", "DATA_TO", "DATA_EXPRESSION", "DATACOLUMN_SPACE", 
-                      "DATACOLUMN_CLOSE", "DATACOLUMN_CONTENT", "HELP_SPACE", 
-                      "HELP_COMMAND", "HELP_CRLF", "HELP_SEMICOLON", "MONITOR_SPACE", 
-                      "MONITOR_MANAGER", "MONITOR_WORKERS", "MONITOR_CREATE", 
-                      "MONITOR_TASK", "MONITOR_EQUAL", "MONITOR_START", 
-                      "MONITOR_STOP", "MONITOR_REPORT", "MONITOR_LIST", 
-                      "MONITOR_ON", "MONITOR_OFF", "MONITOR_EXPRESSION", 
-                      "MONITOR_CRLF", "MONITOR_SEMICOLON", "PLUGIN_SPACE", 
-                      "PLUGIN_EXPRESSION", "PLUGIN_CRLF", "PLUGIN_SEMICOLON" ]
+                      "COMPARE_CONSOLE", "COMPARE_DIFFFILE", "COMPARE_HTMLFILE", 
+                      "COMPARE_SKIPLINE", "COMPARE_NOSKIPLINE", "COMPARE_RESET", 
+                      "COMPARE_ALGORITHM", "COMPARE_ENCODING", "COMPARE_WORK", 
+                      "COMPARE_REFERENCE", "COMPARE_LCS", "COMPARE_MYERS", 
+                      "COMPARE_EXPRESSION", "DATA_SPACE", "DATA_SEMICOLON", 
+                      "DATA_SET", "DATA_SEEDFILE", "DATA_DIR", "DATA_CREATE", 
+                      "DATA_FILE", "DATA_FILETYPE", "DATA_ROWS", "DATA_INT", 
+                      "DATA_COMMA", "DATACOLUMN_OPEN", "DATA_CONVERT", "DATA_TO", 
+                      "DATA_EXPRESSION", "DATACOLUMN_SPACE", "DATACOLUMN_CLOSE", 
+                      "DATACOLUMN_CONTENT", "HELP_SPACE", "HELP_COMMAND", 
+                      "HELP_CRLF", "HELP_SEMICOLON", "MONITOR_SPACE", "MONITOR_MANAGER", 
+                      "MONITOR_WORKERS", "MONITOR_CREATE", "MONITOR_TASK", 
+                      "MONITOR_EQUAL", "MONITOR_START", "MONITOR_STOP", 
+                      "MONITOR_REPORT", "MONITOR_LIST", "MONITOR_ON", "MONITOR_OFF", 
+                      "MONITOR_EXPRESSION", "MONITOR_CRLF", "MONITOR_SEMICOLON", 
+                      "PLUGIN_SPACE", "PLUGIN_EXPRESSION", "PLUGIN_CRLF", 
+                      "PLUGIN_SEMICOLON" ]
 
     RULE_prog = 0
     RULE_command = 1
@@ -766,57 +767,58 @@ class SQLParser ( Parser ):
     COMPARE_OUTPUT=226
     COMPARE_CONSOLE=227
     COMPARE_DIFFFILE=228
-    COMPARE_SKIPLINE=229
-    COMPARE_NOSKIPLINE=230
-    COMPARE_RESET=231
-    COMPARE_ALGORITHM=232
-    COMPARE_ENCODING=233
-    COMPARE_WORK=234
-    COMPARE_REFERENCE=235
-    COMPARE_LCS=236
-    COMPARE_MYERS=237
-    COMPARE_EXPRESSION=238
-    DATA_SPACE=239
-    DATA_SEMICOLON=240
-    DATA_SET=241
-    DATA_SEEDFILE=242
-    DATA_DIR=243
-    DATA_CREATE=244
-    DATA_FILE=245
-    DATA_FILETYPE=246
-    DATA_ROWS=247
-    DATA_INT=248
-    DATA_COMMA=249
-    DATACOLUMN_OPEN=250
-    DATA_CONVERT=251
-    DATA_TO=252
-    DATA_EXPRESSION=253
-    DATACOLUMN_SPACE=254
-    DATACOLUMN_CLOSE=255
-    DATACOLUMN_CONTENT=256
-    HELP_SPACE=257
-    HELP_COMMAND=258
-    HELP_CRLF=259
-    HELP_SEMICOLON=260
-    MONITOR_SPACE=261
-    MONITOR_MANAGER=262
-    MONITOR_WORKERS=263
-    MONITOR_CREATE=264
-    MONITOR_TASK=265
-    MONITOR_EQUAL=266
-    MONITOR_START=267
-    MONITOR_STOP=268
-    MONITOR_REPORT=269
-    MONITOR_LIST=270
-    MONITOR_ON=271
-    MONITOR_OFF=272
-    MONITOR_EXPRESSION=273
-    MONITOR_CRLF=274
-    MONITOR_SEMICOLON=275
-    PLUGIN_SPACE=276
-    PLUGIN_EXPRESSION=277
-    PLUGIN_CRLF=278
-    PLUGIN_SEMICOLON=279
+    COMPARE_HTMLFILE=229
+    COMPARE_SKIPLINE=230
+    COMPARE_NOSKIPLINE=231
+    COMPARE_RESET=232
+    COMPARE_ALGORITHM=233
+    COMPARE_ENCODING=234
+    COMPARE_WORK=235
+    COMPARE_REFERENCE=236
+    COMPARE_LCS=237
+    COMPARE_MYERS=238
+    COMPARE_EXPRESSION=239
+    DATA_SPACE=240
+    DATA_SEMICOLON=241
+    DATA_SET=242
+    DATA_SEEDFILE=243
+    DATA_DIR=244
+    DATA_CREATE=245
+    DATA_FILE=246
+    DATA_FILETYPE=247
+    DATA_ROWS=248
+    DATA_INT=249
+    DATA_COMMA=250
+    DATACOLUMN_OPEN=251
+    DATA_CONVERT=252
+    DATA_TO=253
+    DATA_EXPRESSION=254
+    DATACOLUMN_SPACE=255
+    DATACOLUMN_CLOSE=256
+    DATACOLUMN_CONTENT=257
+    HELP_SPACE=258
+    HELP_COMMAND=259
+    HELP_CRLF=260
+    HELP_SEMICOLON=261
+    MONITOR_SPACE=262
+    MONITOR_MANAGER=263
+    MONITOR_WORKERS=264
+    MONITOR_CREATE=265
+    MONITOR_TASK=266
+    MONITOR_EQUAL=267
+    MONITOR_START=268
+    MONITOR_STOP=269
+    MONITOR_REPORT=270
+    MONITOR_LIST=271
+    MONITOR_ON=272
+    MONITOR_OFF=273
+    MONITOR_EXPRESSION=274
+    MONITOR_CRLF=275
+    MONITOR_SEMICOLON=276
+    PLUGIN_SPACE=277
+    PLUGIN_EXPRESSION=278
+    PLUGIN_CRLF=279
+    PLUGIN_SEMICOLON=280
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
@@ -3449,8 +3451,8 @@ class SQLParser ( Parser ):
         def LOAD_SEMICOLON(self):
             return self.getToken(SQLParser.LOAD_SEMICOLON, 0)
 
-        def CRLF(self):
-            return self.getToken(SQLParser.CRLF, 0)
+        def LOAD_CRLF(self):
+            return self.getToken(SQLParser.LOAD_CRLF, 0)
 
         def LOAD_PLUGIN(self):
             return self.getToken(SQLParser.LOAD_PLUGIN, 0)
@@ -3620,9 +3622,9 @@ class SQLParser ( Parser ):
             self.state = 397
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==17:
+            if _la==120:
                 self.state = 396
-                self.match(SQLParser.CRLF)
+                self.match(SQLParser.LOAD_CRLF)
 
 
         except RecognitionException as re:
@@ -5091,6 +5093,12 @@ class SQLParser ( Parser ):
             else:
                 return self.getToken(SQLParser.COMPARE_DIFFFILE, i)
 
+        def COMPARE_HTMLFILE(self, i:int=None):
+            if i is None:
+                return self.getTokens(SQLParser.COMPARE_HTMLFILE)
+            else:
+                return self.getToken(SQLParser.COMPARE_HTMLFILE, i)
+
         def getRuleIndex(self):
             return SQLParser.RULE_compare
 
@@ -5140,7 +5148,7 @@ class SQLParser ( Parser ):
             elif la_ == 2:
                 self.state = 632
                 _la = self._input.LA(1)
-                if not(_la==229 or _la==230):
+                if not(_la==230 or _la==231):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -5203,7 +5211,7 @@ class SQLParser ( Parser ):
                 while True:
                     self.state = 650
                     _la = self._input.LA(1)
-                    if not(_la==227 or _la==228):
+                    if not((((_la - 227)) & ~0x3f) == 0 and ((1 << (_la - 227)) & 7) != 0):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
@@ -5211,7 +5219,7 @@ class SQLParser ( Parser ):
                     self.state = 653 
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if not (_la==227 or _la==228):
+                    if not ((((_la - 227)) & ~0x3f) == 0 and ((1 << (_la - 227)) & 7) != 0):
                         break
 
                 pass
@@ -5223,7 +5231,7 @@ class SQLParser ( Parser ):
                 self.match(SQLParser.COMPARE_ALGORITHM)
                 self.state = 657
                 _la = self._input.LA(1)
-                if not(_la==236 or _la==237):
+                if not(_la==237 or _la==238):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -5235,7 +5243,7 @@ class SQLParser ( Parser ):
                 self.match(SQLParser.COMPARE_SET)
                 self.state = 659
                 _la = self._input.LA(1)
-                if not(_la==234 or _la==235):
+                if not(_la==235 or _la==236):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -5360,7 +5368,7 @@ class SQLParser ( Parser ):
             self.state = 702
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [241]:
+            if token in [242]:
                 self.state = 671
                 self.match(SQLParser.DATA_SET)
                 self.state = 672
@@ -5372,13 +5380,13 @@ class SQLParser ( Parser ):
                 self.state = 676
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==240:
+                if _la==241:
                     self.state = 675
                     self.match(SQLParser.DATA_SEMICOLON)
 
 
                 pass
-            elif token in [244]:
+            elif token in [245]:
                 self.state = 678
                 self.match(SQLParser.DATA_CREATE)
                 self.state = 679
@@ -5392,7 +5400,7 @@ class SQLParser ( Parser ):
                 self.state = 684
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==256:
+                if _la==257:
                     self.state = 683
                     self.match(SQLParser.DATACOLUMN_CONTENT)
 
@@ -5400,7 +5408,7 @@ class SQLParser ( Parser ):
                 self.state = 688
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==247:
+                if _la==248:
                     self.state = 686
                     self.match(SQLParser.DATA_ROWS)
                     self.state = 687
@@ -5410,7 +5418,7 @@ class SQLParser ( Parser ):
                 self.state = 690
                 self.match(SQLParser.DATA_SEMICOLON)
                 pass
-            elif token in [251]:
+            elif token in [252]:
                 self.state = 691
                 self.match(SQLParser.DATA_CONVERT)
                 self.state = 692
@@ -5430,7 +5438,7 @@ class SQLParser ( Parser ):
                 self.state = 700
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==240:
+                if _la==241:
                     self.state = 699
                     self.match(SQLParser.DATA_SEMICOLON)
 
@@ -5499,7 +5507,7 @@ class SQLParser ( Parser ):
             self.state = 709
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==258:
+            if _la==259:
                 self.state = 708
                 self.match(SQLParser.HELP_COMMAND)
 
@@ -5507,7 +5515,7 @@ class SQLParser ( Parser ):
             self.state = 712
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==260:
+            if _la==261:
                 self.state = 711
                 self.match(SQLParser.HELP_SEMICOLON)
 
@@ -5619,7 +5627,7 @@ class SQLParser ( Parser ):
                 self.state = 722
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==263:
+                if _la==264:
                     self.state = 720
                     self.match(SQLParser.MONITOR_WORKERS)
                     self.state = 721
@@ -5662,7 +5670,7 @@ class SQLParser ( Parser ):
                     self.state = 736 
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if not (_la==273):
+                    if not (_la==274):
                         break
 
                 pass
@@ -5705,7 +5713,7 @@ class SQLParser ( Parser ):
             self.state = 752
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==275:
+            if _la==276:
                 self.state = 751
                 self.match(SQLParser.MONITOR_SEMICOLON)
 
@@ -5713,7 +5721,7 @@ class SQLParser ( Parser ):
             self.state = 755
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==274:
+            if _la==275:
                 self.state = 754
                 self.match(SQLParser.MONITOR_CRLF)
 
@@ -5779,13 +5787,13 @@ class SQLParser ( Parser ):
                 self.state = 761 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==277):
+                if not (_la==278):
                     break
 
             self.state = 764
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==279:
+            if _la==280:
                 self.state = 763
                 self.match(SQLParser.PLUGIN_SEMICOLON)
 
@@ -5793,7 +5801,7 @@ class SQLParser ( Parser ):
             self.state = 767
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==278:
+            if _la==279:
                 self.state = 766
                 self.match(SQLParser.PLUGIN_CRLF)
 

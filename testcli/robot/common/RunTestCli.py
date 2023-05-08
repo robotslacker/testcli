@@ -215,6 +215,9 @@ class RunTestCli(object):
                 nameSpace = "N/A"
 
             # 将当前路径作为系统的Moule路径
+            packagePath = str(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../.."))
+            if packagePath not in sys.path:
+                sys.path.append(packagePath)
             modulePath = str(os.path.dirname(os.path.realpath(__file__)))
             if modulePath not in sys.path:
                 sys.path.append(modulePath)

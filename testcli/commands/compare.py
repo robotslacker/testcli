@@ -4,6 +4,7 @@ import os
 import re
 from collections import namedtuple
 from ..common import rewriteStatement
+from ..htmldiff.diffhtmlgenerate import diffHtmlGenerate
 
 # 默认的比较选项
 compareDefaultOption = {
@@ -633,8 +634,22 @@ def executeCompareRequest(cls, requestObject, commandScriptFile: str):
                     # 如果要求输出到文件，则将比对结果写入文件中
                     baseTargetFile = os.path.splitext(targetFile)[0]
                     diffFile = os.path.join(os.path.dirname(os.path.abspath(targetFile)), baseTargetFile + ".dif")
-                    fp = open(file=diffFile, mode="w")
+                    fp = open(file=diffFile, mode="w", encoding="UTF-8")
                     for line in compareReport:
+                        fp.write(line + "\n")
+                    fp.close()
+                if "htmlFile" in compareOption["output"]:
+                    # 如果要求输出到HTML文件，则将比对结果转换为HTML格式化再输出
+                    diffhtmlGenerate = diffHtmlGenerate()
+                    htmlResult = diffhtmlGenerate.generateHtmlFromDif(
+                        workFile=targetFile,
+                        refFile=referenceFile,
+                        diffLines=compareReport
+                    )
+                    baseTargetFile = os.path.splitext(targetFile)[0]
+                    diffFile = os.path.join(os.path.dirname(os.path.abspath(targetFile)), baseTargetFile + ".html")
+                    fp = open(file=diffFile, mode="w", encoding="UTF-8")
+                    for line in htmlResult:
                         fp.write(line + "\n")
                     fp.close()
                 yield {

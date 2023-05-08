@@ -40,6 +40,7 @@ def abortSignalHandler(signum, frame):
 @click.option("--silent", is_flag=True, help="Run script in silent mode, no console output. Default is false.")
 @click.option("--daemon", is_flag=True, help="Run script in daemon mode. Default is false.")
 @click.option("--pidfile", type=str, help="Set pid file path and filename. Default is no pid control.")
+@click.option("--debug", is_flag=True, help="Run in debug mode. Default is False.")
 def cli(
         version,
         logon,
@@ -59,7 +60,8 @@ def cli(
         casename,
         silent,
         daemon,
-        pidfile
+        pidfile,
+        debug
 ):
     # 程序的返回值，默认是0
     appExitValue = 0
@@ -86,6 +88,11 @@ def cli(
                 try:
                     pid = os.fork()
                     if pid > 0:
+                        # 关闭输入输出，抑制dameon系统回调的屏幕显示
+                        with open('/dev/null') as read_null, open('/dev/null', 'w') as write_null:
+                            os.dup2(read_null.fileno(), sys.stdin.fileno())
+                            os.dup2(write_null.fileno(), sys.stdout.fileno())
+                            os.dup2(write_null.fileno(), sys.stderr.fileno())
                         sys.exit(0)
                 except OSError as oe:
                     click.secho(repr(oe), err=True, fg="red")
@@ -100,6 +107,11 @@ def cli(
                 try:
                     pid = os.fork()
                     if pid > 0:
+                        # 关闭输入输出，抑制dameon系统回调的屏幕显示
+                        with open('/dev/null') as read_null, open('/dev/null', 'w') as write_null:
+                            os.dup2(read_null.fileno(), sys.stdin.fileno())
+                            os.dup2(write_null.fileno(), sys.stdout.fileno())
+                            os.dup2(write_null.fileno(), sys.stderr.fileno())
                         sys.exit(0)
                 except OSError as oe:
                     click.secho(repr(oe), err=True, fg="red")
@@ -114,12 +126,19 @@ def cli(
                     os.dup2(write_null.fileno(), sys.stderr.fileno())
             else:
                 # 非Linux平台不支持daemon模式运行, 即使设置了Daemon参数，也会忽略
+                click.secho(
+                    "[WARN] Current platform [" + platform.system().upper() + "] does not support daemon mode.",
+                    fg="yellow")
                 pass
 
         # 打印版本信息
         if version:
             click.secho("Version: " + __version__)
             return
+
+        # 程序处于调试状态
+        if debug:
+            os.environ["TESTCLI_DEBUG"] = "1"
 
         # 程序自检
         if selftest:

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import ast
 import re
-import platform
 from io import open
 from setuptools import setup
 
@@ -36,10 +35,8 @@ install_requires = ['JPype1', 'setproctitle', 'urllib3<1.27',
                     'click', 'prompt_toolkit', 'paramiko', 'antlr4-python3-runtime==4.11.1',
                     'fs', "psutil", "glom",
                     "python-multipart", "pytest-xdist", "pytest", 'fastapi', 'uvicorn',
-                    "coloredlogs", "robotframework", "beautifulsoup4", "lxml"
+                    "coloredlogs", "robotframework", "beautifulsoup4", "lxml",
                     ]
-if platform.system() == "Windows":
-    install_requires.append("pywin32")
 
 setup(
     name='robotslacker-testcli',
@@ -66,6 +63,7 @@ setup(
         'plugin/*',
         'test/*',
         'docs/*',
+        'htmldiff/*', 'htmldiff/*/*',
         "robot/*", "robot/*/*", "robot/*/*", "robot/*/*/*", "robot/*/*/*/*",
     ]},
     python_requires='>=3.6',

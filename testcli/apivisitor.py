@@ -832,6 +832,8 @@ class APIVisitor(APIParserVisitor):
             output.append("console")
         if len(ctx.COMPARE_DIFFFILE()) != 0:
             output.append("diffFile")
+        if len(ctx.COMPARE_HTMLFILE()) != 0:
+            output.append("htmlFile")
         if len(output) != 0:
             compareOptions.update({"output": output})
         if ctx.COMPARE_LCS() is not None:
