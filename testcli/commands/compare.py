@@ -621,7 +621,7 @@ def executeCompareRequest(cls, requestObject, commandScriptFile: str):
                 if "console" in compareOption["output"]:
                     # 如果要求输出到控制台，则显示比对结果到控制台上
                     for line in compareReport:
-                        if line.startswith("-") or line.startswith("+"):
+                        if line.startswith("-") or line.startswith("+") or line.startswith("S"):
                             tag = line[0]
                             workLineno = ""
                             refLineno = ""
@@ -629,6 +629,8 @@ def executeCompareRequest(cls, requestObject, commandScriptFile: str):
                                 workLineno = line[1:7]
                             if tag == "+":
                                 refLineno = line[1:7]
+                            if tag == "S":
+                                workLineno = line[1:7]
                             compareOutput.append([tag, workLineno, refLineno, line[8:]])
                 if "diffFile" in compareOption["output"]:
                     # 如果要求输出到文件，则将比对结果写入文件中

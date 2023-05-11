@@ -822,11 +822,21 @@ class SQLVisitor(SQLParserVisitor):
         if ctx.COMPARE_SKIPLINE() is not None:
             parsedObject.update({'action': "skip"})
             if ctx.COMPARE_EXPRESSION() is not None:
-                parsedObject.update({'source': str(ctx.COMPARE_EXPRESSION()[0].getText())})
+                skipLine = str(ctx.COMPARE_EXPRESSION()[0].getText()).strip()
+                if skipLine.startswith("'") and skipLine.endswith("'"):
+                    skipLine = skipLine[1:-1]
+                elif skipLine.startswith('"') and skipLine.endswith('"'):
+                    skipLine = skipLine[1:-1]
+                parsedObject.update({'source': skipLine})
         if ctx.COMPARE_NOSKIPLINE() is not None:
             parsedObject.update({'action': "noskip"})
             if ctx.COMPARE_EXPRESSION() is not None:
-                parsedObject.update({'source': str(ctx.COMPARE_EXPRESSION()[0].getText())})
+                skipLine = str(ctx.COMPARE_EXPRESSION()[0].getText()).strip()
+                if skipLine.startswith("'") and skipLine.endswith("'"):
+                    skipLine = skipLine[1:-1]
+                elif skipLine.startswith('"') and skipLine.endswith('"'):
+                    skipLine = skipLine[1:-1]
+                parsedObject.update({'source': skipLine})
 
         # SET
         if ctx.COMPARE_SET() is not None:

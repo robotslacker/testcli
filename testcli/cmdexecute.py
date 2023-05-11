@@ -1325,7 +1325,7 @@ class CmdExecute(object):
                     ):
                         # 处理命令行的提示信息
                         self.processCommandHint_Status(result=result, commandHints=commandHintList)
-                        if "status" in result.keys():
+                        if "status" in result.keys() and result["status"] is not None:
                             consoleOutput.append(result["status"])
                         lastCommandResult["status"] = "\n".join(consoleOutput)
                         lastCommandResult["errorCode"] = 0

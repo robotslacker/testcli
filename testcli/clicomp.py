@@ -4,6 +4,8 @@ import sys
 import click
 import platform
 import signal
+
+from testcli.htmldiff.diffhtmlgenerate import diffHtmlGenerate
 from .commands.compare import POSIXCompare
 from .sqlparse import SQLAnalyze
 
@@ -23,7 +25,7 @@ def abortSignalHandler(signum, frame):
 @click.option("--rule", type=str, help="Compare rule file.")
 @click.option("--output", type=str, default="CONSOLE", required=True,
               help="Specify the result file. default is console.")
-@click.option("--outputformat", type=str, default="TXT", help="Specify the result output file format TXT|HTML.")
+@click.option("--outputformat", type=str, default="TXT", help="Specify the result output file format TXT|HTML|CONSOLE.")
 def cli(
         reference,
         logfile,
@@ -39,11 +41,13 @@ def cli(
         signal.signal(signal.SIGTERM, abortSignalHandler)
 
     # 校验报告输出格式
+    outputformat = str(outputformat).strip().upper()
     if outputformat not in ["TXT", "HTML"]:
-        click.secho("Compare tool only support TXT(text mode) or HTML(html mode). ", err=True, fg="red")
-        sys.exit(255)
-    if outputformat == "HTML":
-        click.secho("Feature not supported yet. Wait for one or two week. ", err=True, fg="red")
+        click.secho(
+            "Compare tool only support TXT(text mode) or HTML(html mode).",
+            err=True,
+            fg="red"
+        )
         sys.exit(255)
 
     # 解析比较配置文件
@@ -140,16 +144,34 @@ def cli(
     if not compareResult:
         if not str(output).strip().upper() == "CONSOLE":
             suffix = os.path.splitext(logFile)[-1]
-            diffFile = os.path.join(
-                output,
-                os.path.basename(logFile)[0:-1*len(suffix)] + ".dif"
-            )
-            with open(file=diffFile, mode="w") as fp:
-                for line in compareReport:
+            if outputformat == "TXT":
+                diffFile = os.path.join(
+                    output,
+                    os.path.basename(logFile)[0:-1*len(suffix)] + ".dif"
+                )
+                with open(file=diffFile, mode="w") as fp:
+                    for line in compareReport:
+                        fp.write(line + "\n")
+                fp.close()
+                print("Compare failed. "
+                      "Please check diff file [" + os.path.abspath(diffFile) + "] to get detail information.")
+            elif outputformat == "HTML":
+                htmlDiffFile = os.path.join(
+                    output,
+                    os.path.basename(logFile)[0:-1 * len(suffix)] + ".html"
+                )
+                diffhtmlGenerate = diffHtmlGenerate()
+                htmlResult = diffhtmlGenerate.generateHtmlFromDif(
+                    workFile=logFile,
+                    refFile=refFile,
+                    diffLines=compareReport
+                )
+                fp = open(file=htmlDiffFile, mode="w", encoding="UTF-8")
+                for line in htmlResult:
                     fp.write(line + "\n")
-            fp.close()
-            print("Compare failed. "
-                  "Please check diff file [" + os.path.abspath(diffFile) + "] to get detail information.")
+                fp.close()
+                print("Compare failed. "
+                      "Please read diff html report [" + os.path.abspath(htmlDiffFile) + "] to get detail information.")
         else:
             for line in compareReport:
                 if line.startswith("-") or line.startswith("+"):

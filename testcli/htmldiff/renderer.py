@@ -21,6 +21,7 @@ def _html_escape(string):
         '"': '&quot;',
         '<': '&lt;',
         '>': '&gt;',
+        "'": '&#39;',
     }
 
     # & must be handled first

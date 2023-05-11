@@ -5,8 +5,17 @@
     <title></title>
     <style>
 
-      button :hover {
-        cursor:pointer
+      button:hover {
+          background: #eee;
+          cursor:pointer
+      }
+
+      button:focus {
+          border: 2px solid #3366ff;
+      }
+
+      button:active {
+        transform: scale(0.98);
       }
 
       .top-title {
@@ -102,7 +111,7 @@
       }
 
       .gray {
-        color: gray;
+        background-color: gray;
       }
 
       .diff {

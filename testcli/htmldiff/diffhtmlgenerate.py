@@ -45,64 +45,6 @@ class diffHtmlGenerate(object):
 
         return data
 
-    @staticmethod
-    def generateLineDiff(body):
-        """
-            功能：比较-+行的差异，并把差异文字并插入Html的P标签
-                 利用SequenceMatcher进行分析
-            参数：
-                body: 正文区行信息
-            返回：
-                无
-        """
-        lines = dict()
-        for line in body:
-            if line["flag"] == '-' or line["flag"] == '+':
-                number = line["number"]
-                if number in lines.keys():
-                    data = lines[number]
-                    data.append(line)
-                else:
-                    # 新行
-                    lines[number] = [line]
-
-        for number in lines.keys():
-            data = lines[number]
-            source = None
-            target = None
-            # FIXME 只比较一行
-            for item in data:
-                if item["flag"] == "-":
-                    source = item
-                if item["flag"] == "+":
-                    target = item
-
-            if source is not None and target is not None:
-                a = source["source"]
-                b = target["source"]
-                s = SequenceMatcher(None, a, b)
-                na = ""
-                nb = ""
-                for tag, i1, i2, j1, j2 in s.get_opcodes():
-                    if tag == "replace":
-                        # 不一样
-                        na = na + "<p class='diff'>" + a[i1:i2] + "</p>"
-                        nb = nb + "<p class='diff'>" + b[j1:j2] + "</p>"
-                    elif tag == "delete":
-                        # 删除
-                        na = na + "<p class='diff'>" + a[i1:i2] + "</p>"
-                        nb = nb + "<p class='diff'>" + b[j1:j2] + "</p>"
-                    elif tag == "insert":
-                        # 新增
-                        na = na + "<p class='diff'>" + a[i1:i2] + "</p>"
-                        nb = nb + "<p class='diff'>" + b[j1:j2] + "</p>"
-                    elif tag == "equal":
-                        na = na + a[i1:i2]
-                        nb = nb + b[j1:j2]
-                source["source"] = na
-                target["source"] = nb
-        return
-
     def generateHtmlFromDif(self, workFile: str, refFile: str, diffLines: list):
 
         """
@@ -120,9 +62,6 @@ class diffHtmlGenerate(object):
                 header.append(self.parseHeaderLine(line))
             else:
                 body.append(self.parseBodyLine(line))
-
-        # 分析-+对应行的差异
-        self.generateLineDiff(body)
 
         # 生成Html文件
         html = self.generateHtml(workFile, refFile, header, body)

@@ -43,26 +43,26 @@
     var current = data[0].number;
 
     function generateSingleTable() {
-        var container = document.querySelector('#pleft');
-        data.forEach(function(row) {
-            let clone = container.querySelector("#l"+row.number);
+        let container = document.querySelector('#pleft');
+        data.forEach(function(row, index) {
+            let clone = container.querySelector("#l"+index);
             if(clone == null) {
                 clone = document.createElement('div');
                 clone.className = "line";
                 const attr = document.createAttribute("id");
-                attr.value = "l"+row.number;
+                attr.value = "l" + index;
                 clone.setAttributeNode(attr);
                 container.appendChild(clone);
             }
-            
+            let source = row.source
             if(row.flag === '+') {
-                clone.innerHTML = "<p class=\"number\">" + row.number + "</p> <p class=\"text plus\">" + row.source + "</p>";
+                clone.innerHTML = "<pre class=\"text plus\">" + row.flag + '  ' + '      ' + row.number.toString().padStart(6, ' ') + '  ' + source + "</pre>";
             } else if(row.flag === '-') {
-                clone.innerHTML = "<p class=\"number\">" + row.number + "</p> <p class=\"text minus\">" + row.source + "</p>";
+                clone.innerHTML = "<pre class=\"text minus\">" + row.flag + '  ' + row.number.toString().padStart(6, ' ') + '      ' + '  ' + source + "</pre>";
             } else if(row.flag === 'S') {
-                clone.innerHTML = "<p class=\"number\">" + row.number + "</p> <p class=\"text gray\">" + row.source + "</p>";
+                clone.innerHTML = "<pre class=\"text gray\">" + row.flag + '  ' + row.number.toString().padStart(6, ' ') + '      ' + '  ' + source + "</pre>";
             } else {
-                clone.innerHTML = "<p class=\"number\">" + row.number + "</p> <p class=\"text\">" + row.source + "</p>";
+                clone.innerHTML = "<pre class=\"text\">" + row.flag + '  ' + row.number.toString().padStart(6, ' ') + '      ' + '  ' + source + "</pre>";
             }
         })
     }
@@ -73,7 +73,7 @@
         let rightContainer = container.querySelector('#pright');
         data.forEach(function(row) {
             let left = leftContainer.querySelector("#l"+row.number);
-            if(left == null) {
+            if (left == null) {
                 left = document.createElement('div');
                 left.className = "line";
                 const attr = document.createAttribute("id");
@@ -83,7 +83,7 @@
             }
 
             let right = rightContainer.querySelector("#r"+row.number);
-            if(right == null) {
+            if (right == null) {
                 right = document.createElement('div');
                 right.className = "line";
                 const attr = document.createAttribute("id");
@@ -91,20 +91,30 @@
                 right.setAttributeNode(attr);
                 rightContainer.appendChild(right);
             }
-
-            if(row.flag === '+') {
-                let source = row.source.replace("&lt;p p='diff'&gt;","<p class=\"diff\">");
-                source = source.replace("&lt;/p&gt;","</p>");
-                left.innerHTML = "<p class=\"number\">" + row.number + "</p> <p class=\"text plus\">" + source + "</p>";
+            let source = row.source
+            if (row.flag === '+') {
+                // 当前信息中有，但是ref中不存在的内容
+                right.innerHTML = "<pre class=\"text plus\">" + row.number.toString().padStart(6, ' ') + '  ' + source + "</pre>";
+                if (left.innerHTML === "") {
+                    left.innerHTML = "<pre class=\"text\">" + row.number.toString().padStart(6, ' ') + "</pre>";
+                }
             } else if(row.flag === '-') {
-                let source = row.source.replace("&lt;p class='diff'&gt;","<p class=\"diff\">");
-                source = source.replace("&lt;/p&gt;","</p>");
-                right.innerHTML = "<p class=\"number\">" + row.number + "</p> <p class=\"text minus\">" + source + "</p>";
+                // 当前信息中没有，但是ref中存在
+                if (right.innerHTML === "") {
+                    right.innerHTML = "<pre class=\"text\">" + row.number.toString().padStart(6, ' ') + "</pre>";
+                }
+                left.innerHTML = "<pre class=\"text minus\">" + row.number.toString().padStart(6, ' ') + '  ' + source + "</pre>";
+            } else if(row.flag === 'S') {
+                // 当前文件中有，但是应该过滤掉
+                if (right.innerHTML === "") {
+                    right.innerHTML = "<pre class=\"text\">" + row.number.toString().padStart(6, ' ') + "</pre>";
+                }
+                left.innerHTML = "<pre class=\"text gray\">" + row.number.toString().padStart(6, ' ') + '  ' + source + "</pre>";
             } else {
-                left.innerHTML = "<p class=\"number\">" + row.number + "</p> <p class=\"text\">" + row.source + "</p>";
-                right.innerHTML = "<p class=\"number\">" + row.number + "</p> <p class=\"text\">" + row.source + "</p>";
+                // 两边内容完全一致
+                left.innerHTML = "<pre class=\"text\">" + row.number.toString().padStart(6, ' ') + '  ' + source + "</pre>";
+                right.innerHTML = "<pre class=\"text\">" + row.number.toString().padStart(6, ' ') + '  ' + source + "</pre>";
             }
-
         })
     }
 
@@ -179,14 +189,16 @@
     function visibleRow(rowNumber) {
         var container = document.querySelector('#container');
         var leftContainer = container.querySelector('#pleft');
-        let element = leftContainer.querySelector("#l"+rowNumber);
-        console.log("#l"+rowNumber);
-        element.scrollIntoView();
+        let element = leftContainer.querySelector("#l" + rowNumber);
+        if (element !== null)
+        {
+            element.scrollIntoView();
+        }
     }
 
     function next( ) {
         for (i = parseInt(current) + 1; i < data.length; i++) {
-            if(data[i].flag =='+') {
+            if ( data[i].flag ==='+' || data[i].flag ==='-') {
                 visibleRow(i.toString());
                 current = i.toString()
                 return;
@@ -196,7 +208,11 @@
 
     function pre() {
         for (i = parseInt(current) - 1; i < data.length; i--) {
-            if(data[i].flag =='+') {
+            if (i < 0)
+            {
+                return
+            }
+            if ( data[i].flag ==='+' || data[i].flag ==='-') {
                 visibleRow(i.toString());
                 current = i.toString()
                 return;

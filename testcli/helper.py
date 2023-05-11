@@ -73,7 +73,7 @@ helpMessage = [
            _COMPARE NOMASKLINE <the mask line to undefine>
            _COMPARE RESET
            _COMPARE SET {MASK|NOMASK|CASE|NOCASE|IGBLANK|NOIGBLANK|TRIM|NOTRIM}
-           _COMPARE SET OUTPUT { CONSOLE | DIFFFILE }
+           _COMPARE SET OUTPUT { CONSOLE | DIFFFILE | HTMLFILE}
            _COMPARE SET ALGORITHM [LCS | MYERS]
            _COMPARE SET WORK ENCODING <work file codec, default is UTF-8>
            _COMPARE SET REFERENCE ENCODING <reference file codec. default is UTF-8>

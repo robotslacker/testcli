@@ -580,7 +580,7 @@ SQL> _help compare
     _COMPARE NOMASKLINE <the mask line to undefine>
     _COMPARE RESET
     _COMPARE SET {MASK | NOMASK | CASE | NOCASE | IGBLANK | NOIGBLANK | TRIM | NOTRIM}
-    _COMPARE SET OUTPUT { CONSOLE | DIFFFILE }
+    _COMPARE SET OUTPUT { CONSOLE | DIFFFILE | HTMLFILE }
     _COMPARE SET ALGORITHM [LCS | MYERS]
     _COMPARE SET WORK ENCODING <work file codec, default is UTF-8>
     _COMPARE SET REFERENCE ENCODING <reference file codec. default is UTF-8>
@@ -2286,8 +2286,8 @@ SQL> _JOB timer slave_finished;
    1. 如果有多个需要进行忽略的内容，可以用多个_COMPARE SKIPLINE来表述
    2. SKIPLINE默认是完全匹配规则，即_COMPARE SKIPLINE aa表示忽略掉行信息为aa的内容，类似aab的内容则不会忽略
    3. 如果希望模拟忽略，则可以用正则表达来描述，如_COMPARE SKIPLINE aa.*
-5. OUTPUT 将比对的结果输出到控制台或者一个DIFF文件中
-   1. 也可以即输出到控制台，也输出到DIFF文件中。设置方法： _COMPARE SET OUTPUT CONSOLE DIFFFILE;
+5. OUTPUT 将比对的结果输出到控制台、一个DIFF文件(文本文件）、一个DIFF文件(HTML文件)中
+   1. 也可以即输出到控制台，也输出到DIFF文本文件中。设置方法： _COMPARE SET OUTPUT CONSOLE DIFFFILE;
 
 ### 脚本中使用SSH命令来远程执行命令以及上传、下载文件
 1. SSH命令主要用来远程执行命令，以及上传、下载文件

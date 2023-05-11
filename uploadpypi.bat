@@ -3,6 +3,8 @@ rd /s/q dist
 python setup.py sdist
 python setup.py bdist_wheel --universal
 pip uninstall --yes robotslacker_testcli
-pip install dist/robotslacker_testcli-0.0.27-py2.py3-none-any.whl
+for %%f in (dist\robotslacker_testcli*.whl) do (
+    pip install %%f
+)
 rd /s/q build
 REM twine upload dist/*

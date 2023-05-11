@@ -306,6 +306,12 @@ def executeSshRequest(requestObject):
             return
 
         if requestObject["action"] == "sftp_cwd":
+            if sshCurrentSessionName not in sshSession.keys():
+                yield {
+                    "type": "error",
+                    "message": "SFTP not connected."
+                }
+                return
             sshContext = sshSession[sshCurrentSessionName]
             sftpHandler = sshContext.getSftpHandler()
             yield {
@@ -318,6 +324,12 @@ def executeSshRequest(requestObject):
             }
             return
         if requestObject["action"] == "sftp_chmod":
+            if sshCurrentSessionName not in sshSession.keys():
+                yield {
+                    "type": "error",
+                    "message": "SFTP not connected."
+                }
+                return
             sshContext = sshSession[sshCurrentSessionName]
             sftpHandler = sshContext.getSftpHandler()
             # chmod的参数为8进制整数，所以这里要转换一下
@@ -332,6 +344,12 @@ def executeSshRequest(requestObject):
             }
             return
         if requestObject["action"] == "sftp_chdir":
+            if sshCurrentSessionName not in sshSession.keys():
+                yield {
+                    "type": "error",
+                    "message": "SFTP not connected."
+                }
+                return
             sshContext = sshSession[sshCurrentSessionName]
             sftpHandler = sshContext.getSftpHandler()
             sftpHandler.chdir(path=requestObject["dir"])
@@ -345,6 +363,12 @@ def executeSshRequest(requestObject):
             }
             return
         if requestObject["action"] == "sftp_chown":
+            if sshCurrentSessionName not in sshSession.keys():
+                yield {
+                    "type": "error",
+                    "message": "SFTP not connected."
+                }
+                return
             sshContext = sshSession[sshCurrentSessionName]
             sftpHandler = sshContext.getSftpHandler()
             sftpHandler.chown(path=requestObject["fileName"], uid=requestObject["uid"], gid=requestObject["gid"])
@@ -358,6 +382,12 @@ def executeSshRequest(requestObject):
             }
             return
         if requestObject["action"] == "sftp_mkdir":
+            if sshCurrentSessionName not in sshSession.keys():
+                yield {
+                    "type": "error",
+                    "message": "SFTP not connected."
+                }
+                return
             sshContext = sshSession[sshCurrentSessionName]
             sftpHandler = sshContext.getSftpHandler()
             # mkdir的mode的参数为8进制整数，所以这里要转换一下
@@ -379,6 +409,12 @@ def executeSshRequest(requestObject):
             }
             return
         if requestObject["action"] == "sftp_put":
+            if sshCurrentSessionName not in sshSession.keys():
+                yield {
+                    "type": "error",
+                    "message": "SFTP not connected."
+                }
+                return
             sshContext = sshSession[sshCurrentSessionName]
             sftpHandler = sshContext.getSftpHandler()
             try:
@@ -400,6 +436,12 @@ def executeSshRequest(requestObject):
             }
             return
         if requestObject["action"] == "sftp_get":
+            if sshCurrentSessionName not in sshSession.keys():
+                yield {
+                    "type": "error",
+                    "message": "SFTP not connected."
+                }
+                return
             sshContext = sshSession[sshCurrentSessionName]
             sftpHandler = sshContext.getSftpHandler()
             try:
@@ -421,6 +463,12 @@ def executeSshRequest(requestObject):
             }
             return
         if requestObject["action"] == "sftp_remove":
+            if sshCurrentSessionName not in sshSession.keys():
+                yield {
+                    "type": "error",
+                    "message": "SFTP not connected."
+                }
+                return
             sshContext = sshSession[sshCurrentSessionName]
             sftpHandler = sshContext.getSftpHandler()
             try:
@@ -441,6 +489,12 @@ def executeSshRequest(requestObject):
             }
             return
         if requestObject["action"] == "sftp_rename":
+            if sshCurrentSessionName not in sshSession.keys():
+                yield {
+                    "type": "error",
+                    "message": "SFTP not connected."
+                }
+                return
             sshContext = sshSession[sshCurrentSessionName]
             sftpHandler = sshContext.getSftpHandler()
             try:
@@ -461,6 +515,12 @@ def executeSshRequest(requestObject):
             }
             return
         if requestObject["action"] == "sftp_listdir":
+            if sshCurrentSessionName not in sshSession.keys():
+                yield {
+                    "type": "error",
+                    "message": "SFTP not connected."
+                }
+                return
             sshContext = sshSession[sshCurrentSessionName]
             sftpHandler = sshContext.getSftpHandler()
             try:
@@ -484,6 +544,12 @@ def executeSshRequest(requestObject):
                 return
             return
         if requestObject["action"] == "sftp_truncate":
+            if sshCurrentSessionName not in sshSession.keys():
+                yield {
+                    "type": "error",
+                    "message": "SFTP not connected."
+                }
+                return
             sshContext = sshSession[sshCurrentSessionName]
             sftpHandler = sshContext.getSftpHandler()
             try:
@@ -510,6 +576,10 @@ def executeSshRequest(requestObject):
             "message": "AuthenticationException failed."
         }
     except Exception as ex:
+        import traceback
+        print('traceback.print_exc():\n%s' % traceback.print_exc())
+        print('traceback.format_exc():\n%s' % traceback.format_exc())
+
         yield {
             "type": "error",
             "message": "SSH Exception :" + repr(ex)
