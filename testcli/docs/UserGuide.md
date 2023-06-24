@@ -2,18 +2,20 @@
 
 # TestCli 快速说明
 
-TestCli 是一个主要用Python完成的，基于命令行下运行的，精致的测试工具。    
-目前比较全面的覆盖了SQL测试，基本的覆盖了API测试  
+TestCli 是一个主要用Python完成的，基于命令行下运行的，精致的测试工具。      
+目前比较全面的覆盖了SQL测试，基本的覆盖了API测试。  
+工程包含两个部分：  
+1. testcli  命令行工具，用来执行手工命令操作、执行预先准备脚本；  
+2. clirobot 命令行工具，用来执行Robot测试程序，在Robot脚本中，testcli将作为底层库被调用;
+ 
 
 ***
 ### 概要
 #### 设计目的：  
 * 能够作为一个日常小工具，进行数据库的日常操作，进行数据查询、更新等。      
 * 满足数据库的各种功能性测试。执行SQL语句，并验证执行结果是否正确。
-* 满足数据库方面的压力测试、稳定性测试需要。   
-* 满足API方面的相关功能测试、验证执行结果。
-  * 在API测试中可以灵活地处置API测试的上下文关系，变量的传递，环境信息的针对性处理
-  * 在API测试中上传或者下载数据文件
+* 满足数据库方面的简单的压力测试、稳定性测试需要。   
+* 满足API方面的相关功能测试需要。
 * 为了方便测试需要，工具内置了一些方便的功能，比如：
   * 方便地用来生成随机数据文件的工具。 
   * 使用提示（Hint）信息来过滤或者掩码输出结果
@@ -32,6 +34,10 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
   * 使用ASSERT来判断运行的结果
   * 使用SESSION来完成多个数据库会话客户端的切换和状态保存
   * 使用SESSION来完成多个API会话客户端的切换和状态保存
+  * 在API测试中可以灵活地处置API测试的上下文关系，变量的传递，环境信息的针对性处理
+  * 在API测试中上传或者下载数据文件
+  * 基于RobotFrameWork，提供了多个测试脚本之间的并发控制、超时控制
+  * 基于RobotFrameWork，提供了HTML格式的测试报告生成
 *** 
 
 ***
@@ -83,7 +89,7 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
 这个工具的存在目的不是为了替代PostMan，JMeter等测试工具。
 
 虽然可以用作压力测试，但是这个工具的并发机制是基于多进程，而不是多线程。  
-这句话的意思是：在非常高地并发下，由于多进程的资源消耗，测试工具本身成了资源消耗重点。  
+这句话的意思是：在非常高地并发下，由于多进程机制的自身资源消耗，测试工具本身成了资源消耗重点。  
 所以： 工具本身不适合非常高地并发压力，比如并发超过100或者更高。
 
 ***
@@ -112,7 +118,6 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
    antlr4-python3-runtime   : Antlr4运行时引用
    python-multipart         : urllib用来完成多段API请求
    
-   pytest-xdist             ：程序自身的测试需要，并不是运行必须项
    pytest                   ：程序自身的测试需要，并不是运行必须项
    fastapi                  ：程序自身的测试需要，并不是运行必须项
    uvicorn                  ：程序自身的测试需要，并不是运行必须项
@@ -128,30 +133,6 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
    pip install -U robotslacker-testcli
 ```
 
-安装后步骤-部署自己的驱动程序：  
-   * 将jar包放在正确的位置下testcli/jlib(或采用环境变量指定)，并修改testcli/conf/testcli.ini文件（或采用环境变量指定）  
-   
-***
-
-### 第一次使用
-安装后直接在命令下执行testcli命令即可。  
-如果你的<PYTHON_HOME>/scripts没有被添加到当前环境的$PATH中，你可能需要输入全路径名  
-```
-(base) C:\>testcli
-TestCli Release 0.0.7
-SQL>
-```
-
-尝试连接内置的数据库：
-```
-(base) C:\>testcli
-TestCli Release 0.0.7
-SQL> _connect /mem
-Database connected.
-SQL>
-```
-如果你看到了Connected信息，那说明程序基本工作正常。 
-
 ***
 
 ### 程序的自检
@@ -164,14 +145,17 @@ SQL>
 platform win32 -- Python 3.9.7, pytest-7.2.0, pluggy-0.13.1 -- C:\Anaconda3\python.exe
 cachedir: .pytest_cache
 ....
-================================== 52 passed in 37.25s ================
+================================== 65 passed in 72.25s ================
 ```
-如果你看到了Passed信息，那说明程序自检完全正常，几乎不会有太大的其他问题。你可以放心的在当前环境下开展你的工作了。 
+如果你看到所有项目都是Passed信息，那说明程序自检完全正常，几乎不会有太大的其他问题。你可以放心的在当前环境下开展你的工作了。 
 
-### 驱动程序的下载和配置
+### TestCli
+
+### TestCliRobot
+#### 驱动程序的下载和配置
 TestCli是一个基于JDBC的数据库工具，基于JDBC操作数据库的前提当前环境下有对应的数据库连接jar包。 
 
-#### 驱动程序的配置
+##### 驱动程序的配置
 配置文件位于TestCli的安装目录下的conf目录中，配置文件名为:testcli.ini  
 配置例子:
 ```
@@ -202,7 +186,8 @@ jdbcurl=jdbc:mysql://${host}:${port}/${service}
   jdbcurl:        可选配置项，jdbc连接字符串，其中${host} ${port} ${service}分别表示数据库连接主机，端口，数据库名称  
   jdbcprop:       可选配置项，若该数据库连接需要相应的额外参数，则在此处配置
 
-### 程序的命令行参数
+### 程序命令行参数
+#### testcli
 ```
 (base) C:\>testcli --help
 Usage: testcli [OPTIONS]
@@ -232,6 +217,8 @@ Options:
   --help                   Show this message and exit.
     
 ```
+
+#### testclirobot的命令行参数
 
 #### --version 
 用来显示当前工具的版本号
@@ -2585,7 +2572,6 @@ SQL> _JOB timer slave_finished;
 
 
 #### TESTCLI_CONNECTION_URL
-用来定义程序的默认数据库连接地址  
 格式和CONNECT语法中的URL相同， 如：  
 ```
    export TESTCLI_CONNECTION_URL=jdbc:linkoopdb:tcp://localhost:9105/ldb
@@ -2745,9 +2731,9 @@ TestCli
 #### Pycharm中IDE运行-工程配置
 ```
    由于使用了大量的相对引用，所以必须用模块的方式来运行，而不能执行运行main.py中代码
-   Prompt_ToolKit需要控制台的一些设置以保证正确运行
+   Prompt_ToolKit需要控制台的一些设置以保证正确运行（模拟控制台输出的终端必须选中）
+   
 ```
-![PyCharm运行配置](PyCharm运行配置.png)
 
 #### 调试Antlr语法定义
 ```
