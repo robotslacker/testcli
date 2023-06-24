@@ -66,6 +66,7 @@ def runRobotExecutor(args):
     logging.getLogger('hdfs.client').setLevel(level=logging.ERROR)
     logging.getLogger('urllib3.connectionpool').setLevel(level=logging.ERROR)
     logging.getLogger("paramiko").setLevel(level=logging.ERROR)
+    logger = logging.getLogger("runRobotExecutor")
 
     # 保存之前的输入输出和环境信息
     saved__Stdout = sys.__stdout__
@@ -75,12 +76,10 @@ def runRobotExecutor(args):
     stdoutFile = None
     stderrFile = None
     oldDirectory = os.getcwd()
-    upperWorkingDirectory = os.getenv("T_WORK")
 
     try:
         # 建立工作目录
-        workingDirectory = os.path.join(
-            os.getenv("T_WORK"), args["workingDirectory"])
+        workingDirectory = args["workingDirectory"]
         os.makedirs(workingDirectory, exist_ok=True)
 
         # 初始化进程日志
@@ -91,36 +90,24 @@ def runRobotExecutor(args):
             mode="a",
             encoding="UTF-8")
         fileLogHandler.setFormatter(logFormat)
-        logger = logging.getLogger("runRobotExecutor")
         logger.setLevel(logging.INFO)
         logger.addHandler(fileLogHandler)
 
         # 需要运行的Robot文件
-        robotFile = args["testrobot"]
+        robotFile = args["robotFile"]
+        testName = os.path.basename(robotFile)[:-len(".robot")]
 
         # JobId,workingDirectory
-        workingDirectory = args["workingDirectory"]
-
         robotOptions = args["robotOptions"]
         logger.info("Begin to execute [" + robotFile + "] ...")
 
-        # 准备一个新的工作目录，用来存放Case的结果，目录用case的名称加上6位随机数字
-        # 6位随机数字的原因是有的Case可能会同名
-        testName = os.path.basename(robotFile)[:-len(".robot")]
-
-        # 建立随后robot运行的工作目录
-        os.makedirs(os.path.join(os.getenv("T_WORK"),
-                                 workingDirectory), exist_ok=True)
-
         # 检查文件路径是否存在
         if not os.path.exists(robotFile):
-            raise RegressException("File [" + robotFile + "] does not exist! task failed.")
+            raise RegressException("Robot File [" + robotFile + "] does not exist! task failed.")
 
         # 切换标准输入输出
-        stdoutFile = open(os.path.join(
-            os.getenv("T_WORK"), workingDirectory, testName + ".stdout"), 'w')
-        stderrFile = open(os.path.join(
-            os.getenv("T_WORK"), workingDirectory, testName + ".stderr"), 'w')
+        stdoutFile = open(os.path.join(workingDirectory, testName + ".stdout"), 'w')
+        stderrFile = open(os.path.join(workingDirectory, testName + ".stderr"), 'w')
         sys.__stdout__ = stdoutFile
         sys.__stderr__ = stderrFile
         sys.stdout = stdoutFile
@@ -130,7 +117,8 @@ def runRobotExecutor(args):
         os.chdir(os.path.dirname(robotFile))
 
         # 重置T_WORK到子目录下
-        os.environ['T_WORK'] = os.path.join(os.getenv("T_WORK"), workingDirectory)
+        os.environ['T_WORK'] = workingDirectory
+        os.environ['TEST_ROOT'] = args["testRoot"]
 
         # 生成测试运行结果，根据Robot的解析情况，一律标记为NOT_STARTED
         # 随后会被正式的测试结果更新
@@ -169,8 +157,8 @@ def runRobotExecutor(args):
             "--report", "NONE",
             "--exclude", "sqlId:None",
             "--exclude", "FILTERED",
-            "--output", workingDirectory + ".xml",
-            "--outputdir", os.environ['T_WORK'],
+            "--output", os.path.basename(workingDirectory) + ".xml",
+            "--outputdir", workingDirectory,
             robotFile, ])
         logger.info("Runtime args:")
         for robotOption in robotOptions:
@@ -179,22 +167,25 @@ def runRobotExecutor(args):
         logger.info("Finished test [" + robotFile + "]. ret=[" + str(rc) + "]")
 
         # 根据XML文件生成一个测试数据的汇总JSON信息
-        xmlResultFile = os.path.abspath(os.path.join(os.environ['T_WORK'], workingDirectory + ".xml"))
-        try:
-            ExecutionResult(xmlResultFile).suite
-        except DataError:
-            # 文件不完整，修正XML后重新运行
-            logger.info("Result file [" + str(xmlResultFile) + "] is incomplete. Try to fix it.")
-            with open(xmlResultFile, encoding="UTF-8", mode="r") as infile:
-                fixed = str(RobotXMLSoupParser(infile, features='xml'))
-            with open(xmlResultFile, encoding="UTF-8", mode='w') as outfile:
-                outfile.write(fixed)
+        xmlResultFile = os.path.abspath(os.path.join(workingDirectory, os.path.basename(workingDirectory) + ".xml"),)
+        if not os.path.exists(xmlResultFile):
+            raise RegressException("Result file [" + str(xmlResultFile) + "] is missed. " +
+                                   "Probably robot run with fatal error.")
+        else:
+            try:
+                ExecutionResult(xmlResultFile).suite
+            except DataError:
+                # 文件不完整，修正XML后重新运行
+                logger.info("Result file [" + str(xmlResultFile) + "] is incomplete. Try to fix it.")
+                with open(xmlResultFile, encoding="UTF-8", mode="r") as infile:
+                    fixed = str(RobotXMLSoupParser(infile, features='xml'))
+                with open(xmlResultFile, encoding="UTF-8", mode='w') as outfile:
+                    outfile.write(fixed)
     except RegressException as ex:
         raise ex
     finally:
         # 切换回原工作目录
         os.chdir(oldDirectory)
-        os.environ['T_WORK'] = upperWorkingDirectory
 
         # 还原重定向的日志
         if savedStdout:
@@ -209,3 +200,7 @@ def runRobotExecutor(args):
             stdoutFile.close()
         if stderrFile:
             stderrFile.close()
+
+        # 移除所有的logHandler
+        for handler in logger.handlers:
+            logger.removeHandler(handler)

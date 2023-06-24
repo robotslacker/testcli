@@ -28,8 +28,7 @@ def runRegress(args, executorMonitor):
     LOG_FORMAT = "%(asctime)s - %(levelname)9s - %(message)s"
     logFormat = logging.Formatter(LOG_FORMAT)
     fileLogHandler = logging.FileHandler(
-        filename=os.path.join(
-            os.environ["T_WORK"], "runRegress.log"),
+        filename=os.path.join(args["workDirectory"], "runRegress.log"),
         mode="a",
         encoding="UTF-8")
     fileLogHandler.setFormatter(logFormat)
@@ -39,11 +38,13 @@ def runRegress(args, executorMonitor):
 
     # 正式开始运行Case
     regressHandler = Regress(
+        jobList=args["jobList"],
+        testRoot=args["testRoot"],
+        workDirectory=args["workDirectory"],
         maxProcess=args["maxProcess"],
         scriptTimeout=args["scriptTimeout"],
         workerTimeout=args["workerTimeout"],
         logger=logger,
-        jobList=args["jobList"],
         executorMonitor=executorMonitor
     )
     executorMonitor["pid"] = os.getpid()
@@ -62,7 +63,7 @@ def runRegress(args, executorMonitor):
         logger.info("Regress end.")
     except RegressException as re:
         logger.error("Regress failed. " + repr(re) + "\n" +
-                     "Please check logfile under [" + os.path.abspath(os.environ["T_WORK"]) + "]")
+                     "Please check logfile under [" + args["workDirectory"] + "]")
         exitCode = 1
         executorMonitor["end"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         executorMonitor["running"] = False
@@ -74,14 +75,14 @@ def runRegress(args, executorMonitor):
         logger.info("Generating report ...")
         regressHandler.generateTestReport()
         logger.info("Finished. Please read report from [" +
-                    os.path.abspath(os.path.join(os.environ["T_WORK"], "report", "report.html")) + "]")
+                    os.path.abspath(os.path.join(args["workDirectory"], "report", "report.html")) + "]")
         executorMonitor["end"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         executorMonitor["running"] = False
     except RegressException as re:
         logger.exception(re)
         logger.error("Report failed. " + repr(re) + "\n" +
                      "Please check logfile under [" +
-                     os.path.abspath(os.path.join(os.environ["T_WORK"], "report")) + "]")
+                     os.path.abspath(os.path.join(args["workDirectory"], "report")) + "]")
         exitCode = 1
     executorMonitor["end"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     executorMonitor["running"] = False
@@ -90,6 +91,7 @@ def runRegress(args, executorMonitor):
 
 @click.command()
 @click.option("--job", type=str, required=True, help="Specify robot job file or directory.",)
+@click.option("--testroot", type=str, required=True, help="Specify test root directory.",)
 @click.option("--work", type=str, required=True,
               help="Specify the work directory(ALL FILES IN THIS DIRECTORY WILL BE CLEANED).",)
 @click.option("--parallel", type=int, default=1,
@@ -102,6 +104,7 @@ def runRegress(args, executorMonitor):
               help="Overwrite old job working directory even it has test data.")
 def cli(
         job,
+        testroot,
         work,
         parallel,
         jobtimeout,
@@ -138,8 +141,7 @@ def cli(
         logger.error("Work directory [" + os.path.abspath(work) + "] does not exist or invalid.")
         sys.exit(255)
     else:
-        os.environ["T_WORK"] = os.path.abspath(work)
-        workDirectory = os.environ["T_WORK"]
+        workDirectory = os.path.abspath(work)
 
     # 清空所有T_WORK下的内容
     logger.info("WILL CLEAN ALL FILES UNDER DIRECTORY [" + workDirectory + "] !!!")
@@ -155,14 +157,10 @@ def cli(
             else:
                 os.remove(filePath)
 
-    # 设置Robot的引导文件位置
-    os.environ["TEST_ROOT"] = os.path.join(os.path.dirname(__file__), "robot")
-
     # 设置需要执行的文件任务或者任务目录
     # 1. 可以为一个目录，该目录下所有robot文件（包括子目录）都会被运行
     # 2. 可以为一个文件，该文件将会被运行
     # 3. 可以为多个文件或者多个目录，中间用逗号隔开
-    os.environ["JOB_LIST"] = job
 
     # 任务会放在子进程中完成，而不会在主进程中完成
     processManagerContext = multiprocessing.get_context("spawn")
@@ -171,7 +169,9 @@ def cli(
         "maxProcess": parallel,
         "scriptTimeout": jobtimeout,
         "workerTimeout": workertimeout,
-        "jobList": os.environ["JOB_LIST"]
+        "testRoot": testroot,
+        "workDirectory": workDirectory,
+        "jobList": job
     }
 
     # 运行回归测试
@@ -181,7 +181,7 @@ def cli(
     )
     logger.info("Regress process started ...")
     logger.info("Regress log will be rediected to [%s] ...",
-                os.path.abspath(os.path.join(os.environ["T_WORK"], "runRegress.log")))
+                os.path.abspath(os.path.join(workDirectory, "runRegress.log")))
     process.start()
 
     # 循环等待进行运行结束
@@ -253,11 +253,11 @@ def cli(
         logger.error("Job failed with exitcode [%d]. " % exitCode)
 
     # 显示HTML文件的位置
-    htmlReportFile = os.path.abspath(os.path.join(os.environ["T_WORK"], "report", "report.html"))
+    htmlReportFile = os.path.abspath(os.path.join(workDirectory, "report", "report.html"))
     if os.path.exists(htmlReportFile):
         logger.info("Finished. Please read report from [%s]." % htmlReportFile)
     else:
-        logger.info("Finished. Please read log uner [%s]." % os.environ["T_WORK"])
+        logger.info("Finished. Please read log uner [%s]." % workDirectory)
     sys.exit(exitCode)
 
 

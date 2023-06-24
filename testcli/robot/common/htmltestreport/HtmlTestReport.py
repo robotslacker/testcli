@@ -739,10 +739,7 @@ class TestResult(object):
         self.elapsedtime = 0
         self.Title = "Unknown title"
         self.Description = "No description"
-        self.targetLabel = ""
-        self.testBranch = ""
         self.robotOptions = ""
-        self.testOptions = ""
         self.lock = threading.Lock()
 
     def getTitle(self):

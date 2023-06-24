@@ -2,21 +2,25 @@
 import copy
 import multiprocessing
 import os
+import logging
 import random
 import shutil
 import sys
 import time
-from robot.running.builder import RobotParser
-from robot.model import SuiteVisitor
+import datetime
+import robot.errors
+from robot.api import TestSuiteBuilder
+from robot.api import ExecutionResult
 from robot import rebot_cli
 
 from .runrobotexecutor import runRobotExecutor
-from .generatereport import generateRobotReport
-from .generatereport import generateIgnoredRobotReport
-from .runrobotexecutor import RobotXMLSoupParser
 from .htmltestreport.HtmlTestReport import HTMLTestRunner
 from .htmltestreport.HtmlTestReport import TestResult
 from .regressexception import RegressException
+from .htmltestreport.HtmlTestReport import TestSuite
+from .htmltestreport.HtmlTestReport import TestCase
+from .htmltestreport.HtmlTestReport import TestCaseStatus
+from .runrobotexecutor import RobotXMLSoupParser
 
 # 默认的系统最大并发作业数
 DEFAULT_Max_Process = 3
@@ -25,15 +29,15 @@ DEFAULT_Max_Process = 3
 class Regress(object):
     def __init__(
             self,
+            jobList,
+            workDirectory: str,
+            testRoot: str,
             maxProcess=None,
-            testOptions=None,
-            testBranch=None,
             logger=None,
             workerTimeout=-1,
             scriptTimeout=-1,
-            targetLabel=None,
-            jobList=None,
-            executorMonitor=None
+            executorMonitor=None,
+            extraParameters=None,
     ):
         if executorMonitor is None:
             executorMonitor = {}
@@ -41,97 +45,257 @@ class Regress(object):
         self.taskList = []
         self.ignoredTaskList = []
         self.executorList = []
-        self.testOptions = testOptions
-        self.testBranch = testBranch
         self.startTime = time.time()
         self.jobName = None
         self.buildNumber = None
-        self.targetLabel = targetLabel
         self.robotOptions = None
-        self.jobList = jobList
+        if type(jobList) == list:
+            self.jobList = jobList
+        else:
+            self.jobList = str(jobList).split(",")
+        self.workDirectory = workDirectory
+        self.testRoot = testRoot
+        if extraParameters is None:
+            self.extraParameters = {}
+        else:
+            self.extraParameters = dict(extraParameters)
 
         # 进程日志
-        self.logger = logger
+        if logger is not None:
+            self.logger = logger
+        else:
+            # 没有提供日志句柄，则直接打印到控制台
+            self.logger = logging.getLogger("runRegress")
 
         # 进程的监控信息
         self.executorMonitor = executorMonitor
 
+        # 设置进程的超时时间
         if workerTimeout is None:
             if "TIMEOUT_WORKER" in os.environ:
                 self.workerTimeout = int(os.environ["TIMEOUT_WORKER"])
             else:
                 self.workerTimeout = -1
         else:
-            self.workerTimeout = workerTimeout
+            self.workerTimeout = int(workerTimeout)
         if scriptTimeout is None:
             if "TIMEOUT_SCRIPT" in os.environ:
                 self.scriptTimeout = int(os.environ["TIMEOUT_SCRIPT"])
             else:
                 self.scriptTimeout = -1
         else:
-            self.scriptTimeout = scriptTimeout
+            self.scriptTimeout = int(scriptTimeout)
 
-    class TestCasesFinder(SuiteVisitor):
-        def __init__(self):
-            self.tests = []
+    def generateRobotReport(
+            self,
+            robotTask
+    ):
+        self.logger.info("  Processing robot result file under [" + str(robotTask["workingDirectory"]) + "] ...")
 
-        def visit_test(self, test):
-            self.tests.append(test)
+        htmlTestSuite = TestSuite()
+
+        # 解析Robot文件，假设悲观原则，即所有测试都失败。失败了也要给测试报告
+        robotSourceSuite = TestSuiteBuilder().build(robotTask["robotFile"])
+        htmlTestSuite.setSuiteName(robotSourceSuite.name)
+        testOwnerMap = {}
+        for testCase in robotSourceSuite.tests:
+            htmlTestCase = TestCase()
+            htmlTestCase.setCaseName(testCase.name)
+            htmlTestCase.setCaseStatus(TestCaseStatus.ERROR)
+            testOwner = None
+            for resultTestCaseTag in testCase.tags:
+                resultTestCaseTag = str(resultTestCaseTag.strip()).lower()
+                if resultTestCaseTag.startswith('owner:'):
+                    if testOwner is None:
+                        testOwner = resultTestCaseTag[6:].strip()
+                        testOwnerMap.update(
+                            {
+                                testCase.name: testOwner
+                            }
+                        )
+            htmlTestCase.setCaseOwner(testOwner)
+            htmlTestCase.setCaseStartTime("____-__-__ __:__:__")
+            htmlTestCase.setCaseElapsedTime(0)
+            htmlTestCase.setErrorStackTrace("Not started.")
+            htmlTestCase.setDownloadURLLink("javascript:void(0)")
+            htmlTestCase.setDetailReportLink("javascript:void(0)")
+            htmlTestSuite.addTestCase(htmlTestCase)
+
+        # 用正确的结果来更新测试报告
+        xmlResultFile = \
+            os.path.join(self.workDirectory,
+                         robotTask["workingDirectory"],
+                         os.path.basename(robotTask["workingDirectory"]) + ".xml")
+        if os.path.exists(xmlResultFile):
+            try:
+                self.logger.info("  Analyze report file [" + xmlResultFile + "] ....")
+                robotResults = ExecutionResult(xmlResultFile)
+            except robot.errors.DataError:
+                # 文件不完整，修正XML后重新运行
+                self.logger.error("Result file [" + str(xmlResultFile) + "] is incomplete xml file, fix it.")
+                with open(xmlResultFile, encoding="UTF-8", mode="r") as infile:
+                    fixed = str(RobotXMLSoupParser(infile, features='xml'))
+                with open(xmlResultFile, encoding="UTF-8", mode='w') as outfile:
+                    outfile.write(fixed)
+                try:
+                    robotResults = ExecutionResult(xmlResultFile)
+                except robot.errors.DataError:
+                    # 文件存在问题，还是无法解析
+                    self.logger.error("Result file [" + str(xmlResultFile) + "] is not a valid xml file, ignore it.")
+                    return
+
+            robotSuiteResultList = []
+            if len(robotResults.suite.suites) == 0:
+                robotSuiteResultList.append(robotResults.suite)
+            else:
+                for resultTestSuite in robotResults.suite.suites:
+                    robotSuiteResultList.append(resultTestSuite)
+            for robotSuiteResult in robotSuiteResultList:
+                for robotCaseResult in robotSuiteResult.tests:
+                    robotCaseFinished = True
+                    htmlTestCase = TestCase()
+                    htmlTestCase.setCaseName(robotCaseResult.name)
+
+                    # 获得测试的Owner
+                    if robotCaseResult.name in testOwnerMap.keys():
+                        testOwner = testOwnerMap[robotCaseResult.name]
+                    else:
+                        testOwner = "UNKNOWN"
+                    htmlTestCase.setCaseOwner(testOwner)
+
+                    if robotCaseResult.status == "FAIL":
+                        htmlTestCase.setCaseStatus(
+                            TestCaseStatus.FAILURE)
+                    elif robotCaseResult.status == "PASS":
+                        htmlTestCase.setCaseStatus(
+                            TestCaseStatus.SUCCESS)
+                    else:
+                        htmlTestCase.setCaseStatus(
+                            TestCaseStatus.ERROR)
+                    if robotCaseResult.starttime is not None:
+                        startTime = datetime.datetime.strptime(robotCaseResult.starttime[:17], "%Y%m%d %H:%M:%S")
+                    else:
+                        # 不确定的test开始时间, 可能是由于Case没有运行完成，robot文件损坏
+                        # 这时将Robot的开始时间作为test的开始时间,并且标记测试为失败
+                        startTime = datetime.datetime.fromtimestamp(os.path.getctime(xmlResultFile))
+                        htmlTestCase.setCaseStatus(TestCaseStatus.ERROR)
+                        robotCaseFinished = False
+                    htmlTestCase.setCaseStartTime(
+                        startTime.strftime("%Y-%m-%d %H:%M:%S"))
+                    if robotCaseResult.endtime is not None:
+                        endTime = \
+                            datetime.datetime.strptime(
+                                robotCaseResult.endtime[:17], "%Y%m%d %H:%M:%S")
+                    else:
+                        # 如果无法得到test的结束时间，可能是由于Case没有运行完成，robot文件损坏
+                        # 这时将xml文件的最后修改时间，作为test的结束时间,并且标记测试为失败
+                        endTime = datetime.datetime.fromtimestamp(os.path.getmtime(xmlResultFile))
+                        htmlTestCase.setCaseStatus(TestCaseStatus.ERROR)
+                        robotCaseFinished = False
+                    htmlTestCase.setCaseElapsedTime(
+                        (endTime - startTime).seconds)
+                    if not robotCaseFinished:
+                        htmlTestCase.setErrorStackTrace("Fatal error， Test has been TIMEOUT terminated.")
+                    else:
+                        htmlTestCase.setErrorStackTrace(
+                            robotSuiteResult.message)
+                    subHtmlReportFile = \
+                        os.path.join(
+                            robotTask["workingDirectory"],
+                            os.path.basename(robotTask["workingDirectory"]) + ".html"
+                        )
+
+                    # 生成该测试的测试报告
+                    resultRebotArgs = []
+                    resultRebotArgs.extend(
+                        ["--tagstatexclude", "owner*"])
+                    resultRebotArgs.extend(
+                        ["--tagstatexclude", "feature*"])
+                    resultRebotArgs.extend(
+                        ["--tagstatexclude", "runLevel*"])
+                    resultRebotArgs.extend(
+                        ["--tagstatexclude", "priority*"])
+                    resultRebotArgs.extend(["--suitestatlevel", "2"])
+                    resultRebotArgs.extend(
+                        ["--outputdir", self.workDirectory])
+                    resultRebotArgs.extend(
+                        ["--logtitle", "Test Report-" + robotSuiteResult.name])
+                    resultRebotArgs.extend(
+                        ["--reporttitle", "Test Report-" + robotSuiteResult.name])
+                    resultRebotArgs.extend(
+                        ["--name", "Test Report-" + robotSuiteResult.name])
+                    resultRebotArgs.extend(["--log", subHtmlReportFile])
+                    resultRebotArgs.extend(["--report", "NONE"])
+                    resultRebotArgs.extend(["--output", "NONE"])
+                    resultRebotArgs.append("--nostatusrc")
+
+                    # 生成测试报告信息
+                    resultXmlList = [os.path.abspath(xmlResultFile)]
+                    resultRebotArgs.extend(resultXmlList)
+
+                    # 备份之前的输入输出和环境信息
+                    saved__Stdout = sys.__stdout__
+                    saved__Stderr = sys.__stderr__
+                    savedStdout = sys.stdout
+                    savedStderr = sys.stderr
+
+                    # 切换标准输入输出到指定的文件中
+                    stdoutFile = open(os.path.join(self.workDirectory, "report", "TestReport.stdout"), 'a+')
+                    stderrFile = open(os.path.join(self.workDirectory, "report", "TestReport.stderr"), 'a+')
+                    sys.__stdout__ = stdoutFile
+                    sys.__stderr__ = stderrFile
+                    sys.stdout = stdoutFile
+                    sys.stderr = stderrFile
+
+                    print("Execute Rebot_Cli: ")
+                    for arg in resultRebotArgs:
+                        print("    " + str(arg))
+                    rebot_cli(resultRebotArgs, exit=False)
+
+                    # 还原重定向的日志
+                    if savedStdout:
+                        sys.__stdout__ = saved__Stdout
+                    if saved__Stderr:
+                        sys.__stderr__ = saved__Stderr
+                    if savedStdout:
+                        sys.stdout = savedStdout
+                    if savedStderr:
+                        sys.stderr = savedStderr
+                    if stdoutFile:
+                        stdoutFile.close()
+                    if stderrFile:
+                        stderrFile.close()
+
+                    htmlTestCase.setDetailReportLink(robotTask["workingDirectory"] + ".html#" + robotCaseResult.id)
+                    htmlTestCase.setDownloadURLLink(robotTask["workingDirectory"] + ".tar")
+                    htmlTestSuite.addTestCase(htmlTestCase)
+
+        # 汇总运行结果
+        htmlTestSuite.SummaryTestCase()
+        return htmlTestSuite
 
     # 整理并生成最后的测试报告
     def generateTestReport(self):
-        # 备份之前的输入输出和环境信息
-        stdoutFile = None
-        stderrFile = None
-        saved__Stdout = sys.__stdout__
-        saved__Stderr = sys.__stderr__
-        savedStdout = sys.stdout
-        savedStderr = sys.stderr
-
         try:
             # 建立报告的保存目录
-            reportFileDir = os.path.join(os.environ["T_WORK"], "report")
+            reportFileDir = os.path.join(self.workDirectory, "report")
             if not os.path.exists(reportFileDir):
                 os.makedirs(reportFileDir, exist_ok=True)
 
             # 整理报告内容
-            reportFileDir = os.path.join(os.environ["T_WORK"], "report")
+            reportFileDir = os.path.join(self.workDirectory, "report")
             if not os.path.exists(reportFileDir):
                 os.makedirs(reportFileDir, exist_ok=True)
-
-            # 切换标准输入输出到指定的文件中
-            stdoutFile = open(os.path.join(
-                reportFileDir, "TestReport.stdout"), 'w')
-            stderrFile = open(os.path.join(
-                reportFileDir, "TestReport.stderr"), 'w')
-            sys.__stdout__ = stdoutFile
-            sys.__stderr__ = stderrFile
-            sys.stdout = stdoutFile
-            sys.stderr = stderrFile
 
             htmlTestResult = TestResult()
             htmlTestResult.setTitle("Test Report")
             htmlTestResult.setDescription("Max Processes : " + str(self.maxProcess) + '<br>')
-            htmlTestResult.targetLabel = self.targetLabel
             htmlTestResult.robotOptions = self.robotOptions
-            htmlTestResult.testOptions = self.testOptions
-            htmlTestResult.testBranch = self.testBranch
 
-            self.logger.info("Processing test result ...")
-            # 首先处理每个子目录
-            # 测试报告是每个子目录一个报告，同时一个累计的报告
-            for subdir in os.listdir(os.environ['T_WORK']):
-                # 遍历所有的sub目录
-                if subdir.startswith("sub_"):
-                    if os.path.exists(os.path.join(os.environ['T_WORK'], subdir, subdir + ".xml")):
-                        # Robot运行结果
-                        self.logger.info("Generate RobotFrameWork report style ...")
-                        htmlTestResult.addSuite(generateRobotReport(cls=self, reportDir=subdir))
-
-            # 补充所有ignore的测试报告
-            self.logger.info("Combing those ignored test to final report ...")
-            for robotTask in self.ignoredTaskList:
-                htmlTestResult.addSuite(generateIgnoredRobotReport(cls=self, ignoredRobotTask=robotTask))
+            self.logger.info("Processing test result under [" + self.workDirectory + "] ...")
+            for task in self.taskList:
+                # 遍历所有的task清单
+                htmlTestResult.addSuite(self.generateRobotReport(robotTask=task))
 
             # 汇总所有的子目录到一个统一的报表上
             # 生成该测试的测试报告
@@ -141,7 +305,7 @@ class Regress(object):
             rebotArgs.extend(["--tagstatexclude", "feature*"])
             rebotArgs.extend(["--tagstatexclude", "priority*"])
             rebotArgs.extend(["--suitestatlevel", "2"])
-            rebotArgs.extend(["--outputdir", os.environ['T_WORK']])
+            rebotArgs.extend(["--outputdir", self.workDirectory])
             rebotArgs.extend(["--logtitle", "TestReport Summary"])
             rebotArgs.extend(["--reporttitle", "TestReport Summary"])
             rebotArgs.extend(["--name", "TestReport Summary"])
@@ -156,17 +320,49 @@ class Regress(object):
 
             # 遍历目录，查找所有的sub开头的目录
             m_TestSubXmlList = []
-            for root, dirs, files in os.walk(os.environ["T_WORK"]):
+            for root, dirs, files in os.walk(self.workDirectory):
                 for f in files:
                     if f.endswith(".xml") and f.startswith("sub_"):
                         m_TestSubXmlList.append(
                             os.path.abspath(os.path.join(root, str(f))))
             if len(m_TestSubXmlList) == 0:
                 self.logger.error(
-                    "No valid test in [" + os.environ["T_WORK"] + "].")
+                    "No valid test in [" + self.workDirectory + "].")
             else:
                 rebotArgs.extend(m_TestSubXmlList)
+
+                # 备份之前的输入输出和环境信息
+                saved__Stdout = sys.__stdout__
+                saved__Stderr = sys.__stderr__
+                savedStdout = sys.stdout
+                savedStderr = sys.stderr
+
+                # 切换标准输入输出到指定的文件中
+                stdoutFile = open(os.path.join(reportFileDir, "TestReport.stdout"), 'a+')
+                stderrFile = open(os.path.join(reportFileDir, "TestReport.stderr"), 'a+')
+                sys.__stdout__ = stdoutFile
+                sys.__stderr__ = stderrFile
+                sys.stdout = stdoutFile
+                sys.stderr = stderrFile
+
+                print("Execute Rebot_Cli: ")
+                for arg in rebotArgs:
+                    print("    " + str(arg))
                 rebot_cli(rebotArgs, exit=False)
+
+                # 还原重定向的日志
+                if savedStdout:
+                    sys.__stdout__ = saved__Stdout
+                if saved__Stderr:
+                    sys.__stderr__ = saved__Stderr
+                if savedStdout:
+                    sys.stdout = savedStdout
+                if savedStderr:
+                    sys.stderr = savedStderr
+                if stdoutFile:
+                    stdoutFile.close()
+                if stderrFile:
+                    stderrFile.close()
 
             # 更新测试结果到共享区域
             testReport = []
@@ -200,37 +396,23 @@ class Regress(object):
 
             # 备份测试结果文件到report目录下
             self.logger.info("Backup test result to report directory ....")
-            for subdir in os.listdir(os.environ['T_WORK']):
-                if os.path.isdir(os.path.join(os.environ['T_WORK'], subdir)) and subdir.startswith("sub_"):
+            for subdir in os.listdir(self.workDirectory):
+                if os.path.isdir(os.path.join(self.workDirectory, subdir)) and subdir.startswith("sub_"):
                     m_SourceReportFile = os.path.join(
-                        os.environ['T_WORK'], subdir, subdir + ".html")
+                        self.workDirectory, subdir, subdir + ".html")
                     m_TargetReportFile = os.path.join(
-                        os.environ['T_WORK'], reportFileDir, subdir + ".html")
+                        self.workDirectory, reportFileDir, subdir + ".html")
                     if os.path.exists(m_SourceReportFile):
                         shutil.copyfile(m_SourceReportFile, m_TargetReportFile)
                     shutil.make_archive(
                         base_name=os.path.join(
-                            os.environ['T_WORK'], reportFileDir, subdir),
+                            self.workDirectory, reportFileDir, subdir),
                         format="tar",
-                        root_dir=os.path.join(os.environ['T_WORK']),
+                        root_dir=os.path.join(self.workDirectory),
                         base_dir=subdir
                     )
         except Exception as e:
             raise RegressException(message="Regress failed.", inner_exception=e)
-        finally:
-            # 还原重定向的日志
-            if savedStdout:
-                sys.__stdout__ = saved__Stdout
-            if saved__Stderr:
-                sys.__stderr__ = saved__Stderr
-            if savedStdout:
-                sys.stdout = savedStdout
-            if savedStderr:
-                sys.stderr = savedStderr
-            if stdoutFile:
-                stdoutFile.close()
-            if stderrFile:
-                stderrFile.close()
 
     # 运行回归测试
     def run(self):
@@ -277,109 +459,80 @@ class Regress(object):
 
         # 检索需要处理的测试文件
         # 第一次检索记录所有可能的文件
-        robotFileList = []
+        # 在这个过程中，要过滤掉所有StandAlone为N的文件，即不能独立运行，或者不包含任何有效测试用例的文件
+        # 要补充runLevel进入任务清单，如果文件没有提供runLevel，则默认runLevel为100
+        runLevels = [100, ]
+
+        def appendJobFile(jobfile: str):
+            self.logger.info("Checking file: [" + str(jobfile) + "] ...")
+            if str(jobfile).endswith(".robot"):
+                try:
+                    isStandAlone = True
+                    robotSuite = TestSuiteBuilder().build(os.path.abspath(jobfile))
+                    for metaKey, metaValue in robotSuite.metadata.items():
+                        if str(metaKey).strip().upper() == "StandAlone".upper():
+                            if str(metaValue).upper() in ["N", "NO", "NOT"]:
+                                isStandAlone = False
+                                break
+                    if isStandAlone:
+                        robotRunLevel = 100
+                        for metaKey, metaValue in robotSuite.metadata.items():
+                            if str(metaKey).strip().upper() == "runLevel".upper():
+                                robotRunLevel = int(str(metaValue))
+                                if robotRunLevel not in runLevels:
+                                    runLevels.append(robotRunLevel)
+                                break
+                        self.logger.info("  Robot file : [" + str(jobfile) + "] has added to task list. ")
+
+                        testName = os.path.basename(jobfile)[:-len(".robot")]
+                        workingFolderName = "sub_" + testName + "_" + str(random.randint(100000, 999999))
+                        self.taskList.append(
+                            {
+                                "robotFile": str(os.path.abspath(jobfile)).replace("\\", "/"),
+                                "runLevel": robotRunLevel,
+                                "suiteName": robotSuite.name,
+                                "workingDirectory": workingFolderName
+                            }
+                        )
+                    else:
+                        self.logger.warning("  Robot file : [" + str(jobfile) + "] is not standalone suite. " +
+                                            "Will ignore this ...")
+                except robot.errors.DataError:
+                    self.logger.warning("  Parse robot file : [" + str(jobfile) + "] error. Will ignore this ...")
+            else:
+                self.logger.warning("  Ignore non-robot file [" + str(jobfile) + "] ....")
+            # end of appendJobFile
+
         if self.jobList is not None:
             self.logger.info("Task list: ")
-            for job in str(self.jobList).split(","):
+            for job in self.jobList:
                 self.logger.info(">>  " + job)
             # Job_List分隔符可以是换行符，也可以是逗号
-            self.jobList = self.jobList.replace('\n', ',')
-            for jobdir in str(self.jobList).split(","):
-                jobdir = jobdir.strip()
-                if len(jobdir) == 0:
+            for job in self.jobList:
+                job = job.strip()
+                if len(job) == 0:
                     continue
-                if os.path.isfile(str(jobdir)):
-                    self.logger.info("Checking file: [" + str(jobdir) + "].")
-                    if str(jobdir).endswith(".robot"):
-                        robotFileList.append(str(os.path.abspath(jobdir)))
-                elif os.path.isdir(str(jobdir)):
-                    self.logger.info("Checking directory: [" + str(jobdir) + "].")
-                    for root, dirs, files in os.walk(str(jobdir)):
+                if os.path.isfile(str(job)):
+                    appendJobFile(jobfile=str(job))
+                elif os.path.isdir(str(job)):
+                    self.logger.info("Checking directory: [" + str(job) + "] ...")
+                    for root, dirs, files in os.walk(str(job)):
                         for f in files:
                             if f.endswith(".robot"):
-                                robotFileList.append(os.path.abspath(
-                                    os.path.join(root, str(f))))
+                                job = os.path.join(root, str(f))
+                                appendJobFile(jobfile=job)
                 else:
-                    self.logger.warning("[" + jobdir + "] is not valid file or directory. Ignore it.")
-
-        # 记录所有的不重复的优先级信息, 并添加任务清单
-        runLevels = [100, ]   # 默认的优先级为100
-        for robotFile in robotFileList:
-            parser = RobotParser()
-            suite = parser.parse_suite_file(source=robotFile)
-            testCaseList = self.TestCasesFinder()
-            suite.remove_empty_suites(True)
-            suite.visit(testCaseList)
-            if len(testCaseList.tests) <= 0:
-                # filter again with no excluded tags
-                parser = RobotParser()
-                suite = parser.parse_suite_file(source=robotFile)
-                testCaseList = self.TestCasesFinder()
-                suite.remove_empty_suites(True)
-                suite.visit(testCaseList)
-                self.ignoredTaskList.append(
-                    {
-                        "robotfile": robotFile,
-                        "validcase": 0,
-                        "Suite_Name": suite.name,
-                        "runLevel": 0,
-                        "workingDirectory": ""
-                    })
-                self.logger.info(
-                    "Ignore test file [" + str(robotFile) + ":" + str(len(testCaseList.tests)) +
-                    "]. no valid test cases.")
-                continue
-
-            # 检查Tag信息
-            # 只要找到一个runLevel，就认为整个Robot都是这个runLevel
-            runLevel = None
-            for robotTest in testCaseList.tests:
-                for tag in robotTest.tags:
-                    tag = str(tag).strip().upper()
-                    if tag.startswith("RUNLEVEL:"):
-                        try:
-                            if runLevel is None:
-                                runLevel = int(tag[9:].strip())
-                        except ValueError:
-                            self.logger.warning("测试脚本中未定义有效的runLevel信息："
-                                                "【" + str(robotFile) + ":" + str(robotTest.name) +
-                                                "-" + str(tag) + "】")
-
-            # 没有指定的优先级默认是100
-            if runLevel is None:
-                runLevel = 100
-            if runLevel not in runLevels:
-                runLevels.append(runLevel)
-            m_RobotRelFile = robotFile.replace("\\", "/")
-            testName = os.path.basename(robotFile)[:-len(".robot")]
-            workingFolderName = "sub_" + testName + \
-                "_" + str(random.randint(100000, 999999))
-            self.taskList.append({
-                "robotfile": robotFile,
-                "robotrelfile": m_RobotRelFile,
-                "validcase": len(testCaseList.tests),
-                "Suite_Name": suite.name,
-                "runLevel": runLevel,
-                "workingDirectory": workingFolderName
-            })
-            self.logger.info("Task [" + str(robotFile) + "] " +
-                             "include [" + str(len(testCaseList.tests)) + "] valid test cases.")
+                    self.logger.warning("[" + job + "] is not valid file or directory. Ignore it.")
 
         # 处理没有完成的JOB
-        def AnalyzeBrokenTest(test_robot_id: int, workingDirectory: str):
-            # 如果测试目录都没有建立起来，这里建立一个空目录
-            if not os.path.exists(os.path.join(os.getenv("T_WORK"), workingDirectory)):
-                os.makedirs(os.path.join(os.getenv("T_WORK"),
-                            workingDirectory), exist_ok=True)
-
+        def AnalyzeBrokenTest(testRobotFile: str, workingDirectory: str):
             # 处理掉损坏的XML文件，由于Robot运行(超时退出)不完整导致的
-            inputxmlfile = os.path.join(
-                os.getenv("T_WORK"),  workingDirectory, workingDirectory + ".xml")
+            inputxmlfile = os.path.join(workingDirectory, os.path.basename(workingDirectory) + ".xml")
             if not os.path.exists(inputxmlfile):
-                self.logger.error("Robot [" + str(test_robot_id) + "] has failed with fatal error. " +
-                                  "No result files found.")
+                self.logger.error("Robot [" + str(testRobotFile) + "] has failed with fatal error. " +
+                                  "No result files found. " + str(inputxmlfile))
             else:
-                self.logger.info("结果文件 【" + str(inputxmlfile) + "】 不完整，会尝试修正.")
+                self.logger.info("Result file [" + str(inputxmlfile) + "] is incompleted. Will try to fix it ...")
                 outputxmlfile = inputxmlfile
                 with open(inputxmlfile, encoding="UTF-8", mode="r") as robotBrokenXMLFile:
                     fixedRobotBrokenXMLFile = str(
@@ -402,24 +555,21 @@ class Regress(object):
                             runningJobsTimeout = self.executorMonitor["runningJobs"]
                             del runningJobsTimeout[timeoutExecutor["executorName"]]
                             self.executorMonitor["runningJobs"] = copy.copy(runningJobsTimeout)
-                            self.executorMonitor.update(
-                                {"taskLeft": self.executorMonitor["taskLeft"] - 1}
-                            )
+                            self.executorMonitor.update({"taskLeft": self.executorMonitor["taskLeft"] - 1})
                             self.executorList.remove(timeoutExecutor)
                         else:
                             # 强行终止进程
                             self.logger.error("Executor(" + str(timeoutExecutor["Process"].pid).rjust(8, ' ') +
                                               ") has run over script limit [" + str(
                                                   self.scriptTimeout) + "] seconds, "
-                                              + "terminate the [" + str(timeoutExecutor["testrobot"]) + "] " +
-                                              str(timeoutExecutor["args"]["robotId"]))
+                                              + "terminate the [" + str(timeoutExecutor["robotFile"]) + "]")
                             timeoutExecutor["Process"].terminate()
                             AnalyzeBrokenTest(
-                                test_robot_id=timeoutExecutor["args"]["robotId"],
+                                testRobotFile=timeoutExecutor["args"]["robotFile"],
                                 workingDirectory=timeoutExecutor["args"]["workingDirectory"])
             if self.workerTimeout != -1:
                 for timeoutExecutor in self.executorList:
-                    if (currentDateTime - timeoutExecutor["Start_Time"]) > self.workerTimeout:
+                    if (currentDateTime - timeoutExecutor["startTime"]) > self.workerTimeout:
                         if not timeoutExecutor["Process"].is_alive():
                             # Python3.6不支持close
                             if sys.version_info[0] == 3 and sys.version_info[1] >= 8:
@@ -437,10 +587,10 @@ class Regress(object):
                             self.logger.error("Executor(" + str(timeoutExecutor["Process"].pid).rjust(8, ' ') +
                                               ") has run over worker limit [" + str(
                                                   self.workerTimeout) + "] seconds, "
-                                              + "terminate the [" + str(timeoutExecutor["testrobot"]) + "]")
+                                              + "terminate the [" + str(timeoutExecutor["robotFile"]) + "]")
                             timeoutExecutor["Process"].terminate()
                             AnalyzeBrokenTest(
-                                test_robot_id=timeoutExecutor["args"]["robotId"],
+                                testRobotFile=timeoutExecutor["args"]["robotFile"],
                                 workingDirectory=timeoutExecutor["args"]["workingDirectory"])
             """ check_timeout """
 
@@ -475,9 +625,7 @@ class Regress(object):
                             runningJobs = self.executorMonitor["runningJobs"]
                             del runningJobs[executor["executorName"]]
                             self.executorMonitor["runningJobs"] = copy.copy(runningJobs)
-                            self.executorMonitor.update(
-                                {"taskLeft": self.executorMonitor["taskLeft"] - 1}
-                            )
+                            self.executorMonitor.update({"taskLeft": self.executorMonitor["taskLeft"] - 1})
                             self.executorList.remove(executor)
                     if len(self.executorList) >= self.maxProcess:
                         # 如果超过了最大进程数限制，则等待
@@ -491,13 +639,14 @@ class Regress(object):
                         break
 
                 self.logger.info("Begin to execute robot test [" + str(taskPos) + "/" + str(len(self.taskList)) + "] "
-                                 + self.taskList[nPos]["robotfile"] + " ...")
+                                 + self.taskList[nPos]["robotFile"] + " ...")
                 taskPos = taskPos + 1
                 processManagerContext = multiprocessing.get_context("spawn")
                 args = {
-                    "testrobot": str(self.taskList[nPos]["robotfile"]),
+                    "robotFile": str(self.taskList[nPos]["robotFile"]),
                     "robotOptions": self.robotOptions,
-                    "workingDirectory": self.taskList[nPos]["workingDirectory"]
+                    "testRoot": self.testRoot,
+                    "workingDirectory": os.path.join(self.workDirectory, self.taskList[nPos]["workingDirectory"]),
                 }
                 process = processManagerContext.Process(
                     target=runRobotExecutor,
@@ -507,9 +656,9 @@ class Regress(object):
                 self.executorList.append(
                     {
                         "Process": process,
-                        "testrobot":  str(self.taskList[nPos]["robotfile"]),
-                        "Start_Time": time.time(),
-                        "workingDirectory": self.taskList[nPos]["workingDirectory"],
+                        "robotFile":  str(self.taskList[nPos]["robotFile"]),
+                        "startTime": time.time(),
+                        "workingDirectory": args["workingDirectory"],
                         "executorName": executorName,
                         "args": args
                     })
@@ -518,8 +667,8 @@ class Regress(object):
                     {
                         executorName:
                             {
-                                "script": str(self.taskList[nPos]["robotfile"]),
-                                "workingDirectory": self.taskList[nPos]["workingDirectory"],
+                                "script": str(self.taskList[nPos]["robotFile"]),
+                                "workingDirectory": args["workingDirectory"],
                                 "pid": process.pid,
                                 "started": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                             }
@@ -527,7 +676,6 @@ class Regress(object):
                 )
                 self.executorMonitor["runningJobs"] = copy.copy(runningJobs)
             self.executorMonitor.update({"runLevelLeft": self.executorMonitor["runLevelLeft"] - 1})
-            self.logger.info("All tasks in run level [" + str(runLevel) + "] have completed.")
 
             while True:
                 # 移除已经结束的进程列表
@@ -537,9 +685,7 @@ class Regress(object):
                         runningJobs = self.executorMonitor["runningJobs"]
                         del runningJobs[executor["executorName"]]
                         self.executorMonitor["runningJobs"] = copy.copy(runningJobs)
-                        self.executorMonitor.update(
-                            {"taskLeft": self.executorMonitor["taskLeft"] - 1}
-                        )
+                        self.executorMonitor.update({"taskLeft": self.executorMonitor["taskLeft"] - 1})
                         self.executorList.remove(executor)
                 if len(self.executorList) == 0:
                     break
@@ -548,3 +694,5 @@ class Regress(object):
                     time.sleep(3)
                     # 检查是否有超时的进程，如果有，则处理
                     check_timeout()
+
+            self.logger.info("All tasks in run level [" + str(runLevel) + "] have completed.")

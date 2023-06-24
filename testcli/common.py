@@ -266,11 +266,11 @@ def parseSQLHints(commandHints: list):
             r"^Scenario:(.*)", commandHint, re.IGNORECASE | re.DOTALL)
         if match_obj:
             senario = match_obj.group(1).strip()
-            if len(senario.split(':')) == 2:
+            if len(senario.split(':')) >= 2:
                 # 如果包含两个内容， 规则是:Scenario:<ScenarioId>:<ScenarioName>
                 scenarioSplitList = senario.split(':')
                 commandHintList["ScenarioId"] = scenarioSplitList[0].strip()
-                commandHintList["ScenarioName"] = scenarioSplitList[1].strip()
+                commandHintList["ScenarioName"] = ":".join(scenarioSplitList[1:]).strip()
                 continue
             else:
                 # 如果只有一个内容， 规则是:Scenario:ScenarioName
@@ -330,11 +330,11 @@ def parseAPIHints(commandHints: list):
             r"^Scenario:(.*)", commandHint, re.IGNORECASE | re.DOTALL)
         if match_obj:
             senario = match_obj.group(1).strip()
-            if len(senario.split(':')) == 2:
+            if len(senario.split(':')) >= 2:
                 # 如果包含两个内容， 规则是:Scenario:<ScenarioId>:<ScenarioName>
                 scenarioSplitList = senario.split(':')
                 commandHintList["ScenarioId"] = scenarioSplitList[0].strip()
-                commandHintList["ScenarioName"] = scenarioSplitList[1].strip()
+                commandHintList["ScenarioName"] = ":".join(scenarioSplitList[1:]).strip()
                 continue
             else:
                 # 如果只有一个内容， 规则是:Scenario:ScenarioName

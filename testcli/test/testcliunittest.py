@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import json
+import shutil
 import time
 import unittest
 import os
+import stat
 import jpype
 import tempfile
 from ..sqlparse import SQLAnalyze
@@ -1011,7 +1013,7 @@ class TestSynatx(unittest.TestCase):
             {'action': 'skip',
              'compareOptions': {},
              'name': 'COMPARE',
-             'source': '"aa*bb"'}, ret_CommandSplitResult)
+             'source': 'aa*bb'}, ret_CommandSplitResult)
 
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_COMPARE NOSKIPLINE \"aa*bb\"")
@@ -1022,7 +1024,7 @@ class TestSynatx(unittest.TestCase):
             {'action': 'noskip',
              'compareOptions': {},
              'name': 'COMPARE',
-             'source': '"aa*bb"'}, ret_CommandSplitResult)
+             'source': 'aa*bb'}, ret_CommandSplitResult)
 
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_COMPARE RESET")
@@ -2295,6 +2297,48 @@ class TestSynatx(unittest.TestCase):
                 if line.startswith("-") or line.startswith("+"):
                     print(line)
         self.assertTrue(compareResult)
+
+    def test_robotdemo(self):
+        def on_rm_error(func, path, exc_info):
+            if func or exc_info:
+                pass
+            # https://stackoverflow.com/questions/4829043/how-to-remove-read-only-attrib-directory-with-python-in-windows
+            os.chmod(path, stat.S_IWRITE)
+            os.unlink(path)
+
+        tempWorkDirectory = os.path.join(tempfile.gettempdir(), str(os.getpid()))
+        if os.path.isdir(tempWorkDirectory):
+            shutil.rmtree(tempWorkDirectory, onerror=on_rm_error)
+        if os.path.isfile(tempWorkDirectory):
+            os.remove(tempWorkDirectory)
+
+        from ..robot.common.runregress import Regress
+        regressHandler = Regress(
+            jobList=os.path.join(os.path.dirname(__file__), "..", "robot/demo"),
+            testRoot=os.path.join(os.path.dirname(__file__), "..", "robot"),
+            workDirectory=os.path.join(tempfile.gettempdir(), str(os.getpid())),
+            maxProcess=3,
+            scriptTimeout=300,
+            workerTimeout=120,
+            logger=None,
+            executorMonitor=None
+        )
+        regressHandler.run()
+        regressHandler.generateTestReport()
+
+        # 判断report文件，suc文件，dif文件是否都正常存在
+        expectedFiles = [
+            "report.html",
+            "demo1.suc",
+            "demo2.suc",
+            "demo3.dif",
+        ]
+        for root, dirs, files in os.walk(tempWorkDirectory):
+            for f in files:
+                if f in expectedFiles:
+                    expectedFiles.remove(f)
+        self.assertTrue(len(expectedFiles) == 0)
+        shutil.rmtree(tempWorkDirectory, onerror=on_rm_error)
 
 
 if __name__ == '__main__':

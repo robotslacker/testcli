@@ -397,6 +397,7 @@ class CmdExecute(object):
                                     if newOutput != output:
                                         bDataChanged = True
                                         rowResult[j] = newOutput
+                                    output = newOutput
                                 except re.error:
                                     if "TESTCLI_DEBUG" in os.environ:
                                         print('[DEBUG] traceback.print_exc():\n%s'
@@ -1027,7 +1028,10 @@ class CmdExecute(object):
                             lastCommandResult["errorCode"] = 1
 
                         if self.singleLoopMode:
-                            matchCondition = evalExpression(self.cliHandler, self.singleLoopExpression)
+                            try:
+                                matchCondition = evalExpression(self.cliHandler, self.singleLoopExpression)
+                            except Exception:
+                                matchCondition = False
                             if matchCondition or (
                                 self.singleLoopMaxIter != -1 and self.singleLoopIter >= self.singleLoopMaxIter
                             ):

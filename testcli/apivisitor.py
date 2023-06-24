@@ -415,6 +415,11 @@ class APIVisitor(APIParserVisitor):
             pluginFile = str((ctx.LOAD_EXPRESSION()[0].getText())).strip()
             pluginFile = pluginFile.strip('"').strip("'")
             parsedObject.update({"pluginFile": pluginFile})
+        if ctx.LOAD_SCRIPT() is not None:
+            parsedObject.update({"option": "SCRIPT"})
+            pluginFile = str((ctx.LOAD_EXPRESSION()[0].getText())).strip()
+            pluginFile = pluginFile.strip('"').strip("'")
+            parsedObject.update({"scriptFile": pluginFile})
         if ctx.LOAD_MAP() is not None:
             parsedObject.update({"option": "MAP"})
             mapFile = str((ctx.LOAD_EXPRESSION()[0].getText())).strip()

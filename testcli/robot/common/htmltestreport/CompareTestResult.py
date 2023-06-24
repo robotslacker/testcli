@@ -334,8 +334,6 @@ class CompareTestResultRunner(CompareTestResultTemplate):
         return [
             (u'任务开始时间', result.taskStartTime),
             (u'任务结束时间', result.taskEndTime),
-            (u'当前执行版本', result.targetLabel),
-            (u'当前测试分支', result.testBranch),
             (u'比对参考版本', result.baseLabel),
             (u'任务提交来自', result.submitUser),
             (u'任务运行环境', result.workerHost)
