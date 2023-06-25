@@ -1,13 +1,15 @@
 ![机器人小懒](robotslacker.jpg)
 
-# TestCli 快速说明
+# TestCli 命令行测试工具
+## 快速说明
 
-TestCli 是一个主要用Python完成的，基于命令行下运行的，精致的测试工具。      
-目前比较全面的覆盖了SQL测试，基本的覆盖了API测试。  
+本项目是一个主要用Python语言完成，基于命令行下运行的、精致的、小巧的测试工具。      
+目前比较全面的覆盖了SQL测试，基本地覆盖了API测试。  
 工程包含两个部分：  
+
 1. testcli  命令行工具，用来执行手工命令操作、执行预先准备脚本；  
 2. clirobot 命令行工具，用来执行Robot测试程序，在Robot脚本中，testcli将作为底层库被调用;
- 
+
 
 ***
 ### 概要
@@ -16,21 +18,30 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
 * 满足数据库的各种功能性测试。执行SQL语句，并验证执行结果是否正确。
 * 满足数据库方面的简单的压力测试、稳定性测试需要。   
 * 满足API方面的相关功能测试需要。
-* 为了方便测试需要，工具内置了一些方便的功能，比如：
-  * 方便地用来生成随机数据文件的工具。 
-  * 使用提示（Hint）信息来过滤或者掩码输出结果
+* 工具内置了一些方便的功能，这些工具用在测试和日常维护方面，会带来很大便利。比如：
+  * 方便地用来快速的生成随机数据文件 
+  * 内置了Hint的功能，在执行语句后能够根据Hint完成信息过滤、信息掩码、附加排序等
+    * 这些可以确保输出的结果文件更加稳定，避免程序结果文件收到噪音干扰
   * 使用TermOut，FeedBack，ECHO来控制显示输出的内容
-  * 使用ECHO来生成一些临时性的测试文件
+    * 同样目的是为了使得结果文件更加稳定，避免程序结果文件收到噪音干扰
+  * 使用ECHO来生成一些临时性的文件
   * 使用COMPARE来进行文件级别的内容比对，比对过程中支持了正则表达过滤，正则表达掩码
-  * 使用SSH来完成远程主机命令的操作，文件的上传和下载
-  * 使用JOBMANAGER来并行执行多个脚本，并提供了聚合点的完整支持
-  * 使用MONITORMANAGER来在测试执行的时候监控系统、进程性能信息，并作为测试的结果输出
+    * 通常我们把经过验证的、正确的结果存盘为参考文件
+    * 当参考文件和当前输出存在不一致的现象，则说明存在测试脚本的潜在问题或者代码行为存在潜在问题。
+  * 脚本内使用SSH来完成远程主机命令的操作，文件的上传和下载
+  * 使用JobManager（任务管理器）来并行执行多个脚本
+    * 并行多脚本操作主要用来测试多测试之间需要严格控制时序、验证并发锁冲突的测试
+    * 提供了聚合点的完整支持，如多个脚本运行到同一个时刻点后等待
+  * 使用MonitorManager（监控管理器）来在测试执行的时候监控系统、进程性能信息，并作为测试的结果输出
+    * 监控管理器提供了简单的性能监控、性能数据记录能力
+    * 不建议复杂的压力测试或者稳定性测试依赖MonitorManager，使用第三方的JMeter能获得更好的测试效果和更完善的监控能力
   * 支持在测试脚本中嵌入Python语法来完成一些常规难以完整的验证
+    * 建议将脚本进行模块化封装后，再直接嵌入模块的调用，避免直接在脚本中嵌入复杂Python脚本后的阅读性下降问题
   * 使用LOAD SCRIPT来加载用户自己提供的Python文件作为测试内嵌Python语法的扩展
   * 使用LOAD PLUGIN来加载用户自己提供的Python文件作为新的脚本命令
   * 支持对测试脚本中的变量信息进行宏替换，包括基于映射文件的替换，基于应用变量的替换，基于环境变量的替换
   * 支持在程序中捕捉返回的上下文信息，利用前面执行的结果来影响后续的执行逻辑
-  * 支持在程序中使用LOOP，IF等循环、条件判断表达式，来完成复杂的测试逻辑
+  * 支持在程序中使用简单的LOOP，IF等循环、条件判断表达式，来完成复杂的测试逻辑
   * 使用ASSERT来判断运行的结果
   * 使用SESSION来完成多个数据库会话客户端的切换和状态保存
   * 使用SESSION来完成多个API会话客户端的切换和状态保存
@@ -38,7 +49,7 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
   * 在API测试中上传或者下载数据文件
   * 基于RobotFrameWork，提供了多个测试脚本之间的并发控制、超时控制
   * 基于RobotFrameWork，提供了HTML格式的测试报告生成
-*** 
+***
 
 ***
 #### TestCli目前支持的数据库  
@@ -48,7 +59,7 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
    * 其他符合标准JDBC规范的数据库
    * 以上描述的支持是指在相关数据库上进行过基本的测试，但显然我们没法覆盖全部的测试点
 
-***   
+***
 #### TestCli的数据类型映射
 以下是数据库类型到TestCli中数据类型的映射关系（右面的数据类型均为Python的原生数据类型）：
 ```  
@@ -115,7 +126,7 @@ TestCli 是一个主要用Python完成的，基于命令行下运行的，精致
    fs                       : 构建虚拟文件系统，用来支撑随机数据文件的生成
    psutil                   : Python的监控管理
    glom                     : 用于API返回结果中的过滤
-   antlr4-python3-runtime   : Antlr4运行时引用
+   antlr4-python3-runtime   : Antlr4运行时引用(由于程序放置的是编译好的Antlr文件，所以这里需要对版本进行精确控制。 目前版本是4.11.1)
    python-multipart         : urllib用来完成多段API请求
    
    pytest                   ：程序自身的测试需要，并不是运行必须项
@@ -151,43 +162,8 @@ cachedir: .pytest_cache
 
 ### TestCli
 
-### TestCliRobot
-#### 驱动程序的下载和配置
-TestCli是一个基于JDBC的数据库工具，基于JDBC操作数据库的前提当前环境下有对应的数据库连接jar包。 
+#### 程序命令行参数
 
-##### 驱动程序的配置
-配置文件位于TestCli的安装目录下的conf目录中，配置文件名为:testcli.ini  
-配置例子:
-```
-[driver]
-oracle=oracle_driver
-mysql=mysql_driver
-.... 
-
-[oracle_driver]
-filename=ojdbc8.jar
-driver=oracle.jdbc.driver.OracleDriver
-jdbcurl=jdbc:oracle:thin:@${host}:${port}/${service}
-
-[mysql_driver]
-filename=mysql-connector-java-8.0.20.jar
-driver=com.mysql.cj.jdbc.Driver
-jdbcurl=jdbc:mysql://${host}:${port}/${service}
-```
-
-如果数据库要新增其他数据库的连接，则应仿效上述配置例子。  
-其中：  
-* 所有的数据库名称及配置项名称均应该出现在[driver]的配置项中  
-  如果某一种数据库连接需要不止一个jar包，则这里应该配置多个配置项  
-  例如：   mydb=mydb1_driver1, mydb1_driver2
-* 数据库的具体配置应该在具体的配置项中  
-  filename：      可选配置项，jar包具体的名字  
-  driver:         可选配置项，数据库连接的主类  
-  jdbcurl:        可选配置项，jdbc连接字符串，其中${host} ${port} ${service}分别表示数据库连接主机，端口，数据库名称  
-  jdbcprop:       可选配置项，若该数据库连接需要相应的额外参数，则在此处配置
-
-### 程序命令行参数
-#### testcli
 ```
 (base) C:\>testcli --help
 Usage: testcli [OPTIONS]
@@ -218,25 +194,29 @@ Options:
     
 ```
 
-#### testclirobot的命令行参数
+##### --version 
 
-#### --version 
 用来显示当前工具的版本号
+
 ```
 (base) C:\>testcli --version
 Version: 0.0.7
 ```
 
-#### --logon  
+##### --logon  
+
 用来输入连接数据的的连接字符串
 使用完成的连接字符串：
+
 ``` 
 (base) C:\>testcli --logon user/pass@jdbc:mysql://127.0.0.1:3306/testdb
 TestCli Release 0.0.7
 SQL> Database connected.
 SQL>
 ```
+
 也可以在设置了TESTCLI_CONNECTION_URL后省略连接字符串后面部分：
+
 ```
 (base) C:\>testcli --logon admin/123456
 TestCli Release 0.0.7
@@ -250,8 +230,10 @@ user/pass : 数据库连接的用户名和口令
    参数格式：  jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名]
 ```
 
-#### --logfile   
+##### --logfile   
+
 用来记录本次命令行操作的所有过程信息    
+
 ```
 (base) C:\>testcli --logfile example.log
 TestCli Release 0.0.7
@@ -289,7 +271,8 @@ SQL> _exit
 Disconnected.
 ```
 
-#### --execute 
+##### --execute 
+
 在TestCli启动后执行特定的脚本  
 通过execute参数，可以让testcli来执行这个脚本，而不再需要我们一行一行的在控制台输入  
 脚本的后缀将影响执行的默认命名空间。  
@@ -324,7 +307,8 @@ select * from test_tab;
 注意： 即使你的脚本中不包含Exit/Quit语句，在TestCli执行完当前脚本后，他也会自动执行exit语句
 ```
 
-#### --commandmap   
+##### --commandmap   
+
 在命令执行的时候，指定命令的映射文件信息  
 提供映射信息文件的目的是为了解决一个测试场景。  
 即：有的测试脚本需要反复多次的运行，其区别仅仅是部分参数信息的不同。  
@@ -379,8 +363,10 @@ Disconnected.
 # 通过这种方法，我们可以通过定义一个测试脚本，多个MAP的方法来让测试脚本复用在不同的测试环境中
 ```
 
-#### --nologo    
-这是一个选项，用来控制TestCli是否会在连接的时候显示当前的程序版本
+##### --nologo    
+
+选项，用来控制TestCli是否会在连接的时候显示当前的程序版本
+
 ```
 (base) testCli 
 TestCli Release 0.0.7
@@ -390,11 +376,13 @@ SQL>
 SQL>
 ```
 
-#### --xlog  
+##### --xlog  
+
 输出测试运行的扩展日志，并指定扩展日志的文件名      
 这里说的日志不是指程序的logfile，而是用sqlite格式文件记录的测试日志    
 这些日志将作为后续对测试运行行为的一种分析    
 运行日志共包括如下信息：  
+
 ```
      Id              INTERGER  整数，自增长序列
      Script          TEXT      当前运行的测试脚本名称  
@@ -413,7 +401,9 @@ SQL>
      ScenarioId      TEXT      测试场景ID，这个来源于测试脚本中的Hint定义，随后会详细介绍如何定义测试场景ID
      ScenarioName    TEXT      测试场景名称，这个来源于测试脚本中的Hint定义，随后会详细介绍如何定义测试场景名称
 ```
+
 以下是实际的一行扩展日志效果：
+
 ```
      Id              =>  2
      Script          =>  aa.api  
@@ -430,19 +420,25 @@ SQL>
      ScenarioId      =>  13279
      ScenarioName    =>  测试数据库连接
 ```
-#### --xlogoverwrite      
+
+##### --xlogoverwrite      
+
 控制如果扩展日志文件已经存在的方式下，是否会覆盖掉原有的扩展日志文件。默认是不覆盖，即追加模式
 
-#### --clientcharset      
+##### --clientcharset      
+
 定义客户端的字符集，默认为UTF-8  
 客户端的字符集影响了脚本的字符集，命令行中输入信息的字符集  
 
-#### --resultcharset      
+##### --resultcharset      
+
 定义了结果输出文件的字符集，包括日志文件，也包括SPOOL导出的文件，也包括ECHO生成的回显文件
 
-#### --profile            
+##### --profile            
+
 定义程序的启动文件，在程序启动之前会首先运行该文件，随后开始正式的执行测试脚本文件。  
 以下是一个在启动文件里头连接数据库，并随后在测试脚本中完成测试的例子。  
+
 ```
 (base) C:\>type myprofile.sql
 _connect /mem
@@ -471,9 +467,12 @@ Disconnected.
 
 # 上述的例子中会首先执行myprofile.sql，随后才会执行testprofile.sql中的测试内容
 ```
-#### --scripttimeout   
+
+##### --scripttimeout   
+
 控制脚本的最大超时时间，这里的计数单位是秒。默认为-1，即完全不控制。    
 以下是一个设置了scriptTimeout为3的时候的执行例子，当达到3秒的限制后，脚本会立刻结束运行，不再继续下去。 
+
 ```
 TestCli Release 0.0.7
 API> _use sql
@@ -482,43 +481,96 @@ SQL> _sleep 5
 TestCli-000: Script Timeout (3) expired. Abort this Script.
 Disconnected.
 ```
+
 需要注意的是：  
+
 1. Abort操作受限于编程语言的实现，只能尽力去释放资源，并不保证资源的完全释放完毕。
 2. 这里的超时时间并不是一个精确时间，对于一些快速的操作，如语句解析，打印输出等并没有被统计在运行耗时内，所以超时控制是一个相对准确的限制，不能作为绝对的时间依赖。  
 3. 除了在命令行上指定脚本的全局超时时间限制外，还可以在脚本中指定具体语句的执行时间显示。 具体地介绍将在后面部分描述。  
 
-#### --namespace    
+##### --namespace    
+
 指定程序的默认命名空间，如果不指定，命名空间的默认依赖于文件后缀，具体的规则是：  
+
 1. 文件后缀为.sql， 则默认的命名空间为SQL
 2. 文件后缀为.api， 则默认的命名空间为API
 3. 其他文件后缀，默认的命名空间为SQL  
-命名空间的不同将影响语句的解析执行， 你也可以在脚本中进行命名空间的切换  
+   命名空间的不同将影响语句的解析执行， 你也可以在脚本中进行命名空间的切换  
 
-#### --selftest      
+##### --selftest      
+
 运行自测脚本并退出  
 这个选项仅仅用于测试当前环境下是否已经正确安装了本工具。  
 
-#### --suitename     
+##### --suitename     
+
 指定测试套件的名称，这个通常用于记录在扩展日志，或者完成测试报告的时候协助统计分析测试结果使用
 
-#### --casename      
+##### --casename      
+
 指定测试用例的名称，这个通常用于记录在扩展日志，或者完成测试报告的时候协助统计分析测试结果使用  
 
-#### --silent
+##### --silent
+
 指定是否为静默方式调用，如果是静默方式，则屏幕上不会输出任何信息
 
-#### --daemon
+##### --daemon
+
 指定是否为后台进程方式运行（只针对非Windows平台）  
 后台方式下由于无法输入，所以只能用指定脚本方式来运行  
 
-#### --pidfile
+##### --pidfile
+
 是否打印PID信息到指定的文件中，默认是不打印，即不产生pidfile文件  
 
-#### --help          
+##### --help          
+
 显示本帮助信息并退出  
+#### 驱动程序的下载和配置
+TestCli是一个基于JDBC的数据库工具，基于JDBC操作数据库的前提当前环境下有对应的数据库连接jar包。 
+
+##### 驱动程序的配置
+配置文件可能存放在：
+1. 环境变量${TESTCLI_CONF}所指定的文件
+2. 环境变量${TESTCLI_HOME}下的conf/testcli.ini文件
+3. TestCli的Python安装目录下的conf目录中，配置文件名为:testcli.ini
+上述3个文件按照优先级依次查找，当找到配置文件时，即采用当前配置文件。 
+
+配置例子:
+
+```
+[driver]
+oracle=oracle_driver
+mysql=mysql_driver
+.... 
+
+[oracle_driver]
+filename=ojdbc8.jar
+driver=oracle.jdbc.driver.OracleDriver
+jdbcurl=jdbc:oracle:thin:@${host}:${port}/${service}
+
+[mysql_driver]
+filename=mysql-connector-java-8.0.20.jar
+driver=com.mysql.cj.jdbc.Driver
+jdbcurl=jdbc:mysql://${host}:${port}/${service}
+```
+
+如果数据库要新增其他数据库的连接，则应仿效上述配置例子。  
+其中：  
+* 所有的数据库名称及配置项名称均应该出现在[driver]的配置项中  
+  如果某一种数据库连接需要不止一个jar包，则这里应该配置多个配置项  
+  例如：   mydb=mydb1_driver1, mydb1_driver2
+* 数据库的具体配置应该在具体的配置项中  
+  filename：      可选配置项，jar包具体的名字  
+  driver:         可选配置项，数据库连接的主类  
+  jdbcurl:        可选配置项，jdbc连接字符串，其中${host} ${port} ${service}分别表示数据库连接主机，端口，数据库名称  
+  jdbcprop:       可选配置项，若该数据库连接需要相应的额外参数，则在此处配置
+
+
 
 ***
-### 在TestCli里面使用帮助
+
+#### 在TestCli里面使用帮助
 ```
 (base) TestCli 
 TestCli Release 0.1.1
@@ -582,7 +634,7 @@ SQL> _help compare
 ```
 
 ***
-### 设置程序的运行选项
+#### 设置程序的运行选项
 通过SET命令，我们可以改变TestCli的一些行为或者显示选项。
 ```
     SQL> _set
@@ -632,7 +684,7 @@ SQL> _help compare
     没有任何参数的set命令将会列出程序所有的配置情况。
 ```
 
-#### 控制参数解释-WHENEVER_ERROR
+##### 控制参数解释-WHENEVER_ERROR
 &emsp; 用来控制在执行命令过程中遇到命令错误，是否继续。 默认是CONTINUE，即继续。   
 &emsp; 目前支持的选项有：    
 ```
@@ -641,7 +693,7 @@ SQL> _help compare
 ```
 WHENEVER_ERROR不支持用SET命令来调整，如果需要调整，需要使用_WHENEVER ERROR <EXIT <int> | CONTINUE>
 
-#### 控制参数解释-PAGE
+##### 控制参数解释-PAGE
 &emsp; 是否分页显示，当执行的命令结果超过了屏幕显示的内容，是否会暂停显示，等待用户输入任意键后继续显示下一页，默认是OFF，即不中断。  
 &emsp; 以下是中断的效果， 中断后单击任意键将显示下一篇内容。  
 &emsp; PAGE的设置在脚本执行中将被忽略。
@@ -665,7 +717,7 @@ WHENEVER_ERROR不支持用SET命令来调整，如果需要调整，需要使用
 -- More  --
 ```
 
-#### 控制参数解释-ECHO
+##### 控制参数解释-ECHO
 &emsp; &emsp; 命令回显标志， 默认为ON，即命令内容在LOG中需要回显
 ```
         SQL> _set ECHO ON      # 在LOG中将会回显命令语句
@@ -689,7 +741,7 @@ WHENEVER_ERROR不支持用SET命令来调整，如果需要调整，需要使用
         SQL> 1 rows selected.
 ```
 
-#### 控制参数解释-TIMING
+##### 控制参数解释-TIMING
 &emsp; 语句运行结束后打印当前语句的执行时间  
 ```
     SQL> _set timing ON
@@ -699,7 +751,7 @@ WHENEVER_ERROR不支持用SET命令来调整，如果需要调整，需要使用
     Running time elapsed:      0.04 seconds
 ```
 
-#### 控制参数解释-TIME
+##### 控制参数解释-TIME
 &emsp; 语句运行结束后打印当前系统时间  
 ```
     SQL> _set time ON
@@ -712,7 +764,7 @@ WHENEVER_ERROR不支持用SET命令来调整，如果需要调整，需要使用
     Current clock time  :2023-01-28 20:02:25
 ```
 
-#### 控制参数解释-FEEDBACK
+##### 控制参数解释-FEEDBACK
 &emsp; 控制是否回显执行影响的行数，默认是ON，显示  
 ```
        SQL> _set feedback on
@@ -733,7 +785,7 @@ WHENEVER_ERROR不支持用SET命令来调整，如果需要调整，需要使用
        | 1  | XYXYXYXY |
        +----+----------+
 ```
-#### 控制参数解释-TERMOUT
+##### 控制参数解释-TERMOUT
 &emsp; 控制是否显示命令结果的返回，默认是ON，显示  
 
 ```
@@ -752,7 +804,7 @@ WHENEVER_ERROR不支持用SET命令来调整，如果需要调整，需要使用
 
 ```
 
-#### 控制参数解释-SQL_FETCHSIZE
+##### 控制参数解释-SQL_FETCHSIZE
 &emsp; SQL数据预读取Fetch的缓冲区大小  
 ```
     默认是10000，设置值为非零的正整数
@@ -761,7 +813,7 @@ WHENEVER_ERROR不支持用SET命令来调整，如果需要调整，需要使用
     如果没有十分必要的需求，不建议修改这个参数。过低的参数将导致程序运行性能下降
 ```
 
-#### 控制参数解释-OUTPUT_FORMAT
+##### 控制参数解释-OUTPUT_FORMAT
 &emsp; 结果集显示格式， 默认是TAB
 &emsp; 目前支持的选项有：
 ```
@@ -788,7 +840,7 @@ WHENEVER_ERROR不支持用SET命令来调整，如果需要调整，需要使用
        2 rows selected.
 ```
 
-#### 控制参数解释-LOB_LENGTH
+##### 控制参数解释-LOB_LENGTH
 &emsp; 控制LOB字段的输出长度，默认是20  
 &emsp; 由于LOB字段中的文本长度可能会比较长，所以默认不会显示出所有的LOB内容到当前输出中，而是最大长度显示LOB_LENGTH值所代表的长度对于超过默认显示长度的，将在输出内容后面添加...省略号来表示   
 &emsp; 对于BLOB类型，输出默认为16进制格式。对于超过默认显示长度的，将在输出内容后面添加...省略号来表示 
@@ -825,7 +877,7 @@ WHENEVER_ERROR不支持用SET命令来调整，如果需要调整，需要使用
         1 row selected.
 ```
 
-#### 控制参数解释-FLOAT_FORMAT/DECIMAL_FORMAT/DATE_FORMAT/DATETIME_FORMAT/TIME_FORMAT
+##### 控制参数解释-FLOAT_FORMAT/DECIMAL_FORMAT/DATE_FORMAT/DATETIME_FORMAT/TIME_FORMAT
 &emsp; FLOAT_FORMAT    控制浮点数字的显示格式，默认是%.7g
 ```
     SQL> _set DECIMAL_FORMAT %0.7g
@@ -857,7 +909,7 @@ WHENEVER_ERROR不支持用SET命令来调整，如果需要调整，需要使用
     类似的参数还有DATETIME_FORMAT, TIME_FORMAT
 ```
 
-#### 控制参数解释-CSV_HEADER/CSV_DELIMITER/CSV_QUOTECHAR
+##### 控制参数解释-CSV_HEADER/CSV_DELIMITER/CSV_QUOTECHAR
 &emsp; CSV格式控制  
 ```
     CSV_HEADER        控制CSV输出中是否包括字段名称信息， 默认是OFF
@@ -882,7 +934,7 @@ WHENEVER_ERROR不支持用SET命令来调整，如果需要调整，需要使用
     7
 ```
 
-#### 控制参数解释-SQL_EXECUTE
+##### 控制参数解释-SQL_EXECUTE
 &emsp; SQL_EXECUTE  
 ```
     控制Jpype调用JDBC测试的时候，使用的具体行为方式。有两个可能的选项，分别是DIRECT和PREPARE
@@ -895,7 +947,7 @@ WHENEVER_ERROR不支持用SET命令来调整，如果需要调整，需要使用
 ```
 
 
-#### 控制参数解释-SQLCONN_RETRYTIMES
+##### 控制参数解释-SQLCONN_RETRYTIMES
 &emsp;  数据库连接尝试次数  
 ```
     默认是1，即数据库只尝试一次数据库连接，失败后即退回。
@@ -904,7 +956,7 @@ WHENEVER_ERROR不支持用SET命令来调整，如果需要调整，需要使用
     
 ```
 
-#### 控制参数-SQL_TIMEOUT，SCRIPT_TIMEOUT，API_TIMEOUT
+##### 控制参数-SQL_TIMEOUT，SCRIPT_TIMEOUT，API_TIMEOUT
 &emsp; 脚本/语句超时控制
 ```
    程序实现了超时管理，默认的超时时间为无限制，即不做任何控制
@@ -922,7 +974,7 @@ WHENEVER_ERROR不支持用SET命令来调整，如果需要调整，需要使用
    不要把精准的时间判断寄希望于这个TIMEOUT设置   
 ```
 
-#### 控制参数  API_HTTPSVERIFY
+##### 控制参数  API_HTTPSVERIFY
 ```
    设置API默认的情况下请求是否验证远程的HTTPS签名。 可选值为ON或者OFF
    默认值为OFF，即不验证
@@ -933,7 +985,7 @@ WHENEVER_ERROR不支持用SET命令来调整，如果需要调整，需要使用
    
 ```
 
-#### 控制参数  API_HTTPPROXY
+##### 控制参数  API_HTTPPROXY
 ```
    设置API的代理地址。 
    合法有效的格式是： http://<ip address>:<port>
@@ -946,7 +998,7 @@ WHENEVER_ERROR不支持用SET命令来调整，如果需要调整，需要使用
    
 ```
 
-### 让程序休息一会
+#### 让程序休息一会
 ```
 (base) TestCli 
 TestCli Release 0.0.32
@@ -957,7 +1009,7 @@ Database disconnected.
 Sleep的做法主要用在一些定期循环反复脚本的执行上
 ```
 
-### 执行主机的操作命令
+#### 执行主机的操作命令
 ```
 (base) TestCli 
 TestCli Release 0.0.32
@@ -968,7 +1020,7 @@ Database disconnected.
 这里的date是主机的命令，需要注意的是：在Windows和Linux上命令的不同，脚本可能因此无法跨平台执行
 ```
 
-### 从脚本中执行其他脚本
+#### 从脚本中执行其他脚本
 我们可以把语句保存在一个其他文件中，在当前控制台或当前脚本中进行调用  
 语法格式为：
 ```
@@ -987,8 +1039,8 @@ SQL> _DISCONNECT
 para1, para2, paran 是子程序的运行参数。具体处理逻辑由子脚本处理.
 ```
 
-### 执行数据库测试
-#### 连接数据库
+#### 执行数据库测试
+##### 连接数据库
 在TestCli命令行里头，可以通过connect命令来连接到具体的数据库  
 执行数据库的连接，前提是你的程序处于SQL的命名空间下
 ```
@@ -1038,7 +1090,7 @@ LinkoopDB:
     _CONNECT username/password@jdbc:oracle:tcp://IP:Port/Service_Name?internal_logon=sysdba
 ```
 
-#### 断开数据库连接
+##### 断开数据库连接
 ```
 (base) TestCli 
 TestCli Release 0.0.11
@@ -1049,7 +1101,7 @@ Database disconnected.
 ```
 ***
 
-#### 执行SQL语句块
+##### 执行SQL语句块
 &emsp; SQL语句块的结束符为【/】，且【/】必须出现在具体一行语句的开头  比如：
 ```
     SQL> CREATE PROCEDURE PROC_TEST()
@@ -1068,7 +1120,7 @@ Database disconnected.
     'CREATE' | 'REPLACE' | 'ALTER'|  '+ | 'OR')+ ('PROCEDURE'|'FUNCTION'|'CLASS'|'TRIGGER'|'PACKAGE'
 
 ```
-#### 执行多行SQL语句
+##### 执行多行SQL语句
 &emsp; 多行SQL结束符为分号【 ；】 比如：
 ```
     SQL> CREATE TABLE TEST_TAB
@@ -1081,35 +1133,27 @@ Database disconnected.
 ```
 &emsp; 对于SQL多行语句，TestCli将被等待语句结束符后把全部的SQL一起送给SQL引擎（包括可能的语句结束符分号）。
 
-#### 其他SQL语句
+##### 其他SQL语句
 * 其他SQL语句  
   不符合上述条件的，即不是语句块也不是多行语句的，则在输入或者脚本回车换行后结束当前语句。  
   结束后的语句会被立刻送到SQL引擎中执行。
 
-#### SQL语句中的注释
-* 语句中的注释  
-  注释信息分为行注释和段落注释，这些注释信息不会被送入到SQL引擎中，而是会被TestCli直接忽略。  
-  
-  行注释的写法是： 【 ...SQL...   -- Comment 】  
+##### SQL语句中的注释
+  这些注释信息不会被送入到SQL引擎中，而是会被TestCli直接忽略。  
+
+  注释的写法是： 【 ...SQL...   -- Comment 】  
   即单行中任何【--】标识符后的内容都被理解为行注释信息。  
-  
-  段落注释的写法是： 【 ...SQL...  /* Comment .... */ 】  
-  即单行中任何【/*】标识符和【*/】标识符中的内容都被理解为行注释信息。  
-  比如：
+
 ```
     SQL> CREATE TABLE TEST_TAB
        > (
        >    ID   CHAR(20),          -- ID信息，这是是一个行注释
        >    COL1 CHAR(20)           -- 第一个CHAR字段，这也是一个行注释
-       >  /*  这个表是做测试用的，有两个字段：
-       >      ID和COL
-       >      这上下的4行内容都是段落注释
-       >   */
        > );
     SQL> 
-```  
+```
 
-#### 在SQL中使用Hint信息
+##### 在SQL中使用Hint信息
 &emsp; &emsp; 在一些场景中，我们通过Hint隐含提示符来控制SQL的具体行为
 ```
     SQL> -- [Hint] Order
@@ -1150,7 +1194,7 @@ Database disconnected.
 
 ```
 
-#### 数据库会话的切换和保存
+##### 数据库会话的切换和保存
 通过_SESSION语句可以保存当前数据库会话，并切换到新的数据库会话上进行工作。  
 如果需要的话，还可以通过SESSION的语句切换回之前保留的会话。
 
@@ -1202,10 +1246,10 @@ Session released.
 ***
 
 
-### 执行API测试
+#### 执行API测试
 在切换到API命名空间后，你就可以使用REST API的语法来书写测试脚本了。  
 REST API的语法结构，这个文档里不会详细描述，具体可以参考网上资料。  
-#### 请求的大致结果：
+##### 请求的大致结果：
 ``` 
     Method Request-URI HTTP-Version
     Header-field: Header-value
@@ -1214,14 +1258,14 @@ REST API的语法结构，这个文档里不会详细描述，具体可以参考
 ```
 其中Method可以为POST，GET，或者其他任何合法的HTTP请求方法。  
 Request-URI为请求的地址，地址可能包含请求参数。 如果请求参数列表很长，可以用多行表达。  
-#### 单行表达的请求：
+##### 单行表达的请求：
 ```
    ### GET请求，一行表达
    GET http://example.com:8080/api/get/html?firstname=John&lastname=Doe&planet=Tatooine&town=Freetown  HTTP/1.1
    
    ###
 ```
-#### 多行表达的请求：
+##### 多行表达的请求：
 ```
    ### GET请求，多行表达
     GET http://example.com:8080/api/get/html?  HTTP/1.1
@@ -1233,7 +1277,7 @@ Request-URI为请求的地址，地址可能包含请求参数。 如果请求�
    ###
 ```
 
-#### 包含请求体的请求示例：
+##### 包含请求体的请求示例：
 ```
     ### POST请求，包含请求体
     POST http://example.com:8080/api/html/post HTTP/1.1
@@ -1244,7 +1288,7 @@ Request-URI为请求的地址，地址可能包含请求参数。 如果请求�
    ###
 ```
 
-#### 从一个外部文件中加载消息体：
+##### 从一个外部文件中加载消息体：
 ```
     ### POST请求，包含请求体
     POST http://example.com:8080/api/html/post HTTP/1.1
@@ -1255,7 +1299,7 @@ Request-URI为请求的地址，地址可能包含请求参数。 如果请求�
    ###
 ```
 
-#### 把执行结果输出到外部文件中(也可以使用>>来追加输出)：
+##### 把执行结果输出到外部文件中(也可以使用>>来追加输出)：
 ```
     ### POST请求，包含请求体
     POST http://example.com:8080/api/html/post HTTP/1.1
@@ -1268,7 +1312,7 @@ Request-URI为请求的地址，地址可能包含请求参数。 如果请求�
    ###
 ```
 
-#### API多段提交：
+##### API多段提交：
 ``` 
     ### POST多段请求
     POST http://example.com/api/upload HTTP/1.1
@@ -1294,7 +1338,7 @@ Request-URI为请求的地址，地址可能包含请求参数。 如果请求�
 
 ```
 
-#### HTTPS签名校验
+##### HTTPS签名校验
 ```
    如果不设置，则是否需要验证的配置来源于程序的全局默认参数 API_HTTPSVERIFY
    
@@ -1305,7 +1349,7 @@ Request-URI为请求的地址，地址可能包含请求参数。 如果请求�
    OFF   关闭HTTPS签名验证
 ```
 
-#### HTTP代理
+##### HTTP代理
 ```
    如果不设置，则HTTP地址来源于系统的全局默认参数 API_HTTPPROXY
    
@@ -1316,7 +1360,7 @@ Request-URI为请求的地址，地址可能包含请求参数。 如果请求�
    SET HTTP_PROXY http://127.0.0.1:8000
 ```
 
-#### API会话的切换和保存
+##### API会话的切换和保存
 通过_SESSION语句可以保存当前API会话，并切换到新的API会话上进行工作。  
 如果需要的话，还可以通过SESSION的语句切换回之前保留的会话。
 
@@ -1340,7 +1384,7 @@ Request-URI为请求的地址，地址可能包含请求参数。 如果请求�
  
 ```
 
-#### 在API请求中使用Hint信息
+##### 在API请求中使用Hint信息
 &emsp; &emsp; 在一些场景中，我们通过Hint隐含提示符来控制SQL的具体行为
 ```    
     JsonFilter：
@@ -1415,7 +1459,7 @@ Request-URI为请求的地址，地址可能包含请求参数。 如果请求�
 ```
 
 ***
-### 脚本中使用变量：
+#### 脚本中使用变量：
 测试脚本中支持使用变量，便于灵活的运行测试。  
 变量的表示方法为：  {{var}}  
 如： 如下的SQL语句中将查询的表名作为一个变量来表达：
@@ -1436,6 +1480,7 @@ Request-URI为请求的地址，地址可能包含请求参数。 如果请求�
 变量的来源可以为：  
 1： 主机环境的环境变量， 如Linux下，通过export设置的环境变量信息  
 2： 内置脚本中的变量名称， 如
+
 ```
    <%  SERVER_IP="127.0.0.1" %>
    <%  FIRST_NAME="John" %>
@@ -1450,7 +1495,7 @@ Request-URI为请求的地址，地址可能包含请求参数。 如果请求�
 ```
 
 ***
-### 定义TestCli的初始化文件
+#### 定义TestCli的初始化文件
 ```
     TestCli在执行的时候可以指定初始化文件，初始化文件会在真正的脚本执行之前被执行
     可以通过以下三种方式来定义TestCli的初始化文件：
@@ -1464,7 +1509,7 @@ Request-URI为请求的地址，地址可能包含请求参数。 如果请求�
 
 ```
 
-### 在脚本中使用简单的_IF/_ENDIF语句来进行条件判断
+#### 在脚本中使用简单的_IF/_ENDIF语句来进行条件判断
 ```
     TestCli支持在脚本中，添加简单的IF和ENDIF来进行逻辑判断
     在IF和ENDIF之间的语句只有条件满足，才会被执行。否则将被跳过
@@ -1484,7 +1529,7 @@ Request-URI为请求的地址，地址可能包含请求参数。 如果请求�
     _ENDIF
 ```
 
-### 在脚本中使用简单的_LOOP语句来进行循环处理
+#### 在脚本中使用简单的_LOOP语句来进行循环处理
 ```
     TestCli支持在脚本中，添加简单的LOOP以及相对应的break，continue来进行循环执行    
     目前还不支持多个LOOP的嵌套
@@ -1536,8 +1581,8 @@ Request-URI为请求的地址，地址可能包含请求参数。 如果请求�
     上述的例子中最多循环10次，10次后由于判断表达式不满足，而会中断循环
     在10次循环过程中，如果发现aaa表中的记录中已经达到3条，则立即终止循环，不再继续
 ```
-***    
-### 在脚本中使用ASSERT语句来判断运行结果
+***
+#### 在脚本中使用ASSERT语句来判断运行结果
 使用Assert可以判断测试运行的结果，结果作为测试运行的结论
 ```
    _ASSERT {% <python表达式> %} [, <AssertName>]   
@@ -1575,7 +1620,7 @@ AssertName是Assert具体的名字，可以为任何字符串，用在这里可�
 ```
 上述错误的例子中定义了一个新的变量x，这违反了python表达式必须是非赋值表达式的限制。  
 
-###  在脚本中嵌入python语法
+####  在脚本中嵌入python语法
 为了方便测试脚本的扩展，testcli支持在测试脚本中嵌入python语法的写法。
 ```
 > {% 
@@ -1607,7 +1652,6 @@ _assert {% end - start > 300 %}
 需要注意的是： 在一个测试脚本运行的过程中，所有的python内嵌语法都拥有共同的变量空间。   
 即如何保证变量空间的不冲突是写业务逻辑代码的时候需要保证的。    
 
-#### 内置Python语法中的系统预制变量
 为了更方便来满足业务的判断，我们内置了一些系统变量，这些系统变量在使用的过程中不需要业务层面重新定义，可以直接拿来使用。  
 
 ##### lastCommandResult
@@ -1640,7 +1684,7 @@ _assert {% end - start > 300 %}
        "elapsed": <命令执行的时间，如1.35，单位为秒>,
        "status": <语句的最后命令行状态输出, 这里指错误消息>,
    }
-``` 
+```
 对于一个正确的API调用，lastCommandResult的结果是一个数据字典，其内容为：
 ``` 
    {
@@ -1649,14 +1693,14 @@ _assert {% end - start > 300 %}
        "status": <HTTP的响应状态，即HTTP.RESP.STATUS>,
        "errorCode": 0
    }
-``` 
+```
 对于一个错误的API调用，lastCommandResult的结果是一个数据字典，其内容为：
 ``` 
    {
        "message": <请求错误消息>,
        "errorCode": 1
    }
-``` 
+```
 
 ##### sessionContext
 定义当前会话的上下文信息。  
@@ -1711,7 +1755,7 @@ sessionContext是一个字典结果。
     argv=['3', '5']    
 ```
 ***
-### 用TestCli来产生测试数据文件
+#### 用TestCli来产生测试数据文件
 为了方便测试，有时候我们要生成大量的测试数据，生成这些测试数据的要求是：  
 1. 能够按照规则进行随机生成  
 2. 能够快速的生成数据
@@ -1771,8 +1815,8 @@ sessionContext是一个字典结果。
     11,'HWgiR','dmh'
     12,'Skxag','mlj'
 ```
-***    
-### 加载附加的命令行映射文件
+***
+#### 加载附加的命令行映射文件
 这里的使用方法和在testcli命令中使用--commandmapping的参数效果是一样的。  
 这里将对mapping文件的规则进行详细的解释和说明。  
 正如前面介绍的， 映射文件的设计目的是为了解决一个典型的测试场景。即：有的测试脚本需要反复多次的运行，其区别仅仅是部分参数信息的不同。
@@ -1840,8 +1884,8 @@ Disconnected.
 每一个映射文件中，可以循环反复多个这样的类似配置，每一个配置段都会生效。  
 如果一个文件规则或者替换规则多次出现定义，则会发生多次匹配的现象。  
 
-*** 
-### 加载附加的外挂脚本
+***
+#### 加载附加的外挂脚本
 为了让测试框架能够支持更多的扩展，testcli支持你将自己写好的Python程序作为一个脚本的方式放入到系统中。脚本中可以包含自己的函数和模块。  
 虽然这是一个可能解决问题的近乎外能良药，但是这么做会导致一定的测试脚本可读性下降。需要你在使用的时候小心谨慎。  
 ```
@@ -1911,8 +1955,8 @@ SQL> _exit
 具体对于SessionConext的用法解释请参考文档的其他章节。  
 上面的例子中，我们在内置脚本中执行了插件中定义的类和方法，并完成了数据的处理和返回。  
 
-*** 
-### 加载附加的外挂命令实现
+***
+#### 加载附加的外挂命令实现
 为了让测试框架能够支持更多的扩展，testcli支持你将自己来实现相关的命令。前提是你遵循相关的写法规则。  
 ```
    _LOAD PLUGIN <插件文件的位置>   
@@ -2008,8 +2052,8 @@ rock smashes scissor. Congrats You win!
     }
 ```
 
-*** 
-### 加载数据库驱动
+***
+#### 加载数据库驱动
 TestCli会默认加载所有配置在conf/testcli.ini中的JDBC驱动  
 你也可以在启动后手工加载额外的驱动，或者更改已经加载的配置。
 ```
@@ -2037,7 +2081,7 @@ TestCli会默认加载所有配置在conf/testcli.ini中的JDBC驱动
        ${port}               表示连接端口，如1521  
        ${service}            表示数据服务名，如orcl  
        例子：_LOAD JDBCDRIVER NAME=ORACLE URL="jdbc:oracle:thin:@${host}:${port}/${service}"
-    ```   
+    ```
 4. PROPS为额外的数据参数,描述格式为：
     ```
    <optionName1>:<optionValue1>[,<optionName2>:<optionValue2>]+
@@ -2055,10 +2099,10 @@ TestCli会默认加载所有配置在conf/testcli.ini中的JDBC驱动
     ...
     |     13 | h2mem      | org.h2.Driver                                | ['C:\\Anaconda3\\lib\\site-packages\\robotslacker_testcli-0.0.8-py3.9.egg\\testcli\\jlib\\h2-1.4.200.jar'] | jdbc:h2:mem:                                                                                                                       | <null>      |
     ...
-    ```      
+    ```
 
-*** 
-### 程序的并发和后台执行
+***
+#### 程序的并发和后台执行
 TestCli被设计为支持并发执行脚本，支持后台执行脚本。    
 为了支持后台操作，我们这里有一系列的语句，他们是：    
 1：  Create         创建后台任务      
@@ -2081,7 +2125,7 @@ TestCli被设计为支持并发执行脚本，支持后台执行脚本。
    _JOB REGISTER WORKER TO <JOB名称>
    _JOB DEREGISTER WORKER
 ```
-#### 创建后台任务脚本
+##### 创建后台任务脚本
 在很多时候，我们需要TestCli来帮我们来运行数据库脚本，但是又不想等待脚本的运行结束。    
 create可以有多个参数：      
 参数1：     JOB的名称  
@@ -2122,7 +2166,7 @@ JOB [jobtest] set successful.
 SQL>
 ```
 
-#### 查看后台任务脚本的运行情况
+##### 查看后台任务脚本的运行情况
 通过show可以查看我们之前提交情况，脚本的运行情况，运行的开始时间，运行的结束时间，当前正在运行的SQL等。
 ```
 SQL> -- 查看JOB整体情况
@@ -2153,7 +2197,7 @@ Detail Tasks:
 +----------+----------+--------------------+--------------------+
 这里可以看到具体对于JOB名称为jobtst的任务的详细情况
 ```
-#### 如何启动后台任务脚本
+##### 如何启动后台任务脚本
 通过start的方式，我可以启动全部的后台任务或者只启动部分后台任务
 ```
 SQL> _JOB jobmanager on
@@ -2166,7 +2210,7 @@ SQL> _JOB start jobtest;
 随后，再次通过show来查看信息，可以注意到相关已经启动
 ```
 
-#### 如何停止后台任务脚本
+##### 如何停止后台任务脚本
 在脚本运行过程中，你可以用shutdown来停止某个某个任务或者全部任务，
 ```
 SQL> _JOB shutdown all;
@@ -2178,7 +2222,7 @@ Total [1] job shutdowned.
       只有在子任务完成当前作业后，shutdownjob才能完成。
       这个意思是说，如果你有一个比较大的长SQL作业，shutdownjob并不能很快的终止任务运行。
 ```
-#### 如何强行停止后台任务脚本
+##### 如何强行停止后台任务脚本
 在脚本运行过程中，你可以用abort来强行停止某个某个任务或者全部任务，
 ```
 SQL> _JOB abort all;
@@ -2187,7 +2231,7 @@ Total [1] job aborted.
 SQL> _JOB abort jobtst;
 Total [1] job aborted.
 ```
-#### 等待后台任务脚本运行结束
+##### 等待后台任务脚本运行结束
 在脚本运行过程中，你可以用wait来等待后台脚本的运行结束
 ```
 SQL> _JOB wait all;
@@ -2202,7 +2246,7 @@ SQL> _job wait all TIMEOUT=3;
 Unexpected internal error: Job wait terminated. Timeout [3]
 ```
 
-#### 如何让若干的Worker应用程序保持聚合点
+##### 如何让若干的Worker应用程序保持聚合点
 主调度程序脚本：
 ```
 SQL> _JOB jobmanager on
@@ -2223,7 +2267,7 @@ SQL> do some sql
 SQL> _JOB timer slave_finished;
 ```
 
-### 脚本中使用COMPARE命令来比较文件差异性
+#### 脚本中使用COMPARE命令来比较文件差异性
 通常我们用比较的方式来比对一个执行结果和预期执行结果的差异性。来判断当前测试是否正确执行。
 ```
    _COMPARE <需要比对的文件名> <比对参考文件> {MASK | NOMASK | CASE | NOCASE | IGBLANK | NOIGBLANK | TRIM | NOTRIM}
@@ -2276,7 +2320,7 @@ SQL> _JOB timer slave_finished;
 5. OUTPUT 将比对的结果输出到控制台、一个DIFF文件(文本文件）、一个DIFF文件(HTML文件)中
    1. 也可以即输出到控制台，也输出到DIFF文本文件中。设置方法： _COMPARE SET OUTPUT CONSOLE DIFFFILE;
 
-### 脚本中使用SSH命令来远程执行命令以及上传、下载文件
+#### 脚本中使用SSH命令来远程执行命令以及上传、下载文件
 1. SSH命令主要用来远程执行命令，以及上传、下载文件
 ```
     _SSH CONNECT <远程主机名称/IP地址> WITH USER <远程主机用户名> KEYFILE <用户密钥文件位置>
@@ -2307,7 +2351,7 @@ SQL> _JOB timer slave_finished;
       PUT 可以用正则表达式上传一系列文件
 ```
 
-### 使用spool命令来将当前执行结果输出到文件中
+#### 使用spool命令来将当前执行结果输出到文件中
 1. SPOOL主要用来把随后语句的执行结果记录到特定的文件中
     ```
         _SPOOL  <输出的文件名>
@@ -2347,8 +2391,8 @@ SQL> _JOB timer slave_finished;
    2. 如果程序运行过程中没有提供logfile信息，且程序在脚本中运行，则spool结果文件目录就是脚本所在的目录
    3. 如果程序运行过程中没有提供logfile信息，且程序在命令行中运行，则spool结果文件目录就是用户所在的当前目录
 
-***  
-### 脚本中使用ECHO来生成简易的文件
+***
+#### 脚本中使用ECHO来生成简易的文件
 1. ECHO主要用来快速的生成一些小的脚本和文件。例如：
     ```
     _ECHO <输出的文件名>
@@ -2357,7 +2401,7 @@ SQL> _JOB timer slave_finished;
     ```
 2. 这里文件内容的所有东西都将被直接输出到指定的文件中，包括换行符等信息
 ***
-### 系统运行监控
+#### 系统运行监控
 使用内置的监控程序，系统将在后台采集需要的性能数据，如果有必要，这些信息可以记录在程序的扩展日志中。  
 ```
     _MONITOR MONITORMANAGER ON [WOKERS <int>]
@@ -2385,18 +2429,18 @@ SQL> _JOB timer slave_finished;
         network               # 网络使用情况统计
         disk                  # 磁盘使用情况统计
         process               # 进程使用情况统计
-   ```   
+   ```
    2. FREQ选项：
    FREQ不是必须的，但是在循环检测中设置必要的FREQ是必要的。  
    如果不设置，FREQ的默认值为30，即30秒采集一次数值  
    3. 针对NETWORK的选项  
    ``` 
    NAME  网卡的名称； 可以不填写，不填写意味着查看所有网卡。也可以用通配符表示，如 NAME='eth.*'
-   ```  
+   ```
    以下是一个采集网络数据并且指定了选项的例子：  
    ```
         _MONITOR CREATE TASK task1 TAG=network NAME='eth0' FREQ=10; 
-   ```   
+   ```
    采集的结果信息包括：
    ```
        nicName:       网卡名称
@@ -2412,7 +2456,7 @@ SQL> _JOB timer slave_finished;
    4. 针对DISK的选项
    ``` 
    NAME  磁盘的名称； 可以不填写，不填写意味着查看所有磁盘。也可以用通配符表示，如 NAME='PhysicalDrive[12]'  
-   ``` 
+   ```
    以下是一个采集网络数据并且指定了选项的例子：
    ```
         _MONITOR CREATE TASK task1 TAG=disk NAME='PhysicalDrive[12]' FREQ=10; 
@@ -2446,7 +2490,7 @@ SQL> _JOB timer slave_finished;
    NAME             进程的名称。可以省略，或者通配符方式表示。需要注意的是，Linux的机制下，对于名称较长的进程，系统会自动截断。  
    EXE              进程的执行文件。可以省略，或者通配符方式表示。需要注意的是，EXE可能为全路径，即包含路径信息。  
    USERNAME         进程的执行用户名。可以省略，或者通配符方式表示  
-   ``` 
+   ```
    采集的结果包括：
    ``` 
         pid:             进程PID
@@ -2486,7 +2530,7 @@ SQL> _JOB timer slave_finished;
    采集的结果包括：
    ``` 
         ratio:           CPU使用率比例（百分比）
-   ```   
+   ```
    9. CPU时间统计  
           以下是一个采集CPU时间的例子：
           ```
@@ -2524,8 +2568,8 @@ SQL> _JOB timer slave_finished;
        ```
    
    
-*** 
-### 程序退出
+***
+#### 程序退出
 如果你执行一个脚本，则在以下三种情况下会退出
 1. 脚本执行失败。并且设置_WHENEVER ERROR EXIT <INT>的时候。退出的值将是这里的<INT>值
 2. 脚本执行结束。退出值为0
@@ -2536,11 +2580,11 @@ SQL> _JOB timer slave_finished;
     (_EXIT | _QUIT) [返回值]
     # 退出的值将是这里的<INT>值, 如果不填写，将为0
 ```
-*** 
-### 程序中用到的环境变量
+***
+#### 程序中用到的环境变量
 程序中我们定义了一些环境变量，用来支撑客户部署和调试的需要。  
 
-#### TESTCLI_DEBUG
+##### TESTCLI_DEBUG
 布尔类型，用来标记程序是否在DEBUG模式。  
 如果为0（默认）： 表示程序处于非调试模式。  
 如果为1（即打开DEBUG模式）：  表示程序处于调试模式。  
@@ -2553,7 +2597,7 @@ SQL> _JOB timer slave_finished;
    随后执行的语句将打印更多的内部日志  
 ```
 
-#### TESTCLI_CONF
+##### TESTCLI_CONF
 用来定义程序配置文件的目录。  
 默认的配置文件是程序安装目录的conf/testcli.ini。 即PYTHON_HOME/lib/python36/site-packages/testcli/conf/testcli.ini.  
 ```
@@ -2561,7 +2605,7 @@ SQL> _JOB timer slave_finished;
    # Windows下用：  set TESTCLI_CONF \Temp\mycli.conf  
 ```
 
-#### TESTCLI_JLIBDIR
+##### TESTCLI_JLIBDIR
 用来定义程序需要加载的数据源JAR包的位置（文件夹名称）    
 默认的配置文件是程序安装目录的jlib。 即PYTHON_HOME/lib/python36/site-packages/testcli/jlib.  
 ```
@@ -2571,7 +2615,7 @@ SQL> _JOB timer slave_finished;
 如果实际部署中用到了客户化的JAR包，可以通过定义TESTCLI_CONF和TESTCLI_JLIBDIR来指定客户化文件的位置，而不用修改PYTHON系统目录。  
 
 
-#### TESTCLI_CONNECTION_URL
+##### TESTCLI_CONNECTION_URL
 格式和CONNECT语法中的URL相同， 如：  
 ```
    export TESTCLI_CONNECTION_URL=jdbc:linkoopdb:tcp://localhost:9105/ldb
@@ -2593,10 +2637,352 @@ SQL> _JOB timer slave_finished;
    Connected.
 ```
 
-# TestCli 开发者说明
-## 以下为程序员修改程序所需要掌握的内容
 
-#### 程序代码结构
+### TestCliRobot
+
+#### 程序命令行参数
+```
+Usage: testclirobot [OPTIONS]
+
+Options:
+  --job TEXT               Specify robot job file or directory.  [required]
+  --work TEXT              Specify the work directory(ALL FILES IN THIS
+                           DIRECTORY WILL BE CLEANED).  [required]
+  --parallel INTEGER       Specify the parallelism of the job, default is 1,
+                           means no parallel.
+  --jobtimeout INTEGER     Specify the timeout limit(seconds) of the job,
+                           Default is -1, means no limit.
+  --workertimeout INTEGER  Specify the timeout limit(seconds) of one suite,
+                           Default is -1, means no limit.
+
+  --force                  Clean all files under working directory if not
+                           empty.
+  --help                   Show this message and exit.
+```
+##### --job
+指定需要运行的测试脚本位置，参数可以为特定的某个robot文件，也可以是特定的某个目录。
+如果给定参数是目录，则目录下所有的robot文件都会被运行。  
+如果需要运行多个目录或者多个文件，则可以在命令行里头一同指定，多个目录或者文件参数中间用逗号分隔即可。
+
+##### --work
+指定测试的工作目录位置，所有的结果信息（包括程序运行日志），报告信息都将存放在该目录下。  
+开始运行后，该目录下的内容将会被清空。需要确保这个目录下不存放之前的重要信息。
+
+##### --parallel 
+控制测试运行的并行度。 默认为1， 可以为任何不为1的正整数。  
+在程序并行期间，运行级别是判断程序运行先后的依据。同一个级别内部，运行的顺序不固定。
+
+#####  --jobtimeout
+控制任务的整体超时时间。参数为时间信息，秒作为单位。默认为-1，即完全不考虑超时。  
+在达到到这个时间后，正在运行的任务会被终止，没有运行的任务不会再被执行。  
+这里的时间统计并不是精准统计，只是一个相对大概。即使超时时间到达，后续也还有报告整理等工作要做，停止也需要一段时间。
+
+#####  --worktimeout
+控制单个测试套件的超时时间。参数为时间信息，秒作为单位。默认为-1，即完全不考虑超时。  
+在达到到这个时间后，正在运行的任务会被终止，后续运行队列上的任务将会被继续运行。  
+这里的时间统计并不是精准统计，只是一个相对大概。即使超时时间到达，后续也还有报告整理等  工作要做，停止也需要一段时间。
+
+#####  --force
+控制是否强制清空工作目录。 如果制定了force，则运行前会强行清空工作目录下的所有文件（包括子目录）
+
+#### Robot文件编写规则
+CliRobot中的文件使用RobotFrameWork的代码编写，具体RF的代码写作方法可以参考：https://robotframework.org/
+原则上，CliRobot中可以用不使用TestCli提供的Robot扩展，而作为Robot程序的调度使用，但是这样做将失去了CliRobot本身的作用。完全可以通过Robot自身命令行或者一些第三方插件来直接运行Robot程序，而不是必须依赖TestCli的Robot扩展。  
+以下是一个Robot文件的书写例子和解释：
+```
+*** Settings ***
+## Resource来定义引用，引用TestCli的扩展函数库
+Resource         %{TEST_ROOT}/common/SetupTestCli.robot
+## Test Setup中需要定义TestCli扩展的函数-初始化函数
+Test Setup       TestCli Test Setup
+## Test TearDown中需要定义TestCli扩展的函数-清理函数
+Test Teardown    TestCli Test Clnup
+
+*** Test Cases ***
+Demo1
+    [Documentation]            TestCli基于Robot测试样例
+    ## Execute TestCli Script等都是TestCli实现的Robot扩展函数，随后将专门介绍
+    Execute TestCli Script     demo1.sql    demo1.log
+    Compare Files              demo1.log    demo1.ref
+```
+
+##### TestCli提供的内置Robot扩展函数-TestCli
+需要主意的是： 以下说的默认值未必是Robot测试执行的默认行为，只是这个扩展函数的默认值。程序执行的默认行为除了受到下面默认值的影响外，还受到套件初始化函数Setup_Robot中的行为行为。具体实际的默认值情况见另外的描述。
+######	Execute TestCli Script
+	说明：
+		执行TEST脚本
+	参数：
+		p_szScript_FileName            计划执行的脚本名称
+		p_szLogOutPutFileName = None   计划输出的执行日志名称（默认为和脚本文件桶命的log文件）
+######	Logon And Execute TestCli Script
+	说明：
+		登录数据库并执行TEST脚本
+	参数：
+		logonString                     登录数据库的用户名/口令
+		p_szScript_FileName             计划执行的脚本名称
+		p_szLogOutPutFileName = None    计划输出的执行日志名称（默认为和脚本文件桶命的log文件）
+######	TestCli Break When Error
+	说明：
+		设置是否在遇到错误的时候中断该Case的后续运行，默认为不退出  
+		如果设置为True，则TestCli运行会中断，Case会被判断执行失败  
+		如果设置为False，则TestCli运行不会中断，运行结果文件中有错误信息，供参考
+	参数：
+		p_BreakWithError                是否退出。 TRUE/FALSE
+######	TestCli Enable ConsoleOutput
+	说明：
+		设置在执行中将控制台输出信息显示到Robot的Log中，默认为不显示
+	参数：
+		p_ConsoleOutput                 是否显示。 TRUE/FALSE
+######	TestCli Enable ExtendLog
+	说明：
+		设置在执行中记录扩展日志（包括语句级别的执行时间，场景信息等）。默认是不记录
+	参数：
+		p_enableExtendLog                是否记录。 TRUE/FALSE
+######	TestCli Set CommandMapping
+	说明：
+		设置程序中用到的映射文件，如果包括多个文件，用逗号分割
+	参数：
+		p_szCommandMapping               映射文件
+######	TestCli Set ResultSet
+	说明：
+		设置脚本执行时候的客户端输出字符集。默认为UTF-8
+	参数：
+		p_ResultCharset                  有效的字符集，如UTF-8,GBK
+######	TestCli Set ClientSet
+	说明：
+		设置脚本执行时候的客户端输入字符集。默认为UTF-8
+	参数：
+		p_ClientCharset                  有效的字符集，如UTF-8,GBK
+
+##### TestCli提供的内置Robot扩展函数-Compare
+需要主意的是： 以下说的默认值未必是Robot测试执行的默认行为，只是这个扩展函数的默认值。程序执行的默认行为除了受到下面默认值的影响外，还受到套件初始化函数Setup_Robot中的行为行为。具体实际的默认值情况见另外的描述。
+######	Compare Algorithm
+	说明：
+		设置文本比对的算法。 分为LCS和Myers. 默认为Myers
+		LCS在小数据量下有优势。Myers在大数据量下有优势。
+	参数：
+		algorithm                        算法， LCS或者Myers
+######	Compare Break When Difference
+	说明：
+		设置是否在遇到错误的时候中断该Case的后续运行。默认不中断
+	参数：
+		p_BreakWithDifference            是否中断。 TRUE/FALSE		
+######	Compare Clean Mask
+	说明：
+		清空之前设置的所有掩码信息
+	参数：
+		无
+######	Compare Clean Skip
+	说明：
+		清空之前设置的所有行忽略信息
+	参数：
+		无
+######	Compare Enable ConsoleOutput
+	说明：
+		设置是否在在屏幕上显示Dif文件的内容。默认是不显示
+	参数：
+		p_ConsoleOutput                 是否显示。  TRUE/FALSE
+######	Compare Enable Mask
+	说明：
+		设置是否在比对的时候考虑正则表达式。 默认为不考虑
+	参数：
+		p_CompareWithMask               是否考虑。  TRUE/FALSE
+######	Compare Files
+	说明：
+		比较两个文件是否一致
+	参数：
+		p_szWorkFile:        需要比对的当前结果文件
+		p_szReferenceFile：  需要比对的结果参考文件
+######	Compare Ignore EmptyLine
+	说明：
+		设置是否在比对的时候忽略空行（包含仅有空格的空白行）。默认为不忽略
+	参数：
+		p_IgnoreEmptyLine               是否考虑。  TRUE/FALSE
+######	Compare IgnoreCase
+	说明：
+		设置是否在比对的时候忽略大小写。默认为不忽略
+	参数：
+		p_IgnoreCase                     是否考虑。  TRUE/FALSE
+######	Compare IgnoreTailOrHeadBlank
+	说明：
+		设置是否在比对的时候忽略行首和行末的空格。默认为不忽略
+	参数：
+		p_IgnoreTailOrHeadBlank          是否考虑。  TRUE/FALSE
+######	Compare Mask
+	说明：
+		设置是否在比对的时候掩码某些特殊行。可以用正则表达式来描述指定的行内容
+		如果有多个内容需要在比对的时候进行掩码，则可以重复执行该语句
+	参数：
+		p_szMaskLine                    特定行的正则表达式。
+######	Compare Not Mask
+	说明：
+		设置是否在比对的时候取消之前定义的掩码行。
+		该语句和之前的Compare Mask是一个反操作，用来取消已经不再需要的掩码信息
+		如果有多个内容需要取消，则可以重复执行该语句
+	参数：
+		p_szMaskLine                    特定行的正则表达式。
+######	Compare Not Skip
+	说明：
+		设置是否在比对的时候取消忽略某些特殊行。
+		该语句和Compare Skip是一个反操作，用来取消已经不再需要的掩码信息
+		如果有多个内容需要取消忽略，则可以重复执行该语句
+	参数：
+		p_szSkipLine                    特定行的正则表达式。
+######	Compare SetDiffEncoding
+	说明：
+		设置在生成dif文件时候用到的Encoding。默认是UTF-8
+	参数：
+		p_szDifEncoding                 有效的字符编码集。如UTF-8，GBK等
+######	Compare SetRefEncoding
+	说明：
+		设置在读取REF参考文件时候用到的Encoding。默认是UTF-8
+	参数：
+		p_szDifEncoding                 有效的字符编码集。如UTF-8，GBK等
+######	Compare SetWorkEncoding
+	说明：
+		设置在读取当前结果参考文件时候用到的Encoding。默认是UTF-8
+	参数：
+		p_szDifEncoding                 有效的字符编码集。如UTF-8，GBK等
+######	Compare Show Config
+	说明：
+		辅助函数。在控制台中打印当前的所有Compare设置
+	参数：
+		无
+######	Compare Skip
+	说明：
+		设置是否在比对的时候忽略某些特殊行。可以用正则表达式来描述指定的行内容
+		如果有多个内容需要忽略，则可以重复执行该语句
+	参数：
+		p_szSkipLine                    特定行的正则表达式。
+##### SetupTestCli.robot中定义的测试预配置
+SetupTestCli.robot定义了一些预先设置的扩展参数设定。这些设定可以被覆盖，如果有相关测试需要。这些预设置只是我们根据经验进行的总结。
+```
+    # 控制TestCli控制台是否显示输出，如果在Jenkins中运行，则打开后同样会在Jenkins的控制台上显示出来
+    # 小心： 如果测试中包含返回内容较多的查询，这样打开将导致测试报告文件很大，可能会变得无法阅读
+    # 默认是关闭状态，即不显示TestCli的输出
+    TestCli Enable ConsoleOutput        False
+
+    # 控制SQLCli在执行SQL语句中是否遇到错误，就立即终止后续的SQL执行
+    # 默认是不终止，即使SQL有错误，整个SQL也会被执行完毕
+    TestCli Break When Error            False
+
+    # 控制TestCli是否记录扩展的日志，打开后，会在LOG目录下生成一个xlog文件
+    # 这里设置为打开状态，即记录扩展信息
+    TestCli Enable ExtendLog            True
+
+    # 控制Compare过程中如果发生比对不一致现象，是否将不一致的结果输出在控制台上。
+    # 如果在Jenkins中运行，则打开后同样会在Jenkins的控制台上显示出来
+    # 小心： 如果比对文件很大，这样打开将导致测试报告文件很大，可能会变得无法阅读
+    # 默认是关闭状态，即不显示Compare的结果
+    Compare Enable ConsoleOutput       True
+
+    # 控制日志比对是否在遇到不一致现象的时候，是否在Robot中抛出比对错误
+    # 默认是抛出
+    Compare Break When Difference      True
+
+    # 设置比较时使用的比较算法，有LCS和MYERS，MYERS在大数据量文件下具有明显优势
+    Compare Algorithm                  MKERS
+
+    # 比对参考文件的时候忽略空白行
+    Compare Ignore EmptyLine           True
+
+    # 比对参考文件的时候使用正则表达式
+    Compare Enable Mask                True
+
+    # 比对文件的时候忽略大小写差异
+    Compare IgnoreCase                 False
+
+    # 比对文件的时候忽略内容的首末空格
+    Compare IgnoreTailOrHeadBlank      True
+
+    # 比对参考文件的时候跳过所有符合以下标记的行
+    #     Running time elapsed 是程序的运行时长，由于每次运行都可能不一致，所以比对没有意义
+    Compare Skip                       Running time elapsed.*
+    #     Current clock time   是脚本的当前结束时间，由于每次运行都可能不一致，所以比对没有意义
+    Compare Skip                       Current clock time.*
+    #     REWROTED             被SQLMAPPING文件改写了的SQL信息，在不同的SQLMAP下，可能会不一样，所以比对没有意义
+    Compare Skip                       REWROTED.*
+    #     PROFILE              SQL文件的环境预处理文件，不作为日志的比较内容
+    Compare Skip                       PROFILE.*
+    #     SKIP                 过滤掉那些在SQL中强制描述不需要比对的内容
+    Compare Skip                       SKIP.*
+    #     TestCli版本号，        由于版本的更新，版本号比对没有意义
+    Compare Skip                       TestCli Release .*
+    #     start                start开始的是在具体执行某一个脚本，在执行中由于路径名不同，具体start后面的信息也会不同，所以不再比对
+    Compare Skip                       SQL\> start .*
+    #     Scneario                 过滤掉Scneario注释信息带来的差异
+    Compare Skip                       .*\> --.*
+
+    # Case运行在脚本所在的目录下，切换当前工作目录
+    SetupRoot CD CurrentDirectory        ${SUITE SOURCE}
+
+    # 记录所有环境变量信息到日志文件中，便于日后检查
+    log environment variables
+```
+###### 如何用自定义的测试配置来覆盖系统默认配置
+```
+*** Settings ***
+Resource         %{TEST_ROOT}/common/SetupTestCli.robot
+# 重新定义测试套件运行的初始化函数，指向自定义的新关键字
+Test Setup       My Custom Setup
+Test Teardown    TestCli Test Clnup
+MetaData         runLevel   10
+
+*** Test Cases ***
+Demo1
+    [Documentation]            TestCli基于Robot测试样例
+    Execute TestCli Script     demo1.sql    demo1.log
+    Compare Files              demo1.log    demo1.ref
+
+*** Keywords ***
+My Custom Setup
+    # 这里继承了默认的Setup，并随后覆盖了其中的部分设置
+    TestCli Test Setup
+    Compare Enable ConsoleOutput        True
+    SQLCli Enable ConsoleOutput         True
+
+```
+
+##### runLevel，     程序运行级别控制
+在程序需要运行多个robot文件的时候，runlevel会按照优先级来运行不同的文件。即总是先运行runlevel数字小的脚本，随后运行runlevel数字高的。默认的优先级数字为100。  
+Robot中定义runLevel的例子：
+```
+*** Settings ***
+Resource         %{TEST_ROOT}/common/SetupTestCli.robot
+Test Setup       TestCli Test Setup
+Test Teardown    TestCli Test Clnup
+MetaData         runLevel   10
+
+*** Test Cases ***
+Demo1
+    [Documentation]            TestCli基于Robot测试样例
+    Execute TestCli Script     demo1.sql    demo1.log
+    Compare Files              demo1.log    demo1.ref
+```
+
+##### StandAlone，独立运行标志
+如果某个robot文件不能作为测试独立运行，则可以通过设置StandAlone来将其排除。  
+被设置了StandAlone的程序在Robot测试中会被自动过滤（不影响其被其他Robot调用）。  
+当StandAlone被定义为N或者No或者Not的时候，表示非独立运行的测试用例。  
+Robot中定义StandAlone的例子：
+
+```
+*** Settings ***
+Resource         %{TEST_ROOT}/common/SetupTestCli.robot
+Test Setup       TestCli Test Setup
+Test Teardown    TestCli Test Clnup
+MetaData         StandAlone   N
+      
+*** Test Cases ***
+Demo1
+    [Documentation]            TestCli基于Robot测试样例
+    Execute TestCli Script     demo1.sql    demo1.log
+    Compare Files              demo1.log    demo1.ref
+```
+
+## TestCli 开发者说明
+
+### 程序代码结构
 ```
 TestCli
 │  LICENSE.txt                                        # 许可信息描述，没啥不许可的，Github非要提供一个不可
@@ -2764,7 +3150,7 @@ TestCli
    testcli --selftest
 ```
 
-#### 从应用程序的角度直接调用该程序
+#### 从应用程序的角度直接调用TestCli类
 TestCli是一个控制台应用，但是你也可以直接绕过控制台应用来直接调用      
 结果会用yield的方式非阻塞性逐行返回，包括统计信息、提示信息等：
 返回信息的详细解释：
@@ -2843,9 +3229,33 @@ TestCli是一个控制台应用，但是你也可以直接绕过控制台应用�
     print("rsult = " + str(testcliHandler.getLastCommandResult()))
 ```
 
+#### 从应用程序的角度直接调用Regress类（运行Robot脚本文件）
+```
+	from testcli.robot.common.runregress import Regress as runRobot
+    from testcli.robot.common.runregress import RegressException as runRobotException
+    
+    logger = logging.getLogger("robotTest")
+    runRoboter = runRobot(
+        maxProcess=3,
+        workDirectory="C:/Temp/",
+        testRoot="C:/work/testcli/robot",
+        logger=logger,
+        workerTimeout=3600,
+        scriptTimeout=18000,
+        jobList=["a.robot", "b.robot", ],
+        executorMonitor=None,
+        extraParameters=None
+    )
+    # 运行Robot测试
+    runRoboter.run()
+    
+    # 整理测试报告
+    runRoboter.generateTestReport()
 
-### 已知问题
-#### Windows下程序安装路径中包含中文的问题
+```
+
+## 已知问题
+### Windows下程序安装路径中包含中文的问题
 由于JPype在处理ClassPath时候的问题，当程序安装目录包含中文，或者用户自定义Jar包路径中包含中文的时候，将导致Jar包无法加载。  
 从直观的表现来看，就是配置好的Jar包找不到。    
 这个问题暂时没有好的解决办法。

@@ -59,8 +59,8 @@ class RunTestCli(object):
         返回值：
             无
 
-        如果设置为True，则SQLCli运行会中断，Case会被判断执行失败
-        如果设置为False，则SQLCli运行不会中断，运行结果文件中有错误信息，供参考
+        如果设置为True，则TestCli运行会中断，Case会被判断执行失败
+        如果设置为False，则TestCli运行不会中断，运行结果文件中有错误信息，供参考
         """
         if str(p_BreakWithError).upper() == 'TRUE':
             self.__BreakWithError = True

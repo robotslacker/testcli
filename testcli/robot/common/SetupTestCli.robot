@@ -9,7 +9,7 @@ Library           Process
 *** Keywords ***
 TestCli Test Setup
     # 控制TestCli控制台是否显示输出，如果在Jenkins中运行，则打开后同样会在Jenkins的控制台上显示出来
-    # 小心： 如果SQL中包含返回内容较多的查询，这样打开将导致测试报告文件很大，可能会变得无法阅读
+    # 小心： 如果测试中包含返回内容较多的查询，这样打开将导致测试报告文件很大，可能会变得无法阅读
     # 默认是关闭状态，即不显示TestCli的输出
     TestCli Enable ConsoleOutput        False
 

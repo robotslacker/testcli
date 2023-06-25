@@ -91,20 +91,18 @@ def runRegress(args, executorMonitor):
 
 @click.command()
 @click.option("--job", type=str, required=True, help="Specify robot job file or directory.",)
-@click.option("--testroot", type=str, required=True, help="Specify test root directory.",)
 @click.option("--work", type=str, required=True,
               help="Specify the work directory(ALL FILES IN THIS DIRECTORY WILL BE CLEANED).",)
 @click.option("--parallel", type=int, default=1,
-              help="Specify the parallelism of the jobs, default is 1, means no parallel.")
+              help="Specify the parallelism of the job, default is 1, means no parallel.")
 @click.option("--jobtimeout", type=int, default=-1,
-              help="Specify the timeout limit of whole jobs, Default is -1, means no limit.")
+              help="Specify the timeout limit(seconds) of the job, Default is -1, means no limit.")
 @click.option("--workertimeout", type=int, default=-1,
-              help="Specify the timeout limit of one job, Default is -1, means no limit.")
+              help="Specify the timeout limit(seconds) of one suite, Default is -1, means no limit.")
 @click.option("--force", is_flag=True,
-              help="Overwrite old job working directory even it has test data.")
+              help="Clean all files under working directory if not empty.")
 def cli(
         job,
-        testroot,
         work,
         parallel,
         jobtimeout,
@@ -169,7 +167,7 @@ def cli(
         "maxProcess": parallel,
         "scriptTimeout": jobtimeout,
         "workerTimeout": workertimeout,
-        "testRoot": testroot,
+        "testRoot": os.path.join(os.path.dirname(__file__), "robot"),
         "workDirectory": workDirectory,
         "jobList": job
     }

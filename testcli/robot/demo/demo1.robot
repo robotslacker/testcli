@@ -1,5 +1,6 @@
 *** Settings ***
 Resource         %{TEST_ROOT}/common/SetupTestCli.robot
+MetaData         runLevel   10
 Test Setup       TestCli Test Setup
 Test Teardown    TestCli Test Clnup
 

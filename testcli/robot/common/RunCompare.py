@@ -433,20 +433,19 @@ class RunCompare(object):
     # 也就是说多test case都引用了这个类的方法，但是只有第一个test case调用的时候实例化
     ROBOT_LIBRARY_SCOPE = 'TEST SUITE'
 
-    __Reference_LogDirLists = None
     __skipLines = []  # Compare比较的时候过滤掉相关内容
     __maskLines = []  # Compare比较的时候掩码相关内容
     __BreakWithDifference = False  # 是否在遇到比对错误的时候抛出运行例外
     __EnableConsoleOutPut = False  # 是否关闭在Console上的显示，默认是不关闭
     __IgnoreEmptyLine = False  # 是否在比对的时候忽略空白行
-    __CompareWithMask = False  # 是否在比对的时候利用正则表达式
-    __CompareIgnoreCase = False  # 是否再比对的时候忽略大小写
-    __CompareIgnoreTailOrHeadBlank = False  # 是否忽略对比的前后空格
+    __compareWithMask = False  # 是否在比对的时候利用正则表达式
+    __compareIgnoreCase = False  # 是否再比对的时候忽略大小写
+    __compareIgnoreTailOrHeadBlank = False  # 是否忽略对比的前后空格
 
-    __CompareWorkEncoding = 'UTF-8'
-    __CompareDifEncoding = 'UTF-8'
-    __CompareRefEncoding = 'UTF-8'
-    __compareAlgorithm = 'LCS'  # Diff算法
+    __compareWorkEncoding = 'UTF-8'
+    __compareDifEncoding = 'UTF-8'
+    __compareRefEncoding = 'UTF-8'
+    __compareAlgorithm = 'MYERS'  # Diff算法
 
     def Compare_Ignore_EmptyLine(self, p_IgnoreEmptyLine):
         """ 设置是否在比对的时候忽略空白行  """
@@ -523,7 +522,7 @@ class RunCompare(object):
         if p_szSkipLine not in self.__skipLines:
             self.__skipLines.append(p_szSkipLine)
 
-    def Clean_Skip(self):
+    def Compare_Clean_Skip(self):
         """ 清空之前设置的忽略行  """
         """
          输入参数：
@@ -563,7 +562,7 @@ class RunCompare(object):
         if p_szMaskLine not in self.__maskLines:
             self.__maskLines.append(p_szMaskLine)
 
-    def Clean_Mask(self):
+    def Compare_Clean_Mask(self):
         """ 清空之前设置的掩码行  """
         """
          输入参数：
@@ -589,47 +588,47 @@ class RunCompare(object):
         if str(algorithm).upper() == 'MYERS':
             self.__compareAlgorithm = 'MYERS'
 
-    def Compare_Enable_Mask(self, p_szCompareWithMask):
+    def Compare_Enable_Mask(self, p_CompareWithMask):
         """ 设置是否在比对的时候考虑正则表达式  """
         """
          输入参数：
-              p_szCompareWithMask:        在比对的时候是否考虑正则，默认是不考虑
+              p_CompareWithMask:        在比对的时候是否考虑正则，默认是不考虑
          返回值：
              无
 
          """
-        if str(p_szCompareWithMask).upper() == 'TRUE':
-            self.__CompareWithMask = True
-        if str(p_szCompareWithMask).upper() == 'FALSE':
-            self.__CompareWithMask = False
+        if str(p_CompareWithMask).upper() == 'TRUE':
+            self.__compareWithMask = True
+        if str(p_CompareWithMask).upper() == 'FALSE':
+            self.__compareWithMask = False
 
-    def Compare_IgnoreCase(self, p_szIgnoreCase):
+    def Compare_IgnoreCase(self, p_IgnoreCase):
         """ 设置是否在比对的时候忽略大小写  """
         """
          输入参数：
-              p_szIgnoreCase:        在比对的时候是否忽略大小写，默认是不忽略
+              p_IgnoreCase:        在比对的时候是否忽略大小写，默认是不忽略
          返回值：
              无
 
          """
-        if str(p_szIgnoreCase).upper() == 'TRUE':
-            self.__CompareIgnoreCase = True
-        if str(p_szIgnoreCase).upper() == 'FALSE':
-            self.__CompareIgnoreCase = False
+        if str(p_IgnoreCase).upper() == 'TRUE':
+            self.__compareIgnoreCase = True
+        if str(p_IgnoreCase).upper() == 'FALSE':
+            self.__compareIgnoreCase = False
 
-    def Compare_IgnoreTailOrHeadBlank(self, p_szIgnoreTailOrHeadBlank):
+    def Compare_IgnoreTailOrHeadBlank(self, p_IgnoreTailOrHeadBlank):
         """ 设置是否在比对的时候忽略行首和行末的空格  """
         """
          输入参数：
-              p_szIgnoreTailOrHeadBlank:        在比对的时候是否忽略行首和行末的空格，默认是不忽略
+              p_IgnoreTailOrHeadBlank:        在比对的时候是否忽略行首和行末的空格，默认是不忽略
          返回值：
              无
 
          """
-        if str(p_szIgnoreTailOrHeadBlank).upper() == 'TRUE':
-            self.__CompareIgnoreTailOrHeadBlank = True
-        if str(p_szIgnoreTailOrHeadBlank).upper() == 'FALSE':
-            self.__CompareIgnoreTailOrHeadBlank = False
+        if str(p_IgnoreTailOrHeadBlank).upper() == 'TRUE':
+            self.__compareIgnoreTailOrHeadBlank = True
+        if str(p_IgnoreTailOrHeadBlank).upper() == 'FALSE':
+            self.__compareIgnoreTailOrHeadBlank = False
 
     def Compare_SetWorkEncoding(self, p_szWorkEncoding):
         """ 设置在读取工作文件时候用到的Encoding  """
@@ -639,7 +638,7 @@ class RunCompare(object):
          返回值：
              无
         """
-        self.__CompareWorkEncoding = p_szWorkEncoding
+        self.__compareWorkEncoding = p_szWorkEncoding
 
     def Compare_SetDiffEncoding(self, p_szDifEncoding):
         """ 设置在生成dif文件时候用到的Encoding  """
@@ -650,7 +649,7 @@ class RunCompare(object):
              无
 
         """
-        self.__CompareDifEncoding = p_szDifEncoding
+        self.__compareDifEncoding = p_szDifEncoding
 
     def Compare_SetRefEncoding(self, p_szRefEncoding):
         """ 设置在读取Ref文件时候用到的Encoding  """
@@ -661,7 +660,7 @@ class RunCompare(object):
              无
 
         """
-        self.__CompareRefEncoding = p_szRefEncoding
+        self.__compareRefEncoding = p_szRefEncoding
 
     def Compare_Files(self, p_szWorkFile, p_szReferenceFile):
         """ 比较两个文件是否一致  """
@@ -744,16 +743,7 @@ class RunCompare(object):
                 )
             return False
 
-        # search reference log
-        m_ReferenceLog = None
-        if self.__Reference_LogDirLists is not None:
-            for m_Reference_LogDir in self.__Reference_LogDirLists:
-                m_TempReferenceLog = os.path.join(m_Reference_LogDir, p_szReferenceFile)
-                if os.path.isfile(m_TempReferenceLog):
-                    m_ReferenceLog = m_TempReferenceLog
-                    break
-        if m_ReferenceLog is None:
-            m_ReferenceLog = p_szReferenceFile
+        m_ReferenceLog = p_szReferenceFile
         if not os.path.isfile(m_ReferenceLog):
             logger.write("  ===== Work file       [" + os.path.abspath(m_szWorkFile) + "]")
             logger.write("  ===== Ref  file       [" + os.path.abspath(m_ReferenceLog) + "]")
@@ -788,11 +778,11 @@ class RunCompare(object):
                 self.__skipLines,
                 self.__maskLines,
                 self.__IgnoreEmptyLine,
-                self.__CompareWithMask,
-                self.__CompareIgnoreCase,
-                self.__CompareIgnoreTailOrHeadBlank,
-                CompareWorkEncoding=self.__CompareWorkEncoding,
-                CompareRefEncoding=self.__CompareRefEncoding,
+                self.__compareWithMask,
+                self.__compareIgnoreCase,
+                self.__compareIgnoreTailOrHeadBlank,
+                CompareWorkEncoding=self.__compareWorkEncoding,
+                CompareRefEncoding=self.__compareRefEncoding,
                 compareAlgorithm=self.__compareAlgorithm
             )
         except DiffException as de:
@@ -1043,7 +1033,7 @@ class RunCompare(object):
             "RobotId": m_RobotId,
             "runLevel": m_RunLevel
         }
-        with open(m_xlogFullFileName, 'w', encoding=self.__CompareDifEncoding) as f:
+        with open(m_xlogFullFileName, 'w', encoding=self.__compareDifEncoding) as f:
             json.dump(obj=m_xlogResults, fp=f, indent=4, sort_keys=True, ensure_ascii=False)
         logger.write("======= Generate ext log file [" + m_xlogFullFileName + "]")
 
@@ -1053,22 +1043,22 @@ class RunCompare(object):
             logger.write("======= Succ file        [" + m_SucFullFileName + "] >>>>> ")
             logger.write("  ===== Work file        [" + os.path.abspath(m_szWorkFile) + "]")
             logger.write("  ===== Ref  file        [" + os.path.abspath(m_ReferenceLog) + "]")
-            logger.write("  ===== Mask flag        [" + str(self.__CompareWithMask) + "]")
-            logger.write("  ===== BlankSpace flag  [" + str(self.__CompareIgnoreTailOrHeadBlank) + "]")
-            logger.write("  ===== Case flag        [" + str(self.__CompareIgnoreCase) + "]")
+            logger.write("  ===== Mask flag        [" + str(self.__compareWithMask) + "]")
+            logger.write("  ===== BlankSpace flag  [" + str(self.__compareIgnoreTailOrHeadBlank) + "]")
+            logger.write("  ===== Case flag        [" + str(self.__compareIgnoreCase) + "]")
             logger.write("  ===== Empty line flag  [" + str(self.__IgnoreEmptyLine) + "]")
             for row in self.__skipLines:
                 logger.write("  ===== Skip line        [" + str(row) + "]")
             for row in self.__maskLines:
                 logger.write("  ===== Mask line        [" + str(row) + "]")
             logger.write("======= Succ file [" + m_SucFullFileName + "] >>>>> ")
-            m_CompareResultFile = open(m_SucFullFileName, 'w', encoding=self.__CompareDifEncoding)
+            m_CompareResultFile = open(m_SucFullFileName, 'w', encoding=self.__compareDifEncoding)
             print("M       SucFullFileName=" + m_SucFullFileName, file=m_CompareResultFile)
             print("M       WorkFullFileName=" + os.path.abspath(m_szWorkFile), file=m_CompareResultFile)
             print("M       RefFullFileName=" + os.path.abspath(m_ReferenceLog), file=m_CompareResultFile)
-            print("M       MaskFlag=" + str(self.__CompareWithMask), file=m_CompareResultFile)
-            print("M       BlankSpaceFlag=" + str(self.__CompareIgnoreTailOrHeadBlank), file=m_CompareResultFile)
-            print("M       CaseFlag=" + str(self.__CompareIgnoreCase), file=m_CompareResultFile)
+            print("M       MaskFlag=" + str(self.__compareWithMask), file=m_CompareResultFile)
+            print("M       BlankSpaceFlag=" + str(self.__compareIgnoreTailOrHeadBlank), file=m_CompareResultFile)
+            print("M       CaseFlag=" + str(self.__compareIgnoreCase), file=m_CompareResultFile)
             print("M       EmptyLineFlag=" + str(self.__IgnoreEmptyLine), file=m_CompareResultFile)
             for line in m_CompareResultList:
                 print(line, file=m_CompareResultFile)
@@ -1108,9 +1098,9 @@ class RunCompare(object):
             else:
                 logger.write("  ===== Patch Command    [cp " + repr(os.path.abspath(m_szWorkFile)) + " " +
                              repr(os.path.abspath(m_ReferenceLog)) + "]")
-            logger.write("  ===== EnableMask       [" + str(self.__CompareWithMask) + "]")
-            logger.write("  ===== IgnoreBlankSpace [" + str(self.__CompareIgnoreTailOrHeadBlank) + "]")
-            logger.write("  ===== CaseSensitive    [" + str(self.__CompareIgnoreCase) + "]")
+            logger.write("  ===== EnableMask       [" + str(self.__compareWithMask) + "]")
+            logger.write("  ===== IgnoreBlankSpace [" + str(self.__compareIgnoreTailOrHeadBlank) + "]")
+            logger.write("  ===== CaseSensitive    [" + str(self.__compareIgnoreCase) + "]")
             logger.write("  ===== IgnoreEmptyLine  [" + str(self.__IgnoreEmptyLine) + "]")
             for row in self.__skipLines:
                 logger.write("  ===== Skip line        [" + str(row) + "]")
@@ -1120,13 +1110,13 @@ class RunCompare(object):
                 logger.write("  ===== IncludePriorities [" + str(os.environ["TEST_INCLUDEPRIORITIES"]) + "]")
 
             # 生成dif文件
-            m_CompareResultFile = open(m_DifFullFileName, 'w', encoding=self.__CompareDifEncoding)
+            m_CompareResultFile = open(m_DifFullFileName, 'w', encoding=self.__compareDifEncoding)
             print("M       DifFullFileName=" + m_DifFullFileName, file=m_CompareResultFile)
             print("M       WorkFullFileName=" + os.path.abspath(m_szWorkFile), file=m_CompareResultFile)
             print("M       RefFullFileName=" + os.path.abspath(m_ReferenceLog), file=m_CompareResultFile)
-            print("M       EnableMask=" + str(self.__CompareWithMask), file=m_CompareResultFile)
-            print("M       IgnoreBlankSpace=" + str(self.__CompareIgnoreTailOrHeadBlank), file=m_CompareResultFile)
-            print("M       CaseSensitive=" + str(self.__CompareIgnoreCase), file=m_CompareResultFile)
+            print("M       EnableMask=" + str(self.__compareWithMask), file=m_CompareResultFile)
+            print("M       IgnoreBlankSpace=" + str(self.__compareIgnoreTailOrHeadBlank), file=m_CompareResultFile)
+            print("M       CaseSensitive=" + str(self.__compareIgnoreCase), file=m_CompareResultFile)
             print("M       IgnoreEmptyLine=" + str(self.__IgnoreEmptyLine), file=m_CompareResultFile)
             for row in self.__skipLines:
                 print("M       SkipLine=" + str(row), file=m_CompareResultFile)
@@ -1180,6 +1170,6 @@ class RunCompare(object):
             logger.write("return True. ")
             return True
 
-    def show_compare_config(self):
+    def Compare_Show_Config(self):
         for m_SkipLine in self.__skipLines:
             print("===> " + m_SkipLine)
