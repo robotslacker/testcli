@@ -856,7 +856,6 @@ class RunCompare(object):
         while True:
             if m_nPos >= len(m_CompareResultList):
                 break
-            logger.info("Compare | =" + str(m_CompareResultList[m_nPos]))
             # Scenario定义
             # -- [Hint] setup:
             # -- [setup:]
@@ -884,7 +883,6 @@ class RunCompare(object):
             matchObj4 = re.search(r"--(\s+)?\[(\s+)?cleanup:", m_CompareResultList[m_nPos],
                                   re.IGNORECASE | re.DOTALL)
             if matchObj1 or matchObj2 or matchObj3 or matchObj4:
-                logger.info("Compare Matched common | =" + str(m_CompareResultList[m_nPos]))
                 # 遇到这些标记，则之前的Scenario结束，记录之前的信息
                 if m_ScenarioId is not None:
                     m_ScenariosPos[m_ScenarioId] = {
@@ -904,7 +902,6 @@ class RunCompare(object):
             matchObj2 = re.search(r"--(\s+)?\[(\s+)?scenario:end", m_CompareResultList[m_nPos],
                                   re.IGNORECASE | re.DOTALL)
             if matchObj1 or matchObj2:
-                logger.info("Compare Matched end | =" + str(m_CompareResultList[m_nPos]))
                 # 当前场景结束，记录之前的信息
                 if m_ScenarioId is None:
                     m_ScenarioId = str(random.randint(999990001, 999999999))
@@ -926,7 +923,6 @@ class RunCompare(object):
             matchObj2 = re.search(r"--(\s+)?\[(\s+)?Scenario:(.*)]", m_CompareResultList[m_nPos],
                                   re.IGNORECASE | re.DOTALL)
             if matchObj1 or matchObj2:
-                logger.info("Compare Matched scenario | =" + str(m_CompareResultList[m_nPos]))
                 if m_ScenarioId is not None:
                     # 之前的Scenario有记录，只是忘了Scenario End
                     m_ScenariosPos[m_ScenarioId] = {
@@ -961,7 +957,6 @@ class RunCompare(object):
                     continue
 
             # 不是什么特殊内容，这里是标准文本
-            logger.info("Compare Matched not | =" + str(m_CompareResultList[m_nPos]))
             m_nPos = m_nPos + 1
 
         # 最后一个Senario的情况记录下来
@@ -973,7 +968,6 @@ class RunCompare(object):
                 "ScenarioName": m_ScenarioName,
             }
 
-        logger.error("m_ScenariosPos=" + str(m_ScenariosPos))
         # 遍历每一个Senario的情况
         for m_ScenarioId, m_Senario_Pos in m_ScenariosPos.items():
             m_StartPos = m_Senario_Pos['ScenarioStartPos']
