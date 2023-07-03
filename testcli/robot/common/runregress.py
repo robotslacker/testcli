@@ -8,6 +8,7 @@ import shutil
 import sys
 import time
 import datetime
+import json
 import robot.errors
 from robot.api import TestSuiteBuilder
 from robot.api import ExecutionResult
@@ -21,6 +22,8 @@ from .htmltestreport.HtmlTestReport import TestSuite
 from .htmltestreport.HtmlTestReport import TestCase
 from .htmltestreport.HtmlTestReport import TestCaseStatus
 from .runrobotexecutor import RobotXMLSoupParser
+from .junitreport.JunitTestReport import TestSuite as JunitTestSuite
+from .junitreport.JunitTestReport import TestCase as JunitTestCase
 
 # 默认的系统最大并发作业数
 DEFAULT_Max_Process = 3
@@ -38,6 +41,7 @@ class Regress(object):
             scriptTimeout=-1,
             executorMonitor=None,
             extraParameters=None,
+            reportType=None
     ):
         if executorMonitor is None:
             executorMonitor = {}
@@ -85,6 +89,13 @@ class Regress(object):
                 self.scriptTimeout = -1
         else:
             self.scriptTimeout = int(scriptTimeout)
+
+        # 设置回归的报告类型
+        if reportType is None:
+            self.reportTypes = []
+        else:
+            s = str(reportType).split(',')
+            self.reportTypes = [i.upper().strip() for i in s if (i is not None) and (str(i).strip() != '')]
 
     def generateRobotReport(
             self,
@@ -274,145 +285,209 @@ class Regress(object):
         htmlTestSuite.SummaryTestCase()
         return htmlTestSuite
 
+    # 测试报告预处理，生成扩展信息文件
+    def generateJunitReport(self):
+        # 为Junit单独准备一个目录，来放置Junit结果
+        jUnitReportDir = os.path.join(self.workDirectory, "junitreport")
+        if not os.path.exists(jUnitReportDir):
+            os.makedirs(jUnitReportDir)
+        JunitReportFile = os.path.join(jUnitReportDir, "junit.xml")
+
+        # 遍历目录来获取Junit测试结果
+        jUnitTestSuites = []
+        subDirs = os.listdir(self.workDirectory)
+        for subDir in subDirs:
+            if not os.path.isdir(os.path.join(self.workDirectory, subDir)):
+                continue
+            if not subDir.startswith("sub_"):
+                continue
+
+            # 开始处理subDir下的内容
+            for root, dirs, files in os.walk(os.path.join(self.workDirectory, subDir)):
+                for f in files:
+                    if f.endswith(".xlog"):
+                        # 这是一个成功的测试
+                        with open(os.path.join(root, f)) as fp:
+                            xlogContent = json.load(fp)
+                        jUnitTestCases = []
+
+                        # xlog信息中不一定包含时间信息
+                        # - passed: 表示测试用例通过, 状态为passed。
+                        # - failed: 表示测试用例失败, 状态为failed。
+                        # - skipped: 表示测试用例被跳过, 状态为skipped。可能是测试用例当前不可执行。
+                        # - error: 表示测试用例执行时报错, 状态为error。
+                        for scenarioName, scenarioResult in dict(xlogContent["ScenarioResults"]).items():
+                            caseStatus = ""
+                            if scenarioResult["Status"] in ["FAILURE"]:
+                                caseStatus = "failed"
+                            if scenarioResult["Status"] in ["Successful"]:
+                                caseStatus = "passed"
+                            jUnitTestCase = JunitTestCase(
+                                name=scenarioName,
+                                classname=f.replace("x.log", ""),
+                                elapsed_sec=0
+                            )
+                            if caseStatus == "failed":
+                                jUnitTestCase.add_failure_info(
+                                    message=scenarioResult["message"]
+                                )
+                            jUnitTestCases.append(jUnitTestCase)
+                        # 每一个xlog作为一个TestSuite，每一个Scenario作为一个TestCase
+                        testSuiteName = "_".join(subDir.split('_')[1:-1]) + "_" + f.replace(".xlog", "")
+                        jUnitTestSuite = JunitTestSuite(testSuiteName, jUnitTestCases)
+                        jUnitTestSuites.append(jUnitTestSuite)
+        with open(file=JunitReportFile, mode="w", encoding="UTF-8") as fp:
+            fp.write(JunitTestSuite.to_xml_string(jUnitTestSuites))
+
     # 整理并生成最后的测试报告
     def generateTestReport(self):
-        try:
-            # 建立报告的保存目录
-            reportFileDir = os.path.join(self.workDirectory, "report")
-            if not os.path.exists(reportFileDir):
-                os.makedirs(reportFileDir, exist_ok=True)
+        if len(self.reportTypes) == 0:
+            # 不需要进行报告输出
+            return
 
-            # 整理报告内容
-            reportFileDir = os.path.join(self.workDirectory, "report")
-            if not os.path.exists(reportFileDir):
-                os.makedirs(reportFileDir, exist_ok=True)
+        # 如果有需要，生成JUNIT格式的测试报告
+        if "JUNIT" in self.reportTypes:
+            self.generateJunitReport()
 
-            htmlTestResult = TestResult()
-            htmlTestResult.setTitle("Test Report")
-            htmlTestResult.setDescription("Max Processes : " + str(self.maxProcess) + '<br>')
-            htmlTestResult.robotOptions = self.robotOptions
+        # 如果有需要，生成HTML格式的测试报告
+        if "HTML" in self.reportTypes:
+            try:
+                # 建立报告的保存目录
+                reportFileDir = os.path.join(self.workDirectory, "report")
+                if not os.path.exists(reportFileDir):
+                    os.makedirs(reportFileDir, exist_ok=True)
 
-            self.logger.info("Processing test result under [" + self.workDirectory + "] ...")
-            for task in self.taskList:
-                # 遍历所有的task清单
-                htmlTestResult.addSuite(self.generateRobotReport(robotTask=task))
+                # 整理报告内容
+                reportFileDir = os.path.join(self.workDirectory, "report")
+                if not os.path.exists(reportFileDir):
+                    os.makedirs(reportFileDir, exist_ok=True)
 
-            # 汇总所有的子目录到一个统一的报表上
-            # 生成该测试的测试报告
-            self.logger.info("Combing all test reports to one summary report ...")
-            rebotArgs = []
-            rebotArgs.extend(["--tagstatexclude", "owner*"])
-            rebotArgs.extend(["--tagstatexclude", "feature*"])
-            rebotArgs.extend(["--tagstatexclude", "priority*"])
-            rebotArgs.extend(["--suitestatlevel", "2"])
-            rebotArgs.extend(["--outputdir", self.workDirectory])
-            rebotArgs.extend(["--logtitle", "TestReport Summary"])
-            rebotArgs.extend(["--reporttitle", "TestReport Summary"])
-            rebotArgs.extend(["--name", "TestReport Summary"])
-            rebotArgs.extend(
-                ["--log", os.path.join(reportFileDir, "summary_log.html")])
-            rebotArgs.extend(
-                ["--report", os.path.join(reportFileDir, "summary_report.html")])
-            rebotArgs.extend(
-                ["--output", os.path.join(reportFileDir, "summary_output.xml")])
-            rebotArgs.append("--splitlog")
-            rebotArgs.append("--nostatusrc")
+                htmlTestResult = TestResult()
+                htmlTestResult.setTitle("Test Report")
+                htmlTestResult.setDescription("Max Processes : " + str(self.maxProcess) + '<br>')
+                htmlTestResult.robotOptions = self.robotOptions
 
-            # 遍历目录，查找所有的sub开头的目录
-            m_TestSubXmlList = []
-            for root, dirs, files in os.walk(self.workDirectory):
-                for f in files:
-                    if f.endswith(".xml") and f.startswith("sub_"):
-                        m_TestSubXmlList.append(
-                            os.path.abspath(os.path.join(root, str(f))))
-            if len(m_TestSubXmlList) == 0:
-                self.logger.error(
-                    "No valid test in [" + self.workDirectory + "].")
-            else:
-                rebotArgs.extend(m_TestSubXmlList)
+                self.logger.info("Processing test result under [" + self.workDirectory + "] ...")
+                for task in self.taskList:
+                    # 遍历所有的task清单
+                    htmlTestResult.addSuite(self.generateRobotReport(robotTask=task))
 
-                # 备份之前的输入输出和环境信息
-                saved__Stdout = sys.__stdout__
-                saved__Stderr = sys.__stderr__
-                savedStdout = sys.stdout
-                savedStderr = sys.stderr
+                # 汇总所有的子目录到一个统一的报表上
+                # 生成该测试的测试报告
+                self.logger.info("Combing all test reports to one summary report ...")
+                rebotArgs = []
+                rebotArgs.extend(["--tagstatexclude", "owner*"])
+                rebotArgs.extend(["--tagstatexclude", "feature*"])
+                rebotArgs.extend(["--tagstatexclude", "priority*"])
+                rebotArgs.extend(["--suitestatlevel", "2"])
+                rebotArgs.extend(["--outputdir", self.workDirectory])
+                rebotArgs.extend(["--logtitle", "TestReport Summary"])
+                rebotArgs.extend(["--reporttitle", "TestReport Summary"])
+                rebotArgs.extend(["--name", "TestReport Summary"])
+                rebotArgs.extend(
+                    ["--log", os.path.join(reportFileDir, "summary_log.html")])
+                rebotArgs.extend(
+                    ["--report", os.path.join(reportFileDir, "summary_report.html")])
+                rebotArgs.extend(
+                    ["--output", os.path.join(reportFileDir, "summary_output.xml")])
+                rebotArgs.append("--splitlog")
+                rebotArgs.append("--nostatusrc")
 
-                # 切换标准输入输出到指定的文件中
-                stdoutFile = open(os.path.join(reportFileDir, "TestReport.stdout"), 'a+')
-                stderrFile = open(os.path.join(reportFileDir, "TestReport.stderr"), 'a+')
-                sys.__stdout__ = stdoutFile
-                sys.__stderr__ = stderrFile
-                sys.stdout = stdoutFile
-                sys.stderr = stderrFile
+                # 遍历目录，查找所有的sub开头的目录
+                m_TestSubXmlList = []
+                for root, dirs, files in os.walk(self.workDirectory):
+                    for f in files:
+                        if f.endswith(".xml") and f.startswith("sub_"):
+                            m_TestSubXmlList.append(
+                                os.path.abspath(os.path.join(root, str(f))))
+                if len(m_TestSubXmlList) == 0:
+                    self.logger.error(
+                        "No valid test in [" + self.workDirectory + "].")
+                else:
+                    rebotArgs.extend(m_TestSubXmlList)
 
-                print("Execute Rebot_Cli: ")
-                for arg in rebotArgs:
-                    print("    " + str(arg))
-                rebot_cli(rebotArgs, exit=False)
+                    # 备份之前的输入输出和环境信息
+                    saved__Stdout = sys.__stdout__
+                    saved__Stderr = sys.__stderr__
+                    savedStdout = sys.stdout
+                    savedStderr = sys.stderr
 
-                # 还原重定向的日志
-                if savedStdout:
-                    sys.__stdout__ = saved__Stdout
-                if saved__Stderr:
-                    sys.__stderr__ = saved__Stderr
-                if savedStdout:
-                    sys.stdout = savedStdout
-                if savedStderr:
-                    sys.stderr = savedStderr
-                if stdoutFile:
-                    stdoutFile.close()
-                if stderrFile:
-                    stderrFile.close()
+                    # 切换标准输入输出到指定的文件中
+                    stdoutFile = open(os.path.join(reportFileDir, "TestReport.stdout"), 'a+')
+                    stderrFile = open(os.path.join(reportFileDir, "TestReport.stderr"), 'a+')
+                    sys.__stdout__ = stdoutFile
+                    sys.__stderr__ = stderrFile
+                    sys.stdout = stdoutFile
+                    sys.stderr = stderrFile
 
-            # 更新测试结果到共享区域
-            testReport = []
-            for testSuite in htmlTestResult.TestSuites:
-                testCaseReports = []
-                for testcase in testSuite.getTestCases():
-                    testCaseReport = {
-                        "caseName": testcase.getCaseName(),
-                        "caseStatus": str(testcase.getCaseStatus())
+                    print("Execute Rebot_Cli: ")
+                    for arg in rebotArgs:
+                        print("    " + str(arg))
+                    rebot_cli(rebotArgs, exit=False)
+
+                    # 还原重定向的日志
+                    if savedStdout:
+                        sys.__stdout__ = saved__Stdout
+                    if saved__Stderr:
+                        sys.__stderr__ = saved__Stderr
+                    if savedStdout:
+                        sys.stdout = savedStdout
+                    if savedStderr:
+                        sys.stderr = savedStderr
+                    if stdoutFile:
+                        stdoutFile.close()
+                    if stderrFile:
+                        stderrFile.close()
+
+                # 更新测试结果到共享区域
+                testReport = []
+                for testSuite in htmlTestResult.TestSuites:
+                    testCaseReports = []
+                    for testcase in testSuite.getTestCases():
+                        testCaseReport = {
+                            "caseName": testcase.getCaseName(),
+                            "caseStatus": str(testcase.getCaseStatus())
+                        }
+                        testCaseReports.append(testCaseReport)
+                    testSuiteReport = {
+                        "suiteName": testSuite.getSuiteName(),
+                        "passedCount": testSuite.getPassedCaseCount(),
+                        "errorCount": testSuite.getErrorCaseCount(),
+                        "failedCount": testSuite.getFailedCaseCount(),
+                        "elapsed": testSuite.getSuiteElapsedTime(),
+                        "cases": testCaseReports
                     }
-                    testCaseReports.append(testCaseReport)
-                testSuiteReport = {
-                    "suiteName": testSuite.getSuiteName(),
-                    "passedCount": testSuite.getPassedCaseCount(),
-                    "errorCount": testSuite.getErrorCaseCount(),
-                    "failedCount": testSuite.getFailedCaseCount(),
-                    "elapsed": testSuite.getSuiteElapsedTime(),
-                    "cases": testCaseReports
-                }
-                testReport.append(testSuiteReport)
-            self.executorMonitor["testReport"] = testReport
+                    testReport.append(testSuiteReport)
+                self.executorMonitor["testReport"] = testReport
 
-            # 生成报告
-            htmlTestRunner = HTMLTestRunner(title="Test Report")
-            htmlTestRunner.generateReport(
-                result=htmlTestResult,
-                output=os.path.join(reportFileDir, "report.html")
-            )
-            self.logger.info("Combined all test reports. Files saved at [" +
-                             os.path.join(reportFileDir, "report.html") + "]")
+                # 生成报告
+                htmlTestRunner = HTMLTestRunner(title="Test Report")
+                htmlTestRunner.generateReport(
+                    result=htmlTestResult,
+                    output=os.path.join(reportFileDir, "report.html")
+                )
+                self.logger.info("Combined all test reports. Files saved at [" +
+                                 os.path.join(reportFileDir, "report.html") + "]")
 
-            # 备份测试结果文件到report目录下
-            self.logger.info("Backup test result to report directory ....")
-            for subdir in os.listdir(self.workDirectory):
-                if os.path.isdir(os.path.join(self.workDirectory, subdir)) and subdir.startswith("sub_"):
-                    m_SourceReportFile = os.path.join(
-                        self.workDirectory, subdir, subdir + ".html")
-                    m_TargetReportFile = os.path.join(
-                        self.workDirectory, reportFileDir, subdir + ".html")
-                    if os.path.exists(m_SourceReportFile):
-                        shutil.copyfile(m_SourceReportFile, m_TargetReportFile)
-                    shutil.make_archive(
-                        base_name=os.path.join(
-                            self.workDirectory, reportFileDir, subdir),
-                        format="tar",
-                        root_dir=os.path.join(self.workDirectory),
-                        base_dir=subdir
-                    )
-        except Exception as e:
-            raise RegressException(message="Regress failed.", inner_exception=e)
+                # 备份测试结果文件到report目录下
+                self.logger.info("Backup test result to report directory ....")
+                for subdir in os.listdir(self.workDirectory):
+                    if os.path.isdir(os.path.join(self.workDirectory, subdir)) and subdir.startswith("sub_"):
+                        m_SourceReportFile = os.path.join(
+                            self.workDirectory, subdir, subdir + ".html")
+                        m_TargetReportFile = os.path.join(
+                            self.workDirectory, reportFileDir, subdir + ".html")
+                        if os.path.exists(m_SourceReportFile):
+                            shutil.copyfile(m_SourceReportFile, m_TargetReportFile)
+                        shutil.make_archive(
+                            base_name=os.path.join(
+                                self.workDirectory, reportFileDir, subdir),
+                            format="tar",
+                            root_dir=os.path.join(self.workDirectory),
+                            base_dir=subdir
+                        )
+            except Exception as e:
+                raise RegressException(message="Regress failed.", inner_exception=e)
 
     # 运行回归测试
     def run(self):

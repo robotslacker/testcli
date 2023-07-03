@@ -45,7 +45,8 @@ def runRegress(args, executorMonitor):
         scriptTimeout=args["scriptTimeout"],
         workerTimeout=args["workerTimeout"],
         logger=logger,
-        executorMonitor=executorMonitor
+        executorMonitor=executorMonitor,
+        reportType=args["reportType"]
     )
     executorMonitor["pid"] = os.getpid()
     executorMonitor["maxProcess"] = args["maxProcess"]
@@ -101,13 +102,16 @@ def runRegress(args, executorMonitor):
               help="Specify the timeout limit(seconds) of one suite, Default is -1, means no limit.")
 @click.option("--force", is_flag=True,
               help="Clean all files under working directory if not empty.")
+@click.option("--report", type=str, default="html",
+              help="Specify the report type. html or junit, default is html.",)
 def cli(
         job,
         work,
         parallel,
         jobtimeout,
         workertimeout,
-        force
+        force,
+        report
 ):
     # 初始化信号变量
     # 捕捉信号，处理服务中断的情况
@@ -169,7 +173,8 @@ def cli(
         "workerTimeout": workertimeout,
         "testRoot": os.path.join(os.path.dirname(__file__), "robot"),
         "workDirectory": workDirectory,
-        "jobList": job
+        "jobList": job,
+        "reportType": report,
     }
 
     # 运行回归测试

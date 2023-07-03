@@ -5,6 +5,7 @@ import re
 import json
 import random
 import html
+import sqlite3
 from shutil import copyfile, SameFileError
 from robot.api import logger
 from robot.errors import ExecutionFailed
@@ -684,17 +685,17 @@ class RunCompare(object):
             (m_ShortWorkFileName, m_WorkFileExtension) = os.path.splitext(m_TempFileName)
             # 如果定义了T_WORK，则dif文件生成在T_WORK下, 否则生成在当前目录下
             if "T_WORK" in os.environ:
-                m_DifFilePath = os.environ["T_WORK"]
-                m_SucFilePath = os.environ["T_WORK"]
+                logFilePath = os.environ["T_WORK"]
             else:
-                m_DifFilePath = os.getcwd()
-                m_SucFilePath = os.getcwd()
+                logFilePath = os.getcwd()
             m_DifFileName = m_ShortWorkFileName + '.dif'
             m_SucFileName = m_ShortWorkFileName + '.suc'
             m_xlogFileName = m_ShortWorkFileName + '.xlog'
-            m_DifFullFileName = os.path.join(m_DifFilePath, m_DifFileName)
-            m_xlogFullFileName = os.path.join(m_DifFilePath, m_xlogFileName)
-            m_SucFullFileName = os.path.join(m_SucFilePath, m_SucFileName)
+            m_xdbFileName = m_ShortWorkFileName + '.xdb'
+            m_DifFullFileName = os.path.join(logFilePath, m_DifFileName)
+            m_xlogFullFileName = os.path.join(logFilePath, m_xlogFileName)
+            m_SucFullFileName = os.path.join(logFilePath, m_SucFileName)
+            m_xdbFullFileName = os.path.join(logFilePath, m_xdbFileName)
             m_szWorkFile = p_szWorkFile
         else:
             if "T_WORK" not in os.environ:
@@ -711,14 +712,15 @@ class RunCompare(object):
             # 传递的不是绝对路径，是相对路径
             (m_ShortWorkFileName, m_WorkFileExtension) = os.path.splitext(p_szWorkFile)
             # 如果定义了T_WORK，则dif文件生成在T_WORK下, 否则生成在当前目录下
-            m_DifFilePath = os.environ["T_WORK"]
-            m_SucFilePath = os.environ["T_WORK"]
+            logFilePath = os.environ["T_WORK"]
             m_DifFileName = m_ShortWorkFileName + '.dif'
             m_SucFileName = m_ShortWorkFileName + '.suc'
             m_xlogFileName = m_ShortWorkFileName + '.xlog'
-            m_DifFullFileName = os.path.join(m_DifFilePath, m_DifFileName)
-            m_xlogFullFileName = os.path.join(m_DifFilePath, m_xlogFileName)
-            m_SucFullFileName = os.path.join(m_SucFilePath, m_SucFileName)
+            m_xdbFileName = m_ShortWorkFileName + '.xdb'
+            m_DifFullFileName = os.path.join(logFilePath, m_DifFileName)
+            m_xlogFullFileName = os.path.join(logFilePath, m_xlogFileName)
+            m_SucFullFileName = os.path.join(logFilePath, m_SucFileName)
+            m_xdbFullFileName = os.path.join(logFilePath, m_xdbFileName)
             m_szWorkFile = os.path.join(os.environ['T_WORK'], p_szWorkFile)
 
         # remove old file first
@@ -795,34 +797,52 @@ class RunCompare(object):
             return False
 
         # 获得Robot的上下文信息
-        # 记录所有的TAG信息，特殊处理component, feature, owner这三个tag
+        # 记录所有的TAG信息，MetaData信息
         m_SuiteName = None
         m_TestName = None
-        m_TestTags = []
-        m_SqlId = None
-        m_RobotId = None
-        m_RunLevel = None
+        testTags = []
+        suiteMetaData = {}
         if EXECUTION_CONTEXTS.current is not None:
             m_SuiteName = str(EXECUTION_CONTEXTS.current.suite)
             if hasattr(EXECUTION_CONTEXTS.current.test, "name"):
                 m_TestName = str(EXECUTION_CONTEXTS.current.test.name)
             else:
                 m_TestName = "--------"  # Setup Or TearDown
-            m_TestFullTags = EXECUTION_CONTEXTS.current.variables.as_dict()["@{TEST_TAGS}"]
-            for m_TestTag in m_TestFullTags:
-                if m_TestTag.lower().startswith("sqlid:"):
-                    if m_SqlId is None:
-                        m_SqlId = int(m_TestTag[6:])
-                    continue
-                if m_TestTag.lower().startswith("robotid:"):
-                    if m_RobotId is None:
-                        m_RobotId = m_TestTag[8:]
-                    continue
-                if m_TestTag.lower().startswith("runlevel:"):
-                    if m_RunLevel is None:
-                        m_RunLevel = m_TestTag[9:]
-                    continue
-                m_TestTags.append(m_TestTag)
+            if hasattr(EXECUTION_CONTEXTS.current.suite, "metadata"):
+                suiteMetaData = dict(EXECUTION_CONTEXTS.current.suite.metadata)
+            testTags = EXECUTION_CONTEXTS.current.variables.as_dict()["@{TEST_TAGS}"]
+
+        # 读取xdb文件，如果存在（说明文件是用TestCli生成的）
+        xdbScenarioElapsedResult = {}
+        if os.path.exists(m_xdbFullFileName):
+            xlogFileHandle = sqlite3.connect(m_xdbFullFileName)
+            cursor = xlogFileHandle.cursor()
+            try:
+                cursor.execute("SELECT * FROM TestCli_Xlog")
+                rs = cursor.fetchall()
+                field_names = [i[0] for i in cursor.description]
+                cursor.close()
+                data = []
+                for row in rs:
+                    rowMap = {}
+                    for i in range(0, len(row)):
+                        rowMap[field_names[i]] = row[i]
+                    data.append(rowMap)
+                for row in data:
+                    scenarioId = row["ScenarioId"]
+                    if scenarioId is not None:
+                        if scenarioId in xdbScenarioElapsedResult.keys():
+                            xdbScenarioElapsedResult.update(
+                                {
+                                    scenarioId: row["Elapsed"] + xdbScenarioElapsedResult[scenarioId]
+                                }
+                            )
+                        else:
+                            xdbScenarioElapsedResult[scenarioId] = row["Elapsed"]
+
+            except sqlite3.OperationalError:
+                logger.warn("TestCli_Xlog does not exist in extend log.", html=True)
+            xlogFileHandle.close()
 
         # 生成Scenario分析结果
         m_ScenarioStartPos = 0  # 当前Senario开始的位置
@@ -836,7 +856,7 @@ class RunCompare(object):
         while True:
             if m_nPos >= len(m_CompareResultList):
                 break
-
+            logger.info("Compare | =" + str(m_CompareResultList[m_nPos]))
             # Scenario定义
             # -- [Hint] setup:
             # -- [setup:]
@@ -864,6 +884,7 @@ class RunCompare(object):
             matchObj4 = re.search(r"--(\s+)?\[(\s+)?cleanup:", m_CompareResultList[m_nPos],
                                   re.IGNORECASE | re.DOTALL)
             if matchObj1 or matchObj2 or matchObj3 or matchObj4:
+                logger.info("Compare Matched common | =" + str(m_CompareResultList[m_nPos]))
                 # 遇到这些标记，则之前的Scenario结束，记录之前的信息
                 if m_ScenarioId is not None:
                     m_ScenariosPos[m_ScenarioId] = {
@@ -883,6 +904,7 @@ class RunCompare(object):
             matchObj2 = re.search(r"--(\s+)?\[(\s+)?scenario:end", m_CompareResultList[m_nPos],
                                   re.IGNORECASE | re.DOTALL)
             if matchObj1 or matchObj2:
+                logger.info("Compare Matched end | =" + str(m_CompareResultList[m_nPos]))
                 # 当前场景结束，记录之前的信息
                 if m_ScenarioId is None:
                     m_ScenarioId = str(random.randint(999990001, 999999999))
@@ -904,6 +926,7 @@ class RunCompare(object):
             matchObj2 = re.search(r"--(\s+)?\[(\s+)?Scenario:(.*)]", m_CompareResultList[m_nPos],
                                   re.IGNORECASE | re.DOTALL)
             if matchObj1 or matchObj2:
+                logger.info("Compare Matched scenario | =" + str(m_CompareResultList[m_nPos]))
                 if m_ScenarioId is not None:
                     # 之前的Scenario有记录，只是忘了Scenario End
                     m_ScenariosPos[m_ScenarioId] = {
@@ -925,10 +948,6 @@ class RunCompare(object):
                         m_ScenarioId = str(random.randint(999990001, 999999999))
                         m_ScenarioName = "Empty ScenarioID at line: " \
                                          + str(m_nPos) + "-[" + m_ScenarioName + "]"
-                    if not m_ScenarioId.isdigit():
-                        m_ScenarioId = str(random.randint(999990001, 999999999))
-                        m_ScenarioName = "Invalid ScenarioID at line: " \
-                                         + str(m_nPos) + "-[" + m_ScenarioName + "]"
                     m_ScenarioStartPos = m_nPos
                     m_nPos = m_nPos + 1
                     continue
@@ -942,6 +961,7 @@ class RunCompare(object):
                     continue
 
             # 不是什么特殊内容，这里是标准文本
+            logger.info("Compare Matched not | =" + str(m_CompareResultList[m_nPos]))
             m_nPos = m_nPos + 1
 
         # 最后一个Senario的情况记录下来
@@ -953,6 +973,7 @@ class RunCompare(object):
                 "ScenarioName": m_ScenarioName,
             }
 
+        logger.error("m_ScenariosPos=" + str(m_ScenariosPos))
         # 遍历每一个Senario的情况
         for m_ScenarioId, m_Senario_Pos in m_ScenariosPos.items():
             m_StartPos = m_Senario_Pos['ScenarioStartPos']
@@ -965,13 +986,18 @@ class RunCompare(object):
                     m_DifStartPos = m_nPos
                     bFoundDif = True
                     break
+            if m_ScenarioId in xdbScenarioElapsedResult.keys():
+                elapsedTime = xdbScenarioElapsedResult[m_ScenarioId]
+            else:
+                elapsedTime = 0
             if not bFoundDif:
                 m_ScenarioResults[m_ScenarioId] = \
                     {
                         "Status": "Successful",
                         "Name": m_ScenarioName,
                         "message": "",
-                        "Id": m_ScenarioId
+                        "Id": m_ScenarioId,
+                        "Elapsed": elapsedTime
                     }
             else:
                 # 错误信息只记录前后20行信息,前5行，多余的不记录
@@ -989,7 +1015,8 @@ class RunCompare(object):
                         "Status": "FAILURE",
                         "message": m_Message,
                         "Name": m_ScenarioName,
-                        "Id": m_ScenarioId
+                        "Id": m_ScenarioId,
+                        "Elapsed": elapsedTime
                     }
 
         # 如果没有设置任何Scenario，则将CaseName作为Scenario的名字，统一为一个Scenario
@@ -1000,7 +1027,8 @@ class RunCompare(object):
                         "Status": "Successful",
                         "message": "",
                         "Id": -1,
-                        "Name": m_TestName
+                        "Name": m_TestName,
+                        "Elapsed": 0
                     }
             else:
                 m_ScenarioResults[m_TestName] = \
@@ -1008,7 +1036,8 @@ class RunCompare(object):
                         "Status": "FAILURE",
                         "message": "Test failed.",
                         "Id": -1,
-                        "Name": m_TestName
+                        "Name": m_TestName,
+                        "Elapsed": 0
                     }
 
         # 遍历所有Scneario的结果，如果全部为SUCCESSFUL，则Case为成功，否则为失败
@@ -1028,10 +1057,8 @@ class RunCompare(object):
             "ScenarioResults": m_ScenarioResults,
             "SuiteName": m_SuiteName,
             "CaseName": m_TestName,
-            "CaseTags": m_TestTags,
-            "SqlId": m_SqlId,
-            "RobotId": m_RobotId,
-            "runLevel": m_RunLevel
+            "CaseTags": testTags,
+            "MetaData": suiteMetaData
         }
         with open(m_xlogFullFileName, 'w', encoding=self.__compareDifEncoding) as f:
             json.dump(obj=m_xlogResults, fp=f, indent=4, sort_keys=True, ensure_ascii=False)

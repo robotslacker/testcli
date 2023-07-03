@@ -2308,7 +2308,13 @@ class TestSynatx(unittest.TestCase):
 
         tempWorkDirectory = os.path.join(tempfile.gettempdir(), str(os.getpid()))
         if os.path.isdir(tempWorkDirectory):
-            shutil.rmtree(tempWorkDirectory, onerror=on_rm_error)
+            for file in os.listdir(tempWorkDirectory):
+                if os.path.isfile(os.path.join(tempWorkDirectory, file)):
+                    os.remove(os.path.join(tempWorkDirectory, file))
+                if os.path.isdir(os.path.join(tempWorkDirectory, file)):
+                    shutil.rmtree(os.path.join(tempWorkDirectory, file), onerror=on_rm_error)
+                if os.path.islink(os.path.join(tempWorkDirectory, file)):
+                    os.unlink(os.path.join(tempWorkDirectory, file))
         if os.path.isfile(tempWorkDirectory):
             os.remove(tempWorkDirectory)
 
@@ -2316,12 +2322,13 @@ class TestSynatx(unittest.TestCase):
         regressHandler = Regress(
             jobList=os.path.join(os.path.dirname(__file__), "..", "robot/demo"),
             testRoot=os.path.join(os.path.dirname(__file__), "..", "robot"),
-            workDirectory=os.path.join(tempfile.gettempdir(), str(os.getpid())),
+            workDirectory=tempWorkDirectory,
             maxProcess=3,
             scriptTimeout=300,
             workerTimeout=120,
             logger=None,
-            executorMonitor=None
+            executorMonitor=None,
+            reportType="HTML,JUNIT"
         )
         regressHandler.run()
         regressHandler.generateTestReport()
@@ -2332,12 +2339,13 @@ class TestSynatx(unittest.TestCase):
             "demo1.suc",
             "demo2.suc",
             "demo3.dif",
+            "junit.xml"
         ]
         for root, dirs, files in os.walk(tempWorkDirectory):
             for f in files:
                 if f in expectedFiles:
                     expectedFiles.remove(f)
-        self.assertTrue(len(expectedFiles) == 0)
+        self.assertTrue(len(expectedFiles) == 0, msg="missed file: " + str(expectedFiles))
         shutil.rmtree(tempWorkDirectory, onerror=on_rm_error)
 
 
