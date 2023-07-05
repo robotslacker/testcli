@@ -194,15 +194,6 @@ class TestSuite(object):
         for key, value in iteritems(attributes):
             xml_element.set(key, str(value))
         xml_string = str(xmlEt.tostring(xml_element, encoding="utf-8").decode("utf-8"))
-        # xml_string = xml_string.replace("\n", "&#13;")
-        # print("xml_String = " + str(xml_string))
-        # if prettyprint:
-        #     print("PrettyPrint ...")
-        #     # minidom.parseString() works just on correctly encoded binary strings
-        #     xml_string = xml.dom.minidom.parseString(xml_string)
-        #     # toprettyxml() produces unicode if no encoding is being passed or binary string with an encoding
-        #     xml_string = xml_string.toprettyxml(encoding="utf-8").decode("utf-8")
-        #     # is unicode now
 
         return xml_string
 
@@ -313,7 +304,7 @@ if __name__ == '__main__':
         elapsed_sec=0,
         stdout='I am stdout!',
         stderr='I am stderr!')
-    xx.add_failure_info(message="abcd\r\ndexfg")
+    xx.add_failure_info(message="abcd\r\ndexfg中国人民解放军")
     test_cases = [xx]
     ts = TestSuite("my test suite", test_cases)
     # pretty printing is on by default but can be disabled using prettyprint=False

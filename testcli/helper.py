@@ -155,14 +155,19 @@ helpMessage = [
             '''
                 _DATA SET SEEDFILE DIR <seed file location>;
                   
-                _DATA CREATE MEM|FS FILE <target file location> 
+                _DATA SET HDFSUSER <hdfs connected user>;
+                
+                _DATA CREATE MEM|FS|HDFS FILE <target file location> 
                 (
                    <column expression..>,
                    <column expression..>
                 )
                 [ROWS <rows will generated>];
                   
-                _DATA CONVERT MEM|FS FILE <source file location> TO MEM|FS FILE <target file location>;  
+                _DATA CONVERT MEM|FS|HDFS FILE <source file location> TO MEM|FS|HDFS FILE <target file location>;  
+                
+                hdfs file location:
+                    hdfs://<hdfs server ip>:<hdfs server port>/<hdfs file path>
             ''',
     },
     {

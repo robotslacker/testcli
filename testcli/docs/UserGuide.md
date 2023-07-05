@@ -48,7 +48,7 @@
   * 在API测试中可以灵活地处置API测试的上下文关系，变量的传递，环境信息的针对性处理
   * 在API测试中上传或者下载数据文件
   * 基于RobotFrameWork，提供了多个测试脚本之间的并发控制、超时控制
-  * 基于RobotFrameWork，提供了HTML格式的测试报告生成
+  * 基于RobotFrameWork，提供了HTML格式、JUNIT格式的测试报告生成
 ***
 
 ***
@@ -1762,14 +1762,19 @@ sessionContext是一个字典结果。
 ```
   _DATA SET SEEDFILE DIR <种子文件的路径>;
   
-  _DATA CREATE MEM|FS FILE <目标文件路径> 
+  _DATA SET HDFSUSER <HDFS连接用户>;
+  
+  _DATA CREATE MEM|FS|HDFS FILE <目标文件路径> 
   (
      <列表达式..>
      <列表达式..>
   )
   [ROWS <计划生成的记录行数>]
   
-  _DATA CONVERT MEM|FS FILE <源文件路径> TO MEM|FS FILE <目标文件路径>  
+  HDFS路径描述方法:
+    hdfs://<hdfs服务器IP>:<hdfs服务器端口>/<hdfs文件路径>
+
+  _DATA CONVERT MEM|FS|HDFS FILE <源文件路径> TO MEM|FS|HDFS FILE <目标文件路径>  
 ```
 
 ```
@@ -2654,9 +2659,12 @@ Options:
                            Default is -1, means no limit.
   --workertimeout INTEGER  Specify the timeout limit(seconds) of one suite,
                            Default is -1, means no limit.
-
   --force                  Clean all files under working directory if not
                            empty.
+  --report TEXT            Specify the report type. html or junit, default is
+                           html,junit.
+  --reportlevel TEXT       Specify the report level. case or scenario, default
+                           is case.                           
   --help                   Show this message and exit.
 ```
 ##### --job
@@ -2682,12 +2690,23 @@ Options:
 在达到到这个时间后，正在运行的任务会被终止，后续运行队列上的任务将会被继续运行。  
 这里的时间统计并不是精准统计，只是一个相对大概。即使超时时间到达，后续也还有报告整理等  工作要做，停止也需要一段时间。
 
+#####  --report
+标记测试报告的展示类型，可以为JUNIT或者HTML。 默认是两者都生成，即JUNIT,HTML  
+HTML的报告生成位置为：  <T_WORK>/report  
+JUNIT的报告生成位置为：  <T_WORK>/report/junitreport
+
+#####  --reportlevel
+测试报告的展示层级，可以为CASE或者SCENARIO。 默认是CASE。  
+CASE表示生成报告的细粒度到测试用例层面；  
+SCENARIO表示生成报告的细粒度到测试场景层面；
+使用SCENARIO需要在TestCli脚本中配合利用Hint信息来标记Scenario。
+
 #####  --force
 控制是否强制清空工作目录。 如果制定了force，则运行前会强行清空工作目录下的所有文件（包括子目录）
 
 #### Robot文件编写规则
 CliRobot中的文件使用RobotFrameWork的代码编写，具体RF的代码写作方法可以参考：https://robotframework.org/
-原则上，CliRobot中可以用不使用TestCli提供的Robot扩展，而作为Robot程序的调度使用，但是这样做将失去了CliRobot本身的作用。完全可以通过Robot自身命令行或者一些第三方插件来直接运行Robot程序，而不是必须依赖TestCli的Robot扩展。  
+原则上，CliRobot中可以用不使用TestCli提供的Robot扩展，而作为Robot程序的调度使用，但是这样做将失去了CliRobot本身的作用。完全可以通过Robot自身命令行或者一些第三方插件来直接运行Robot程序，而不是必须依赖TestCli的Robot扩展。    
 以下是一个Robot文件的书写例子和解释：
 ```
 *** Settings ***
@@ -3130,16 +3149,17 @@ TestCli
    2. 修改g4文件
    3. 右键单击修改后的g4文件，执行Generate Antlr Recognizer, 生成Python运行文件
       第一次Generate前需要配置默认Generate选项(Configure ANTLR...)，选项为：
-          Language： 填入Python3
+          Grammer file enconding:        填入utf-8
+          Language:                      填入Python3
+          Location of imported grammers: 填入<项目所在路径/testcli/antlr>
           Generate parse tree listener:  取消选择，即不需要监听器
           Generate parse tree visitor:   选择，即需要访问器      
    3. 修改后可以利用IDEA插件提供的预览器（ANTLR Preview)来检查修改是否正确
    4. 确认修改无误后用generate.bat中的语句来重新生成Antlr的Python运行文件(放置在antlrgen目录下)
       ！！！请不要直接修改antlrgen目录下的文件，此处的修改将不会被保留!!!   
-   5. 修改对应的sqlvisitor.py和apivisitor.py文件
+   5. 修改对应的sqlvisitor.py和apivisitor.py文件, 如果修改基础命令，则两个文件都需要同步修改
       确认能修解析到新的语法内容
-   6. 如果修改基础命令，则修改BaseLexer或者BaseParse文件
-   7. 对于基础命令，如果visitor文件需要改变，则sqlvisitor文件和apivisitor文件需要同步修改
+   6. 修改对应command的处理文件，实现新语法的功能实现
 ```
 
 #### 单元测试
@@ -3243,6 +3263,8 @@ TestCli是一个控制台应用，但是你也可以直接绕过控制台应用�
         workerTimeout=3600,
         scriptTimeout=18000,
         jobList=["a.robot", "b.robot", ],
+        reportType="JUNIT,HTML",
+        reportLevel="CASE",
         executorMonitor=None,
         extraParameters=None
     )

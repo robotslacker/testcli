@@ -5,12 +5,15 @@ import time
 import datetime
 import random
 import traceback
+from hdfs.client import Client, InsecureClient
 from ..testcliexception import TestCliException
 
 # 定义种子文件的存放目录
 seedFileDir = ""
 # 定义种子文件的缓存
 seedDataCache = {}
+# 定义HDFS的默认用户
+hdfsConnectedUser = None
 
 
 # 返回随机的Boolean类型
@@ -704,9 +707,60 @@ class MemHandler:
         self.fp.close()
 
 
+class HdfsHandler:
+    def __init__(self):
+        self.hdfsHandler = None
+        self.hdfsFileName = None
+        self.isFirstWrite = True
+
+    def open(self, fileName: str, mode: str, encoding: str):
+        if mode or encoding:
+            pass
+        # HDFS 文件格式： http://node:port/xx/yy/cc.dat
+        # 注意这里的node和port都是webfs端口，不是rpc端口
+        protocal = fileName.split("://")[0]
+        nodePort = fileName[len(protocal) + 3:].split("/")[0]
+        webFSURL = protocal + "://" + nodePort
+        hdfsFSDir, self.hdfsFileName = os.path.split(fileName[len(webFSURL):])
+        if hdfsConnectedUser is None:
+            self.hdfsHandler = Client(url=webFSURL, root=hdfsFSDir, proxy=None, session=None)
+        else:
+            self.hdfsHandler = InsecureClient(url=webFSURL, user=hdfsConnectedUser, root=hdfsFSDir)
+
+    def read(self, nByte: int):
+        with self.hdfsHandler.read(self.hdfsFileName) as reader:
+            return reader.read(nByte)
+
+    def write(self, content: bytes):
+        if self.isFirstWrite:
+            with self.hdfsHandler.write(hdfs_path=self.hdfsFileName, overwrite=True) as output:
+                output.write(content)
+            self.isFirstWrite = False
+        else:
+            with self.hdfsHandler.write(hdfs_path=self.hdfsFileName, append=True) as output:
+                output.write(content)
+
+    def writeLines(self, buf: list):
+        if self.isFirstWrite:
+            with self.hdfsHandler.write(hdfs_path=self.hdfsFileName, overwrite=True) as output:
+                for line in buf:
+                    output.write(line.encode())
+            self.isFirstWrite = False
+        else:
+            with self.hdfsHandler.write(hdfs_path=self.hdfsFileName, append=True) as output:
+                for line in buf:
+                    output.write(line.encode())
+
+    def close(self):
+        self.hdfsHandler = None
+        self.hdfsFileName = None
+        self.isFirstWrite = True
+
+
 fsImplemention = {
     "MEM": MemHandler,
-    "FS": FileHandler
+    "FS": FileHandler,
+    "HDFS": HdfsHandler,
 }
 
 
@@ -784,6 +838,17 @@ def executeDataRequest(cls, requestObject):
                 "status": "Data seed dir has been setted to [" + str(seedFileDir) + "]."
             }
             return
+        if requestObject["option"] == "hdfsUser":
+            hdfsConnectedUser = requestObject["hdfsUser"]
+            yield {
+                "type": "result",
+                "title": None,
+                "rows": None,
+                "headers": None,
+                "columnTypes": None,
+                "status": "Hdfs has changed to [" + str(hdfsConnectedUser) + "]."
+            }
+            return
     if requestObject["action"] == "create":
         rowCount = requestObject["rowCount"]
         fileType = requestObject["fileType"]
@@ -828,7 +893,7 @@ def executeDataRequest(cls, requestObject):
                 "headers": None,
                 "columnTypes": None,
                 "status": "File [" + str(requestObject["sourceFile"]) +
-                          "] has been converted to [" + requestObject["targetFile"] + "] generated."
+                          "] has been converted to [" + requestObject["targetFile"] + "]."
             }
         except TestCliException as te:
             yield {

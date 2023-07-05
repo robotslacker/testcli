@@ -41,7 +41,8 @@ class Regress(object):
             scriptTimeout=-1,
             executorMonitor=None,
             extraParameters=None,
-            reportType=None
+            reportType="HTML,JUNIT",
+            reportLevel="Case"
     ):
         if executorMonitor is None:
             executorMonitor = {}
@@ -90,12 +91,19 @@ class Regress(object):
         else:
             self.scriptTimeout = int(scriptTimeout)
 
-        # 设置回归的报告类型
+        # 设置报告的展示类型
         if reportType is None:
             self.reportTypes = []
         else:
             s = str(reportType).split(',')
             self.reportTypes = [i.upper().strip() for i in s if (i is not None) and (str(i).strip() != '')]
+
+        # 设置报告的展示级别（仅对Junit报告有意义）
+        self.reportLevel = None
+        if reportLevel is not None:
+            self.reportLevel = reportLevel.strip().upper()
+        if self.reportLevel not in ["CASE", "SCENARIO"]:
+            raise RegressException("Invalid reportLevel.  Case or Scenario only.")
 
     def generateRobotReport(
             self,
@@ -288,56 +296,120 @@ class Regress(object):
     # 测试报告预处理，生成扩展信息文件
     def generateJunitReport(self):
         # 为Junit单独准备一个目录，来放置Junit结果
-        jUnitReportDir = os.path.join(self.workDirectory, "junitreport")
+        jUnitReportDir = os.path.join(self.workDirectory, "report", "junitreport")
         if not os.path.exists(jUnitReportDir):
             os.makedirs(jUnitReportDir)
         JunitReportFile = os.path.join(jUnitReportDir, "junit.xml")
 
-        # 遍历目录来获取Junit测试结果
-        jUnitTestSuites = []
-        subDirs = os.listdir(self.workDirectory)
-        for subDir in subDirs:
-            if not os.path.isdir(os.path.join(self.workDirectory, subDir)):
-                continue
-            if not subDir.startswith("sub_"):
-                continue
+        if self.reportLevel == "CASE":
+            # 直接用Robot的xml作为Junit报告的基础
 
-            # 开始处理subDir下的内容
-            for root, dirs, files in os.walk(os.path.join(self.workDirectory, subDir)):
-                for f in files:
-                    if f.endswith(".xlog"):
-                        # 这是一个成功的测试
-                        with open(os.path.join(root, f)) as fp:
-                            xlogContent = json.load(fp)
-                        jUnitTestCases = []
+            # 遍历目录来获取Junit测试结果
+            jUnitTestSuites = []
+            subDirs = os.listdir(self.workDirectory)
+            for subDir in subDirs:
+                if not os.path.isdir(os.path.join(self.workDirectory, subDir)):
+                    continue
+                if not subDir.startswith("sub_"):
+                    continue
+                xmlResultFile = os.path.join(self.workDirectory, subDir, subDir + ".xml")
+                if not os.path.exists(xmlResultFile):
+                    continue
+                robotResults = ExecutionResult(xmlResultFile)
+                robotSuiteResultList = []
+                if len(robotResults.suite.suites) == 0:
+                    robotSuiteResultList.append(robotResults.suite)
+                else:
+                    for resultTestSuite in robotResults.suite.suites:
+                        robotSuiteResultList.append(resultTestSuite)
+                jUnitTestCases = []
+                for robotSuiteResult in robotSuiteResultList:
+                    testSuiteName = robotSuiteResult.name
+                    for robotCaseResult in robotSuiteResult.tests:
+                        caseStatus = ""
+                        if robotCaseResult.status == "PASS":
+                            caseStatus = "passed"
+                        if robotCaseResult.status == "FAIL":
+                            caseStatus = "failed"
+                        if robotCaseResult.status == "ERROR":
+                            caseStatus = "error"
+                        if robotCaseResult.starttime is not None:
+                            startTime = datetime.datetime.strptime(robotCaseResult.starttime[:17], "%Y%m%d %H:%M:%S")
+                        else:
+                            startTime = None
+                        if robotCaseResult.endtime is not None:
+                            endTime = datetime.datetime.strptime(robotCaseResult.endtime[:17], "%Y%m%d %H:%M:%S")
+                        else:
+                            endTime = 0
+                        if startTime is not None and endTime is not None:
+                            caseElapsed = (endTime - startTime).seconds
+                        else:
+                            caseElapsed = 0
+                        jUnitTestCase = JunitTestCase(
+                            name=robotCaseResult.name,
+                            classname=robotCaseResult.name,
+                            elapsed_sec=caseElapsed
+                        )
+                        if caseStatus in ["failed", "error"]:
+                            if robotCaseResult.message is None or len(str(robotCaseResult.message).strip()) == 0:
+                                failureMessage = "Test failed."
+                            else:
+                                failureMessage = robotCaseResult.message
+                            jUnitTestCase.add_failure_info(message=failureMessage)
+                        jUnitTestCases.append(jUnitTestCase)
+                    jUnitTestSuite = JunitTestSuite(testSuiteName, jUnitTestCases)
+                    jUnitTestSuites.append(jUnitTestSuite)
+            with open(file=JunitReportFile, mode="w", encoding="UTF-8") as fp:
+                fp.write(JunitTestSuite.to_xml_string(jUnitTestSuites))
+        elif self.reportLevel == "SCENARIO":
+            # 遍历目录来获取Junit测试结果
+            jUnitTestSuites = []
+            subDirs = os.listdir(self.workDirectory)
+            for subDir in subDirs:
+                if not os.path.isdir(os.path.join(self.workDirectory, subDir)):
+                    continue
+                if not subDir.startswith("sub_"):
+                    continue
 
-                        # xlog信息中不一定包含时间信息
-                        # - passed: 表示测试用例通过, 状态为passed。
-                        # - failed: 表示测试用例失败, 状态为failed。
-                        # - skipped: 表示测试用例被跳过, 状态为skipped。可能是测试用例当前不可执行。
-                        # - error: 表示测试用例执行时报错, 状态为error。
-                        for scenarioName, scenarioResult in dict(xlogContent["ScenarioResults"]).items():
-                            caseStatus = ""
-                            if scenarioResult["Status"] in ["FAILURE"]:
-                                caseStatus = "failed"
-                            if scenarioResult["Status"] in ["Successful"]:
-                                caseStatus = "passed"
-                            jUnitTestCase = JunitTestCase(
-                                name=scenarioName,
-                                classname=f.replace("x.log", ""),
-                                elapsed_sec=0
-                            )
-                            if caseStatus == "failed":
-                                jUnitTestCase.add_failure_info(
-                                    message=scenarioResult["message"]
+                # 开始处理subDir下的内容
+                for root, dirs, files in os.walk(os.path.join(self.workDirectory, subDir)):
+                    for f in files:
+                        if f.endswith(".xlog"):
+                            #
+                            with open(file=os.path.join(root, f), mode="r", encoding="utf-8") as fp:
+                                xlogContent = json.load(fp)
+                            jUnitTestCases = []
+
+                            # xlog信息中不一定包含时间信息
+                            # - passed: 表示测试用例通过, 状态为passed。
+                            # - failed: 表示测试用例失败, 状态为failed。
+                            # - skipped: 表示测试用例被跳过, 状态为skipped。可能是测试用例当前不可执行。
+                            # - error: 表示测试用例执行时报错, 状态为error。
+                            for scenarioName, scenarioResult in dict(xlogContent["ScenarioResults"]).items():
+                                caseStatus = ""
+                                if scenarioResult["Status"] in ["FAILURE"]:
+                                    caseStatus = "failed"
+                                if scenarioResult["Status"] in ["Successful"]:
+                                    caseStatus = "passed"
+                                caseElapsed = 0
+                                if "Elapsed" in dict(scenarioResult).keys():
+                                    caseElapsed = scenarioResult["Elapsed"]
+                                jUnitTestCase = JunitTestCase(
+                                    name=scenarioName,
+                                    classname=f.replace("x.log", ""),
+                                    elapsed_sec=caseElapsed
                                 )
-                            jUnitTestCases.append(jUnitTestCase)
-                        # 每一个xlog作为一个TestSuite，每一个Scenario作为一个TestCase
-                        testSuiteName = "_".join(subDir.split('_')[1:-1]) + "_" + f.replace(".xlog", "")
-                        jUnitTestSuite = JunitTestSuite(testSuiteName, jUnitTestCases)
-                        jUnitTestSuites.append(jUnitTestSuite)
-        with open(file=JunitReportFile, mode="w", encoding="UTF-8") as fp:
-            fp.write(JunitTestSuite.to_xml_string(jUnitTestSuites))
+                                if caseStatus == "failed":
+                                    jUnitTestCase.add_failure_info(
+                                        message=scenarioResult["message"]
+                                    )
+                                jUnitTestCases.append(jUnitTestCase)
+                            # 每一个xlog作为一个TestSuite，每一个Scenario作为一个TestCase
+                            testSuiteName = "_".join(subDir.split('_')[1:-1]) + "_" + f.replace(".xlog", "")
+                            jUnitTestSuite = JunitTestSuite(testSuiteName, jUnitTestCases)
+                            jUnitTestSuites.append(jUnitTestSuite)
+            with open(file=JunitReportFile, mode="w", encoding="UTF-8") as fp:
+                fp.write(JunitTestSuite.to_xml_string(jUnitTestSuites))
 
     # 整理并生成最后的测试报告
     def generateTestReport(self):

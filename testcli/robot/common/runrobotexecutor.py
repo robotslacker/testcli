@@ -2,10 +2,8 @@
 import os
 import sys
 import logging
-from robot.running.builder import RobotParser
-from robot.model import SuiteVisitor
-from robot.run import run_cli as run_robot
 from robot.api import ExecutionResult
+from robot.run import run_cli as run_robot
 from robot.errors import DataError
 from bs4 import BeautifulSoup
 from .regressexception import RegressException
@@ -55,13 +53,6 @@ class RobotXMLSoupParser(BeautifulSoup):
 
 
 def runRobotExecutor(args):
-    class TestCasesFinder(SuiteVisitor):
-        def __init__(self):
-            self.tests = []
-
-        def visit_test(self, test):
-            self.tests.append(test)
-
     # 禁止掉一些不必要显示的log信息
     logging.getLogger('hdfs.client').setLevel(level=logging.ERROR)
     logging.getLogger('urllib3.connectionpool').setLevel(level=logging.ERROR)
@@ -119,32 +110,6 @@ def runRobotExecutor(args):
         # 重置T_WORK到子目录下
         os.environ['T_WORK'] = workingDirectory
         os.environ['TEST_ROOT'] = args["testRoot"]
-
-        # 生成测试运行结果，根据Robot的解析情况，一律标记为NOT_STARTED
-        # 随后会被正式的测试结果更新
-        testSuiteResults = {}
-        robotParser = RobotParser().parse_suite_file(source=robotFile)
-        # will not filter sqlid:none
-        robotParser.remove_empty_suites(True)
-        testCaseParserList = TestCasesFinder()
-        robotParser.visit(testCaseParserList)
-        testSuiteResult = {
-            "Suite_Name": str(robotParser.name),
-            "Start_Time": "-------- --:--:--.---",
-            "End_Time": "-------- --:--:--.---",
-            "Status": "NOT_STARTED",
-            "RobotPath": robotFile,
-            "ValidCase": robotParser.test_count
-        }
-        testSuiteResults[str(robotParser)] = testSuiteResult
-        for robotTest in testCaseParserList.tests:
-            tagList = []
-            for tag in robotTest.tags:
-                tag = str(tag.strip()).lower()
-                if tag.startswith('runlevel:'):
-                    pass
-                else:
-                    tagList.append(tag)
 
         # 拼接测试选项
         if robotOptions is None:

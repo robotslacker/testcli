@@ -46,7 +46,8 @@ def runRegress(args, executorMonitor):
         workerTimeout=args["workerTimeout"],
         logger=logger,
         executorMonitor=executorMonitor,
-        reportType=args["reportType"]
+        reportType=args["reportType"],
+        reportLevel=args["reportLevel"],
     )
     executorMonitor["pid"] = os.getpid()
     executorMonitor["maxProcess"] = args["maxProcess"]
@@ -75,8 +76,7 @@ def runRegress(args, executorMonitor):
     try:
         logger.info("Generating report ...")
         regressHandler.generateTestReport()
-        logger.info("Finished. Please read report from [" +
-                    os.path.abspath(os.path.join(args["workDirectory"], "report", "report.html")) + "]")
+        logger.info("Finished. Generating report Done.")
         executorMonitor["end"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         executorMonitor["running"] = False
     except RegressException as re:
@@ -102,8 +102,10 @@ def runRegress(args, executorMonitor):
               help="Specify the timeout limit(seconds) of one suite, Default is -1, means no limit.")
 @click.option("--force", is_flag=True,
               help="Clean all files under working directory if not empty.")
-@click.option("--report", type=str, default="html",
-              help="Specify the report type. html or junit, default is html.",)
+@click.option("--report", type=str, default="html,junit",
+              help="Specify the report type. html or junit, default is html,junit.",)
+@click.option("--reportlevel", type=str, default="case",
+              help="Specify the report level. case or scenario, default is case.",)
 def cli(
         job,
         work,
@@ -111,7 +113,8 @@ def cli(
         jobtimeout,
         workertimeout,
         force,
-        report
+        report,
+        reportlevel
 ):
     # 初始化信号变量
     # 捕捉信号，处理服务中断的情况
@@ -175,6 +178,7 @@ def cli(
         "workDirectory": workDirectory,
         "jobList": job,
         "reportType": report,
+        "reportLevel": reportlevel
     }
 
     # 运行回归测试

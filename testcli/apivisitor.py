@@ -756,6 +756,15 @@ class APIVisitor(APIParserVisitor):
                     elif seedDir.startswith("'") and seedDir.endswith("'"):
                         seedDir = seedDir[1:-1]
                     parsedObject.update({"seedDir": seedDir})
+            if ctx.DATA_HDFSUSER() is not None:
+                parsedObject.update({"option": "hdfsUser"})
+                if len(ctx.DATA_EXPRESSION()) != 0:
+                    hdfsUser = str(ctx.DATA_EXPRESSION()[0].getText()).strip()
+                    if hdfsUser.startswith('"') and hdfsUser.endswith('"'):
+                        hdfsUser = hdfsUser[1:-1]
+                    elif hdfsUser.startswith("'") and hdfsUser.endswith("'"):
+                        hdfsUser = hdfsUser[1:-1]
+                    parsedObject.update({"hdfsUser": hdfsUser})
 
         if ctx.DATA_CONVERT() is not None:
             parsedObject.update({"action": "convert"})
