@@ -2704,6 +2704,15 @@ SCENARIO表示生成报告的细粒度到测试场景层面；
 #####  --force
 控制是否强制清空工作目录。 如果制定了force，则运行前会强行清空工作目录下的所有文件（包括子目录）
 
+#### ROBOTOPTIONS环境变量
+用来在运行Robot的时候设置某些排除选项
+如：  
+```
+export ROBOTOPTIONS="--exclude DEMO --execlude TEST"
+testclirobot ....
+```
+该命令将排除所有TAG为DEMO以及TEST的测试
+
 #### Robot文件编写规则
 CliRobot中的文件使用RobotFrameWork的代码编写，具体RF的代码写作方法可以参考：https://robotframework.org/
 原则上，CliRobot中可以用不使用TestCli提供的Robot扩展，而作为Robot程序的调度使用，但是这样做将失去了CliRobot本身的作用。完全可以通过Robot自身命令行或者一些第三方插件来直接运行Robot程序，而不是必须依赖TestCli的Robot扩展。    

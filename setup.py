@@ -31,7 +31,7 @@ def open_file(filename):
 
 readme = open_file("testcli/docs/UserGuide.md")
 
-install_requires = ['JPype1', 'setproctitle', 'urllib3<1.27',
+install_requires = ['JPype1', 'setproctitle', 'urllib3',
                     'click', 'prompt_toolkit', 'paramiko', 'antlr4-python3-runtime==4.11.1',
                     'fs', "psutil", "glom", "hdfs",
                     "python-multipart", "pytest-xdist", "pytest", 'fastapi', 'uvicorn',

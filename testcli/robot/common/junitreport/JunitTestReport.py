@@ -195,6 +195,7 @@ class TestSuite(object):
             xml_element.set(key, str(value))
         xml_string = str(xmlEt.tostring(xml_element, encoding="utf-8").decode("utf-8"))
 
+        xml_string = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + xml_string
         return xml_string
 
 

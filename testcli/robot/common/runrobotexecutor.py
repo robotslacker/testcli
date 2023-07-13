@@ -120,8 +120,6 @@ def runRobotExecutor(args):
             "--loglevel", "INFO",
             "--log", "NONE",
             "--report", "NONE",
-            "--exclude", "sqlId:None",
-            "--exclude", "FILTERED",
             "--output", os.path.basename(workingDirectory) + ".xml",
             "--outputdir", workingDirectory,
             robotFile, ])

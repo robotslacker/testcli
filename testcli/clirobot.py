@@ -36,12 +36,19 @@ def runRegress(args, executorMonitor):
     logger.setLevel(logging.INFO)
     logger.addHandler(fileLogHandler)
 
+    # 如果环境变量中有ROBOTOPTIONS，则会利用这个参数
+    if "ROBOTOPTIONS" in os.environ:
+        robotOptions = os.environ["ROBOTOPTIONS"]
+    else:
+        robotOptions = None
+
     # 正式开始运行Case
     regressHandler = Regress(
         jobList=args["jobList"],
         testRoot=args["testRoot"],
         workDirectory=args["workDirectory"],
         maxProcess=args["maxProcess"],
+        robotOptions=robotOptions,
         scriptTimeout=args["scriptTimeout"],
         workerTimeout=args["workerTimeout"],
         logger=logger,

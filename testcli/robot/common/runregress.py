@@ -36,6 +36,7 @@ class Regress(object):
             workDirectory: str,
             testRoot: str,
             maxProcess=None,
+            robotOptions=None,
             logger=None,
             workerTimeout=-1,
             scriptTimeout=-1,
@@ -53,7 +54,7 @@ class Regress(object):
         self.startTime = time.time()
         self.jobName = None
         self.buildNumber = None
-        self.robotOptions = None
+        self.robotOptions = robotOptions
         if type(jobList) == list:
             self.jobList = jobList
         else:
@@ -97,6 +98,9 @@ class Regress(object):
         else:
             s = str(reportType).split(',')
             self.reportTypes = [i.upper().strip() for i in s if (i is not None) and (str(i).strip() != '')]
+        for s in self.reportTypes:
+            if s not in ["JUNIT", "HTML"]:
+                raise RegressException("Invalid reportType.  Only support JUNIT and HTML.")
 
         # 设置报告的展示级别（仅对Junit报告有意义）
         self.reportLevel = None
@@ -113,6 +117,14 @@ class Regress(object):
 
         htmlTestSuite = TestSuite()
 
+        # 对于测试运行中过滤掉的Case，也不会显示在html报告中
+        filteredTags = []
+        if self.robotOptions is not None:
+            robotOptionList = str(self.robotOptions).split()
+            for pos in range(0, len(robotOptionList)):
+                if robotOptionList[pos] == "--exclude" and pos < (len(robotOptionList) - 1):
+                    filteredTags.append(robotOptionList[pos+1])
+
         # 解析Robot文件，假设悲观原则，即所有测试都失败。失败了也要给测试报告
         robotSourceSuite = TestSuiteBuilder().build(robotTask["robotFile"])
         htmlTestSuite.setSuiteName(robotSourceSuite.name)
@@ -122,9 +134,11 @@ class Regress(object):
             htmlTestCase.setCaseName(testCase.name)
             htmlTestCase.setCaseStatus(TestCaseStatus.ERROR)
             testOwner = None
+            isFilteredCase = False
             for resultTestCaseTag in testCase.tags:
-                resultTestCaseTag = str(resultTestCaseTag.strip()).lower()
-                if resultTestCaseTag.startswith('owner:'):
+                if resultTestCaseTag in filteredTags:
+                    isFilteredCase = True
+                if str(resultTestCaseTag).lower().startswith('owner:'):
                     if testOwner is None:
                         testOwner = resultTestCaseTag[6:].strip()
                         testOwnerMap.update(
@@ -132,13 +146,14 @@ class Regress(object):
                                 testCase.name: testOwner
                             }
                         )
-            htmlTestCase.setCaseOwner(testOwner)
-            htmlTestCase.setCaseStartTime("____-__-__ __:__:__")
-            htmlTestCase.setCaseElapsedTime(0)
-            htmlTestCase.setErrorStackTrace("Not started.")
-            htmlTestCase.setDownloadURLLink("javascript:void(0)")
-            htmlTestCase.setDetailReportLink("javascript:void(0)")
-            htmlTestSuite.addTestCase(htmlTestCase)
+            if not isFilteredCase:
+                htmlTestCase.setCaseOwner(testOwner)
+                htmlTestCase.setCaseStartTime("____-__-__ __:__:__")
+                htmlTestCase.setCaseElapsedTime(0)
+                htmlTestCase.setErrorStackTrace("Not started.")
+                htmlTestCase.setDownloadURLLink("javascript:void(0)")
+                htmlTestCase.setDetailReportLink("javascript:void(0)")
+                htmlTestSuite.addTestCase(htmlTestCase)
 
         # 用正确的结果来更新测试报告
         xmlResultFile = \
@@ -439,7 +454,7 @@ class Regress(object):
                 htmlTestResult.setDescription("Max Processes : " + str(self.maxProcess) + '<br>')
                 htmlTestResult.robotOptions = self.robotOptions
 
-                self.logger.info("Processing test result under [" + self.workDirectory + "] ...")
+                self.logger.info("Processing test result under [" + str(self.workDirectory) + "] ...")
                 for task in self.taskList:
                     # 遍历所有的task清单
                     htmlTestResult.addSuite(self.generateRobotReport(robotTask=task))
@@ -592,6 +607,9 @@ class Regress(object):
             self.maxProcess = DEFAULT_Max_Process
             self.executorMonitor.update({"maxProcess": self.maxProcess})
         self.logger.info("Test parallelism :[" + str(self.maxProcess) + "].")
+
+        # 系统Robot运行选项
+        self.logger.info("robotOptions :[" + str(self.robotOptions) + "].")
 
         # 构造一个字典，用来标记每个子进程的名称，方便监控作业
         executorNameList = []
@@ -749,6 +767,7 @@ class Regress(object):
 
         self.logger.info("Totally [" + str(self.executorMonitor["taskCount"]) + "] in task TODO list ...")
 
+        self.logger.info("Start runner at [" + str(self.workDirectory) + "]...")
         # 按照运行级别来分别开始运行
         runLevels.sort()
         if len(runLevels) != 1:
