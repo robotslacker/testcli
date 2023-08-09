@@ -2,9 +2,13 @@
 import copy
 import os
 import re
+import  warnings
 from collections import namedtuple
 from ..common import rewriteStatement
 from ..htmldiff.diffhtmlgenerate import diffHtmlGenerate
+
+# 抑制在比对文件中出现的||,]]等的警告信息
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # 默认的比较选项
 compareDefaultOption = {

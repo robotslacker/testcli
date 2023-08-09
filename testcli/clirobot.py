@@ -194,7 +194,7 @@ def cli(
         args=(args, executorMonitor)
     )
     logger.info("Regress process started ...")
-    logger.info("Regress log will be rediected to [%s] ...",
+    logger.info("Regress log will forward to [%s] ...",
                 os.path.abspath(os.path.join(workDirectory, "runRegress.log")))
     process.start()
 
@@ -276,4 +276,4 @@ def cli(
 
 
 if __name__ == '__main__':
-    cli()
+   cli()

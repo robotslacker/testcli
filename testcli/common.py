@@ -2,6 +2,7 @@
 import copy
 import os
 import re
+import hashlib
 from .sqlparse import SQLFormatWithPrefix
 from .apiparse import APIRequestObjectFormatWithPrefix
 from .commands.assertExpression import evalExpression
@@ -274,7 +275,12 @@ def parseSQLHints(commandHints: list):
                 continue
             else:
                 # 如果只有一个内容， 规则是:Scenario:ScenarioName
-                commandHintList["ScenarioId"] = "N/A"
+                # 没有scenarioId，就给他编一个
+                md5 = hashlib.md5(senario.encode('utf-8')).hexdigest()
+                md5bytes = bytearray.fromhex(md5)
+                num = int.from_bytes(md5bytes, 'big')
+                scenarioId = 999000000 + num % 1000000
+                commandHintList["ScenarioId"] = str(scenarioId)
                 commandHintList["ScenarioName"] = senario
                 continue
 
@@ -338,7 +344,12 @@ def parseAPIHints(commandHints: list):
                 continue
             else:
                 # 如果只有一个内容， 规则是:Scenario:ScenarioName
-                commandHintList["ScenarioId"] = "N/A"
+                # 没有scenarioId，就给他编一个
+                md5 = hashlib.md5(senario.encode('utf-8')).hexdigest()
+                md5bytes = bytearray.fromhex(md5)
+                num = int.from_bytes(md5bytes, 'big')
+                scenarioId = 999000000 + num % 1000000
+                commandHintList["ScenarioId"] = str(scenarioId)
                 commandHintList["ScenarioName"] = senario
                 continue
 

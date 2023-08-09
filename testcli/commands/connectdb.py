@@ -106,7 +106,7 @@ def connectDb(cls, connectProperties, timeout: int = -1):
                 # 必须指定数据库驱动类型
                 yield {
                     "type": "error",
-                    "message": "Unknown database [" + str(connectProperties["driverSchema"]) + "]." +
+                    "message": "Unknown database [" + str(connectProperties["driverSchema"]) + "]. " +
                                "Connect Failed. Missed configuration in conf/testcli.ini."
                 }
                 return
@@ -127,7 +127,7 @@ def connectDb(cls, connectProperties, timeout: int = -1):
                 # 没有找到Jar包
                 yield {
                     "type": "error",
-                    "message": "Unknown database [" + str(connectProperties["driverSchema"]) + "]." +
+                    "message": "Unknown database [" + str(connectProperties["driverSchema"]) + "]. " +
                                "Connect Failed. Missed configuration in conf/testcli.ini."
                 }
                 return

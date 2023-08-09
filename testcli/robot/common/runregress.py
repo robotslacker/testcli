@@ -5,6 +5,7 @@ import os
 import logging
 import random
 import shutil
+import sqlite3
 import sys
 import time
 import datetime
@@ -26,7 +27,7 @@ from .junitreport.JunitTestReport import TestSuite as JunitTestSuite
 from .junitreport.JunitTestReport import TestCase as JunitTestCase
 
 # 默认的系统最大并发作业数
-DEFAULT_Max_Process = 3
+DEFAULT_MAX_PROCESS = 3
 
 
 class Regress(object):
@@ -65,6 +66,9 @@ class Regress(object):
             self.extraParameters = {}
         else:
             self.extraParameters = dict(extraParameters)
+
+        # 统计测试场景的数量
+        self.scenarioResult = {}
 
         # 进程日志
         if logger is not None:
@@ -390,7 +394,7 @@ class Regress(object):
                 for root, dirs, files in os.walk(os.path.join(self.workDirectory, subDir)):
                     for f in files:
                         if f.endswith(".xlog"):
-                            #
+                            # 读取xlog扩展文件
                             with open(file=os.path.join(root, f), mode="r", encoding="utf-8") as fp:
                                 xlogContent = json.load(fp)
                             jUnitTestCases = []
@@ -411,7 +415,7 @@ class Regress(object):
                                     caseElapsed = scenarioResult["Elapsed"]
                                 jUnitTestCase = JunitTestCase(
                                     name=scenarioName,
-                                    classname=f.replace("x.log", ""),
+                                    classname=f.replace(".xlog", ""),
                                     elapsed_sec=caseElapsed
                                 )
                                 if caseStatus == "failed":
@@ -451,7 +455,6 @@ class Regress(object):
 
                 htmlTestResult = TestResult()
                 htmlTestResult.setTitle("Test Report")
-                htmlTestResult.setDescription("Max Processes : " + str(self.maxProcess) + '<br>')
                 htmlTestResult.robotOptions = self.robotOptions
 
                 self.logger.info("Processing test result under [" + str(self.workDirectory) + "] ...")
@@ -547,6 +550,44 @@ class Regress(object):
                     testReport.append(testSuiteReport)
                 self.executorMonitor["testReport"] = testReport
 
+                # 统计测试场景的数量
+                subDirs = os.listdir(self.workDirectory)
+                for subDir in subDirs:
+                    if not os.path.isdir(os.path.join(self.workDirectory, subDir)):
+                        continue
+                    if not subDir.startswith("sub_"):
+                        continue
+                    # 开始处理subDir下的内容
+                    for root, dirs, files in os.walk(os.path.join(self.workDirectory, subDir)):
+                        for f in files:
+                            if f.endswith(".xdb"):
+                                # 读取xdb文件
+                                xlogFileHandle = sqlite3.connect(
+                                    database=os.path.join(root, f),
+                                    check_same_thread=False,
+                                )
+                                cursor = xlogFileHandle.cursor()
+                                cursor.execute(
+                                    "Select DISTINCT ScenarioId "
+                                    "From   TestCli_Xlog "
+                                    "Where  ScenarioId is not NULL And ScenarioId != ''")
+                                rows = cursor.fetchall()
+                                for row in rows:
+                                    if row[0] not in self.scenarioResult.keys():
+                                        # 暂时先不统计其他信息
+                                        self.scenarioResult[row[0]] = \
+                                            {
+                                                "caseStatus": "N/A",
+                                                "caseElapsed": 0
+                                            }
+                                xlogFileHandle.close()
+
+                # 更新描述信息
+                htmlTestResult.setDescription(
+                    "Max Processes   : " + str(self.maxProcess) + '<br>' +
+                    "Total Scenarios : " + str(len(self.scenarioResult)) + '<br>'
+                )
+
                 # 生成报告
                 htmlTestRunner = HTMLTestRunner(title="Test Report")
                 htmlTestRunner.generateReport(
@@ -604,7 +645,7 @@ class Regress(object):
 
         # 系统最大并发进程数
         if self.maxProcess is None:
-            self.maxProcess = DEFAULT_Max_Process
+            self.maxProcess = DEFAULT_MAX_PROCESS
             self.executorMonitor.update({"maxProcess": self.maxProcess})
         self.logger.info("Test parallelism :[" + str(self.maxProcess) + "].")
 
@@ -768,6 +809,7 @@ class Regress(object):
         self.logger.info("Totally [" + str(self.executorMonitor["taskCount"]) + "] in task TODO list ...")
 
         self.logger.info("Start runner at [" + str(self.workDirectory) + "]...")
+
         # 按照运行级别来分别开始运行
         runLevels.sort()
         if len(runLevels) != 1:

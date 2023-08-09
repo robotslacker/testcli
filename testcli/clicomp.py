@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import re
 import sys
 import click
 import platform
@@ -23,8 +24,7 @@ def abortSignalHandler(signum, frame):
 @click.option("--reference", type=str, required=True, help="Specify the log file for reference.",)
 @click.option("--logfile", type=str, required=True, help="Specify the log file for comparison.",)
 @click.option("--rule", type=str, help="Compare rule file.")
-@click.option("--output", type=str, default="CONSOLE", required=True,
-              help="Specify the result file. default is console.")
+@click.option("--output", type=str, default="CONSOLE", help="Specify the result file location. default is console.")
 @click.option("--outputformat", type=str, default="TXT", help="Specify the result output file format TXT|HTML|CONSOLE.")
 def cli(
         reference,
@@ -55,11 +55,15 @@ def cli(
     optionCompareWithMask = True           # 是否在比较中使用正则
     optionIgnoreEmptyLine = False          # 是否忽略空行
     optionIgnoreTailOrHeadBlank = False    # 是否忽略首尾空格
+    optionCompareAlgorithm = "MYERS"       # 默认的比较算法
     optionSkipLines = []                   # 需要忽略的比对信息
     optionMaskLines = {}                   # 需要掩码的比对信息
 
     ruleList = []
     if rule is not None:
+        if not os.path.exists(rule):
+            click.secho("Invalid compare rule file, file [" + str(rule) + "] does not exist!", err=True, fg="red")
+            sys.exit(255)
         with open(file=rule, mode="r", encoding="UTF-8") as fp:
             ruleList = fp.readlines()
     lineno = 1
@@ -98,6 +102,11 @@ def cli(
                         optionIgnoreTailOrHeadBlank = True
                     else:
                         optionIgnoreTailOrHeadBlank = False
+                if str(optionName) == "algorithm":
+                    if optionValue == "lcs":
+                        optionCompareAlgorithm = "LCS"
+                    if optionValue == "myers":
+                        optionCompareAlgorithm = "MYERS"
         if requestObject["action"] == "skip":
             optionSkipLines.append(requestObject["source"])
         if requestObject["action"] == "mask":
@@ -138,6 +147,7 @@ def cli(
             CompareWithMask=optionCompareWithMask,
             CompareIgnoreCase=optionCompareIgnoreCase,
             CompareIgnoreTailOrHeadBlank=optionIgnoreTailOrHeadBlank,
+            compareAlgorithm=optionCompareAlgorithm,
             CompareWorkEncoding='UTF-8',
             CompareRefEncoding='UTF-8'
         )
