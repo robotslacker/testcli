@@ -382,6 +382,9 @@ def connect(jclassname, url, driverArgs=None, jars=None, libs=None, timeoutLimit
             connecterJDBC = limit(jpype.java.sql.DriverManager.getConnection, timeoutLimit)
         else:
             connecterJDBC = jpype.java.sql.DriverManager.getConnection
+        if "TESTCLI_DEBUG" in os.environ:
+            print("[DEBUG] JDBC Connect URL =[" + str(url) + "]. ")
+            print("[DEBUG] JDBC Connect Prop=[" + str(driverArgs) + "]. ")
         jconn = connecterJDBC(url, *dargs)
     except SQLCliJDBCTimeOutException:
         raise SQLCliJDBCException("SQLCLI-0000:: Timeout expired. Abort this command.")

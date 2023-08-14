@@ -362,7 +362,7 @@ class POSIXCompare:
         # 输出两个信息
         # 1：  Compare的结果是否存在dif，True/False
         # 2:   Compare的Dif列表. 注意：LCS算法是一个翻转的列表. MYERS算法里头是一个正序列表
-        if compareAlgorithm == "MYERS":
+        if compareAlgorithm.upper() == "MYERS":
             (compareResult, compareResultList) = \
                 self.compareMyers(workFileContent, refFileContent,
                                   lineno1, lineno2,
@@ -625,7 +625,7 @@ def executeCompareRequest(cls, requestObject, commandScriptFile: str):
                 if "console" in compareOption["output"]:
                     # 如果要求输出到控制台，则显示比对结果到控制台上
                     for line in compareReport:
-                        if line.startswith("-") or line.startswith("+") or line.startswith("S"):
+                        if line.startswith("-") or line.startswith("+"):
                             tag = line[0]
                             workLineno = ""
                             refLineno = ""
@@ -633,8 +633,6 @@ def executeCompareRequest(cls, requestObject, commandScriptFile: str):
                                 workLineno = line[1:7]
                             if tag == "+":
                                 refLineno = line[1:7]
-                            if tag == "S":
-                                workLineno = line[1:7]
                             compareOutput.append([tag, workLineno, refLineno, line[8:]])
                 if "diffFile" in compareOption["output"]:
                     # 如果要求输出到文件，则将比对结果写入文件中

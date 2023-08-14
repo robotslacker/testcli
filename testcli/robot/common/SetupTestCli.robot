@@ -32,7 +32,7 @@ TestCli Test Setup
     Compare Break When Difference      True
 
     # 设置比较时使用的比较算法，有LCS和MYERS，MYERS在大数据量文件下具有明显优势
-    Compare Algorithm                  MKERS
+    Compare Algorithm                  MYERS
 
     # 比对参考文件的时候忽略空白行
     Compare Ignore EmptyLine           True

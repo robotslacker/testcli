@@ -227,19 +227,9 @@ def connectDb(cls, connectProperties, timeout: int = -1):
         if "TESTCLI_DEBUG" in os.environ:
             print('traceback.print_exc():\n%s' % traceback.print_exc())
             print('traceback.format_exc():\n%s' % traceback.format_exc())
-            print("db_sessionName = [" + str(cls.db_sessionName) + "]")
-            print("db_user = [" + str(connectProperties["username"]) + "]")
-            print("db_pass = [" + str(connectProperties["password"]) + "]")
-            print("db_driver = [" + str(connectProperties["driver"]) + "]")
-            print("db_driverSchema = [" + str(connectProperties["driverSchema"]) + "]")
-            print("db_driverType = [" + str(connectProperties["driverType"]) + "]")
-            print("db_host = [" + connectProperties["host"] + "]")
-            print("db_port = [" + str(connectProperties["port"]) + "]")
-            print("db_service = [" + str(connectProperties["service"]) + "]")
-            print("db_parameters = [" + str(connectProperties["parameters"]) + "]")
-            print("db_url = [" + str(cls.db_url) + "]")
+            print("[DEBUG] db_sessionName = [" + str(cls.db_sessionName) + "]")
             for jarfile in cls.db_connectionConf:
-                print("jar_file = " + str(jarfile) + "]")
+                print("[DEBUG] jar_file = " + str(jarfile) + "]")
         if str(e).find("SQLInvalidAuthorizationSpecException") != -1:
             yield {
                 "type": "error",
