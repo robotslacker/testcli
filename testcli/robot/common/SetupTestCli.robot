@@ -63,6 +63,8 @@ TestCli Test Setup
     Compare Skip                       SQL\> start .*
     #     Scneario                 过滤掉Scneario注释信息带来的差异
     Compare Skip                       .*\> --.*
+    #     过滤掉完全是表头的内容
+    Compare Skip                       ^[-|+]+$
 
     # Case运行在脚本所在的目录下，切换当前工作目录
     SetupRoot CD CurrentDirectory        ${SUITE SOURCE}

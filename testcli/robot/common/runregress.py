@@ -10,6 +10,9 @@ import sys
 import time
 import datetime
 import json
+import threading
+
+import psutil
 import robot.errors
 from robot.api import TestSuiteBuilder
 from robot.api import ExecutionResult
@@ -28,6 +31,8 @@ from .junitreport.JunitTestReport import TestCase as JunitTestCase
 
 # 默认的系统最大并发作业数
 DEFAULT_MAX_PROCESS = 3
+# 默认的系统最大报告汇总进程数量
+DEFAULT_MAX_REPORTER = int(psutil.cpu_count() / 2)
 
 
 class Regress(object):
@@ -80,6 +85,10 @@ class Regress(object):
         # 进程的监控信息
         self.executorMonitor = executorMonitor
 
+        # 生成报告的时候考虑并发，来提高生成效率。但是要控制线程冲突
+        self.semGenerateReport = threading.Semaphore(DEFAULT_MAX_REPORTER)
+        self.lockGenerateReport = threading.Lock()
+
         # 设置进程的超时时间
         if workerTimeout is None:
             if "TIMEOUT_WORKER" in os.environ:
@@ -115,202 +124,181 @@ class Regress(object):
 
     def generateRobotReport(
             self,
-            robotTask
+            robotTask,
+            htmlTestResult
     ):
-        self.logger.info("  Processing robot result file under [" + str(robotTask["workingDirectory"]) + "] ...")
+        with self.semGenerateReport:
+            # 不能有太多的并发来处理这个报告，避免CPU的过度消耗
+            self.logger.info("  Processing robot result file under [" + str(robotTask["workingDirectory"]) + "] ...")
 
-        htmlTestSuite = TestSuite()
+            htmlTestSuite = TestSuite()
+            # 对于测试运行中过滤掉的Case，也不会显示在html报告中
+            filteredTags = []
+            if self.robotOptions is not None:
+                robotOptionList = str(self.robotOptions).split()
+                for pos in range(0, len(robotOptionList)):
+                    if robotOptionList[pos] == "--exclude" and pos < (len(robotOptionList) - 1):
+                        filteredTags.append(robotOptionList[pos+1])
 
-        # 对于测试运行中过滤掉的Case，也不会显示在html报告中
-        filteredTags = []
-        if self.robotOptions is not None:
-            robotOptionList = str(self.robotOptions).split()
-            for pos in range(0, len(robotOptionList)):
-                if robotOptionList[pos] == "--exclude" and pos < (len(robotOptionList) - 1):
-                    filteredTags.append(robotOptionList[pos+1])
-
-        # 解析Robot文件，假设悲观原则，即所有测试都失败。失败了也要给测试报告
-        robotSourceSuite = TestSuiteBuilder().build(robotTask["robotFile"])
-        htmlTestSuite.setSuiteName(robotSourceSuite.name)
-        testOwnerMap = {}
-        for testCase in robotSourceSuite.tests:
-            htmlTestCase = TestCase()
-            htmlTestCase.setCaseName(testCase.name)
-            htmlTestCase.setCaseStatus(TestCaseStatus.ERROR)
-            testOwner = None
-            isFilteredCase = False
-            for resultTestCaseTag in testCase.tags:
-                if resultTestCaseTag in filteredTags:
-                    isFilteredCase = True
-                if str(resultTestCaseTag).lower().startswith('owner:'):
-                    if testOwner is None:
-                        testOwner = resultTestCaseTag[6:].strip()
-                        testOwnerMap.update(
-                            {
-                                testCase.name: testOwner
-                            }
-                        )
-            if not isFilteredCase:
-                htmlTestCase.setCaseOwner(testOwner)
-                htmlTestCase.setCaseStartTime("____-__-__ __:__:__")
-                htmlTestCase.setCaseElapsedTime(0)
-                htmlTestCase.setErrorStackTrace("Not started.")
-                htmlTestCase.setDownloadURLLink("javascript:void(0)")
-                htmlTestCase.setDetailReportLink("javascript:void(0)")
-                htmlTestSuite.addTestCase(htmlTestCase)
-
-        # 用正确的结果来更新测试报告
-        xmlResultFile = \
-            os.path.join(self.workDirectory,
-                         robotTask["workingDirectory"],
-                         os.path.basename(robotTask["workingDirectory"]) + ".xml")
-        if os.path.exists(xmlResultFile):
-            try:
-                self.logger.info("  Analyze report file [" + xmlResultFile + "] ....")
-                robotResults = ExecutionResult(xmlResultFile)
-            except robot.errors.DataError:
-                # 文件不完整，修正XML后重新运行
-                self.logger.error("Result file [" + str(xmlResultFile) + "] is incomplete xml file, fix it.")
-                with open(xmlResultFile, encoding="UTF-8", mode="r") as infile:
-                    fixed = str(RobotXMLSoupParser(infile, features='xml'))
-                with open(xmlResultFile, encoding="UTF-8", mode='w') as outfile:
-                    outfile.write(fixed)
-                try:
-                    robotResults = ExecutionResult(xmlResultFile)
-                except robot.errors.DataError:
-                    # 文件存在问题，还是无法解析
-                    self.logger.error("Result file [" + str(xmlResultFile) + "] is not a valid xml file, ignore it.")
-                    return
-
-            robotSuiteResultList = []
-            if len(robotResults.suite.suites) == 0:
-                robotSuiteResultList.append(robotResults.suite)
-            else:
-                for resultTestSuite in robotResults.suite.suites:
-                    robotSuiteResultList.append(resultTestSuite)
-            for robotSuiteResult in robotSuiteResultList:
-                for robotCaseResult in robotSuiteResult.tests:
-                    robotCaseFinished = True
-                    htmlTestCase = TestCase()
-                    htmlTestCase.setCaseName(robotCaseResult.name)
-
-                    # 获得测试的Owner
-                    if robotCaseResult.name in testOwnerMap.keys():
-                        testOwner = testOwnerMap[robotCaseResult.name]
-                    else:
-                        testOwner = "UNKNOWN"
+            # 解析Robot文件，假设悲观原则，即所有测试都失败。失败了也要给测试报告
+            robotSourceSuite = TestSuiteBuilder().build(robotTask["robotFile"])
+            htmlTestSuite.setSuiteName(robotSourceSuite.name)
+            testOwnerMap = {}
+            for testCase in robotSourceSuite.tests:
+                htmlTestCase = TestCase()
+                htmlTestCase.setCaseName(testCase.name)
+                htmlTestCase.setCaseStatus(TestCaseStatus.ERROR)
+                testOwner = None
+                isFilteredCase = False
+                for resultTestCaseTag in testCase.tags:
+                    if resultTestCaseTag in filteredTags:
+                        isFilteredCase = True
+                    if str(resultTestCaseTag).lower().startswith('owner:'):
+                        if testOwner is None:
+                            testOwner = resultTestCaseTag[6:].strip()
+                            testOwnerMap.update(
+                                {
+                                    testCase.name: testOwner
+                                }
+                            )
+                if not isFilteredCase:
                     htmlTestCase.setCaseOwner(testOwner)
-
-                    if robotCaseResult.status == "FAIL":
-                        htmlTestCase.setCaseStatus(
-                            TestCaseStatus.FAILURE)
-                    elif robotCaseResult.status == "PASS":
-                        htmlTestCase.setCaseStatus(
-                            TestCaseStatus.SUCCESS)
-                    else:
-                        htmlTestCase.setCaseStatus(
-                            TestCaseStatus.ERROR)
-                    if robotCaseResult.starttime is not None:
-                        startTime = datetime.datetime.strptime(robotCaseResult.starttime[:17], "%Y%m%d %H:%M:%S")
-                    else:
-                        # 不确定的test开始时间, 可能是由于Case没有运行完成，robot文件损坏
-                        # 这时将Robot的开始时间作为test的开始时间,并且标记测试为失败
-                        startTime = datetime.datetime.fromtimestamp(os.path.getctime(xmlResultFile))
-                        htmlTestCase.setCaseStatus(TestCaseStatus.ERROR)
-                        robotCaseFinished = False
-                    htmlTestCase.setCaseStartTime(
-                        startTime.strftime("%Y-%m-%d %H:%M:%S"))
-                    if robotCaseResult.endtime is not None:
-                        endTime = \
-                            datetime.datetime.strptime(
-                                robotCaseResult.endtime[:17], "%Y%m%d %H:%M:%S")
-                    else:
-                        # 如果无法得到test的结束时间，可能是由于Case没有运行完成，robot文件损坏
-                        # 这时将xml文件的最后修改时间，作为test的结束时间,并且标记测试为失败
-                        endTime = datetime.datetime.fromtimestamp(os.path.getmtime(xmlResultFile))
-                        htmlTestCase.setCaseStatus(TestCaseStatus.ERROR)
-                        robotCaseFinished = False
-                    htmlTestCase.setCaseElapsedTime(
-                        (endTime - startTime).seconds)
-                    if not robotCaseFinished:
-                        htmlTestCase.setErrorStackTrace("Fatal error， Test has been TIMEOUT terminated.")
-                    else:
-                        htmlTestCase.setErrorStackTrace(
-                            robotSuiteResult.message)
-                    subHtmlReportFile = \
-                        os.path.join(
-                            robotTask["workingDirectory"],
-                            os.path.basename(robotTask["workingDirectory"]) + ".html"
-                        )
-
-                    # 生成该测试的测试报告
-                    resultRebotArgs = []
-                    resultRebotArgs.extend(
-                        ["--tagstatexclude", "owner*"])
-                    resultRebotArgs.extend(
-                        ["--tagstatexclude", "feature*"])
-                    resultRebotArgs.extend(
-                        ["--tagstatexclude", "runLevel*"])
-                    resultRebotArgs.extend(
-                        ["--tagstatexclude", "priority*"])
-                    resultRebotArgs.extend(["--suitestatlevel", "2"])
-                    resultRebotArgs.extend(
-                        ["--outputdir", self.workDirectory])
-                    resultRebotArgs.extend(
-                        ["--logtitle", "Test Report-" + robotSuiteResult.name])
-                    resultRebotArgs.extend(
-                        ["--reporttitle", "Test Report-" + robotSuiteResult.name])
-                    resultRebotArgs.extend(
-                        ["--name", "Test Report-" + robotSuiteResult.name])
-                    resultRebotArgs.extend(["--log", subHtmlReportFile])
-                    resultRebotArgs.extend(["--report", "NONE"])
-                    resultRebotArgs.extend(["--output", "NONE"])
-                    resultRebotArgs.append("--nostatusrc")
-
-                    # 生成测试报告信息
-                    resultXmlList = [os.path.abspath(xmlResultFile)]
-                    resultRebotArgs.extend(resultXmlList)
-
-                    # 备份之前的输入输出和环境信息
-                    saved__Stdout = sys.__stdout__
-                    saved__Stderr = sys.__stderr__
-                    savedStdout = sys.stdout
-                    savedStderr = sys.stderr
-
-                    # 切换标准输入输出到指定的文件中
-                    stdoutFile = open(os.path.join(self.workDirectory, "report", "TestReport.stdout"), 'a+')
-                    stderrFile = open(os.path.join(self.workDirectory, "report", "TestReport.stderr"), 'a+')
-                    sys.__stdout__ = stdoutFile
-                    sys.__stderr__ = stderrFile
-                    sys.stdout = stdoutFile
-                    sys.stderr = stderrFile
-
-                    print("Execute Rebot_Cli: ")
-                    for arg in resultRebotArgs:
-                        print("    " + str(arg))
-                    rebot_cli(resultRebotArgs, exit=False)
-
-                    # 还原重定向的日志
-                    if savedStdout:
-                        sys.__stdout__ = saved__Stdout
-                    if saved__Stderr:
-                        sys.__stderr__ = saved__Stderr
-                    if savedStdout:
-                        sys.stdout = savedStdout
-                    if savedStderr:
-                        sys.stderr = savedStderr
-                    if stdoutFile:
-                        stdoutFile.close()
-                    if stderrFile:
-                        stderrFile.close()
-
-                    htmlTestCase.setDetailReportLink(robotTask["workingDirectory"] + ".html#" + robotCaseResult.id)
-                    htmlTestCase.setDownloadURLLink(robotTask["workingDirectory"] + ".tar")
+                    htmlTestCase.setCaseStartTime("____-__-__ __:__:__")
+                    htmlTestCase.setCaseElapsedTime(0)
+                    htmlTestCase.setErrorStackTrace("Not started.")
+                    htmlTestCase.setDownloadURLLink("javascript:void(0)")
+                    htmlTestCase.setDetailReportLink("javascript:void(0)")
                     htmlTestSuite.addTestCase(htmlTestCase)
 
-        # 汇总运行结果
-        htmlTestSuite.SummaryTestCase()
-        return htmlTestSuite
+            # 用正确的结果来更新测试报告
+            xmlResultFile = \
+                os.path.join(self.workDirectory,
+                             robotTask["workingDirectory"],
+                             os.path.basename(robotTask["workingDirectory"]) + ".xml")
+            if os.path.exists(xmlResultFile):
+                try:
+                    self.logger.info("  Analyze report file [" + xmlResultFile + "] ....")
+                    robotResults = ExecutionResult(xmlResultFile)
+                except robot.errors.DataError:
+                    # 文件不完整，修正XML后重新运行
+                    self.logger.error("Result file [" + str(xmlResultFile) + "] is incomplete xml file, fix it.")
+                    with open(xmlResultFile, encoding="UTF-8", mode="r") as infile:
+                        fixed = str(RobotXMLSoupParser(infile, features='xml'))
+                    with open(xmlResultFile, encoding="UTF-8", mode='w') as outfile:
+                        outfile.write(fixed)
+                    try:
+                        robotResults = ExecutionResult(xmlResultFile)
+                    except robot.errors.DataError:
+                        # 文件存在问题，还是无法解析
+                        self.logger.error("Result file [" + str(xmlResultFile) + "] is not valid xml file, ignore it.")
+                        return
+
+                robotSuiteResultList = []
+                if len(robotResults.suite.suites) == 0:
+                    robotSuiteResultList.append(robotResults.suite)
+                else:
+                    for resultTestSuite in robotResults.suite.suites:
+                        robotSuiteResultList.append(resultTestSuite)
+                for robotSuiteResult in robotSuiteResultList:
+                    for robotCaseResult in robotSuiteResult.tests:
+                        robotCaseFinished = True
+                        htmlTestCase = TestCase()
+                        htmlTestCase.setCaseName(robotCaseResult.name)
+
+                        # 获得测试的Owner
+                        if robotCaseResult.name in testOwnerMap.keys():
+                            testOwner = testOwnerMap[robotCaseResult.name]
+                        else:
+                            testOwner = "UNKNOWN"
+                        htmlTestCase.setCaseOwner(testOwner)
+
+                        if robotCaseResult.status == "FAIL":
+                            htmlTestCase.setCaseStatus(
+                                TestCaseStatus.FAILURE)
+                        elif robotCaseResult.status == "PASS":
+                            htmlTestCase.setCaseStatus(
+                                TestCaseStatus.SUCCESS)
+                        else:
+                            htmlTestCase.setCaseStatus(
+                                TestCaseStatus.ERROR)
+                        if robotCaseResult.starttime is not None:
+                            startTime = datetime.datetime.strptime(robotCaseResult.starttime[:17], "%Y%m%d %H:%M:%S")
+                        else:
+                            # 不确定的test开始时间, 可能是由于Case没有运行完成，robot文件损坏
+                            # 这时将Robot的开始时间作为test的开始时间,并且标记测试为失败
+                            startTime = datetime.datetime.fromtimestamp(os.path.getctime(xmlResultFile))
+                            htmlTestCase.setCaseStatus(TestCaseStatus.ERROR)
+                            robotCaseFinished = False
+                        htmlTestCase.setCaseStartTime(
+                            startTime.strftime("%Y-%m-%d %H:%M:%S"))
+                        if robotCaseResult.endtime is not None:
+                            endTime = \
+                                datetime.datetime.strptime(
+                                    robotCaseResult.endtime[:17], "%Y%m%d %H:%M:%S")
+                        else:
+                            # 如果无法得到test的结束时间，可能是由于Case没有运行完成，robot文件损坏
+                            # 这时将xml文件的最后修改时间，作为test的结束时间,并且标记测试为失败
+                            endTime = datetime.datetime.fromtimestamp(os.path.getmtime(xmlResultFile))
+                            htmlTestCase.setCaseStatus(TestCaseStatus.ERROR)
+                            robotCaseFinished = False
+                        htmlTestCase.setCaseElapsedTime(
+                            (endTime - startTime).seconds)
+                        if not robotCaseFinished:
+                            htmlTestCase.setErrorStackTrace("Fatal error， Test has been TIMEOUT terminated.")
+                        else:
+                            htmlTestCase.setErrorStackTrace(
+                                robotSuiteResult.message)
+                        subHtmlReportFile = \
+                            os.path.join(
+                                robotTask["workingDirectory"],
+                                os.path.basename(robotTask["workingDirectory"]) + ".html"
+                            )
+
+                        # 生成该测试的测试报告
+                        resultRebotArgs = []
+                        resultRebotArgs.extend(
+                            ["--tagstatexclude", "owner*"])
+                        resultRebotArgs.extend(
+                            ["--tagstatexclude", "feature*"])
+                        resultRebotArgs.extend(
+                            ["--tagstatexclude", "runLevel*"])
+                        resultRebotArgs.extend(
+                            ["--tagstatexclude", "priority*"])
+                        resultRebotArgs.extend(["--suitestatlevel", "2"])
+                        resultRebotArgs.extend(
+                            ["--outputdir", self.workDirectory])
+                        resultRebotArgs.extend(
+                            ["--logtitle", "Test Report-" + robotSuiteResult.name])
+                        resultRebotArgs.extend(
+                            ["--reporttitle", "Test Report-" + robotSuiteResult.name])
+                        resultRebotArgs.extend(
+                            ["--name", "Test Report-" + robotSuiteResult.name])
+                        resultRebotArgs.extend(["--log", subHtmlReportFile])
+                        resultRebotArgs.extend(["--report", "NONE"])
+                        resultRebotArgs.extend(["--output", "NONE"])
+                        resultRebotArgs.append("--nostatusrc")
+
+                        # 生成测试报告参数
+                        resultXmlList = [os.path.abspath(xmlResultFile)]
+                        resultRebotArgs.extend(resultXmlList)
+
+                        # 生成测试报告
+                        print("Execute Rebot_Cli: ")
+                        for arg in resultRebotArgs:
+                            print("    " + str(arg))
+                        rebot_cli(resultRebotArgs, exit=False)
+
+                        htmlTestCase.setDetailReportLink(robotTask["workingDirectory"] + ".html#" + robotCaseResult.id)
+                        htmlTestCase.setDownloadURLLink(robotTask["workingDirectory"] + ".tar")
+                        htmlTestSuite.addTestCase(htmlTestCase)
+
+            # 汇总运行结果
+            htmlTestSuite.SummaryTestCase()
+
+            # 更新引用中的信息
+            with self.lockGenerateReport:
+                # 合并报告的时候无法采用并发
+                htmlTestResult.addSuite(htmlTestSuite)
 
     # 测试报告预处理，生成扩展信息文件
     def generateJunitReport(self):
@@ -458,9 +446,32 @@ class Regress(object):
                 htmlTestResult.robotOptions = self.robotOptions
 
                 self.logger.info("Processing test result under [" + str(self.workDirectory) + "] ...")
+
+                # 备份之前的输入输出和环境信息
+                saved__Stdout = sys.__stdout__
+                saved__Stderr = sys.__stderr__
+                savedStdout = sys.stdout
+                savedStderr = sys.stderr
+
+                # 切换标准输入输出到指定的文件中
+                stdoutFile = open(os.path.join(self.workDirectory, "report", "TestReport.stdout"), 'a+')
+                stderrFile = open(os.path.join(self.workDirectory, "report", "TestReport.stderr"), 'a+')
+                sys.stdout = stdoutFile
+                sys.stderr = stderrFile
+                sys.__stdout__ = stdoutFile
+                sys.__stderr__ = stderrFile
+
+                # 分线程来统计报告
+                threads = []
                 for task in self.taskList:
-                    # 遍历所有的task清单
-                    htmlTestResult.addSuite(self.generateRobotReport(robotTask=task))
+                    t = threading.Thread(
+                        target=self.generateRobotReport,
+                        args=(task, htmlTestResult)
+                    )
+                    t.start()
+                    threads.append(t)
+                for t in threads:
+                    t.join()
 
                 # 汇总所有的子目录到一个统一的报表上
                 # 生成该测试的测试报告
@@ -496,38 +507,18 @@ class Regress(object):
                 else:
                     rebotArgs.extend(m_TestSubXmlList)
 
-                    # 备份之前的输入输出和环境信息
-                    saved__Stdout = sys.__stdout__
-                    saved__Stderr = sys.__stderr__
-                    savedStdout = sys.stdout
-                    savedStderr = sys.stderr
-
-                    # 切换标准输入输出到指定的文件中
-                    stdoutFile = open(os.path.join(reportFileDir, "TestReport.stdout"), 'a+')
-                    stderrFile = open(os.path.join(reportFileDir, "TestReport.stderr"), 'a+')
-                    sys.__stdout__ = stdoutFile
-                    sys.__stderr__ = stderrFile
-                    sys.stdout = stdoutFile
-                    sys.stderr = stderrFile
-
                     print("Execute Rebot_Cli: ")
                     for arg in rebotArgs:
                         print("    " + str(arg))
                     rebot_cli(rebotArgs, exit=False)
 
-                    # 还原重定向的日志
-                    if savedStdout:
-                        sys.__stdout__ = saved__Stdout
-                    if saved__Stderr:
-                        sys.__stderr__ = saved__Stderr
-                    if savedStdout:
-                        sys.stdout = savedStdout
-                    if savedStderr:
-                        sys.stderr = savedStderr
-                    if stdoutFile:
-                        stdoutFile.close()
-                    if stderrFile:
-                        stderrFile.close()
+                # 还原重定向的日志
+                sys.__stdout__ = saved__Stdout
+                sys.stdout = savedStdout
+                sys.__stderr__ = saved__Stderr
+                sys.stderr = savedStderr
+                stdoutFile.close()
+                stderrFile.close()
 
                 # 更新测试结果到共享区域
                 testReport = []
