@@ -167,13 +167,21 @@ def identity(p_arg):
 #   identity_name   自增序列号的名字
 #   stime   开始时间
 #     若stime写作current_timestamp, 则自增上从当前时间开始
-#   frmt    日期格式， 如%Y-%m-%d %H:%M:%S
+#   frmt    日期格式， 默认为%Y-%m-%d %H:%M:%S
 #   step    步长，可以用ms,us,s来表示，默认情况下是ms
 def identity_timestamp(p_arg):
-    identity_name = str(p_arg[0])
-    ptime = str(p_arg[1])
-    frmt = str(p_arg[2])
-    step = str(p_arg[3])
+    if len(p_arg) not in [3, 4]:
+        raise TestCliException("identity_timestamp need at least 2 arg, stime, [frmt,] step.")
+    if len(p_arg) == 4:
+        identity_name = str(p_arg[0])
+        ptime = str(p_arg[1])
+        frmt = str(p_arg[2])
+        step = str(p_arg[3])
+    else:
+        identity_name = str(p_arg[0])
+        ptime = str(p_arg[1])
+        frmt = "%Y-%m-%d %H:%M:%S"
+        step = str(p_arg[2])
     if not hasattr(identity_timestamp, 'x'):
         identity_timestamp.x = {}
     if identity_name not in identity_timestamp.x.keys():
@@ -203,23 +211,35 @@ def identity_timestamp(p_arg):
 
 
 # 缓存seed文件
-def load_seed_ache():
+def loadSeedCache(seedName: str):
     global seedFileDir
     global seedDataCache
 
-    if seedFileDir == "":
-        raise TestCliException("To generate random data from seed, Please make sure set seed data dir correct.")
-    files = os.listdir(seedFileDir)
-    for file in files:
-        if not file.endswith(".seed"):
-            continue
-        seed_name = os.path.basename(file)[:-5]  # 去掉.seed的后缀
-        with open(os.path.join(seedFileDir, file), mode='r', encoding="utf-8") as f:
-            seed_lines = f.readlines()
-        for pos in range(0, len(seed_lines)):
-            if seed_lines[pos].endswith("\n"):
-                seed_lines[pos] = seed_lines[pos][:-1]  # 去掉回车换行
-        seedDataCache[seed_name] = seed_lines
+    # 判断文件名
+    # 1. 当前目录的文件全名
+    # 2. 当前目录下省略了.seed后缀的文件名
+    # 3. 定义了seed目录下的文件全名
+    # 3. 定义了seed目录省略了.seed后缀的文件名
+    fpName = None
+    if os.path.exists(seedName):
+        fpName = seedName
+    elif os.path.exists(seedName + ".seed"):
+        fpName = seedName + ".seed"
+    if fpName is None and seedFileDir != "":
+        if os.path.exists(os.path.join(seedFileDir, seedName)):
+            fpName = os.path.join(seedFileDir, seedName)
+        elif os.path.exists(os.path.join(seedFileDir, seedName + ".seed")):
+            fpName = os.path.join(seedFileDir, seedName + ".seed")
+    if fpName is None:
+        raise TestCliException("Invalid seed [" + str(seedName) + "]. Seed file does not exist!")
+
+    # 加载文件
+    with open(fpName, mode='r', encoding="utf-8") as f:
+        seedLines = f.readlines()
+    for pos in range(0, len(seedLines)):
+        if seedLines[pos].endswith("\n"):
+            seedLines[pos] = seedLines[pos][:-1]  # 去掉回车换行
+    seedDataCache[seedName] = seedLines
 
 
 def random_from_seed(p_arg):
@@ -240,14 +260,14 @@ def random_from_seed(p_arg):
 
     # 如果还没有加载种子，就先尝试加载
     if seed_name not in seedDataCache:
-        load_seed_ache()
+        loadSeedCache(seed_name)
 
     # 在种子中查找需要的内容
     if seed_name in seedDataCache:
         n = len(seedDataCache[seed_name])
         if n == 0:
             # 空的Seed文件，可能是由于Seed文件刚刚创建，则尝试重新加载数据
-            load_seed_ache()
+            loadSeedCache(seed_name)
             n = len(seedDataCache[seed_name])
             if n == 0:
                 raise TestCliException("Seed cache is zero. [" + str(p_arg[0]) + "].")
@@ -263,26 +283,30 @@ def random_from_seed(p_arg):
 # 将传递的SQL字符串转换成一个带有函数指针的数组
 def parse_formula_str(p_formula_str):
     # 首先按照{}来把所有的函数定义分拆到数组中
+    # 如果一个描述带有函数描述信息，则必须用{}来包括
     m_row_struct = re.split('[{}]', p_formula_str)
     m_return_row_struct = []
 
     # 在分拆的数组中依次查找关键字，作为后续函数替换的需要
     for m_nRowPos in range(0, len(m_row_struct)):
+        m_call_out_struct = []
         if re.search('random_ascii_lowercase|random_ascii_uppercase|random_ascii_letters' +
                      '|random_digits|identity|identity_timestamp|random_ascii_letters_and_digits|random_from_seed' +
                      '|random_date|random_timestamp|random_time|random_boolean|'
                      'current_timestamp|current_unixtimestamp|value',
                      m_row_struct[m_nRowPos], re.IGNORECASE):
             m_function_struct = re.split(r'[(,)]', m_row_struct[m_nRowPos])
+
+            # 去掉函数描述中的首尾字符
+            m_function_struct = [s.strip() for s in m_function_struct]
+            # 去掉函数描述中的单引号信息
             for pos in range(0, len(m_function_struct)):
-                m_function_struct[pos] = m_function_struct[pos].strip()
                 if m_function_struct[pos].startswith("'"):
                     m_function_struct[pos] = m_function_struct[pos][1:]
                 if m_function_struct[pos].endswith("'"):
                     m_function_struct[pos] = m_function_struct[pos][0:-1]
             if len(m_function_struct[-1]) == 0:
                 m_function_struct.pop()
-            m_call_out_struct = []
             if m_function_struct[0].upper() == "RANDOM_ASCII_LOWERCASE":
                 m_call_out_struct.append(random_ascii_lowercase)
                 m_call_out_struct.append(m_function_struct[1:])
@@ -619,33 +643,47 @@ def parse_formula_str(p_formula_str):
                     raise TestCliException("Invalid pattern. Please use Value(:ColumnName).")
                 else:
                     column_name = m_function_struct[1:][0][1:]
-                # 检查列名是否已经定义
-                found = False
-                for row in m_return_row_struct:
-                    if isinstance(row, list):
-                        if row[2] == column_name.upper():
-                            found = True
-                            break
-                if not found:
-                    m_ValidColumn = ""
+                    # 检查列名是否已经定义
+                    found = False
                     for row in m_return_row_struct:
                         if isinstance(row, list):
-                            m_ValidColumn = m_ValidColumn + row[2] + "|"
-                    raise TestCliException("Invalid pattern. "
-                                           "Please make sure column [" + column_name + "] is valid.\n" +
-                                           "Valid Column=[" + m_ValidColumn + "]")
-                m_call_out_struct.append(None)
-                m_call_out_struct.append(column_name)
-                m_call_out_struct.append("VALUE")
-            else:
-                raise TestCliException("Invalid pattern. parse [" + m_row_struct[m_nRowPos] + "] failed. ")
+                            if row[2] == column_name.upper():
+                                found = True
+                                break
+                    if not found:
+                        m_ValidColumn = ""
+                        for row in m_return_row_struct:
+                            if isinstance(row, list):
+                                m_ValidColumn = m_ValidColumn + row[2] + "|"
+                        raise TestCliException("Invalid pattern. "
+                                               "Please make sure column [" + column_name + "] is valid.\n" +
+                                               "Valid Column=[" + m_ValidColumn + "]")
+                    m_call_out_struct.append(None)
+                    m_call_out_struct.append(column_name)
+                    m_call_out_struct.append("VALUE")
             m_return_row_struct.append(m_call_out_struct)
         else:
-            m_return_row_struct.append(m_row_struct[m_nRowPos])
+            match_obj = re.search(r"(.*):(.*)", m_row_struct[m_nRowPos])
+            if match_obj:
+                m_call_out_struct.append(str)
+                m_call_out_struct.append(match_obj.group(2))
+                m_call_out_struct.append("__NO_NAME__")
+                m_return_row_struct.append(m_call_out_struct)
+            else:
+                m_return_row_struct.append(m_row_struct[m_nRowPos])
     return m_return_row_struct
 
 
 def get_final_string(p_row_struct):
+    # row_struct分为3个部分（列表）或者一个部分（单值）
+    # 列表：
+    #   0.  函数指针
+    #   1.  函数参数
+    #   2： 类型
+    #       VALUE      表示这是一个对其他列值的引用
+    #       其他       表示将调用函数来计算该列
+    # 单值：
+    #   本身就是一个字符串，定义结果
     m_Result = ""
     m_Saved_ColumnData = {}
     for col in p_row_struct:
@@ -772,14 +810,17 @@ def createFile(p_filetype: str, p_filename, p_formula_str, p_rows, p_encoding='U
         fsHandler.open(fileName=p_filename, mode='w', encoding=p_encoding)
 
         m_row_struct = parse_formula_str(p_formula_str)
-        buf = []
-        for i in range(0, p_rows):
-            buf.append(get_final_string(m_row_struct) + '\n')
-            if len(buf) == 100000:  # 为了提高IO效率，每10W条写入文件一次
+        if p_rows == 1:
+            fsHandler.write(get_final_string(m_row_struct))
+        else:
+            buf = []
+            for i in range(0, p_rows):
+                buf.append(get_final_string(m_row_struct) + '\n')
+                if len(buf) == 100000:  # 为了提高IO效率，每10W条写入文件一次
+                    fsHandler.writeLines(buf)
+                    buf = []
+            if len(buf) != 0:
                 fsHandler.writeLines(buf)
-                buf = []
-        if len(buf) != 0:
-            fsHandler.writeLines(buf)
         fsHandler.close()
 
         # 重置identity的序列号，保证下次从开头开始
@@ -824,6 +865,7 @@ def convertFile(srcFileType: str, srcFileName: str, dstFileType: str, dstFileNam
 
 def executeDataRequest(cls, requestObject):
     global seedFileDir
+    global hdfsConnectedUser
 
     if requestObject["action"] == "set":
         if requestObject["option"] == "seedDir":

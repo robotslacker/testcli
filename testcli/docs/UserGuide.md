@@ -1788,8 +1788,8 @@ sessionContext是一个字典结果。
                                                如果一行内有多个identity，他们将分别自增
      {identity_timestamp(start_time,fmt,step)} 表示一个自增的时间戳
                                                起始数字为start_time，格式位fmt（可以省略，默认是%Y-%m-%d %H:%M:%S)，
-                                               每次自增长度为Step， Step的单位可以是s,ms,ns (默认为ms)
-                                               s: 秒 ;  ms: 毫秒； ns: 纳秒
+                                               每次自增长度为Step， Step的单位可以是s,ms,us (默认为ms)
+                                               s: 秒 ;  ms: 毫秒； us: 微妙
                                                如果一行内有多个identity，他们将分别自增
      {random_ascii_letters(length)}            表示一个随机的ascii字符串，可能大写，可能小写，最大长度为length
      {random_ascii_lowercase(length)}          表示一个随机的ascii字符串，只能是大写字母，最大长度为length
@@ -1806,6 +1806,7 @@ sessionContext是一个字典结果。
      {current_unixtimestamp()}                 unix时间戳格式表示的系统当前时间
      {column_name: macro()}                    一个带有列名的宏定义，其中macro()的写法参考前面的写法
      {value(:column_name)}                     根据列名，引用之前的一个定义
+     {column_name: value(expr)}                带有列名的一个定义                             
      {random_from_seed(seedname,length)}                  表示从seed文件中随机选取一个内容，并且最大长度限制在length, 此时seedname不要引号
      {random_from_seed(seedname,start_pos, length)}       表示从seed文件中随机选取一个内容，内容从start_pos开始(第一个位置为0)， 并且最大长度限制在length, 此时seedname不要引号
      使用random_from_seed需要用到seed文件，必须提前准备到$TestCli_HOME/data下，用来后续的随机函数  
