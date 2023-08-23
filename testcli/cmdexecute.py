@@ -346,6 +346,10 @@ class CmdExecute(object):
             # 如果Hint中存在LogFilter，则结果集中过滤指定的输出信息
             if "LogFilter" in commandHints.keys():
                 for logFilter in commandHints["LogFilter"]:
+                    if logFilter.strip().startswith("'") and logFilter.strip().endswith("'"):
+                        logFilter = logFilter.strip()
+                    if logFilter.strip().startswith("'") and logFilter.strip().endswith("'"):
+                        logFilter = logFilter.strip()
                     for item in rows[::-1]:
                         # 将所有列用空格分隔来合并为一行
                         combinedRow = ""
@@ -377,8 +381,16 @@ class CmdExecute(object):
                         for sqlMaskListString in commandHints["LogMask"]:
                             sqlMaskList = sqlMaskListString.split("=>")
                             if len(sqlMaskList) == 2:
-                                sqlMaskPattern = sqlMaskList[0]
-                                sqlMaskTarget = sqlMaskList[1]
+                                sqlMaskPattern = str(sqlMaskList[0])
+                                sqlMaskTarget = str(sqlMaskList[1])
+                                if sqlMaskPattern.strip().startswith("'") and sqlMaskPattern.strip().endswith("'"):
+                                    sqlMaskPattern = sqlMaskPattern.strip()
+                                if sqlMaskTarget.strip().startswith("'") and sqlMaskTarget.strip().endswith("'"):
+                                    sqlMaskTarget = sqlMaskTarget.strip()
+                                if sqlMaskPattern.strip().startswith('"') and sqlMaskPattern.strip().endswith('"'):
+                                    sqlMaskPattern = sqlMaskPattern.strip()
+                                if sqlMaskTarget.strip().startswith('"') and sqlMaskTarget.strip().endswith('"'):
+                                    sqlMaskTarget = sqlMaskTarget.strip()
                                 if "TESTCLI_DEBUG" in os.environ:
                                     print("[DEBUG] Will apply mask:" + output +
                                           " with " + sqlMaskPattern + "=>" + sqlMaskTarget)

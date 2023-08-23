@@ -108,8 +108,11 @@ def runRobotExecutor(args):
         os.chdir(os.path.dirname(robotFile))
 
         # 重置T_WORK到子目录下
-        os.environ['T_WORK'] = workingDirectory
-        os.environ['TEST_ROOT'] = args["testRoot"]
+        # 如果运行的外部环境已经强行设置了这两个变量，则不会考虑去覆盖
+        if 'T_WORK' not in os.environ:
+            os.environ['T_WORK'] = workingDirectory
+        if 'TEST_ROOT' not in os.environ:
+            os.environ['TEST_ROOT'] = args["testRoot"]
 
         # 拼接测试选项
         if robotOptions is None:
