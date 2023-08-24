@@ -2306,6 +2306,10 @@ class TestSynatx(unittest.TestCase):
             os.chmod(path, stat.S_IWRITE)
             os.unlink(path)
 
+        # TEST_ROOT设置可能会破坏单元测试，单元测试过程中先移除
+        if "TEST_ROOT" in os.environ:
+            os.environ.pop("TEST_ROOT")
+
         tempWorkDirectory = os.path.join(tempfile.gettempdir(), str(os.getpid()))
         if os.path.isdir(tempWorkDirectory):
             for file in os.listdir(tempWorkDirectory):

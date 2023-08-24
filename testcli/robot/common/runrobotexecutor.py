@@ -109,10 +109,16 @@ def runRobotExecutor(args):
 
         # 重置T_WORK到子目录下
         # 如果运行的外部环境已经强行设置了这两个变量，则不会考虑去覆盖
+        # 如果参数已经传递了，则直接使用参数中的变量
+        # 如果参数没有传递，则默认为当前目录
         if 'T_WORK' not in os.environ:
             os.environ['T_WORK'] = workingDirectory
         if 'TEST_ROOT' not in os.environ:
-            os.environ['TEST_ROOT'] = args["testRoot"]
+            if args["testRoot"] is not None:
+                os.environ['TEST_ROOT'] = args["testRoot"]
+            else:
+                # 当前目录的上一级目录，即robot目录
+                os.environ['TEST_ROOT'] = os.path.dirname(os.path.dirname(__file__))
 
         # 拼接测试选项
         if robotOptions is None:

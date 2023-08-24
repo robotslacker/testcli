@@ -2,6 +2,7 @@
 import os
 import sys
 import time
+import stat
 import shutil
 import click
 import platform
@@ -98,7 +99,10 @@ def runRegress(args, executorMonitor):
 
 
 @click.command()
-@click.option("--job", type=str, required=True, help="Specify robot job file or directory.",)
+@click.option("--job", type=str, required=False,
+              help="Specify robot job file or directory. Separated by commas, if multiple files are included.",)
+@click.option("--jobgroup", type=str, required=False,
+              help="Specify robot job list file. Each line represents a file.",)
 @click.option("--work", type=str, required=True,
               help="Specify the work directory(ALL FILES IN THIS DIRECTORY WILL BE CLEANED).",)
 @click.option("--parallel", type=int, default=1,
@@ -115,6 +119,7 @@ def runRegress(args, executorMonitor):
               help="Specify the report level. case or scenario, default is case.",)
 def cli(
         job,
+        jobgroup,
         work,
         parallel,
         jobtimeout,
@@ -148,6 +153,21 @@ def cli(
         isatty=True
     )
 
+    # JOB和jobGroup参数至少定义一个
+    jobList = []
+    if job is None and jobgroup is None:
+        logger.error("Failed, parameter missed. job and jobgroup define at least one.")
+        sys.exit(255)
+    if jobgroup is not None:
+        if not os.path.isfile(jobgroup):
+            logger.error("Job failed. job group must be a valid text file.")
+            sys.exit(255)
+        with open(file=jobgroup, mode="r", encoding="utf-8") as fp:
+            jobList.extend(fp.readlines())
+    if job is not None:
+        jobList.extend(str(job).split(','))
+    jobList = [s.strip() for s in jobList if s is not None and s.strip() != ""]
+
     # 设置程序运行的目录
     if not os.path.isdir(work):
         logger.error("Work directory [" + os.path.abspath(work) + "] does not exist or invalid.")
@@ -165,7 +185,14 @@ def cli(
         for file in files:
             filePath = os.path.join(workDirectory, file)
             if os.path.isdir(filePath):
-                shutil.rmtree(path=filePath, ignore_errors=True)
+                if platform.system().upper() in ["LINUX", "DARWIN"]:
+                    shutil.rmtree(filePath)
+                else:
+                    # 删除只读文件，解决Windows的PermissionError问题
+                    def on_rm_error(func, path, _):
+                        os.chmod(path, stat.S_IWRITE)
+                        func(path)
+                    shutil.rmtree(path=filePath, onerror=on_rm_error)
             else:
                 os.remove(filePath)
 
@@ -183,7 +210,7 @@ def cli(
         "workerTimeout": workertimeout,
         "testRoot": os.path.join(os.path.dirname(__file__), "robot"),
         "workDirectory": workDirectory,
-        "jobList": job,
+        "jobList": jobList,
         "reportType": report,
         "reportLevel": reportlevel
     }

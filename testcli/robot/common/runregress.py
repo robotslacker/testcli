@@ -40,7 +40,7 @@ class Regress(object):
             self,
             jobList,
             workDirectory: str,
-            testRoot: str,
+            testRoot=None,
             maxProcess=None,
             robotOptions=None,
             logger=None,
