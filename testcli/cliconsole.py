@@ -21,31 +21,33 @@ def abortSignalHandler(signum, frame):
 
 
 @click.command()
-@click.option("--version", is_flag=True, help="Show TestCli version.")
 @click.option("--logon", type=str, help="SQL logon user name and password. user/pass",)
-@click.option("--logfile", type=str, help="Log every command and its results to file.",)
+@click.option("--namespace", type=str, help="Command default name space(SQL|API). Default is depend on file suffix.")
 @click.option("--execute", type=str, help="Execute command script.")
-@click.option("--commandmap", type=str, help="Command mapping file.")
-@click.option("--nologo", is_flag=True, help="Execute with no-logo mode.")
-@click.option("--xlog", type=str, help="Save command extended log.")
+@click.option("--reference", type=str, help="Test result reference.")
+@click.option("--logfile", type=str, help="Log every command and its results to file.",)
 @click.option("--xlogoverwrite", is_flag=True, help="Overwrite extended log if old file exists. Default is false.")
+@click.option("--xlog", type=str, help="Save command extended log.")
+@click.option("--commandmap", type=str, help="Command mapping file.")
+@click.option("--profile", type=str, help="Startup profile. Default is none.")
 @click.option("--clientcharset", type=str, help="Set client charset. Default is UTF-8.")
 @click.option("--resultcharset", type=str, help="Set result charset. Default is same to clientCharset.")
-@click.option("--profile", type=str, help="Startup profile. Default is none.")
 @click.option("--scripttimeout", type=int, help="Script timeout(seconds). Default is -1, means no limit.")
-@click.option("--namespace", type=str, help="Command default name space(SQL|API). Default is depend on file suffix.")
-@click.option("--selftest", is_flag=True, help="Run self test and exit.")
 @click.option("--suitename", type=str, help="Test suite name.")
 @click.option("--casename", type=str, help="Test case name.")
 @click.option("--silent", is_flag=True, help="Run script in silent mode, no console output. Default is false.")
 @click.option("--daemon", is_flag=True, help="Run script in daemon mode. Default is false.")
-@click.option("--pidfile", type=str, help="Set pid file path and filename. Default is no pid control.")
 @click.option("--debug", is_flag=True, help="Run in debug mode. Default is False.")
+@click.option("--pidfile", type=str, help="Set pid file path and filename. Default is no pid control.")
+@click.option("--selftest", is_flag=True, help="Run self test and exit.")
+@click.option("--version", is_flag=True, help="Show TestCli version.")
+@click.option("--nologo", is_flag=True, help="Execute with no-logo mode.")
 def cli(
         version,
         logon,
         logfile,
         execute,
+        reference,
         commandmap,
         nologo,
         xlog,
@@ -173,6 +175,7 @@ def cli(
             logfilename=logfile,
             logon=logon,
             script=execute,
+            referenceFile=reference,
             commandMap=commandmap,
             nologo=nologo,
             xlog=xlog,

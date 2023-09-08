@@ -338,9 +338,13 @@ class POSIXCompare:
                     if len(m_SQLMask) == 2:
                         m_SQLMaskPattern = m_SQLMask[0]
                         m_SQLMaskTarget = m_SQLMask[1]
-                        if re.search(m_SQLMaskPattern, refFileContent[m_nPos], re.IGNORECASE) is not None:
-                            refFileContent[m_nPos] = \
-                                re.sub(m_SQLMaskPattern, m_SQLMaskTarget, refFileContent[m_nPos], flags=re.IGNORECASE)
+                        try:
+                            if re.search(m_SQLMaskPattern, refFileContent[m_nPos], re.IGNORECASE) is not None:
+                                refFileContent[m_nPos] = \
+                                    re.sub(m_SQLMaskPattern, m_SQLMaskTarget, refFileContent[m_nPos],
+                                           flags=re.IGNORECASE)
+                        except re.error as rex:
+                            print("LogMask Hint Error, rex =>: [" + str(m_SQLMaskPattern) + "::" + str(rex) + "]")
                     else:
                         print("LogMask Hint Error, missed =>: [" + pattern + "]")
                 m_nPos = m_nPos + 1
@@ -351,9 +355,13 @@ class POSIXCompare:
                     if len(m_SQLMask) == 2:
                         m_SQLMaskPattern = m_SQLMask[0]
                         m_SQLMaskTarget = m_SQLMask[1]
-                        if re.search(m_SQLMaskPattern, workFileContent[m_nPos], re.IGNORECASE) is not None:
-                            workFileContent[m_nPos] = \
-                                re.sub(m_SQLMaskPattern, m_SQLMaskTarget, workFileContent[m_nPos], flags=re.IGNORECASE)
+                        try:
+                            if re.search(m_SQLMaskPattern, workFileContent[m_nPos], re.IGNORECASE) is not None:
+                                workFileContent[m_nPos] = \
+                                    re.sub(m_SQLMaskPattern, m_SQLMaskTarget, workFileContent[m_nPos],
+                                           flags=re.IGNORECASE)
+                        except re.error as rex:
+                            print("LogMask Hint Error, rex =>: [" + str(m_SQLMaskPattern) + "::" + str(rex) + "]")
                     else:
                         print("LogMask Hint Error, missed =>: [" + pattern + "]")
                 m_nPos = m_nPos + 1

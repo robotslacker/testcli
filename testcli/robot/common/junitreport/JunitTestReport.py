@@ -296,17 +296,3 @@ class TestCase(object):
     def is_skipped(self):
         """returns true if this test case has been skipped"""
         return len(self.skipped) > 0
-
-
-if __name__ == '__main__':
-    xx = TestCase(
-        name='Test1',
-        classname='some.class.name',
-        elapsed_sec=0,
-        stdout='I am stdout!',
-        stderr='I am stderr!')
-    xx.add_failure_info(message="abcd\r\ndexfg中国人民解放军")
-    test_cases = [xx]
-    ts = TestSuite("my test suite", test_cases)
-    # pretty printing is on by default but can be disabled using prettyprint=False
-    print(TestSuite.to_xml_string([ts]))

@@ -1044,17 +1044,20 @@ class JOBManager(object):
                                 )
                                 m_args["xlog"] = xlogRelPath
                             if self.getProcessContextInfo("logfilename") is not None:
-                                m_logfilename = os.path.join(
-                                    os.path.dirname(self.getProcessContextInfo("logfilename")),
+                                logFileDir = os.path.join(
+                                    self.getProcessContextInfo("processPwd"),
+                                    os.path.dirname(self.getProcessContextInfo("logfilename")))
+                                logFileName = os.path.join(
+                                    logFileDir,
                                     m_Job.getScript().split('.')[0] + "_" + str(m_Job.getJobName()) +
                                     str(m_JOB_Sequence+1) + "-" + str(m_WorkerStarter) + ".log")
                             else:
-                                m_logfilename = \
+                                logFileName = \
                                     m_Job.getScript().split('.')[0] + "_" + \
                                     str(m_Job.getJobName()) + "-" + \
                                     str(m_JOB_Sequence+1) + "-" + \
                                     str(m_WorkerStarter) + ".log"
-                            m_args["logfilename"] = m_logfilename
+                            m_args["logfilename"] = logFileName
                             # jpype无法运行在fork机制下的子进程中，linux默认为fork机制，所以这里要强制为spawn
                             # fork模式下，子进程会继承父进程的一些信息
                             # spawn模式下，子进程为全新进程

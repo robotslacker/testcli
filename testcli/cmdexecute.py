@@ -1410,6 +1410,10 @@ class CmdExecute(object):
             endTime = time.time()
             lastCommandResult["elapsed"] = endTime - startTime
 
+            # 如果指定了reference文件，要判断是否符合reference的结果
+            # if self.cliHandler.referenceFile is not None:
+            #     print("check reference ...")
+
             # 记录命令的日志信息
             if self.testOptions.get("SILENT").upper() == 'OFF':
                 if parseObject["name"] == "START":

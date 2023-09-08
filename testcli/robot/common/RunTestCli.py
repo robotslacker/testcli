@@ -243,7 +243,7 @@ class RunTestCli(object):
                           xlogoverwrite=False,
                           suitename=m_SuiteName,
                           casename=m_TestName)
-            logger.info('<b>===== Start TestCli [' + str(cli.Version) +
+            logger.info('<b>===== Start TestCli [' + str(cli.version) +
                         '] with script</b> [' + str(scriptFileName) + '] ', html=True)
             if not self.__EnableConsoleOutPut:
                 logger.info('  ... suppressed testcli console output ...')

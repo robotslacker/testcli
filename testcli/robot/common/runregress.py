@@ -822,6 +822,9 @@ class Regress(object):
                                 # close函数只有Python3.8才开始支持
                                 executor["Process"].close()
                             runningJobs = self.executorMonitor["runningJobs"]
+                            self.logger.info("End the robot test [" +
+                                             runningJobs[executor["executorName"]]["workingDirectory"] + ":" +
+                                             str(runningJobs[executor["executorName"]]["script"] + "]"))
                             del runningJobs[executor["executorName"]]
                             self.executorMonitor["runningJobs"] = copy.copy(runningJobs)
                             self.executorMonitor.update({"taskLeft": self.executorMonitor["taskLeft"] - 1})
@@ -849,6 +852,7 @@ class Regress(object):
                 }
                 process = processManagerContext.Process(
                     target=runRobotExecutor,
+                    name="TestCliRobot: " + str(args["workingDirectory"]),
                     args=(args,)
                 )
                 process.start()
@@ -882,6 +886,9 @@ class Regress(object):
                     if not executor["Process"].is_alive():
                         # 进程已经结束，记录进程运行结果
                         runningJobs = self.executorMonitor["runningJobs"]
+                        self.logger.info("End the robot test [" +
+                                         runningJobs[executor["executorName"]]["workingDirectory"] + ":" +
+                                         str(runningJobs[executor["executorName"]]["script"] + "]"))
                         del runningJobs[executor["executorName"]]
                         self.executorMonitor["runningJobs"] = copy.copy(runningJobs)
                         self.executorMonitor.update({"taskLeft": self.executorMonitor["taskLeft"] - 1})

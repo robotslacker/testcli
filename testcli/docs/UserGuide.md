@@ -2137,11 +2137,11 @@ create可以有多个参数：
 参数1：     JOB的名称  
 参数2-..:   JOB的各种参数，要求成对出现 ParameterName  ParameterValue
 ```
-SQL> _JOB job create jobtest;
+SQL> _JOB create jobtest;
 JOB [jobtest] create successful.
-SQL> _JOB job create jobtest2 loop=4;
+SQL> _JOB create jobtest2 loop=4;
 JOB [jobtest2] create successful.
-SQL> _JOB job create jobtest3 loop=4 parallel=2;
+SQL> _JOB create jobtest3 loop=4 parallel=2;
 JOB [jobtest3] create successful.
 
 ```
@@ -2163,11 +2163,11 @@ think_time               ：  每一次作业完成后，启动下一个作业�
 blowout_threshold_count  ：  完全失败阈值，若失败次数已经达到该次数，认为后续作业已经没必要运行。默认是0，即不限制   
 tag                      ：  程序组标识，所有具有相同tag的Worker进程在判断聚合点的时候将保持同步
 例子： 
-SQL> _JOB job set jobtest script=bb.sql parallel=2;
+SQL> _JOB set jobtest script=bb.sql parallel=2;
 JOB [jobtest] set successful.
-SQL> _JOB job set jobtest script=bb.sql loop 4;
+SQL> _JOB set jobtest script=bb.sql loop 4;
 JOB [jobtest] set successful.
-SQL> _JOB job set jobtest script=bb.sql;
+SQL> _JOB set jobtest script=bb.sql;
 JOB [jobtest] set successful.
 SQL>
 ```
@@ -2176,7 +2176,7 @@ SQL>
 通过show可以查看我们之前提交情况，脚本的运行情况，运行的开始时间，运行的结束时间，当前正在运行的SQL等。
 ```
 SQL> -- 查看JOB整体情况
-SQL> _JOB job show all;
+SQL> _JOB show all;
 +----------+-----------+-------------+-------------+---------------+---------------------+------------+----------+
 | job_name | status    | active_jobs | failed_jobs | finished_jobs | submit_time         | start_time | end_time |
 +----------+-----------+-------------+-------------+---------------+---------------------+------------+----------+
@@ -2186,7 +2186,7 @@ Total 1 Jobs.
 这里可以看到目前1个脚本已经提交.
 
 SQL> -- 查看JOB具体情况 
-SQL> _JOB job show jobtest;
+SQL> _JOB show jobtest;
 JOB_Name = [jobtest     ]; ID = [   3]; Status = [Submitted          ]
 ActiveJobs/FailedJobs/FinishedJobs: [         0/         0/         0]
 Submit Time: [2020-12-02 11:00:41                                    ]

@@ -69,6 +69,10 @@ def runRobotExecutor(args):
     oldDirectory = os.getcwd()
 
     try:
+        # 设置进程的名称，来标记当前运行的脚本
+        import setproctitle
+        setproctitle.setproctitle('TestCliRobot: ' + str(args["workingDirectory"]))
+
         # 建立工作目录
         workingDirectory = args["workingDirectory"]
         os.makedirs(workingDirectory, exist_ok=True)

@@ -218,7 +218,8 @@ def connectDb(cls, connectProperties, timeout: int = -1):
         else:
             yield {
                 "type": "error",
-                "message": "Current driver [" + str(connectProperties["driver"]) + "] is not supported."
+                "message": "Invalid protocol [" + str(connectProperties["driver"]) +
+                           "]. Currently, JDBC is the only supported option."
             }
             return
     except TestCliException as se:  # Connecting to a database fail.

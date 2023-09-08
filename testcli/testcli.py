@@ -60,7 +60,8 @@ class TestCli(object):
             logon=None,                             # 默认登录信息，None表示不需要
             logfilename=None,                       # 程序输出文件名，None表示不需要
             script=None,                            # 脚本文件名，None表示命令行模式
-            commandMap=None,                        # SQL映射文件名，None表示不存在
+            referenceFile=None,                     # 脚本运行参考日志文件，用来校验数据是否正确
+            commandMap=None,                        # 脚本变量映射文件名，None表示不存在
             nologo=False,                           # 是否不打印登陆时的Logo信息，True的时候不打印
             breakWithError=False,                   # 遇到命令行错误，是否中断脚本后续执行，立刻退出
             breakErrorCode=255,                     # 遇到命令行错误时候的退出代码
@@ -78,7 +79,7 @@ class TestCli(object):
             casename=None,                          # 程序所在的CaseName
             namespace=None,                         # 程序的默认命名空间
     ):
-        self.Version = __version__                      # 当前程序版本
+        self.version = __version__                      # 当前程序版本
 
         self.db_saved_conn = {}                         # 数据库Session对象，可能存在多个Session，并存在切换需要
         self.api_saved_conn = {}                        # HTTP请求Session对象，可能存在多个Session，并存在切换需要
@@ -89,7 +90,7 @@ class TestCli(object):
 
         self.testOptions = TestOptions()                # 程序运行中各种参数
         self.JobHandler = JOBManager()                  # 并发任务管理器
-        self.MetaHandler = TestCliMeta()                # SQLCli元数据
+        self.MetaHandler = TestCliMeta()                # TestCli元数据
         self.SpoolFileHandler = []                      # Spool文件句柄, 是一个数组，可能发生嵌套
         self.EchoFileHandler = None                     # 当前回显文件句柄
         self.appOptions = None                          # 应用程序的配置参数
@@ -117,6 +118,10 @@ class TestCli(object):
         self.db_service = None                          # 数据库连接服务
         self.db_parameters = None                       # 数据库连接额外参数
 
+        # 参考日志信息
+        self.referenceFile = referenceFile              # 参考日志名称
+        self.reference = {}                             # 参考日志解析信息
+
         # 当前Http请求的信息
         self.httpSessionName = "DEFAULT"                # 当前Http会话的名称
 
@@ -133,7 +138,7 @@ class TestCli(object):
         if not sys.stderr.isatty():
             sys.stderr = open(os.devnull, mode="w")
 
-        # NLS处理，设置字符集
+        # 多语言集处理，设置字符集
         if clientCharset is not None:                   # 客户端脚本字符集
             self.testOptions.set("SCRIPT_ENCODING", clientCharset)
             self.testOptions.set("RESULT_ENCODING", resultCharset)
@@ -279,6 +284,62 @@ class TestCli(object):
         self.appOptions.set("driver", "h2mem", "h2_memdriver")
         self.appOptions.set("driver", "h2tcp", "h2_tcpdriver")
 
+        # 加载referenceFile文件
+        if self.referenceFile is not None:
+            if not os.path.isfile(self.referenceFile):
+                raise TestCliException("Reference file [" + self.referenceFile + "] does not exist!")
+            with open(file=self.referenceFile, mode="r", encoding="utf-8") as fp:
+                referenceLines = fp.readlines()
+            currentScenarioId = "__init__"
+            currentScenarioContents = []
+            linepos = 0
+            for reference in referenceLines:
+                linepos = linepos + 1
+                matchObj1 = re.search(r"--(\s+)?\[Hint](\s+)?Scenario:(.*)", reference,
+                                      re.IGNORECASE | re.DOTALL)
+                matchObj2 = re.search(r"--(\s+)?\[(\s+)?Scenario:(.*)]", reference,
+                                      re.IGNORECASE | re.DOTALL)
+                if matchObj1 or matchObj2:
+                    if matchObj1:
+                        senarioInfo = matchObj1.group(3).strip()
+                    else:
+                        senarioInfo = matchObj2.group(3).strip()
+                    if len(senarioInfo.split(':')) >= 2:
+                        scenarioId = senarioInfo.split(':')[0].strip()
+                    else:
+                        scenarioId = senarioInfo.split(':')[0].strip()
+                    if scenarioId.lower() == "end":
+                        # 测试场景已经结束
+                        currentScenarioContents.append(reference.strip())
+                        self.reference.update(
+                            {
+                                currentScenarioId: currentScenarioContents
+                            }
+                        )
+                        currentScenarioId = "__Line__" + str(linepos)
+                        currentScenarioContents = []
+                        continue
+                    if currentScenarioId != scenarioId:
+                        # 测试场景已经结束
+                        self.reference.update(
+                            {
+                                currentScenarioId: currentScenarioContents
+                            }
+                        )
+                        currentScenarioId = scenarioId
+                        currentScenarioContents = [reference.strip()]
+                        continue
+
+                currentScenarioContents.append(reference.strip())
+
+            # 最后一个测试场景
+            if currentScenarioId is not None:
+                self.reference.update(
+                    {
+                        currentScenarioId: currentScenarioContents
+                    }
+                )
+
         # 打开输出日志, 如果打开失败，就直接退出
         try:
             if self.logfilename is not None:
@@ -288,7 +349,7 @@ class TestCli(object):
             if "TESTCLI_DEBUG" in os.environ:
                 print('traceback.print_exc():\n%s' % traceback.print_exc())
                 print('traceback.format_exc():\n%s' % traceback.format_exc())
-            raise TestCliException("Can not open logfile for write [" + self.logfilename + "]")
+            raise TestCliException("Can not open logfile for write [" + self.logfilename + "]" + os.getcwd())
 
         # 如果要求打开扩展日志，则打开扩展日志
         if self.xlogFile is not None:
@@ -474,7 +535,7 @@ class TestCli(object):
             while True:
                 try:
                     bottomToolbar = HTML('<b><style bg="ansired">' + saxutils.escape(
-                                            'Version: ' + self.Version + ' | ' +
+                                            'Version: ' + self.version + ' | ' +
                                             (
                                                 "Not Connected." if self.db_conn is None
                                                 else "Connected with " + self.db_username + "/******@" + self.db_url
