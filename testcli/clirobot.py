@@ -100,9 +100,9 @@ def runRegress(args, executorMonitor):
 
 @click.command()
 @click.option("--job", type=str, required=False,
-              help="Specify robot job file or directory. Separated by commas, if multiple files are included.",)
+              help="Specify robot(python) job file or directory. Separated by commas, if multiple files are included.",)
 @click.option("--jobgroup", type=str, required=False,
-              help="Specify robot job list file. Each line represents a file.",)
+              help="Specify robot(python) job list file. Each line represents a file.",)
 @click.option("--work", type=str, required=True,
               help="Specify the work directory(ALL FILES IN THIS DIRECTORY WILL BE CLEANED).",)
 @click.option("--parallel", type=int, default=1,

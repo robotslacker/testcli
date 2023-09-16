@@ -77,6 +77,9 @@ def runRobotExecutor(args):
         workingDirectory = args["workingDirectory"]
         os.makedirs(workingDirectory, exist_ok=True)
 
+        # 重置T_WORK到子目录下
+        os.environ['T_WORK'] = workingDirectory
+
         # 初始化进程日志
         LOG_FORMAT = "%(asctime)s - %(levelname)9s - %(message)s"
         logFormat = logging.Formatter(LOG_FORMAT)
@@ -115,13 +118,12 @@ def runRobotExecutor(args):
         # 如果运行的外部环境已经强行设置了这两个变量，则不会考虑去覆盖
         # 如果参数已经传递了，则直接使用参数中的变量
         # 如果参数没有传递，则默认为当前目录
-        if 'T_WORK' not in os.environ:
-            os.environ['T_WORK'] = workingDirectory
-        if 'TEST_ROOT' not in os.environ:
-            if args["testRoot"] is not None:
-                os.environ['TEST_ROOT'] = args["testRoot"]
-            else:
-                # 当前目录的上一级目录，即robot目录
+        if args["testRoot"] is not None:
+            # 如果参数提供了testRoot，以参数为准
+            os.environ['TEST_ROOT'] = args["testRoot"]
+        else:
+            if "T_WORK" not in os.environ:
+                # 如果参数没有提供，以TEST_ROOT环境变量为准, 否则以当前目录的上一级目录为准
                 os.environ['TEST_ROOT'] = os.path.dirname(os.path.dirname(__file__))
 
         # 拼接测试选项
@@ -145,8 +147,8 @@ def runRobotExecutor(args):
         # 根据XML文件生成一个测试数据的汇总JSON信息
         xmlResultFile = os.path.abspath(os.path.join(workingDirectory, os.path.basename(workingDirectory) + ".xml"),)
         if not os.path.exists(xmlResultFile):
-            raise RegressException("Result file [" + str(xmlResultFile) + "] is missed. " +
-                                   "Probably robot run with fatal error.")
+            logger.warning("Result file [" + str(xmlResultFile) + "] is missed. " +
+                           "Probably robot run with no invalid test case.")
         else:
             try:
                 ExecutionResult(xmlResultFile).suite
@@ -157,6 +159,9 @@ def runRobotExecutor(args):
                     fixed = str(RobotXMLSoupParser(infile, features='xml'))
                 with open(xmlResultFile, encoding="UTF-8", mode='w') as outfile:
                     outfile.write(fixed)
+
+        # 结束运行测试
+        logger.info("End execute [" + robotFile + "].")
     except RegressException as ex:
         raise ex
     finally:

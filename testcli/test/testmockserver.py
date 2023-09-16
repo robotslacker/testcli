@@ -89,7 +89,7 @@ def health():
         "data4": {
             "subdata4": "subdata4XXX"
         },
-        "data5": [{"data51": {"subdata51": "subdata51XXX"}},{"data51": {"subdata52": "subdata52XXX"}}]
+        "data5": [{"data51": {"subdata51": "subdata51XXX"}}, {"data51": {"subdata52": "subdata52XXX"}}]
     }
 
 

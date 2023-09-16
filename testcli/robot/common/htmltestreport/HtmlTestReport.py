@@ -859,9 +859,11 @@ class HTMLTestRunner(HtmlFileTemplate):
         # 复制需要的css和js文件
         m_csspath = os.path.abspath(os.path.join(os.path.dirname(__file__), "css"))
         m_jspath = os.path.abspath(os.path.join(os.path.dirname(__file__), "js"))
+        m_assetpath = os.path.abspath(os.path.join(os.path.dirname(__file__), "assets"))
 
         m_new_csspath = os.path.abspath(os.path.join(os.path.dirname(output), "css"))
         m_new_jspath = os.path.abspath(os.path.join(os.path.dirname(output), "js"))
+        m_new_assetpath = os.path.abspath(os.path.join(os.path.dirname(output), "assets"))
 
         if m_csspath != m_new_csspath:
             if os.path.exists(m_new_csspath):
@@ -871,6 +873,10 @@ class HTMLTestRunner(HtmlFileTemplate):
             if os.path.exists(m_new_jspath):
                 shutil.rmtree(m_new_jspath)
             shutil.copytree(m_jspath, m_new_jspath)
+        if m_assetpath != m_new_assetpath:
+            if os.path.exists(m_new_assetpath):
+                shutil.rmtree(m_new_assetpath)
+            shutil.copytree(m_assetpath, m_new_assetpath)
 
     def _generate_stylesheet(self):
         return self.STYLESHEET_TMPL

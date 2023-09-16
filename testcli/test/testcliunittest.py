@@ -2323,8 +2323,12 @@ class TestSynatx(unittest.TestCase):
             os.remove(tempWorkDirectory)
 
         from ..robot.common.runregress import Regress
+        jobList = []
+        for file in os.listdir(os.path.join(os.path.dirname(__file__), "..", "robot/demo")):
+            if file.endswith(".robot"):
+                jobList.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "robot/demo", file)))
         regressHandler = Regress(
-            jobList=os.path.join(os.path.dirname(__file__), "..", "robot/demo"),
+            jobList=jobList,
             testRoot=os.path.join(os.path.dirname(__file__), "..", "robot"),
             workDirectory=tempWorkDirectory,
             maxProcess=3,
