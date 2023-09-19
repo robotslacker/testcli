@@ -72,13 +72,14 @@ def runPythonExecutor(args):
         os.environ['T_WORK'] = workingDirectory
 
         # 处理Python的测试源目录
-        if args["testRoot"] is not None:
-            # 如果参数提供了testRoot，以参数为准
-            os.environ['TEST_ROOT'] = args["testRoot"]
-        else:
-            if "T_WORK" not in os.environ:
+        if "TEST_ROOT" not in os.environ:
+            if args["testRoot"] is not None:
+                # 如果参数提供了testRoot，以参数为准
+                os.environ['TEST_ROOT'] = args["testRoot"]
+            else:
                 # 如果参数没有提供，以TEST_ROOT环境变量为准, 否则以当前目录的上一级目录为准
                 os.environ['TEST_ROOT'] = os.path.dirname(os.path.dirname(__file__))
+        logger.info("TEST_ROOT [" + os.environ['TEST_ROOT'] + "]")
         sys.path.append(os.environ["TEST_ROOT"])
 
         # 运行pytest脚本

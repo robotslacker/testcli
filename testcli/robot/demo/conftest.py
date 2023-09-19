@@ -3,11 +3,17 @@ import copy
 import json
 import time
 import os
+import re
 import pytest
 from py.xml import html
 
 # 记录测试的运行结果
-scenarioResults = {}
+scenarioResults = {
+    "summary": {
+        "caseId": 0,
+        "suiteId": 0
+    }
+}
 
 
 @pytest.mark.optionalhook
@@ -50,12 +56,46 @@ def pytest_runtest_makereport(item, call):
     if nodeId in scenarioResults.keys():
         scenarioResult = scenarioResults[nodeId]
     when = report.when
+
     if when == "setup":
         # 记录开始时间
         scenarioResult["startTime"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+
+        # 记录caseId，suiteId等信息
+        pythonFileName = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), os.path.basename(nodeId.split("::")[0]))
+        )
+        with open(file=pythonFileName, mode="r", encoding="utf-8") as fp:
+            pythonLines = fp.readlines()
+        metadata = {}
+        for pythonLine in pythonLines:
+            pythonLine = str(pythonLine).strip()
+            matchObj = re.match(r"^#(\s+)?MetaData(\s+)?(.*)\s+(.*)$", pythonLine, re.IGNORECASE)
+            if matchObj:
+                metaKey = matchObj.group(3).strip()
+                metaValue = matchObj.group(4).strip()
+                metadata.update(
+                    {
+                        metaKey: metaValue
+                    }
+                )
+        if "suiteId" in metadata.keys():
+            suiteId = metadata["suiteId"]
+        else:
+            suiteId = 0
+        if "caseId" in metadata.keys():
+            caseId = metadata["caseId"]
+        else:
+            caseId = 0
+        scenarioResults["summary"] = {
+            "caseId": caseId,
+            "suiteId": suiteId
+        }
+
     if when == "teardown":
         # 记录结束时间
         scenarioResult["endTime"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+
     if report.when == "call":
         scenarioResult["suiteName"] = str(suiteName)
         scenarioResult["className"] = str(className)
@@ -67,32 +107,17 @@ def pytest_runtest_makereport(item, call):
 
 @pytest.hookimpl(trylast=True)
 def pytest_sessionfinish(session):
+    global scenarioResults
+
     if session:
         pass
+
     if "T_WORK" in os.environ:
         testName = os.path.basename(os.environ["T_WORK"])
         scenarioResultFile = \
             os.path.join(os.environ["T_WORK"], testName + ".pytestlog")
     else:
         scenarioResultFile = "scenarioResult.xlog"
-
-    if "T_TEST_JOBID" in os.environ:
-        jobId = int(os.environ["T_TEST_JOBID"])
-    else:
-        jobId = 0
-    if "T_TEST_SQLID" in os.environ:
-        sqlId = int(os.environ["T_TEST_SQLID"])
-    else:
-        sqlId = 0
-    if "T_TEST_ROBOTID" in os.environ:
-        robotId = int(os.environ["T_TEST_ROBOTID"])
-    else:
-        robotId = 0
-    scenarioResults["summary"] = {
-        "jobId": jobId,
-        "sqlId": sqlId,
-        "robotId": robotId
-    }
     fp = open(file=scenarioResultFile, mode='w', encoding='UTF-8')
     fp.write(
         json.dumps(

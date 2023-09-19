@@ -135,7 +135,11 @@ def cli(
 
         # 打印版本信息
         if version:
-            click.secho("Version: " + __version__)
+            import pkg_resources
+            try:
+                click.secho("Version: " + pkg_resources.get_distribution("robotslacker_testcli").version)
+            except pkg_resources.DistributionNotFound:
+                click.secho("Version: " + __version__ + ".DEV")
             return
 
         # 程序处于调试状态

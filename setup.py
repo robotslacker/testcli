@@ -2,6 +2,7 @@
 import ast
 import re
 from io import open
+from time import strftime, localtime
 from setuptools import setup
 
 '''
@@ -21,6 +22,7 @@ with open("testcli/__init__.py", "rb") as f:
     version = str(
         ast.literal_eval(_version_re.search(f.read().decode("utf-8")).group(1))
     )
+    version = version + "." + strftime("%Y%m%d%H%M%S", localtime())
 
 
 def open_file(filename):

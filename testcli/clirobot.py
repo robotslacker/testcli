@@ -24,7 +24,9 @@ def abortSignalHandler(signum, frame):
 
 
 # 运行回归测试应用
-def runRegress(args, executorMonitor):
+# args               程序参数
+# executorMonitor    运行信息监控，字典结构
+def runRegress(args, executorMonitor=None):
     # 初始化进程日志
     LOG_FORMAT = "%(asctime)s - %(levelname)9s - %(message)s"
     logFormat = logging.Formatter(LOG_FORMAT)
@@ -42,6 +44,9 @@ def runRegress(args, executorMonitor):
         robotOptions = os.environ["ROBOTOPTIONS"]
     else:
         robotOptions = None
+
+    if executorMonitor is None:
+        executorMonitor = dict()
 
     # 正式开始运行Case
     regressHandler = Regress(
@@ -79,7 +84,7 @@ def runRegress(args, executorMonitor):
         executorMonitor["running"] = False
     if exitCode != 0:
         # 如果已经失败，没有必要继续统计报表
-        sys.exit(exitCode)
+        return exitCode
 
     try:
         logger.info("Generating report ...")
@@ -95,7 +100,7 @@ def runRegress(args, executorMonitor):
         exitCode = 1
     executorMonitor["end"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     executorMonitor["running"] = False
-    sys.exit(exitCode)
+    return exitCode
 
 
 @click.command()

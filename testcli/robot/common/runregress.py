@@ -312,7 +312,6 @@ class Regress(object):
             testExtendLog = os.path.join(workDirectory,
                                          robotTask["workingDirectory"],
                                          robotTask["workingDirectory"] + ".pytestlog")
-            self.logger.error(os.path.abspath(testExtendLog))
             if not os.path.exists(testExtendLog):
                 self.logger.warning("  dir [" + robotTask["workingDirectory"] +
                                     "] does not include any valid pytestlog.")
