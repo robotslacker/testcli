@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import os
 import sys
 import traceback
@@ -28,6 +29,10 @@ from .globalvar import lastCommandResult
 from .__init__ import __version__
 from .sqlparse import SQLAnalyze
 from .apiparse import APIAnalyze
+from .commands.compare import POSIXCompare
+from .commands.compare import compareMaskLines
+from .commands.compare import compareSkipLines
+from .commands.compare import compareOption
 from .commands.monitor import stopMonitorManager
 
 OFLAG_LOGFILE = 1
@@ -49,9 +54,10 @@ class TestCli(object):
 
     # 屏幕输出
     Console = None  # 程序的控制台显示
-    logfile = None  # 程序输出日志文件
+
+    logfile = None        # 程序输出日志文件
+    logger = None         # 程序的第三方输出日志，用于第三方调用
     HeadlessMode = False  # 没有显示输出，即不需要回显，用于子进程的显示
-    logger = None  # 程序的输出日志
 
     exitValue = 0  # 程序退出状态位
 
@@ -120,7 +126,14 @@ class TestCli(object):
 
         # 参考日志信息
         self.referenceFile = referenceFile              # 参考日志名称
-        self.reference = {}                             # 参考日志解析信息
+        self.referenceContent = []                      # 参考日志文本信息
+        self.referenceScenario = {}                     # 参考日志解析信息
+
+        self.logfileContent = []                        # 程序执行日志文本信息
+        self.logfileScenario = {}                       # 执行日志解析信息
+
+        # 参考日志比对句柄
+        self.referenceCompareHandler = POSIXCompare()
 
         # 当前Http请求的信息
         self.httpSessionName = "DEFAULT"                # 当前Http会话的名称
@@ -289,11 +302,12 @@ class TestCli(object):
             if not os.path.isfile(self.referenceFile):
                 raise TestCliException("Reference file [" + self.referenceFile + "] does not exist!")
             with open(file=self.referenceFile, mode="r", encoding="utf-8") as fp:
-                referenceLines = fp.readlines()
+                self.referenceContent = fp.readlines()
             currentScenarioId = "__init__"
             currentScenarioContents = []
             linepos = 0
-            for reference in referenceLines:
+            referenceId = 1
+            for reference in self.referenceContent:
                 linepos = linepos + 1
                 matchObj1 = re.search(r"--(\s+)?\[Hint](\s+)?Scenario:(.*)", reference,
                                       re.IGNORECASE | re.DOTALL)
@@ -311,17 +325,18 @@ class TestCli(object):
                     if scenarioId.lower() == "end":
                         # 测试场景已经结束
                         currentScenarioContents.append(reference.strip())
-                        self.reference.update(
+                        self.referenceScenario.update(
                             {
                                 currentScenarioId: currentScenarioContents
                             }
                         )
-                        currentScenarioId = "__Line__" + str(linepos)
+                        currentScenarioId = "__REF__" + str(referenceId)
                         currentScenarioContents = []
+                        referenceId = referenceId + 1
                         continue
                     if currentScenarioId != scenarioId:
                         # 测试场景已经结束
-                        self.reference.update(
+                        self.referenceScenario.update(
                             {
                                 currentScenarioId: currentScenarioContents
                             }
@@ -331,15 +346,15 @@ class TestCli(object):
                         continue
 
                 currentScenarioContents.append(reference.strip())
-
             # 最后一个测试场景
             if currentScenarioId is not None:
-                self.reference.update(
+                self.referenceScenario.update(
                     {
                         currentScenarioId: currentScenarioContents
                     }
                 )
 
+        # print("self.reference=" + json.dumps(self.reference, indent=4, ensure_ascii=False))
         # 打开输出日志, 如果打开失败，就直接退出
         try:
             if self.logfilename is not None:
@@ -825,6 +840,176 @@ class TestCli(object):
             if not self.nologo:
                 self.echo("Disconnected with [" + str(self.exitValue) + "].")
 
+        # 取消进程共享服务的注册信息
+        self.JobHandler.unregisterjob()
+        self.JobHandler.unregisterAgent()
+
+        # 关闭Meta服务
+        if self.MetaHandler is not None:
+            self.MetaHandler.ShutdownServer()
+            self.MetaHandler = None
+
+        # 还原进程标题
+        setproctitle.setproctitle(cliProcessTitleBak)
+
+        # 如果需要，查看日志比对结果
+        if self.referenceFile is not None:
+            currentScenarioId = "__init__"
+            currentScenarioContents = []
+            self.logfileScenario = {}
+            linepos = 0
+            referenceId = 1
+            for logContent in self.logfileContent:
+                linepos = linepos + 1
+                matchObj1 = re.search(r"--(\s+)?\[Hint](\s+)?Scenario:(.*)", logContent, re.IGNORECASE | re.DOTALL)
+                matchObj2 = re.search(r"--(\s+)?\[(\s+)?Scenario:(.*)]", logContent, re.IGNORECASE | re.DOTALL)
+                if matchObj1 or matchObj2:
+                    if matchObj1:
+                        senarioInfo = matchObj1.group(3).strip()
+                    else:
+                        senarioInfo = matchObj2.group(3).strip()
+                    if len(senarioInfo.split(':')) >= 2:
+                        scenarioId = senarioInfo.split(':')[0].strip()
+                    else:
+                        scenarioId = senarioInfo.split(':')[0].strip()
+                    if scenarioId.lower() == "end":
+                        # 测试场景已经结束
+                        currentScenarioContents.append(logContent.strip())
+                        self.logfileScenario.update(
+                            {
+                                currentScenarioId: currentScenarioContents
+                            }
+                        )
+                        currentScenarioId = "__REF__" + str(referenceId)
+                        currentScenarioContents = []
+                        referenceId = referenceId + 1
+                        continue
+                    if currentScenarioId != scenarioId:
+                        # 测试场景已经结束
+                        self.logfileScenario.update(
+                            {
+                                currentScenarioId: currentScenarioContents
+                            }
+                        )
+                        currentScenarioId = scenarioId
+                        currentScenarioContents = [logContent.strip()]
+                        continue
+                currentScenarioContents.append(logContent.strip())
+            # 最后一个测试场景
+            if currentScenarioId is not None:
+                self.logfileScenario.update(
+                    {
+                        currentScenarioId: currentScenarioContents
+                    }
+                )
+
+            # 对比文件内容，并给出dif和suc内容
+            compareResult, newCompareResultList = self.referenceCompareHandler.compare_text(
+                lines1=self.logfileContent,
+                lines2=self.referenceContent,
+                CompareWithMask=compareOption["mask"],
+                CompareIgnoreCase=not compareOption["case"],
+                CompareIgnoreTailOrHeadBlank=not compareOption["trim"],
+                compareAlgorithm=compareOption["algorithm"],
+                ignoreEmptyLine=compareOption["igblank"],
+                skipLines=compareSkipLines,
+                maskLines=compareMaskLines
+            )
+
+            # 生成dif和suc文件
+            if self.logfilename is not None:
+                name, ext = os.path.splitext(self.logfilename)
+            else:
+                name, ext = os.path.splitext(self.commandScript)
+            difFileName = name + ".dif"
+            sucFileName = name + ".suc"
+            rptFileName = name + ".rpt"
+            if os.path.exists(difFileName):
+                os.remove(difFileName)
+            if os.path.exists(sucFileName):
+                os.remove(sucFileName)
+            if os.path.exists(rptFileName):
+                os.remove(rptFileName)
+            if compareResult:
+                difFileName = name + ".dif"
+            else:
+                difFileName = name + ".dif"
+            newCompareResultList = [s + "\n" for s in newCompareResultList]
+            with open(file=difFileName, mode="w", encoding="UTF-8") as fp:
+                fp.writelines(newCompareResultList)
+
+            # 生成xdb文件, 里头包含的信息有：
+            # ScenarioId, ScenarioName, Elapsed, Status, MessageShort
+            if self.xlogFileHandle is not None:
+                cursor = self.xlogFileHandle.cursor()
+                cursor.execute(
+                    "SELECT     ScenarioId,ScenarioName,SuiteName,CaseName,"
+                    "           Min(Started) Started, Sum(Elapsed) Elapsed "
+                    "FROM       TestCli_Xlog "
+                    "Group By   ScenarioId,ScenarioName,SuiteName,CaseName "
+                    "Order by 1,2"
+                )
+                rs = cursor.fetchall()
+                field_names = [i[0] for i in cursor.description]
+                cursor.close()
+                data = []
+                for row in rs:
+                    rowMap = {}
+                    for i in range(0, len(row)):
+                        rowMap[field_names[i]] = row[i]
+                    data.append(rowMap)
+
+                scenarioResult = {}
+                for scenarioId in self.logfileScenario.keys():
+                    if scenarioId in self.referenceScenario.keys():
+                        compareResult, newCompareResultList = self.referenceCompareHandler.compare_text(
+                            lines1=self.logfileScenario[scenarioId],
+                            lines2=self.referenceScenario[scenarioId],
+                            CompareWithMask=compareOption["mask"],
+                            CompareIgnoreCase=not compareOption["case"],
+                            CompareIgnoreTailOrHeadBlank=not compareOption["trim"],
+                            compareAlgorithm=compareOption["algorithm"],
+                            ignoreEmptyLine=compareOption["igblank"],
+                            skipLines=compareSkipLines,
+                            maskLines=compareMaskLines
+                        )
+                        if compareResult:
+                            scenarioResult[scenarioId] = {
+                                "Status": "Successed",
+                                "Content": self.logfileScenario[scenarioId]
+                            }
+                        else:
+                            scenarioResult[scenarioId] = {
+                                "Status": "Failed",
+                                "Content": newCompareResultList
+                            }
+                    else:
+                        scenarioResult[scenarioId] = {
+                            "Status": "Failed",
+                            "Content": self.logfileScenario[scenarioId]
+                        }
+                rptInfo = {}
+                for row in data:
+                    scenarioId = row["ScenarioId"]
+                    if scenarioId in scenarioResult.keys():
+                        scenarioStatus = scenarioResult[scenarioId]["Status"]
+                        scenarioMessage = "\n".join(scenarioResult[scenarioId]["Content"])
+                    else:
+                        scenarioStatus = "UNKNOWN"
+                        scenarioMessage = ""
+                    # 检查该Scenario是否顺利完成
+                    rptInfo[scenarioId] = {
+                        "Name": row["ScenarioName"],
+                        "Started": row["Started"],
+                        "Elapsed": float("%8.2f" % row["Elapsed"]),
+                        "Status": scenarioStatus,
+                        "Message": scenarioMessage,
+                        "SuiteName": row["SuiteName"],
+                        "CaseName": row["CaseName"]
+                    }
+                with open(file=rptFileName, mode='w', encoding="UTF-8") as f:
+                    json.dump(obj=rptInfo, fp=f, indent=4, sort_keys=True, ensure_ascii=False)
+
         # 关闭LogFile
         if self.logfile is not None:
             self.logfile.flush()
@@ -835,18 +1020,6 @@ class TestCli(object):
         if self.xlogFileHandle is not None:
             self.xlogFileHandle.close()
             self.xlogFileHandle = None
-
-        # 还原进程标题
-        setproctitle.setproctitle(cliProcessTitleBak)
-
-        # 取消进程共享服务的注册信息
-        self.JobHandler.unregisterjob()
-        self.JobHandler.unregisterAgent()
-
-        # 关闭Meta服务
-        if self.MetaHandler is not None:
-            self.MetaHandler.ShutdownServer()
-            self.MetaHandler = None
 
         # 退出runCli
         return self.exitValue
@@ -862,31 +1035,32 @@ class TestCli(object):
         # 5:   程序的ECHO回显文件
         if self.testOptions.get("SILENT").upper() != 'ON':
             if len(self.testOptions.get('OUTPUT_PREFIX')) != 0:
-                m_OutputPrefix = self.testOptions.get('OUTPUT_PREFIX') + " "
+                outputPrefix = self.testOptions.get('OUTPUT_PREFIX') + " "
             else:
-                m_OutputPrefix = ''
+                outputPrefix = ''
             match_obj = re.match(self.nameSpace + r">(\s+)?set(\s+)?OUTPUT_PREFIX(\s+)?$", s, re.IGNORECASE | re.DOTALL)
             if match_obj:
-                m_OutputPrefix = ''
+                outputPrefix = ''
             if Flags & OFLAG_LOGFILE:
+                self.logfileContent.append(outputPrefix + s)
                 if self.logfile is not None:
-                    print(m_OutputPrefix + s, file=self.logfile)
+                    print(outputPrefix + s, file=self.logfile)
                     self.logfile.flush()
             if Flags & OFLAG_SPOOL:
                 if self.SpoolFileHandler is not None:
                     for m_SpoolFileHandler in self.SpoolFileHandler:
-                        print(m_OutputPrefix + s, file=m_SpoolFileHandler)
+                        print(outputPrefix + s, file=m_SpoolFileHandler)
                         m_SpoolFileHandler.flush()
             if Flags & OFLAG_LOGGER:
                 if self.logger is not None:
-                    self.logger.info(m_OutputPrefix + s)
+                    self.logger.info(outputPrefix + s)
             if Flags & OFLAG_ECHO:
                 if self.EchoFileHandler is not None:
-                    print(m_OutputPrefix + s, file=self.EchoFileHandler)
+                    print(outputPrefix + s, file=self.EchoFileHandler)
                     self.EchoFileHandler.flush()
             if Flags & OFLAG_CONSOLE:
                 try:
-                    click.secho(m_OutputPrefix + s, **kwargs, file=self.Console)
+                    click.secho(outputPrefix + s, **kwargs, file=self.Console)
                 except UnicodeEncodeError as ue:
                     # Unicode Error, This is console issue, Skip
                     if "TESTCLI_DEBUG" in os.environ:

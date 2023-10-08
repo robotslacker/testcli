@@ -150,7 +150,7 @@ class CmdExecute(object):
                 (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
                     = APIAnalyze(currentStatement)
             else:
-                raise TestCliException("不支持的运行空间【" + str(nameSpace) + "】")
+                raise TestCliException("Non-support NAMESPACE [" + str(nameSpace) + "]")
 
             # 如果发生了语句解析错误，且错误信息是缺少EOF，则是认为语句没有结束导致，不是正常的错误
             if ret_errorCode != 0:

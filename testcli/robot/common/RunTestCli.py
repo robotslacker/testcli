@@ -1,6 +1,8 @@
 # -*- coding: UTF-8 -*-
+import json
 import os
 import sys
+import html
 import traceback
 from robot.api import logger
 from robot.errors import ExecutionFailed
@@ -108,7 +110,38 @@ class RunTestCli(object):
         """
         self.__CommandMapping = p_szCommandMapping
 
-    def Logon_And_Execute_TestCli_Script(self, logonString, p_szScript_FileName, p_szLogOutPutFileName=None):
+    def Logon_And_Execute_TestCli_Script(self, logonString, scriptFileName, logFileName=None):
+        self.Logon_And_Execute_TestCli_Script_With_Reference(
+            logonString=logonString,
+            scriptFileName=scriptFileName,
+            logFileName=logFileName,
+            referenceFileName=None
+        )
+
+    def Execute_TestCli_Script(self, scriptFileName, logFileName=None):
+        """ 执行TEST脚本  """
+        """
+        输入参数：
+            p_szScript_FileName         脚本文件名称
+            p_szLogOutPutFileName       结果日志文件名称, 如果没有提供，则默认和脚本同名的.log文件
+        输出参数：
+            无
+        例子：
+            Execute Test Script         test.sql test.log
+        """
+        self.Execute_TestCli_Script_With_Reference(
+            scriptFileName=scriptFileName,
+            logFileName=logFileName,
+            referenceFileName=None
+        )
+
+    def Logon_And_Execute_TestCli_Script_With_Reference(
+            self,
+            logonString,
+            scriptFileName,
+            logFileName=None,
+            referenceFileName=None
+    ):
         """ 执行TEST脚本  """
         """
         输入参数：
@@ -122,17 +155,11 @@ class RunTestCli(object):
             Logon And Execute TEST Script     admin/123456 test.api test.log
         """
         try:
-            logger.info('<b>===== Logon_And_Execute_Script</b> [' + str(p_szScript_FileName) + '] ', html=True)
+            logger.info('<b>===== Logon_And_Execute_Script</b> [' + str(scriptFileName) + '] ', html=True)
 
-            scriptFileName = None
-
-            # 判断是否全路径名
-            if os.path.exists(p_szScript_FileName):
-                scriptFileName = p_szScript_FileName
-
-            # 如果还是没有找到文件，则异常错误
-            if scriptFileName is None:
-                raise RuntimeError("Script [" + p_szScript_FileName + "] does not exist.")
+            # 判断文件是否存在
+            if not os.path.exists(scriptFileName):
+                raise RuntimeError("Script [" + scriptFileName + "] does not exist.")
 
             # 如果路径名中包含空格，则需要用单引号包括起来
             if str(scriptFileName).find(' ') != -1 and not str(scriptFileName).startswith("'"):
@@ -144,22 +171,22 @@ class RunTestCli(object):
             # 如果提供了文件名，   并且是全路径名， 用提供的名字
             # 如果提供了文件名，   但不是全路径名，有T_WORK下，在T_WORK下生成提供的文件名
             # 如果提供了文件名，   但不是全路径名，没有T_WORK下，在当前目录下生成提供的文件名
-            if p_szLogOutPutFileName is None:
+            if logFileName is None:
                 if "T_WORK" in os.environ:
                     m_szLogOutPutFileName = os.path.join(
                         os.environ["T_WORK"],
-                        os.path.basename(p_szScript_FileName).split('.')[0] + ".log")
+                        os.path.basename(scriptFileName).split('.')[0] + ".log")
                     logOutPutFullFileName = os.path.join(os.environ["T_WORK"], m_szLogOutPutFileName)
                 else:
                     m_szLogOutPutFileName = os.path.join(
                         os.getcwd(),
-                        os.path.basename(p_szScript_FileName).split('.')[0] + ".log")
+                        os.path.basename(scriptFileName).split('.')[0] + ".log")
                     logOutPutFullFileName = os.path.join(os.getcwd(), m_szLogOutPutFileName)
             else:
                 if "T_WORK" in os.environ:
-                    logOutPutFullFileName = os.path.join(os.environ["T_WORK"], p_szLogOutPutFileName)
+                    logOutPutFullFileName = os.path.join(os.environ["T_WORK"], logFileName)
                 else:
-                    logOutPutFullFileName = os.path.join(os.getcwd(), p_szLogOutPutFileName)
+                    logOutPutFullFileName = os.path.join(os.getcwd(), logFileName)
             # 如果Log目录不存在，则创建Log目录
             if not os.path.exists(os.path.dirname(logOutPutFullFileName)):
                 os.makedirs(os.path.dirname(logOutPutFullFileName))
@@ -167,26 +194,41 @@ class RunTestCli(object):
             # ExtendLog文件默认存放在log文件目录下
             if self.__enableExtendLog:
                 if "T_WORK" in os.environ:
-                    xlogFileName = os.path.basename(p_szScript_FileName).split('.')[0] + ".xdb"
+                    xlogFileName = os.path.basename(scriptFileName).split('.')[0] + ".xdb"
                     xlogFullFileName = os.path.join(os.environ["T_WORK"], xlogFileName)
                 else:
-                    xlogFileName = os.path.basename(p_szScript_FileName).split('.')[0] + ".xdb"
+                    xlogFileName = os.path.basename(scriptFileName).split('.')[0] + ".xdb"
                     xlogFullFileName = os.path.join(os.getcwd(), xlogFileName)
             else:
                 xlogFullFileName = None
+            if referenceFileName is not None:
+                if "T_WORK" in os.environ:
+                    rptFileName = os.path.basename(logFileName).split('.')[0] + ".rpt"
+                    rptFullFileName = os.path.join(os.environ["T_WORK"], rptFileName)
+                else:
+                    rptFileName = os.path.basename(logFileName).split('.')[0] + ".rpt"
+                    rptFullFileName = os.path.join(os.getcwd(), rptFileName)
+            else:
+                rptFullFileName = None
+
+            logger.info('<b>===== Execute</b>     [' + scriptFileName + ']', html=True)
+            logger.info('<b>===== LogFile</b>     [' + str(logOutPutFullFileName) + ']', html=True)
+            logger.info('<b>===== Reference</b>   [' + str(referenceFileName) + ']', html=True)
+            logger.info('<b>===== ScenarioRpt</b> [' + str(rptFullFileName) + ']', html=True)
+            logger.info('<b>===== BreakMode</b>   [' + str(self.__BreakWithError) + ']', html=True)
+            logger.info('<b>===== SQLMAP1</b>     [' + str(self.__CommandMapping) + ']', html=True)
+            logger.info('<b>===== SQLMAP2</b>     [' + str(os.environ.get("SQLCLI_SQLMAPPING")) + ']', html=True)
+            logger.info('<b>===== Logon</b>       [' + str(logonString) + ']', html=True)
 
             sys.__stdout__.write('\n')  # 打印一个空行，好保证在Robot上Console显示不错行
-            logger.info('<b>===== Execute</b>   [' + scriptFileName + ']', html=True)
-            logger.info('<b>===== LogFile</b>   [' + logOutPutFullFileName + ']', html=True)
-            logger.info('<b>===== BreakMode</b> [' + str(self.__BreakWithError) + ']', html=True)
-            logger.info('<b>===== SQLMAP1</b>   [' + str(self.__CommandMapping) + ']', html=True)
-            logger.info('<b>===== SQLMAP2</b>   [' + str(os.environ.get("SQLCLI_SQLMAPPING")) + ']', html=True)
-            logger.info('<b>===== Logon</b>     [' + str(logonString) + ']', html=True)
-            sys.__stdout__.write('===== Execute   [' + scriptFileName + ']\n')
-            sys.__stdout__.write('===== LogFile   [' + logOutPutFullFileName + ']\n')
-            sys.__stdout__.write('===== BreakMode [' + str(self.__BreakWithError) + ']\n')
-            sys.__stdout__.write('===== SQLMAP1   [' + str(self.__CommandMapping) + ']\n')
-            sys.__stdout__.write('===== SQLMAP2   [' + str(os.environ.get("SQLCLI_SQLMAPPING")) + ']\n')
+            sys.__stdout__.write('===== Execute     [' + scriptFileName + ']\n')
+            sys.__stdout__.write('===== LogFile     [' + logOutPutFullFileName + ']\n')
+            sys.__stdout__.write('===== Reference   [' + str(referenceFileName) + ']\n')
+            sys.__stdout__.write('===== ScenarioRpt [' + str(rptFullFileName) + ']\n',)
+            sys.__stdout__.write('===== BreakMode   [' + str(self.__BreakWithError) + ']\n')
+            sys.__stdout__.write('===== SQLMAP1     [' + str(self.__CommandMapping) + ']\n')
+            sys.__stdout__.write('===== SQLMAP2     [' + str(os.environ.get("SQLCLI_SQLMAPPING")) + ']\n')
+
             sys.__stdout__.write('===== Starting .....\n')
             if not self.__EnableConsoleOutPut:
                 myConsole = None
@@ -231,6 +273,7 @@ class RunTestCli(object):
             cli = TestCli(logon=logonString,
                           script=scriptFileName,
                           logfilename=logOutPutFullFileName,
+                          referenceFile=referenceFileName,
                           Console=myConsole,
                           headlessMode=myHeadLessMode,
                           namespace=nameSpace,
@@ -257,53 +300,53 @@ class RunTestCli(object):
             else:
                 testSuccessful = False
 
-            # 读取xLog信息
-            if self.__enableExtendLog:
-                scenarioResults = {}
-                import sqlite3
-                if os.path.exists(xlogFullFileName):
-                    xlogFileHandle = sqlite3.connect(xlogFullFileName)
-                    cursor = xlogFileHandle.cursor()
-                    try:
-                        cursor.execute("SELECT * FROM TestCli_Xlog")
-                        rs = cursor.fetchall()
-                        field_names = [i[0] for i in cursor.description]
-                        cursor.close()
-                        data = []
-                        for row in rs:
-                            rowMap = {}
-                            for i in range(0, len(row)):
-                                rowMap[field_names[i]] = row[i]
-                            data.append(rowMap)
-                        for row in data:
-                            scenarioName = row["ScenarioId"] + ":" + row["ScenarioName"]
-                            if scenarioName == ":":
-                                scenarioName = "NONAME"
-                            if scenarioName not in scenarioResults:
-                                scenarioResults[scenarioName] = {"ErrorCode": "0", "CommandStatus": ""}
-                            if row["CommandType"] in ["ASSERT", "SCRIPT"]:
-                                if row["ErrorCode"] != "0":
-                                    scenarioResults[scenarioName] = \
-                                        {"ErrorCode": row["ErrorCode"], "CommandStatus": row["CommandStatus"]}
-                                    if self.__failWithAssertOrScriptError:
-                                        testSuccessful = False
-                    except sqlite3.OperationalError:
-                        logger.warn("TestCli_Xlog does not exist in extend log.", html=True)
-                    xlogFileHandle.close()
-
+            if rptFullFileName is not None:
+                # 读取rpt信息，包含了详细的运行情况报告
                 logger.info("<b>>>>>>>>>>>>>>>> Test Result Summary <<<<<<<<<<<<< </b>", html=True)
                 logger.info("<b>SuiteName    :</b> [" + m_SuiteName + "]", html=True)
                 logger.info("<b>CaseName     :</b> [" + m_TestName + "]", html=True)
-                logger.info(r'<hr style="border:6 outset #ff0033" width="100%" SIZE=6>', html=True)
-                for scenarioName, scenarioResult in scenarioResults.items():
-                    if scenarioResult["ErrorCode"] == "0":
-                        if scenarioName != "NONAME":
-                            logger.info("<b>Scenario:[" + scenarioName + "]</b>", html=True)
-                            logger.info("<b>Status: [<font color=\"green\">" + "Successful" + "</font>]</b>", html=True)
+                rptFileHandler = open(rptFullFileName, mode='r', encoding='UTF-8')
+                rptResult = dict(json.load(rptFileHandler))
+                rptFileHandler.close()
+                for scenarioId, scenarioResult in rptResult.items():
+                    if scenarioResult["Status"] != "Failed":
+                        logger.info("<b>Scenario:[" + scenarioResult["Name"] + "]</b>", html=True)
+                        logger.info("<b>Status: [<font color=\"green\">" + "Successful" + "</font>]</b>", html=True)
                     else:
-                        logger.error("<b><font color=\"red\">Scenario:[" + scenarioName + "</font>]</b><b>[" +
-                                     "Failed with " + scenarioResult["CommandStatus"] + "]</b>", html=True)
+                        testSuccessful = False  # 有失败的场景，那就标记为失败吧
+                        logger.info("<b>Scenario:[" + scenarioResult["Name"] + "]</b>", html=True)
+                        logger.info("<b>Status: [<font color=\"red\">" + "Failed" + "</font>]</b>", html=True)
+                        for line in scenarioResult["Message"].split('\n'):
+                            if line.startswith('-'):
+                                logger.write('<font style="color:Black;background-color:#E0E0E0">' +
+                                             html.escape(line[0:7]) + '</font>' +
+                                             '<font style="color:white;background-color:Red">' +
+                                             html.escape(line[7:]) + '</font>',
+                                             html=True)
+                            elif line.startswith('+'):
+                                logger.write('<font style="color:Black;background-color:#E0E0E0">' +
+                                             html.escape(line[0:7]) + '</font>' +
+                                             '<font style="color:white;background-color:Green">' +
+                                             html.escape(line[7:]) + '</font>',
+                                             html=True)
+                            elif line.startswith('S'):
+                                logger.write('<font style="color:Black;background-color:#E0E0E0">' +
+                                             html.escape(line) + '</font>',
+                                             html=True)
+                            else:
+                                logger.write('<font style="color:Black;background-color:#E0E0E0">' +
+                                             html.escape(line[0:7]) + '</font>' +
+                                             '<font style="color:Black;background-color:white">' +
+                                             html.escape(line[7:]) + '</font>',
+                                             html=True)
                     logger.info(r'<hr style="border:6 outset #ff0033" width="100%" SIZE=6>', html=True)
+                logger.info("<b>>>>>>>>>>>>>>>> Test Result Summary <<<<<<<<<<<<< </b>", html=True)
+
+            else:
+                logger.info("<b>>>>>>>>>>>>>>>> Test Result Summary <<<<<<<<<<<<< </b>", html=True)
+                logger.info("<b>SuiteName          :</b> [" + m_SuiteName + "]", html=True)
+                logger.info("<b>CaseName           :</b> [" + m_TestName + "]", html=True)
+                logger.info("<b>ScenarioResult     :</b> [N/A(No extend and reference log available.]", html=True)
                 logger.info("<b>>>>>>>>>>>>>>>> Test Result Summary <<<<<<<<<<<<< </b>", html=True)
 
             logger.info('<b>===== End TestCli with result</b> [' + str(cliResult) + '] ', html=True)
@@ -361,7 +404,12 @@ class RunTestCli(object):
             logger.info('traceback.format_exc():\n%s' % traceback.format_exc())
             raise RuntimeError("TEST Execute failed.")
 
-    def Execute_TestCli_Script(self, p_szScript_FileName, p_szLogOutPutFileName=None):
+    def Execute_TestCli_Script_With_Reference(
+            self,
+            scriptFileName,
+            logFileName=None,
+            referenceFileName=None
+    ):
         """ 执行TEST脚本  """
         """
         输入参数：
@@ -372,4 +420,9 @@ class RunTestCli(object):
         例子：
             Execute Test Script         test.sql test.log
         """
-        self.Logon_And_Execute_TestCli_Script(None, p_szScript_FileName, p_szLogOutPutFileName)
+        self.Logon_And_Execute_TestCli_Script_With_Reference(
+            logonString=None,
+            scriptFileName=scriptFileName,
+            logFileName=logFileName,
+            referenceFileName=referenceFileName,
+        )

@@ -68,6 +68,15 @@ def cli(
     # 程序的返回值，默认是0
     appExitValue = 0
 
+    # 打印版本信息
+    if version:
+        import pkg_resources
+        try:
+            click.secho("Version: " + pkg_resources.get_distribution("robotslacker_testcli").version)
+        except pkg_resources.DistributionNotFound:
+            click.secho("Version: " + __version__ + ".DEV")
+        return
+
     # 捕捉信号，处理服务中断的情况
     if platform.system().upper() in ["LINUX", "DARWIN"]:
         # 通信管道中断，不处理中断信息，放弃后续数据
@@ -132,15 +141,6 @@ def cli(
                     "[WARN] Current platform [" + platform.system().upper() + "] does not support daemon mode.",
                     fg="yellow")
                 pass
-
-        # 打印版本信息
-        if version:
-            import pkg_resources
-            try:
-                click.secho("Version: " + pkg_resources.get_distribution("robotslacker_testcli").version)
-            except pkg_resources.DistributionNotFound:
-                click.secho("Version: " + __version__ + ".DEV")
-            return
 
         # 程序处于调试状态
         if debug:

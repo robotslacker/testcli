@@ -1,0 +1,44 @@
+SQL> _start demo3.sql
+SQL> -- [Hint] scenario:123:test1
+SQL> _connect /mem
+REWROTED Hint> --[Scenario:123:test1]
+Database connected.
+SQL> select 1+5 from dual;
++--------+---+
+|   ##   | 6 |
++--------+---+
+|      1 | 6 |
++--------+---+
+1 row selected.
+SQL> _sleep 15
+SQL> -- [Hint] scenario:end
+SQL>
+SQL> -- [Hint] scenario:346:test2
+SQL> _connect /mem
+REWROTED Hint> --[Scenario:346:test2]
+Database connected.
+SQL> select 1+5 from dual;
++--------+---+
+|   ##   | 6 |
++--------+---+
+|      1 | 7 |
++--------+---+
+1 row selected.
+SQL> _sleep 15
+SQL> -- [Hint] scenario:end
+SQL>
+SQL> -- [Hint] scenario:test3
+SQL> _connect /mem
+REWROTED Hint> --[Scenario:test3:test3]
+Database connected.
+SQL> select 1+5 from dual;
++--------+---+
+|   ##   | 6 |
++--------+---+
+|      1 | 6 |
++--------+---+
+1 row selected.
+SQL> _sleep 15
+SQL> -- [Hint] scenario:end
+SQL> _exit
+Disconnected.

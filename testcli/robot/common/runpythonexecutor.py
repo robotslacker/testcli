@@ -80,7 +80,11 @@ def runPythonExecutor(args):
                 # 如果参数没有提供，以TEST_ROOT环境变量为准, 否则以当前目录的上一级目录为准
                 os.environ['TEST_ROOT'] = os.path.dirname(os.path.dirname(__file__))
         logger.info("TEST_ROOT [" + os.environ['TEST_ROOT'] + "]")
-        sys.path.append(os.environ["TEST_ROOT"])
+        if os.environ['TEST_ROOT'] not in sys.path:
+            sys.path.append(os.environ['TEST_ROOT'])
+        logger.info("Python PATH:")
+        for path in sys.path:
+            logger.info("  " + str(path))
 
         # 运行pytest脚本
         pytest.main(

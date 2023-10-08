@@ -2,7 +2,7 @@
 import copy
 import os
 import re
-import  warnings
+import warnings
 from collections import namedtuple
 from ..common import rewriteStatement
 from ..htmldiff.diffhtmlgenerate import diffHtmlGenerate
@@ -247,30 +247,22 @@ class POSIXCompare:
                 next_i = next_i - 1
         return compare_result, m_CompareDiffResult
 
-    def compare_text_files(self, file1, file2,
-                           skipLines: list = None,
-                           maskLines: dict = None,
-                           ignoreEmptyLine: bool = False,
-                           CompareWithMask: bool = True,
-                           CompareIgnoreCase: bool = False,
-                           CompareIgnoreTailOrHeadBlank: bool = False,
-                           CompareWorkEncoding: str = 'UTF-8',
-                           CompareRefEncoding: str = 'UTF-8',
-                           compareAlgorithm: str = 'MYERS'):
-        if not os.path.isfile(file1):
-            raise DiffException('ERROR: File %s does not exist!' % file1)
-        if not os.path.isfile(file2):
-            raise DiffException('ERROR: File %s does not exist!' % file2)
+    def compare_text(self,
+                     lines1: list,
+                     lines2: list,
+                     skipLines: list = None,
+                     maskLines: dict = None,
+                     ignoreEmptyLine: bool = False,
+                     CompareWithMask: bool = True,
+                     CompareIgnoreCase: bool = False,
+                     CompareIgnoreTailOrHeadBlank: bool = False,
+                     compareAlgorithm: str = 'MYERS'):
 
         # 将比较文件加载到数组
-        fileRaw = open(file1, mode='r', encoding=CompareWorkEncoding)
-        refFileRaw = open(file2, mode='r', encoding=CompareRefEncoding)
-        workFile = open(file1, mode='r', encoding=CompareWorkEncoding)
-        refFile = open(file2, mode='r', encoding=CompareRefEncoding)
-        fileRawContent = fileRaw.readlines()
-        refFileRawContent = refFileRaw.readlines()
-        workFileContent = workFile.readlines()
-        refFileContent = refFile.readlines()
+        fileRawContent = lines1
+        refFileRawContent = lines2
+        workFileContent = lines1
+        refFileContent = lines2
 
         # linno用来记录行号，在最后输出打印的时候，显示的是原始文件信息，而不是修正后的信息
         lineno1 = []
@@ -429,26 +421,47 @@ class POSIXCompare:
                 refLastPos = refLastPos + 1
                 continue
             else:
-                # 关闭打开的文件
-                if fileRaw:
-                    fileRaw.close()
-                if refFileRaw:
-                    refFileRaw.close()
-                if workFile:
-                    workFile.close()
-                if refFile:
-                    refFile.close()
                 raise DiffException("Missed line number. Bad compare result. [" + row + "]")
 
+        return compareResult, newCompareResultList
+
+    def compare_text_files(self, file1, file2,
+                           skipLines: list = None,
+                           maskLines: dict = None,
+                           ignoreEmptyLine: bool = False,
+                           CompareWithMask: bool = True,
+                           CompareIgnoreCase: bool = False,
+                           CompareIgnoreTailOrHeadBlank: bool = False,
+                           CompareWorkEncoding: str = 'UTF-8',
+                           CompareRefEncoding: str = 'UTF-8',
+                           compareAlgorithm: str = 'MYERS'):
+        if not os.path.isfile(file1):
+            raise DiffException('ERROR: File %s does not exist!' % file1)
+        if not os.path.isfile(file2):
+            raise DiffException('ERROR: File %s does not exist!' % file2)
+
+        # 将比较文件加载到数组
+        filefp1 = open(file1, mode='r', encoding=CompareWorkEncoding)
+        filefp2 = open(file2, mode='r', encoding=CompareRefEncoding)
+
+        fileLines1 = filefp1.readlines()
+        fileLines2 = filefp2.readlines()
+        compareResult, newCompareResultList = self.compare_text(
+            lines1=fileLines1,
+            lines2=fileLines2,
+            skipLines=skipLines,
+            maskLines=maskLines,
+            ignoreEmptyLine=ignoreEmptyLine,
+            CompareWithMask=CompareWithMask,
+            CompareIgnoreCase=CompareIgnoreCase,
+            CompareIgnoreTailOrHeadBlank=CompareIgnoreTailOrHeadBlank,
+            compareAlgorithm=compareAlgorithm
+        )
         # 关闭打开的文件
-        if fileRaw:
-            fileRaw.close()
-        if refFileRaw:
-            refFileRaw.close()
-        if workFile:
-            workFile.close()
-        if refFile:
-            refFile.close()
+        if filefp1:
+            filefp1.close()
+        if filefp2:
+            filefp2.close()
         return compareResult, newCompareResultList
 
 

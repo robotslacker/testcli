@@ -2347,6 +2347,7 @@ class TestSynatx(unittest.TestCase):
             "demo1.suc",
             "demo2.suc",
             "demo3.dif",
+            "demo4.dif",
             "junit.xml"
         ]
         for root, dirs, files in os.walk(tempWorkDirectory):

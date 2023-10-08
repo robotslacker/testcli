@@ -15,7 +15,10 @@ def executeFile(cls, scriptFile, argv):
             scriptFile = scriptFile[1:]
         if str(scriptFile).endswith("'"):
             scriptFile = scriptFile[:-1]
-        with open(os.path.expanduser(scriptFile), encoding=cls.testOptions.get("SCRIPT_ENCODING")) as f:
+        with open(
+                file=os.path.expanduser(scriptFile),
+                mode="r",
+                encoding=cls.testOptions.get("SCRIPT_ENCODING")) as f:
             query = f.read()
 
         # 空文件直接返回
