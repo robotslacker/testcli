@@ -7,7 +7,6 @@ from setuptools import setup
 
 '''
 How to build and upload this package to PyPi
-    python setup.py sdist
     python setup.py bdist_wheel --universal
     twine upload dist/*
 

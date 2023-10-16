@@ -915,15 +915,19 @@ class TestCli(object):
                 skipLines=compareSkipLines,
                 maskLines=compareMaskLines
             )
-
             # 生成dif和suc文件
             if self.logfilename is not None:
                 name, ext = os.path.splitext(self.logfilename)
             else:
                 name, ext = os.path.splitext(self.commandScript)
-            difFileName = name + ".dif"
-            sucFileName = name + ".suc"
-            rptFileName = name + ".rpt"
+            if "T_WORK" in os.environ:
+                difFileName = os.path.join(os.environ["T_WORK"], os.path.basename(name + ".dif"))
+                sucFileName = os.path.join(os.environ["T_WORK"], os.path.basename(name + ".suc"))
+                rptFileName = os.path.join(os.environ["T_WORK"], os.path.basename(name + ".rpt"))
+            else:
+                difFileName = os.path.join(self.ProcessPwd, os.path.basename(name + ".dif"))
+                sucFileName = os.path.join(self.ProcessPwd, os.path.basename(name + ".suc"))
+                rptFileName = os.path.join(self.ProcessPwd, os.path.basename(name + ".rpt"))
             if os.path.exists(difFileName):
                 os.remove(difFileName)
             if os.path.exists(sucFileName):
@@ -931,11 +935,12 @@ class TestCli(object):
             if os.path.exists(rptFileName):
                 os.remove(rptFileName)
             if compareResult:
-                difFileName = name + ".dif"
+                resultFileName = sucFileName
             else:
-                difFileName = name + ".dif"
+                resultFileName = difFileName
             newCompareResultList = [s + "\n" for s in newCompareResultList]
-            with open(file=difFileName, mode="w", encoding="UTF-8") as fp:
+
+            with open(file=resultFileName, mode="w", encoding="UTF-8") as fp:
                 fp.writelines(newCompareResultList)
 
             # 生成xdb文件, 里头包含的信息有：

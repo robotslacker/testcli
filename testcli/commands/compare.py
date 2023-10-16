@@ -4,6 +4,7 @@ import os
 import re
 import warnings
 from collections import namedtuple
+from difflib import SequenceMatcher
 from ..common import rewriteStatement
 from ..htmldiff.diffhtmlgenerate import diffHtmlGenerate
 
@@ -19,7 +20,7 @@ compareDefaultOption = {
     "igblank": False,         # 比较中是否忽略空格
     "trim": False,            # 比较中是否忽略行前行尾的空格
     "workEncoding": "utf-8",  # 工作文件的比对字符集
-    "refEncoding": "utf-8"    # 参考文件的比对字符集
+    "refEncoding": "utf-8",   # 参考文件的比对字符集
 }
 compareOption = copy.copy(compareDefaultOption)
 compareMaskLines = {}        # 比对中进行掩码的内容信息
@@ -156,7 +157,6 @@ class POSIXCompare:
                     x += 1
                     y += 1
                     history.append(self.Keep(a_lines[x - 1], a_lineno[x - 1]))
-
                 if x >= a_max and y >= b_max:
                     # If we're here, then we've traversed through the bottom-left corner,
                     # and are done.
@@ -247,6 +247,33 @@ class POSIXCompare:
                 next_i = next_i - 1
         return compare_result, m_CompareDiffResult
 
+    @staticmethod
+    def compareDiffLib(x,
+                       y,
+                       linenox,
+                       linenoy
+                       ):
+        compareResult = True
+        compareDiffResult = []
+        for group in SequenceMatcher(None, x, y).get_grouped_opcodes(3):
+            for tag, i1, i2, j1, j2 in group:
+                if tag == 'equal':
+                    # 内容完全相同，标记的行号为日志文件的行号
+                    for nPos in range(i1, i2):
+                        compareDiffResult.append(" {:>{}} ".format(linenox[nPos], 6) + x[nPos])
+                    continue
+                if tag in {'replace', 'delete'}:
+                    # 当前日志有，但是参考日志中没有
+                    compareResult = False
+                    for nPos in range(i1, i2):
+                        compareDiffResult.append("-{:>{}} ".format(linenox[nPos], 6) + x[nPos])
+                if tag in {'replace', 'insert'}:
+                    # 当前日志没有，但是参考日志中有
+                    compareResult = False
+                    for nPos in range(j1, j2):
+                        compareDiffResult.append("+{:>{}} ".format(linenoy[nPos], 6) + y[nPos])
+        return compareResult, compareDiffResult
+
     def compare_text(self,
                      lines1: list,
                      lines2: list,
@@ -256,7 +283,8 @@ class POSIXCompare:
                      CompareWithMask: bool = True,
                      CompareIgnoreCase: bool = False,
                      CompareIgnoreTailOrHeadBlank: bool = False,
-                     compareAlgorithm: str = 'MYERS'):
+                     compareAlgorithm: str = 'MYERS',
+                     compareAlgorithmDiffLibThresHold: int = 1000):
 
         # 将比较文件加载到数组
         fileRawContent = lines1
@@ -354,12 +382,22 @@ class POSIXCompare:
         # 输出两个信息
         # 1：  Compare的结果是否存在dif，True/False
         # 2:   Compare的Dif列表. 注意：LCS算法是一个翻转的列表. MYERS算法里头是一个正序列表
-        if compareAlgorithm.upper() == "MYERS":
+        useCompareAlgorithm = compareAlgorithm.upper()
+        if len(lineno1) > compareAlgorithmDiffLibThresHold or len(lineno2) > compareAlgorithmDiffLibThresHold:
+            useCompareAlgorithm = "DIFFLIB"
+            if "TESTCLI_DEBUG" in os.environ:
+                print("[DEBUG] Large fila compare. Compare algorithm will failback to DIFFLIB.")
+        if useCompareAlgorithm == "MYERS":
             (compareResult, compareResultList) = \
-                self.compareMyers(workFileContent, refFileContent,
-                                  lineno1, lineno2,
-                                  p_compare_maskEnabled=CompareWithMask,
-                                  p_compare_ignoreCase=CompareIgnoreCase)
+                    self.compareMyers(
+                        workFileContent, refFileContent,
+                        lineno1, lineno2,
+                        p_compare_maskEnabled=CompareWithMask,
+                        p_compare_ignoreCase=CompareIgnoreCase
+                    )
+        elif useCompareAlgorithm == "DIFFLIB":
+            (compareResult, compareResultList) = \
+                self.compareDiffLib(workFileContent, refFileContent, lineno1, lineno2)
         else:
             (compareResult, compareResultList) = \
                 self.compareLCS(workFileContent, refFileContent,
@@ -368,6 +406,7 @@ class POSIXCompare:
                                 p_compare_ignoreCase=CompareIgnoreCase)
             # 翻转数组
             compareResultList = compareResultList[::-1]
+
         # 随后从数组中补充进入被Skip掉的内容
         workLastPos = 0  # 上次Work文件已经遍历到的位置
         refLastPos = 0  # 上次Ref文件已经遍历到的位置
@@ -375,13 +414,13 @@ class POSIXCompare:
         # 从列表中反向开始遍历， Step=-1
         for row in compareResultList:
             if row.startswith('+'):
-                # 当前日志没有，Reference Log中有的
+                # 当前日志没有，Reference中有的
                 # 需要注意的是，Ref文件中被跳过的行不会补充进入dif文件
                 lineno = int(row[1:7])
-                m_AppendLine = "+{:>{}} ".format(lineno, 6) + refFileRawContent[lineno - 1]
-                if m_AppendLine.endswith("\n"):
-                    m_AppendLine = m_AppendLine[:-1]
-                newCompareResultList.append(m_AppendLine)
+                appendLine = "+{:>{}} ".format(lineno, 6) + refFileRawContent[lineno - 1]
+                if appendLine.endswith("\n"):
+                    appendLine = appendLine[:-1]
+                newCompareResultList.append(appendLine)
                 refLastPos = lineno
                 continue
             elif row.startswith('-'):
@@ -391,14 +430,14 @@ class POSIXCompare:
                 if lineno > (workLastPos + 1):
                     # 当前日志中存在，但是比较的过程中被Skip掉的内容，要首先补充进来
                     for m_nPos in range(workLastPos + 1, lineno):
-                        m_AppendLine = "S{:>{}} ".format(m_nPos, 6) + fileRawContent[m_nPos - 1]
-                        if m_AppendLine.endswith("\n"):
-                            m_AppendLine = m_AppendLine[:-1]
-                        newCompareResultList.append(m_AppendLine)
-                m_AppendLine = "-{:>{}} ".format(lineno, 6) + fileRawContent[lineno - 1]
-                if m_AppendLine.endswith("\n"):
-                    m_AppendLine = m_AppendLine[:-1]
-                newCompareResultList.append(m_AppendLine)
+                        appendLine = "S{:>{}} ".format(m_nPos, 6) + fileRawContent[m_nPos - 1]
+                        if appendLine.endswith("\n"):
+                            appendLine = appendLine[:-1]
+                        newCompareResultList.append(appendLine)
+                appendLine = "-{:>{}} ".format(lineno, 6) + fileRawContent[lineno - 1]
+                if appendLine.endswith("\n"):
+                    appendLine = appendLine[:-1]
+                newCompareResultList.append(appendLine)
                 workLastPos = lineno
                 continue
             elif row.startswith(' '):
@@ -408,15 +447,15 @@ class POSIXCompare:
                 if lineno > (workLastPos + 1):
                     # 当前日志中存在，但是比较的过程中被Skip掉的内容，要首先补充进来
                     for m_nPos in range(workLastPos + 1, lineno):
-                        m_AppendLine = "S{:>{}} ".format(m_nPos, 6) + fileRawContent[m_nPos - 1]
-                        if m_AppendLine.endswith("\n"):
-                            m_AppendLine = m_AppendLine[:-1]
-                        newCompareResultList.append(m_AppendLine)
+                        appendLine = "S{:>{}} ".format(m_nPos, 6) + fileRawContent[m_nPos - 1]
+                        if appendLine.endswith("\n"):
+                            appendLine = appendLine[:-1]
+                        newCompareResultList.append(appendLine)
                 # 完全一样的内容
-                m_AppendLine = " {:>{}} ".format(lineno, 6) + fileRawContent[lineno - 1]
-                if m_AppendLine.endswith("\n"):
-                    m_AppendLine = m_AppendLine[:-1]
-                newCompareResultList.append(m_AppendLine)
+                appendLine = " {:>{}} ".format(lineno, 6) + fileRawContent[lineno - 1]
+                if appendLine.endswith("\n"):
+                    appendLine = appendLine[:-1]
+                newCompareResultList.append(appendLine)
                 workLastPos = lineno
                 refLastPos = refLastPos + 1
                 continue
@@ -434,7 +473,9 @@ class POSIXCompare:
                            CompareIgnoreTailOrHeadBlank: bool = False,
                            CompareWorkEncoding: str = 'UTF-8',
                            CompareRefEncoding: str = 'UTF-8',
-                           compareAlgorithm: str = 'MYERS'):
+                           compareAlgorithm: str = 'MYERS',
+                           compareAlgorithmDiffLibThresHold: int = 1000,
+                           ):
         if not os.path.isfile(file1):
             raise DiffException('ERROR: File %s does not exist!' % file1)
         if not os.path.isfile(file2):
@@ -455,7 +496,8 @@ class POSIXCompare:
             CompareWithMask=CompareWithMask,
             CompareIgnoreCase=CompareIgnoreCase,
             CompareIgnoreTailOrHeadBlank=CompareIgnoreTailOrHeadBlank,
-            compareAlgorithm=compareAlgorithm
+            compareAlgorithm=compareAlgorithm,
+            compareAlgorithmDiffLibThresHold=compareAlgorithmDiffLibThresHold,
         )
         # 关闭打开的文件
         if filefp1:
@@ -623,6 +665,7 @@ def executeCompareRequest(cls, requestObject, commandScriptFile: str):
                     maskLines=compareMaskLines,
                     CompareWorkEncoding=currentCompareOption["workEncoding"],
                     CompareRefEncoding=currentCompareOption["refEncoding"],
+                    compareAlgorithmDiffLibThresHold=cls.testOptions.get("COMPARE_DIFFLIB_THRESHOLD")
                 )
             if compareResult:
                 yield {

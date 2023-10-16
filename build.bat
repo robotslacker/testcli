@@ -1,6 +1,6 @@
 rd /s/q build
 rd /s/q dist
-python setup.py sdist
+REM python setup.py sdist
 python setup.py bdist_wheel --universal
 pip uninstall --yes robotslacker_testcli
 for %%f in (dist\robotslacker_testcli*.whl) do (

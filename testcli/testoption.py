@@ -158,6 +158,11 @@ class TestOptions(object):
                                     "Comments": '',
                                     "Hidden": False})
 
+        self.testOptionList.append({"Name": "COMPARE_DIFFLIB_THRESHOLD",
+                                    "Value": 1000,
+                                    "Comments": 'Threshold(lines) for use difflib compare algorithm.',
+                                    "Hidden": False})
+
         self.testOptionList.append({"Name": "NAMESPACE",
                                     "Value": "SQL",
                                     "Comments": 'Script Namespace, SQL|API',

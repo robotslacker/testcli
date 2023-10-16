@@ -1085,8 +1085,8 @@ class JOBManager(object):
     def registerAgent(self):
         # 启动后台守护线程，用来处理延时启动，超时等问题
         Agenthread = threading.Thread(target=self.JOBManagerAgent)
-        Agenthread.setDaemon(True)  # 主进程退出，守护进程也会退出
-        Agenthread.setName("JobManagerAgent")
+        Agenthread.daemon = True  # 主进程退出，守护进程也会退出
+        Agenthread.name = "JobManagerAgent"
         Agenthread.start()
         self.isAgentStarted = True
 
