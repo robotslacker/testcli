@@ -5,13 +5,12 @@ import time
 import os
 import re
 import pytest
-from py.xml import html
 
 # 记录测试的运行结果
 scenarioResults = {
     "summary": {
-        "caseId": 0,
-        "suiteId": 0
+        "caseId": "0",
+        "suiteId": "0"
     }
 }
 
@@ -19,7 +18,7 @@ scenarioResults = {
 @pytest.mark.optionalhook
 def pytest_html_results_table_header(cells):
     # cells.insert(2, html.th('Description'))
-    cells.insert(1, html.th('Time', class_='sortable time', col='time'))
+    cells.insert(1, '<th class="sortable time" col="time">Time</th>')
     cells.pop()
 
 
@@ -27,7 +26,7 @@ def pytest_html_results_table_header(cells):
 def pytest_html_results_table_row(report, cells):
     if report:
         pass
-    cells.insert(1, html.td(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), class_='col-time'))
+    cells.insert(1, '<td class="col-time">' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + '</td>')
     # cells.insert(2, html.td(report.description))
     cells.pop()
 
@@ -88,8 +87,8 @@ def pytest_runtest_makereport(item, call):
         else:
             caseId = 0
         scenarioResults["summary"] = {
-            "caseId": caseId,
-            "suiteId": suiteId
+            "caseId": str(caseId),
+            "suiteId": str(suiteId)
         }
 
     if when == "teardown":

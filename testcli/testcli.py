@@ -84,6 +84,7 @@ class TestCli(object):
             suitename=None,                         # 程序所在的SuiteName
             casename=None,                          # 程序所在的CaseName
             namespace=None,                         # 程序的默认命名空间
+            testRunId=0,                            # 程序每次运行的唯一ID（便于统计，可以省略)
     ):
         self.version = __version__                      # 当前程序版本
 
@@ -131,6 +132,9 @@ class TestCli(object):
 
         self.logfileContent = []                        # 程序执行日志文本信息
         self.logfileScenario = {}                       # 执行日志解析信息
+
+        # 测试的运行ID，用来完成多次运行时候的比较
+        self.testRunId = testRunId
 
         # 参考日志比对句柄
         self.referenceCompareHandler = POSIXCompare()
@@ -367,7 +371,7 @@ class TestCli(object):
             raise TestCliException("Can not open logfile for write [" + self.logfilename + "]" + os.getcwd())
 
         # 如果要求打开扩展日志，则打开扩展日志
-        if self.xlogFile is not None:
+        if self.xlogFile is not None and self.xlogFile != "":
             # 创建文件，并写入文件头信息
             if self.xlogOverwrite:
                 # 如果打开了覆盖模式，则删除之前的历史文件
@@ -394,6 +398,7 @@ class TestCli(object):
                            "  SuiteName       TEXT,"
                            "  CaseName        TEXT,"
                            "  ScenarioId      TEXT,"
+                           "  TestRunId       TEXT,"
                            "  ScenarioName    TEXT"
                            ")"
                            "")
@@ -1330,14 +1335,15 @@ class TestCli(object):
                 str(processName),
                 str(self.suitename),
                 str(self.casename),
+                str(self.testRunId),
                 str(commandResult["scenarioId"]),
                 str(commandResult["scenarioName"])
             )
             cursor.execute(
                 "Insert Into TestCli_Xlog(Script,Started,Elapsed,RawCommand,"
                 "CommandType,Command,CommandStatus,ErrorCode,WorkerName,SuiteName,CaseName,"
-                "ScenarioId, ScenarioName) "
-                "Values(?,?,?,?, ?,?,?,?,?,?,?, ?,?)",
+                "ScenarioId, TestRunId, ScenarioName) "
+                "Values(?,?,?,?,  ?,?,?,?,?,?,?,  ?,?,?)",
                 data
             )
             cursor.close()

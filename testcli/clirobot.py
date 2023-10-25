@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import os
 import sys
 import time
@@ -242,10 +243,12 @@ def cli(
                                 executorMonitor["runLevelCount"],
                             ))
                 for runningJobName, runningJobInfo in dict(executorMonitor["runningJobs"]).items():
+                    runningJobInfoJson = dict(json.loads(runningJobInfo))
                     logger.info("--- " +
                                 runningJobName + ":" +
-                                runningJobInfo["workingDirectory"] +
-                                "(" + runningJobInfo["script"] + ") started at " + runningJobInfo["started"] + ".")
+                                runningJobInfoJson["workingDirectory"] +
+                                "(" + runningJobInfoJson["script"] + ") started at " +
+                                runningJobInfoJson["started"] + ".")
                 time.sleep(10)
             else:
                 logger.info("Waiting for runExecutor join ...")

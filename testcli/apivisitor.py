@@ -141,7 +141,7 @@ class APIVisitor(APIParserVisitor):
     def visitSleep(self, ctx: APIParser.SleepContext):
         parsedObject = {
             'name': 'SLEEP',
-            "sleepTime": int(ctx.INT().getText())
+            "sleepTime": ctx.SLEEP_SEMICOLON().getText()
         }
 
         # 获取错误代码

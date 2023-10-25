@@ -4,7 +4,16 @@ from ..sqlclijdbc import SQLCliJDBCTimeOutException
 
 
 # 休息一段时间
-def cliSleep(cls, sleepTime: int):
+def cliSleep(cls, sleepTime):
+    try:
+        sleepTime = int(sleepTime)
+    except ValueError:
+        yield {
+            "type": "error",
+            "message": "Sleep time must be valid positive integer.",
+        }
+        return
+
     sleepTimeOut = -1
 
     nameSpace = cls.testOptions.get("NAMESPACE")

@@ -24,7 +24,7 @@ SPACE               : [ \t]+ ->channel(HIDDEN);
 
 EXIT                : '_EXIT';
 QUIT                : '_QUIT';
-SLEEP               : '_SLEEP';
+SLEEP               : '_SLEEP' -> pushMode(SleepMode);
 
 // 切换应用模式
 USE                 : '_USE' -> pushMode(UseMode);
@@ -250,7 +250,7 @@ JOB_ON              : 'ON';
 JOB_OFF             : 'OFF';
 JOB_TO              : 'TO';
 JOB_EXPRESSION      :
-    (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' )+;
+    (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' | '{' | '}')+;
 
 mode CompareMode;
 COMPARE_SPACE       : [ \t]+ -> channel (HIDDEN);
@@ -340,3 +340,9 @@ PLUGIN_EXPRESSION    :
 PLUGIN_CRLF          : CRLF -> popMode;
 PLUGIN_SEMICOLON     : ';';
 
+mode SleepMode;
+SLEEP_SPACE         : [ \t]+ -> channel (HIDDEN);
+SLEEP_EXPRESSION    :
+    (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' | '{' | '}')+;
+SLEEP_CRLF          : CRLF -> popMode;
+SLEEP_SEMICOLON     : ';';

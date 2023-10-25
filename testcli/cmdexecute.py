@@ -23,7 +23,7 @@ from .commands.host import executeLocalCommand
 from .commands.spool import spool
 from .commands.echo import echo_input
 from .commands.setOptions import setOptions
-from .commands.cliSleep import cliSleep
+from .commands.sleep import cliSleep
 from .commands.userNameSpace import userNameSpace
 from .commands.whenever import setWheneverAction
 from .commands.ssh import executeSshRequest
@@ -1077,6 +1077,12 @@ class CmdExecute(object):
                             lastCommandResult["errorCode"] = 1
                         yield commandResult
                 elif parseObject["name"] in ["SLEEP"]:
+                    sleepTime = rewriteStatement(
+                        cls=self.cliHandler,
+                        statement=parseObject["sleepTime"],
+                        commandScriptFile=commandScriptFile
+                    )
+                    parseObject["sleepTime"] = sleepTime
                     for commandResult in cliSleep(
                             cls=self.cliHandler,
                             sleepTime=parseObject["sleepTime"]
@@ -1347,6 +1353,24 @@ class CmdExecute(object):
                         lastCommandResult["errorCode"] = 0
                         yield result
                 elif parseObject["name"] in ["JOB"]:
+                    # rewriteStatement
+                    if "jobName" in parseObject.keys():
+                        jobName = rewriteStatement(
+                            cls=self.cliHandler,
+                            statement=parseObject["jobName"],
+                            commandScriptFile=commandScriptFile
+                        )
+                        parseObject["jobName"] = jobName
+                    if "param" in parseObject.keys():
+                        params = dict(parseObject["param"])
+                        for paramKey, paramValue in params.items():
+                            newParamValue = rewriteStatement(
+                                cls=self.cliHandler,
+                                statement=paramValue,
+                                commandScriptFile=commandScriptFile
+                            )
+                            params.update({ paramKey: newParamValue})
+                        parseObject["param"] = params
                     for result in self.cliHandler.JobHandler.processRequest(
                             cls=self.cliHandler,
                             requestObject=parseObject,

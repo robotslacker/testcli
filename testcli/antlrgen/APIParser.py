@@ -10,7 +10,7 @@ else:
 
 def serializedATN():
     return [
-        4,1,264,679,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,
+        4,1,268,679,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,
         7,6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,
         13,2,14,7,14,2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,2,
         20,7,20,2,21,7,21,2,22,7,22,2,23,7,23,2,24,7,24,2,25,7,25,2,26,7,
@@ -135,8 +135,8 @@ def serializedATN():
         235,237,5,6,0,0,236,235,1,0,0,0,236,237,1,0,0,0,237,45,1,0,0,0,238,
         239,5,24,0,0,239,241,7,3,0,0,240,242,5,146,0,0,241,240,1,0,0,0,241,
         242,1,0,0,0,242,244,1,0,0,0,243,245,5,6,0,0,244,243,1,0,0,0,244,
-        245,1,0,0,0,245,47,1,0,0,0,246,247,5,23,0,0,247,249,5,44,0,0,248,
-        250,5,8,0,0,249,248,1,0,0,0,249,250,1,0,0,0,250,252,1,0,0,0,251,
+        245,1,0,0,0,245,47,1,0,0,0,246,247,5,23,0,0,247,249,5,266,0,0,248,
+        250,5,268,0,0,249,248,1,0,0,0,249,250,1,0,0,0,250,252,1,0,0,0,251,
         253,5,6,0,0,252,251,1,0,0,0,252,253,1,0,0,0,253,49,1,0,0,0,254,256,
         5,28,0,0,255,257,5,105,0,0,256,255,1,0,0,0,257,258,1,0,0,0,258,256,
         1,0,0,0,258,259,1,0,0,0,259,261,1,0,0,0,260,262,5,8,0,0,261,260,
@@ -425,7 +425,8 @@ class APIParser ( Parser ):
                       "MONITOR_STOP", "MONITOR_REPORT", "MONITOR_LIST", 
                       "MONITOR_ON", "MONITOR_OFF", "MONITOR_EXPRESSION", 
                       "MONITOR_CRLF", "MONITOR_SEMICOLON", "PLUGIN_SPACE", 
-                      "PLUGIN_EXPRESSION", "PLUGIN_CRLF", "PLUGIN_SEMICOLON" ]
+                      "PLUGIN_EXPRESSION", "PLUGIN_CRLF", "PLUGIN_SEMICOLON", 
+                      "SLEEP_SPACE", "SLEEP_EXPRESSION", "SLEEP_CRLF", "SLEEP_SEMICOLON" ]
 
     RULE_prog = 0
     RULE_command = 1
@@ -748,6 +749,10 @@ class APIParser ( Parser ):
     PLUGIN_EXPRESSION=262
     PLUGIN_CRLF=263
     PLUGIN_SEMICOLON=264
+    SLEEP_SPACE=265
+    SLEEP_EXPRESSION=266
+    SLEEP_CRLF=267
+    SLEEP_SEMICOLON=268
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
@@ -2400,11 +2405,11 @@ class APIParser ( Parser ):
         def SLEEP(self):
             return self.getToken(APIParser.SLEEP, 0)
 
-        def INT(self):
-            return self.getToken(APIParser.INT, 0)
+        def SLEEP_EXPRESSION(self):
+            return self.getToken(APIParser.SLEEP_EXPRESSION, 0)
 
-        def SEMICOLON(self):
-            return self.getToken(APIParser.SEMICOLON, 0)
+        def SLEEP_SEMICOLON(self):
+            return self.getToken(APIParser.SLEEP_SEMICOLON, 0)
 
         def CRLF(self):
             return self.getToken(APIParser.CRLF, 0)
@@ -2431,13 +2436,13 @@ class APIParser ( Parser ):
             self.state = 246
             self.match(APIParser.SLEEP)
             self.state = 247
-            self.match(APIParser.INT)
+            self.match(APIParser.SLEEP_EXPRESSION)
             self.state = 249
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==8:
+            if _la==268:
                 self.state = 248
-                self.match(APIParser.SEMICOLON)
+                self.match(APIParser.SLEEP_SEMICOLON)
 
 
             self.state = 252

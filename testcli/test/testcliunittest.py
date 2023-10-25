@@ -406,7 +406,7 @@ class TestSynatx(unittest.TestCase):
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
             = SQLAnalyze("_sleep 3")
         self.assertTrue(isFinished)
-        self.assertEqual({'name': 'SLEEP', 'sleepTime': 3}, ret_CommandSplitResult)
+        self.assertEqual({'name': 'SLEEP', 'sleepTime': "3"}, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
         self.assertEqual(None, ret_errorMsg)
 

@@ -142,7 +142,7 @@ class SQLVisitor(SQLParserVisitor):
     def visitSleep(self, ctx: SQLParser.SleepContext):
         parsedObject = {
             'name': 'SLEEP',
-            "sleepTime": int(ctx.INT().getText())
+            "sleepTime": ctx.SLEEP_EXPRESSION().getText()
         }
 
         # 获取错误代码

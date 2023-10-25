@@ -35,6 +35,7 @@ def abortSignalHandler(signum, frame):
 @click.option("--scripttimeout", type=int, help="Script timeout(seconds). Default is -1, means no limit.")
 @click.option("--suitename", type=str, help="Test suite name.")
 @click.option("--casename", type=str, help="Test case name.")
+@click.option("--runid", type=str, help="Test run unique id. Default is 0. will save in extend log for later analyze.")
 @click.option("--silent", is_flag=True, help="Run script in silent mode, no console output. Default is false.")
 @click.option("--daemon", is_flag=True, help="Run script in daemon mode. Default is false.")
 @click.option("--debug", is_flag=True, help="Run in debug mode. Default is False.")
@@ -63,7 +64,8 @@ def cli(
         silent,
         daemon,
         pidfile,
-        debug
+        debug,
+        runid
 ):
     # 程序的返回值，默认是0
     appExitValue = 0
@@ -191,7 +193,8 @@ def cli(
             namespace=namespace,
             suitename=suitename,
             casename=casename,
-            headlessMode=silent
+            headlessMode=silent,
+            testRunId=runid,
         )
 
         # 运行主程序

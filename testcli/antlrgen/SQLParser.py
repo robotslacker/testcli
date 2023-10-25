@@ -10,7 +10,7 @@ else:
 
 def serializedATN():
     return [
-        4,1,281,776,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,
+        4,1,285,776,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,
         7,6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,
         13,2,14,7,14,2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,2,
         20,7,20,2,21,7,21,2,22,7,22,2,23,7,23,2,24,7,24,2,25,7,25,2,26,7,
@@ -172,10 +172,10 @@ def serializedATN():
         0,333,334,1,0,0,0,334,69,1,0,0,0,335,336,5,35,0,0,336,338,7,5,0,
         0,337,339,5,163,0,0,338,337,1,0,0,0,338,339,1,0,0,0,339,341,1,0,
         0,0,340,342,5,17,0,0,341,340,1,0,0,0,341,342,1,0,0,0,342,71,1,0,
-        0,0,343,344,5,34,0,0,344,346,5,55,0,0,345,347,5,19,0,0,346,345,1,
-        0,0,0,346,347,1,0,0,0,347,349,1,0,0,0,348,350,5,17,0,0,349,348,1,
-        0,0,0,349,350,1,0,0,0,350,73,1,0,0,0,351,353,5,39,0,0,352,354,5,
-        122,0,0,353,352,1,0,0,0,354,355,1,0,0,0,355,353,1,0,0,0,355,356,
+        0,0,343,344,5,34,0,0,344,346,5,283,0,0,345,347,5,285,0,0,346,345,
+        1,0,0,0,346,347,1,0,0,0,347,349,1,0,0,0,348,350,5,17,0,0,349,348,
+        1,0,0,0,349,350,1,0,0,0,350,73,1,0,0,0,351,353,5,39,0,0,352,354,
+        5,122,0,0,353,352,1,0,0,0,354,355,1,0,0,0,355,353,1,0,0,0,355,356,
         1,0,0,0,356,358,1,0,0,0,357,359,5,19,0,0,358,357,1,0,0,0,358,359,
         1,0,0,0,359,361,1,0,0,0,360,362,5,17,0,0,361,360,1,0,0,0,361,362,
         1,0,0,0,362,75,1,0,0,0,363,391,5,40,0,0,364,365,5,109,0,0,365,392,
@@ -468,7 +468,8 @@ class SQLParser ( Parser ):
                       "MONITOR_STOP", "MONITOR_REPORT", "MONITOR_LIST", 
                       "MONITOR_ON", "MONITOR_OFF", "MONITOR_EXPRESSION", 
                       "MONITOR_CRLF", "MONITOR_SEMICOLON", "PLUGIN_SPACE", 
-                      "PLUGIN_EXPRESSION", "PLUGIN_CRLF", "PLUGIN_SEMICOLON" ]
+                      "PLUGIN_EXPRESSION", "PLUGIN_CRLF", "PLUGIN_SEMICOLON", 
+                      "SLEEP_SPACE", "SLEEP_EXPRESSION", "SLEEP_CRLF", "SLEEP_SEMICOLON" ]
 
     RULE_prog = 0
     RULE_command = 1
@@ -822,6 +823,10 @@ class SQLParser ( Parser ):
     PLUGIN_EXPRESSION=279
     PLUGIN_CRLF=280
     PLUGIN_SEMICOLON=281
+    SLEEP_SPACE=282
+    SLEEP_EXPRESSION=283
+    SLEEP_CRLF=284
+    SLEEP_SEMICOLON=285
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
@@ -3304,11 +3309,11 @@ class SQLParser ( Parser ):
         def SLEEP(self):
             return self.getToken(SQLParser.SLEEP, 0)
 
-        def INT(self):
-            return self.getToken(SQLParser.INT, 0)
+        def SLEEP_EXPRESSION(self):
+            return self.getToken(SQLParser.SLEEP_EXPRESSION, 0)
 
-        def SEMICOLON(self):
-            return self.getToken(SQLParser.SEMICOLON, 0)
+        def SLEEP_SEMICOLON(self):
+            return self.getToken(SQLParser.SLEEP_SEMICOLON, 0)
 
         def CRLF(self):
             return self.getToken(SQLParser.CRLF, 0)
@@ -3335,13 +3340,13 @@ class SQLParser ( Parser ):
             self.state = 343
             self.match(SQLParser.SLEEP)
             self.state = 344
-            self.match(SQLParser.INT)
+            self.match(SQLParser.SLEEP_EXPRESSION)
             self.state = 346
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==19:
+            if _la==285:
                 self.state = 345
-                self.match(SQLParser.SEMICOLON)
+                self.match(SQLParser.SLEEP_SEMICOLON)
 
 
             self.state = 349

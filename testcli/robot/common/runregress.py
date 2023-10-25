@@ -322,8 +322,9 @@ class Regress(object):
 
             # 根据pytestlog中的信息依次添加测试结果
             for _, testScenarioResults in testExtendResult.items():
+                testScenarioResults = dict(json.loads(testScenarioResults))
                 htmlTestCase = TestCase()
-                if "caseName" not in testScenarioResults:
+                if "caseName" not in testScenarioResults.keys():
                     # 处理掉报告中的Summary字段信息，并不需要在这里统计
                     continue
                 htmlTestCase.setCaseName(testScenarioResults["caseName"])
@@ -441,13 +442,14 @@ class Regress(object):
                             # - error: 表示测试用例执行时报错, 状态为error。
                             for scenarioName, scenarioResult in dict(xlogContent["ScenarioResults"]).items():
                                 caseStatus = ""
-                                if scenarioResult["Status"] in ["FAILURE"]:
+                                scenarioResultJson = dict(json.loads(scenarioResult))
+                                if scenarioResultJson["Status"] in ["FAILURE"]:
                                     caseStatus = "failed"
-                                if scenarioResult["Status"] in ["Successful"]:
+                                if scenarioResultJson["Status"] in ["Successful"]:
                                     caseStatus = "passed"
                                 caseElapsed = 0
-                                if "Elapsed" in dict(scenarioResult).keys():
-                                    caseElapsed = scenarioResult["Elapsed"]
+                                if "Elapsed" in dict(scenarioResultJson).keys():
+                                    caseElapsed = scenarioResultJson["Elapsed"]
                                 jUnitTestCase = JunitTestCase(
                                     name=scenarioName,
                                     classname=f.replace(".xlog", ""),
@@ -455,7 +457,7 @@ class Regress(object):
                                 )
                                 if caseStatus == "failed":
                                     jUnitTestCase.add_failure_info(
-                                        message=scenarioResult["message"]
+                                        message=scenarioResultJson["message"]
                                     )
                                 jUnitTestCases.append(jUnitTestCase)
                             # 每一个xlog作为一个TestSuite，每一个Scenario作为一个TestCase

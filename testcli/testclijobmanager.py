@@ -1030,7 +1030,7 @@ class JOBManager(object):
                                       }
                             xlogPath = self.getProcessContextInfo("xlog")
                             if xlogPath is None:
-                                m_args["xlog"] = None
+                                m_args["xlog"] = ""
                             else:
                                 # 这里由于Cli已经切换了当前的路径到脚本路径，所以当把带有相对路径的xlog传递给子进程时候，会导致子进程无法使用
                                 # 这里要做相对路径的转换
