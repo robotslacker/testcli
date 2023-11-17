@@ -79,6 +79,8 @@ def runRobotExecutor(args):
 
         # 重置T_WORK到子目录下
         os.environ['T_WORK'] = workingDirectory
+        # 记录测试唯一ID
+        os.environ['T_RUNID'] = str(args["testRunId"])
 
         # 初始化进程日志
         LOG_FORMAT = "%(asctime)s - %(levelname)9s - %(message)s"

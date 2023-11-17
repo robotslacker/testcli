@@ -14,7 +14,7 @@ __version__ = "0.0.1"
 # Template
 class HtmlFileTemplate(object):
     """
-    Define a HTML template for report customerization and generation.
+    Define HTML template for report customerization and generation.
 
     Overall structure of an HTML report
 

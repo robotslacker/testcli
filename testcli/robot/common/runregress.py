@@ -6,7 +6,6 @@ import re
 import logging
 import random
 import shutil
-import sqlite3
 import sys
 import time
 import datetime
@@ -20,7 +19,6 @@ from robot.api import ExecutionResult
 from robot import rebot_cli
 
 from .runrobotexecutor import runRobotExecutor
-from .runpythonexecutor import runPythonExecutor
 from .htmltestreport.HtmlTestReport import HTMLTestRunner
 from .htmltestreport.HtmlTestReport import TestResult
 from .regressexception import RegressException
@@ -50,7 +48,8 @@ class Regress(object):
             scriptTimeout=-1,
             executorMonitor=None,
             reportType="HTML,JUNIT",
-            reportLevel="Case"
+            reportLevel="Case",
+            testRunId=0
     ):
         if executorMonitor is None:
             executorMonitor = {}
@@ -68,8 +67,9 @@ class Regress(object):
             self.jobList = str(jobList).split(",")
         self.workDirectory = workDirectory
         self.testRoot = testRoot
+        self.testRunId = testRunId
 
-        # 统计测试场景的数量
+        # 测试场景的详细信息
         self.scenarioResult = {}
 
         # 进程日志
@@ -297,57 +297,6 @@ class Regress(object):
                 # 合并报告的时候无法采用并发
                 htmlTestResult.addSuite(htmlTestSuite)
 
-    def generatePythonReport(
-            self,
-            robotTask,
-            htmlTestResult,
-            workDirectory
-    ):
-        with self.semGenerateReport:
-            # 不能有太多的并发来处理这个报告，避免CPU的过度消耗
-            self.logger.info("  Processing python result file under [" + str(robotTask["workingDirectory"]) + "] ...")
-
-            htmlTestSuite = TestSuite()
-            htmlTestSuite.setSuiteName(str(os.path.basename(robotTask["pythonFile"])).rstrip(".py"))
-            testExtendLog = os.path.join(workDirectory,
-                                         robotTask["workingDirectory"],
-                                         robotTask["workingDirectory"] + ".pytestlog")
-            if not os.path.exists(testExtendLog):
-                self.logger.warning("  dir [" + robotTask["workingDirectory"] +
-                                    "] does not include any valid pytestlog.")
-                return
-            testExtendLogFileHandler = open(testExtendLog, mode='r', encoding='UTF-8')
-            testExtendResult = dict(json.load(testExtendLogFileHandler))
-            testExtendLogFileHandler.close()
-
-            # 根据pytestlog中的信息依次添加测试结果
-            for _, testScenarioResults in testExtendResult.items():
-                testScenarioResults = dict(json.loads(testScenarioResults))
-                htmlTestCase = TestCase()
-                if "caseName" not in testScenarioResults.keys():
-                    # 处理掉报告中的Summary字段信息，并不需要在这里统计
-                    continue
-                htmlTestCase.setCaseName(testScenarioResults["caseName"])
-                if testScenarioResults["result"] == "passed":
-                    htmlTestCase.setCaseStatus(TestCaseStatus.SUCCESS)
-                else:
-                    htmlTestCase.setCaseStatus(TestCaseStatus.FAILURE)
-                htmlTestCase.setDetailReportLink(robotTask["workingDirectory"] + ".html#")
-                htmlTestCase.setDownloadURLLink(robotTask["workingDirectory"] + ".tar")
-                htmlTestCase.setCaseStartTime(testScenarioResults["startTime"])
-                startTime = time.mktime(time.strptime(testScenarioResults["startTime"], '%Y-%m-%d %H:%M:%S'))
-                endTime = time.mktime(time.strptime(testScenarioResults["endTime"], '%Y-%m-%d %H:%M:%S'))
-                htmlTestCase.setCaseElapsedTime(endTime - startTime)
-                htmlTestSuite.addTestCase(htmlTestCase)
-
-            # 汇总运行结果
-            htmlTestSuite.SummaryTestCase()
-
-            # 更新引用中的信息
-            with self.lockGenerateReport:
-                # 合并报告的时候无法采用并发
-                htmlTestResult.addSuite(htmlTestSuite)
-
     # 测试报告预处理，生成扩展信息文件
     def generateJunitReport(self):
         # 为Junit单独准备一个目录，来放置Junit结果
@@ -358,7 +307,6 @@ class Regress(object):
 
         if self.reportLevel == "CASE":
             # 直接用Robot的xml作为Junit报告的基础
-
             # 遍历目录来获取Junit测试结果
             jUnitTestSuites = []
             subDirs = os.listdir(self.workDirectory)
@@ -389,11 +337,16 @@ class Regress(object):
                         if robotCaseResult.status == "ERROR":
                             caseStatus = "error"
                         if robotCaseResult.starttime is not None:
-                            startTime = datetime.datetime.strptime(robotCaseResult.starttime[:17], "%Y%m%d %H:%M:%S")
+                            startTime = datetime.datetime.strptime(
+                                robotCaseResult.starttime[:17],
+                                "%Y%m%d %H:%M:%S"
+                            )
                         else:
                             startTime = None
                         if robotCaseResult.endtime is not None:
-                            endTime = datetime.datetime.strptime(robotCaseResult.endtime[:17], "%Y%m%d %H:%M:%S")
+                            endTime = datetime.datetime.strptime(
+                                robotCaseResult.endtime[:17],
+                                "%Y%m%d %H:%M:%S")
                         else:
                             endTime = 0
                         if startTime is not None and endTime is not None:
@@ -427,6 +380,9 @@ class Regress(object):
                     continue
 
                 # 开始处理subDir下的内容
+                # 需要处理的文件有 xdb文件， 即Execute TestCli形成的结果
+                # 需要处理的文件有 xlog文件，即Compare形成的结果
+                # 如果xlog文件中有和xdb不一样的结果，以xlog文件中的信息为最终结果，忽略之前xdb的结果
                 for root, dirs, files in os.walk(os.path.join(self.workDirectory, subDir)):
                     for f in files:
                         if f.endswith(".xlog"):
@@ -442,14 +398,13 @@ class Regress(object):
                             # - error: 表示测试用例执行时报错, 状态为error。
                             for scenarioName, scenarioResult in dict(xlogContent["ScenarioResults"]).items():
                                 caseStatus = ""
-                                scenarioResultJson = dict(json.loads(scenarioResult))
-                                if scenarioResultJson["Status"] in ["FAILURE"]:
+                                if scenarioResult["Status"] in ["FAILURE"]:
                                     caseStatus = "failed"
-                                if scenarioResultJson["Status"] in ["Successful"]:
+                                if scenarioResult["Status"] in ["Successful"]:
                                     caseStatus = "passed"
                                 caseElapsed = 0
-                                if "Elapsed" in dict(scenarioResultJson).keys():
-                                    caseElapsed = scenarioResultJson["Elapsed"]
+                                if "Elapsed" in dict(scenarioResult).keys():
+                                    caseElapsed = scenarioResult["Elapsed"]
                                 jUnitTestCase = JunitTestCase(
                                     name=scenarioName,
                                     classname=f.replace(".xlog", ""),
@@ -457,11 +412,12 @@ class Regress(object):
                                 )
                                 if caseStatus == "failed":
                                     jUnitTestCase.add_failure_info(
-                                        message=scenarioResultJson["message"]
+                                        message=scenarioResult["message"]
                                     )
                                 jUnitTestCases.append(jUnitTestCase)
                             # 每一个xlog作为一个TestSuite，每一个Scenario作为一个TestCase
-                            testSuiteName = "_".join(subDir.split('_')[1:-1]) + "_" + f.replace(".xlog", "")
+                            testSuiteName = ("_".join(subDir.split('_')[1:-1]) +
+                                             "_" + f.replace(".xlog", ""))
                             jUnitTestSuite = JunitTestSuite(testSuiteName, jUnitTestCases)
                             jUnitTestSuites.append(jUnitTestSuite)
             with open(file=JunitReportFile, mode="w", encoding="UTF-8") as fp:
@@ -513,25 +469,16 @@ class Regress(object):
                 # 分线程来统计报告
                 threads = []
                 for task in self.taskList:
-                    if "robotFile" in dict(task).keys():
-                        t = threading.Thread(
-                            target=self.generateRobotReport,
-                            args=(task, htmlTestResult)
-                        )
-                        t.start()
-                        threads.append(t)
-                    if "pythonFile" in dict(task).keys():
-                        t = threading.Thread(
-                            target=self.generatePythonReport,
-                            args=(task, htmlTestResult, self.workDirectory)
-                        )
-                        t.start()
-                        threads.append(t)
+                    t = threading.Thread(
+                        target=self.generateRobotReport,
+                        args=(task, htmlTestResult)
+                    )
+                    t.start()
+                    threads.append(t)
                 for t in threads:
                     t.join()
 
-                # 汇总所有的子目录到一个统一的报表上
-                # 生成该测试的测试报告
+                # 汇总所有的子目录到一个统一的报表上，便于展现
                 self.logger.info("Combing all test reports to one summary report ...")
                 rebotArgs = []
                 rebotArgs.extend(["--tagstatexclude", "owner*"])
@@ -550,8 +497,7 @@ class Regress(object):
                     ["--output", os.path.join(reportFileDir, "summary_output.xml")])
                 rebotArgs.append("--splitlog")
                 rebotArgs.append("--nostatusrc")
-
-                # 遍历目录，查找所有的sub开头的目录
+                # 遍历目录，将所有的Robot的XML文件合并到程序的参数中
                 m_TestSubXmlList = []
                 for root, dirs, files in os.walk(self.workDirectory):
                     for f in files:
@@ -563,7 +509,7 @@ class Regress(object):
                         "No valid test in [" + self.workDirectory + "].")
                 else:
                     rebotArgs.extend(m_TestSubXmlList)
-
+                    # 调用Rebot_Cli来合并报表
                     print("Execute Rebot_Cli: ")
                     for arg in rebotArgs:
                         print("    " + str(arg))
@@ -597,38 +543,6 @@ class Regress(object):
                     }
                     testReport.append(testSuiteReport)
                 self.executorMonitor["testReport"] = testReport
-
-                # 统计测试场景的数量
-                subDirs = os.listdir(self.workDirectory)
-                for subDir in subDirs:
-                    if not os.path.isdir(os.path.join(self.workDirectory, subDir)):
-                        continue
-                    if not subDir.startswith("sub_"):
-                        continue
-                    # 开始处理subDir下的内容
-                    for root, dirs, files in os.walk(os.path.join(self.workDirectory, subDir)):
-                        for f in files:
-                            if f.endswith(".xdb"):
-                                # 读取xdb文件
-                                xlogFileHandle = sqlite3.connect(
-                                    database=os.path.join(root, f),
-                                    check_same_thread=False,
-                                )
-                                cursor = xlogFileHandle.cursor()
-                                cursor.execute(
-                                    "Select DISTINCT ScenarioId "
-                                    "From   TestCli_Xlog "
-                                    "Where  ScenarioId is not NULL And ScenarioId != ''")
-                                rows = cursor.fetchall()
-                                for row in rows:
-                                    if row[0] not in self.scenarioResult.keys():
-                                        # 暂时先不统计其他信息
-                                        self.scenarioResult[row[0]] = \
-                                            {
-                                                "caseStatus": "N/A",
-                                                "caseElapsed": 0
-                                            }
-                                xlogFileHandle.close()
 
                 # 更新描述信息
                 htmlTestResult.setDescription(
@@ -814,13 +728,8 @@ class Regress(object):
                             if f.endswith(".robot"):
                                 job = os.path.join(root, str(f))
                                 appendJobFile(jobfile=job)
-                            if f.endswith(".py"):
-                                if f == "conftest.py":
-                                    # conftest.py是一个特殊文件，不能执行
-                                    continue
-                                job = os.path.join(root, str(f))
-                                appendJobFile(jobfile=job)
                 else:
+                    self.logger.warning("Current pwd directory : [" + str(os.getcwd()) + "]")
                     self.logger.warning("[" + job + "] is not valid file or directory. Ignore it.")
 
         # 处理没有完成的JOB
@@ -944,88 +853,45 @@ class Regress(object):
 
                 # Robot文件和Python文件分别运行
                 processManagerContext = multiprocessing.get_context("spawn")
-                if "pythonFile" in dict(self.taskList[nPos]).keys():
-                    self.logger.info(
-                        "Begin to execute python test [" + str(taskPos) + "/" + str(len(self.taskList)) + "] "
-                        + self.taskList[nPos]["pythonFile"] + " ...")
-                    args = {
-                        "pythonFile": str(self.taskList[nPos]["pythonFile"]),
-                        "testRoot": self.testRoot,
-                        "workingDirectory": os.path.join(self.workDirectory, self.taskList[nPos]["workingDirectory"]),
+                self.logger.info(
+                    "Begin to execute robot test [" + str(taskPos) + "/" + str(len(self.taskList)) + "] "
+                    + self.taskList[nPos]["robotFile"] + " ...")
+                args = {
+                    "robotFile": str(self.taskList[nPos]["robotFile"]),
+                    "robotOptions": self.robotOptions,
+                    "testRoot": self.testRoot,
+                    "testRunId": self.testRunId,
+                    "workingDirectory": os.path.join(self.workDirectory, self.taskList[nPos]["workingDirectory"]),
+                }
+                taskPos = taskPos + 1
+                process = processManagerContext.Process(
+                    target=runRobotExecutor,
+                    name="TestCliRobot: " + str(args["workingDirectory"]),
+                    args=(args,)
+                )
+                process.start()
+                self.executorList.append(
+                    {
+                        "Process": process,
+                        "robotFile":  str(self.taskList[nPos]["robotFile"]),
+                        "startTime": time.time(),
+                        "workingDirectory": args["workingDirectory"],
+                        "executorName": executorName,
+                        "args": args
+                    })
+                runningJobs = self.executorMonitor["runningJobs"]
+                runningJobs.update(
+                    {
+                        executorName:
+                            {
+                                "script": str(self.taskList[nPos]["robotFile"]),
+                                "workingDirectory": args["workingDirectory"],
+                                "pid": process.pid,
+                                "started": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                            }
                     }
-                    taskPos = taskPos + 1
-                    process = processManagerContext.Process(
-                        target=runPythonExecutor,
-                        name="TestCliRobot: " + str(args["workingDirectory"]),
-                        args=(args,)
-                    )
-                    process.start()
-                    self.executorList.append(
-                        {
-                            "Process": process,
-                            "pythonFile":  str(self.taskList[nPos]["pythonFile"]),
-                            "startTime": time.time(),
-                            "workingDirectory": args["workingDirectory"],
-                            "executorName": executorName,
-                            "args": args
-                        })
-                    runningJobs = self.executorMonitor["runningJobs"]
-                    runningJobs.update(
-                        {
-                            executorName:
-                                {
-                                    "script": str(self.taskList[nPos]["pythonFile"]),
-                                    "workingDirectory": args["workingDirectory"],
-                                    "pid": process.pid,
-                                    "started": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-                                }
-                        }
-                    )
-                    self.executorMonitor["runningJobs"] = copy.copy(runningJobs)
-                elif "robotFile" in dict(self.taskList[nPos]).keys():
-                    self.logger.info(
-                        "Begin to execute robot test [" + str(taskPos) + "/" + str(len(self.taskList)) + "] "
-                        + self.taskList[nPos]["robotFile"] + " ...")
-                    args = {
-                        "robotFile": str(self.taskList[nPos]["robotFile"]),
-                        "robotOptions": self.robotOptions,
-                        "testRoot": self.testRoot,
-                        "workingDirectory": os.path.join(self.workDirectory, self.taskList[nPos]["workingDirectory"]),
-                    }
-                    taskPos = taskPos + 1
-                    process = processManagerContext.Process(
-                        target=runRobotExecutor,
-                        name="TestCliRobot: " + str(args["workingDirectory"]),
-                        args=(args,)
-                    )
-                    process.start()
-                    self.executorList.append(
-                        {
-                            "Process": process,
-                            "robotFile":  str(self.taskList[nPos]["robotFile"]),
-                            "startTime": time.time(),
-                            "workingDirectory": args["workingDirectory"],
-                            "executorName": executorName,
-                            "args": args
-                        })
-                    runningJobs = self.executorMonitor["runningJobs"]
-                    runningJobs.update(
-                        {
-                            executorName:
-                                {
-                                    "script": str(self.taskList[nPos]["robotFile"]),
-                                    "workingDirectory": args["workingDirectory"],
-                                    "pid": process.pid,
-                                    "started": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-                                }
-                        }
-                    )
-                    self.executorMonitor["runningJobs"] = copy.copy(runningJobs)
-                else:
-                    self.logger.error(
-                        "Unknown test file format [" + str(taskPos) + "/" + str(len(self.taskList)) + "] "
-                        + self.taskList[nPos] + " ...")
-                    continue
+                )
+                self.executorMonitor["runningJobs"] = copy.copy(runningJobs)
             self.executorMonitor.update({"runLevelLeft": self.executorMonitor["runLevelLeft"] - 1})
 
             while True:

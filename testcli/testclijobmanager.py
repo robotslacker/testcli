@@ -619,7 +619,7 @@ class JOBManager(object):
         self.ProcessContextInfo = {}
 
         # 进程句柄信息
-        self.ProcessID = {}
+        self.processHandlerInfo = {}
 
         # 当前清理进程的状态, NOT-STARTED, RUNNING, WAITINGFOR_STOP, STOPPED
         # 如果WorkerStatus==WAITINGFOR_STOP 则Worker主动停止
@@ -858,6 +858,7 @@ class JOBManager(object):
 
     @staticmethod
     def runSQLCli(p_args):
+        import sys
         from .testcli import TestCli
 
         # 运行子进程的时候，不需要启动JOBManager
@@ -871,7 +872,7 @@ class JOBManager(object):
             workerName=p_args["workername"],
             xlog=p_args["xlog"]
         )
-        sqlcliHandler.run_cli()
+        sys.exit(sqlcliHandler.run_cli())
 
     # 后台守护线程，跟踪进程信息，启动或强制关闭进程
     def JOBManagerAgent(self):
@@ -897,7 +898,7 @@ class JOBManager(object):
                         for m_Worker in m_WorkerList:
                             m_ProcessID = m_Worker.ProcessID
                             if m_ProcessID != 0:
-                                m_Process = self.ProcessID[m_ProcessID]
+                                m_Process = self.processHandlerInfo[m_ProcessID]
                                 if not m_Process.is_alive():
                                     # 进程ID不是0，进程已经不存在，或者是正常完成，或者是异常退出
                                     if m_Process.exitcode != 0:
@@ -908,7 +909,7 @@ class JOBManager(object):
                                                        m_Process.exitcode, "")
                                     self.SaveJob(m_Job)
                                     # 从当前保存的进程信息中释放该进程
-                                    self.ProcessID.pop(m_ProcessID)
+                                    self.processHandlerInfo.pop(m_ProcessID)
                                 else:
                                     # 进程还在运行中
                                     if m_Job.getTimeOut() != 0:
@@ -922,7 +923,7 @@ class JOBManager(object):
                                             m_Job.active_jobs = m_Job.active_jobs - 1
                                             self.SaveJob(m_Job)
                                             # 从当前保存的进程信息中释放该进程
-                                            self.ProcessID.pop(m_ProcessID)
+                                            self.processHandlerInfo.pop(m_ProcessID)
                                         else:
                                             if m_Job.getStatus() == "WAITINGFOR_ABORT":
                                                 m_Process.terminate()
@@ -933,7 +934,7 @@ class JOBManager(object):
                                                 m_Job.active_jobs = m_Job.active_jobs - 1
                                                 self.SaveJob(m_Job)
                                                 # 从当前保存的进程信息中释放该进程
-                                                self.ProcessID.pop(m_ProcessID)
+                                                self.processHandlerInfo.pop(m_ProcessID)
                                             bAllWorkerFinished = False
                                     else:
                                         if m_Job.getStatus() == "WAITINGFOR_ABORT":
@@ -945,7 +946,7 @@ class JOBManager(object):
                                             m_Job.active_jobs = m_Job.active_jobs - 1
                                             self.SaveJob(m_Job)
                                             # 从当前保存的进程信息中释放该进程
-                                            self.ProcessID.pop(m_ProcessID)
+                                            self.processHandlerInfo.pop(m_ProcessID)
                                         bAllWorkerFinished = False
                                     continue
                         if bAllWorkerFinished and m_Job.getStatus() == "WAITINGFOR_SHUTDOWN":
@@ -1074,7 +1075,7 @@ class JOBManager(object):
                             m_Job.setStartedJobs(m_JOB_Sequence+1)
                             m_JOB_Sequence = m_JOB_Sequence + 1
                             self.SaveJob(m_Job)
-                            self.ProcessID[m_Process.pid] = m_Process
+                            self.processHandlerInfo[m_Process.pid] = m_Process
                 # 每0.5秒检查一次任务
                 time.sleep(3)
         except Exception as e:
@@ -1617,7 +1618,7 @@ class JOBManager(object):
     # 判断是否所有有效的子进程都已经退出
     def isAllJobClosed(self):
         # 当前有活动进程存在
-        return len(self.ProcessID) == 0
+        return len(self.processHandlerInfo) == 0
 
     def processRequest(self, cls, requestObject):
         try:

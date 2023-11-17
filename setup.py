@@ -37,6 +37,7 @@ install_requires = ['JPype1', 'setproctitle', 'urllib3',
                     'fs', "psutil", "glom", "hdfs",
                     "python-multipart", "pytest-xdist", "pytest", 'fastapi', 'uvicorn',
                     "coloredlogs", "robotframework", "beautifulsoup4", "lxml",
+                    "pytest", "pytest-html"
                     ]
 
 setup(

@@ -447,16 +447,17 @@ class CmdExecute(object):
                 for logFilter in commandHints["LogFilter"]:
                     # 从后往前删除，以避免漏掉一些东西
                     for line in statusLineList[::-1]:
-                        if re.match(pattern=logFilter, string=line, flags=re.IGNORECASE):
+                        try:
+                            if re.match(pattern=logFilter, string=line, flags=re.IGNORECASE):
+                                print("[DEBUG] Apply filter: [" + line + "] with " + logFilter + ". Matched.")
+                                statusLineList.remove(line)
+                                continue
+                            else:
+                                if "TESTCLI_DEBUG" in os.environ:
+                                    print("[DEBUG] Apply filter: [" + line + "] with " + logFilter + ". Not match.")
+                        except re.error as rex:
                             if "TESTCLI_DEBUG" in os.environ:
-                                print("[DEBUG] Will apply filter: [" + line +
-                                      "] with " + logFilter + ". Matched.")
-                            statusLineList.remove(line)
-                            continue
-                        else:
-                            if "TESTCLI_DEBUG" in os.environ:
-                                print("[DEBUG] Will apply filter: [" + line +
-                                      "] with " + logFilter + ". Not matched.")
+                                print("[DEBUG] Filter error : [" + line + "] with " + logFilter + ". " + str(rex))
                 result["status"] = "\n".join(statusLineList)
             # 如果Hint中存在LogMask,则掩码指定的输出信息
             if "LogMask" in commandHints.keys():
@@ -522,11 +523,18 @@ class CmdExecute(object):
             if "LogFilter" in commandHints.keys():
                 for logFilter in commandHints["LogFilter"]:
                     for line in messageLineList[::-1]:
-                        if "TESTCLI_DEBUG" in os.environ:
-                            print("[DEBUG] Will apply filter: [" + line + "] with " + logFilter)
-                        if re.match(pattern=logFilter, string=line, flags=re.IGNORECASE):
-                            messageLineList.remove(line)
-                            continue
+                        try:
+                            if re.match(pattern=logFilter, string=line, flags=re.IGNORECASE):
+                                if "TESTCLI_DEBUG" in os.environ:
+                                    print("[DEBUG] Apply filter: [" + line + "] with " + logFilter + ". Matched.")
+                                messageLineList.remove(line)
+                                continue
+                            else:
+                                if "TESTCLI_DEBUG" in os.environ:
+                                    print("[DEBUG] Apply filter: [" + line + "] with " + logFilter + ". Not match.")
+                        except re.error as rex:
+                            if "TESTCLI_DEBUG" in os.environ:
+                                print("[DEBUG] Filter error : [" + line + "] with " + logFilter + ". " + str(rex))
                 result["message"] = "\n".join(messageLineList)
 
             # 如果Hint中存在LogMask,则掩码指定的输出信息
@@ -848,6 +856,25 @@ class CmdExecute(object):
             else:
                 commandHintList = {}
             for commandHintKey, commandHintValue in commandHintList.items():
+                if type(commandHintValue) == list:
+                    for nPos in range(0, len(commandHintValue)):
+                        commandHintNewValue, rewrotedCommandHintValueList = rewriteHintStatement(
+                            cls=self.cliHandler,
+                            statement=commandHintValue[nPos],
+                            commandScriptFile=commandScriptFile
+                        )
+                        if len(rewrotedCommandHintValueList) != 0:
+                            commandHintValue[nPos] = commandHintNewValue
+                            rewrotedHint = "REWROTED Hint> --[Hint] " + \
+                                           commandHintKey + "    " + commandHintNewValue + "]"
+                            yield {
+                                "type": "parse",
+                                "rawCommand": None,
+                                "formattedCommand": None,
+                                "rewrotedCommand": [rewrotedHint, ],
+                                "script": commandScriptFile
+                            }
+
                 # 根据语句中的变量或者其他定义信息来重写当前语句
                 if type(commandHintValue) == str:
                     # 只针对字符串进行处理，暂时不对其他数据类型进行处理
@@ -1369,7 +1396,7 @@ class CmdExecute(object):
                                 statement=paramValue,
                                 commandScriptFile=commandScriptFile
                             )
-                            params.update({ paramKey: newParamValue})
+                            params.update({paramKey: newParamValue})
                         parseObject["param"] = params
                     for result in self.cliHandler.JobHandler.processRequest(
                             cls=self.cliHandler,

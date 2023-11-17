@@ -1,6 +1,7 @@
 *** Settings ***
 Library           SetupTestCli.py
 Library           RunTestCli.py
+Library           RunPython.py
 Library           RunCompare.py
 Library           OperatingSystem
 Library           String
