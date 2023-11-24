@@ -449,7 +449,8 @@ class CmdExecute(object):
                     for line in statusLineList[::-1]:
                         try:
                             if re.match(pattern=logFilter, string=line, flags=re.IGNORECASE):
-                                print("[DEBUG] Apply filter: [" + line + "] with " + logFilter + ". Matched.")
+                                if "TESTCLI_DEBUG" in os.environ:
+                                    print("[DEBUG] Apply filter: [" + line + "] with " + logFilter + ". Matched.")
                                 statusLineList.remove(line)
                                 continue
                             else:
@@ -1378,7 +1379,44 @@ class CmdExecute(object):
                             consoleOutput.append(result["status"])
                         lastCommandResult["status"] = "\n".join(consoleOutput)
                         lastCommandResult["errorCode"] = 0
-                        yield result
+
+                        if self.singleLoopMode:
+                            try:
+                                matchCondition = evalExpression(self.cliHandler, self.singleLoopExpression)
+                            except Exception:
+                                matchCondition = False
+                            if matchCondition or (
+                                self.singleLoopMaxIter != -1 and self.singleLoopIter >= self.singleLoopMaxIter
+                            ):
+                                if "TESTCLI_DEBUG" in os.environ:
+                                    if matchCondition:
+                                        print("[DEBUG] Loop execute statement " + str(self.singleLoopIter) +
+                                              ". Matched.")
+                                    else:
+                                        print("[DEBUG] Loop execute statement " + str(self.singleLoopIter) +
+                                              ". Not match.")
+                                # 符合条件，退出单语句循环
+                                self.singleLoopMode = False
+                                self.singleLoopExpression = None
+                                self.singleLoopInterval = 0
+                                self.singleLoopIter = 0
+                                self.singleLoopMaxIter = -1
+                            else:
+                                if "TESTCLI_DEBUG" in os.environ:
+                                    print("[DEBUG] Loop execute statement " + str(self.singleLoopIter) + ". Not match.")
+                                # 不符合条件，需要下次继续执行该语句，pos不能加1
+                                time.sleep(self.singleLoopInterval)
+                                self.singleLoopIter = self.singleLoopIter + 1
+                        if not self.singleLoopMode:
+                            if "TESTCLI_DEBUG" in os.environ:
+                                print("[DEBUG] Loop end " + str(self.singleLoopIter) + ".")
+                            # 最后一次执行，要输出结果
+                            yield result
+                    if self.singleLoopMode:
+                        if "TESTCLI_DEBUG" in os.environ:
+                            print("[DEBUG] Loop execute statement " + str(self.singleLoopIter) + ".")
+                        # 如果当前还处于单句循环中，则重复执行语句，即POS位置保持不变
+                        continue
                 elif parseObject["name"] in ["JOB"]:
                     # rewriteStatement
                     if "jobName" in parseObject.keys():

@@ -464,9 +464,19 @@ class RunPython(object):
     pythonPathList = []                     # Python的执行包路径
 
     def Append_Python_Path(self, pythonPath):
-        if pythonPath not in self.pythonPathList:
-            self.pythonPathList.append(pythonPath)
-            logger.info("<b>Append Python Path : " + str(pythonPath) + "</b>")
+        pythonPath = os.path.abspath(pythonPath)
+        if os.path.exists(pythonPath):
+            if pythonPath not in self.pythonPathList:
+                self.pythonPathList.append(pythonPath)
+                logger.info("<b>Append Python Path : " + str(pythonPath) + "</b>", html=True)
+            else:
+                logger.warn(
+                    "<b>Append Python Path : " + str(pythonPath) + " SKIP. Duplicate directory!</b>",
+                    html=True)
+        else:
+            logger.warn(
+                "<b>Append Python Path : " + str(pythonPath) + " SKIP. Directory does not exist!</b>",
+                html=True)
 
     def Execute_Python_Script(self, scriptFileName, logFileName=None):
         try:
@@ -657,6 +667,8 @@ class RunPython(object):
 
             logger.info('<b>===== Execute</b>     [' + scriptFileName + ']', html=True)
             logger.info('<b>===== LogFile</b>     [' + str(logOutPutFullFileName) + ']', html=True)
+            logger.info('<b>===== PytestLog</b>   [<a href="' + os.path.basename(htmlReportFile) + '">Pytest report: ' +
+                        os.path.basename(htmlReportFile) + '</a>].', html=True)
 
             sys.__stdout__.write('\n')  # 打印一个空行，好保证在Robot上Console显示不错行
             sys.__stdout__.write('===== Execute     [' + scriptFileName + ']\n')
@@ -674,7 +686,6 @@ class RunPython(object):
             sys.stderr = open(logOutPutFullFileName, mode="a")
             sys.__stdout__ = open(logOutPutFullFileName, mode="a")
             sys.__stderr__ = open(logOutPutFullFileName, mode="a")
-
             myargs = [
                 "-vs",
                 "--capture=sys",

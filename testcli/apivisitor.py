@@ -672,7 +672,13 @@ class APIVisitor(APIParserVisitor):
             parsedObject.update({"command": command})
         elif ctx.SSH_CONNECT() is not None:
             parsedObject.update({"action": "connect"})
-            parsedObject.update({"host": str(ctx.SSH_EXPRESSION()[0].getText())})
+            sshHost = str(ctx.SSH_EXPRESSION()[0].getText())
+            if (
+                    (sshHost.startswith('"') and sshHost.endswith('"')) or
+                    (sshHost.startswith("'") and sshHost.endswith("'"))
+            ):
+                sshHost = sshHost[1:-1]
+            parsedObject.update({"host": sshHost})
             if ctx.SSH_USER() is not None:
                 parsedObject.update({"user": str(ctx.SSH_EXPRESSION()[1].getText())})
             if ctx.SSH_PASSWORD() is not None:

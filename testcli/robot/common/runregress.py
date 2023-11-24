@@ -2,7 +2,6 @@
 import copy
 import multiprocessing
 import os
-import re
 import logging
 import random
 import shutil
@@ -563,12 +562,14 @@ class Regress(object):
                 self.logger.info("Backup test result to report directory ....")
                 for subdir in os.listdir(self.workDirectory):
                     if os.path.isdir(os.path.join(self.workDirectory, subdir)) and subdir.startswith("sub_"):
-                        m_SourceReportFile = os.path.join(
-                            self.workDirectory, subdir, subdir + ".html")
-                        m_TargetReportFile = os.path.join(
-                            self.workDirectory, reportFileDir, subdir + ".html")
-                        if os.path.exists(m_SourceReportFile):
-                            shutil.copyfile(m_SourceReportFile, m_TargetReportFile)
+                        for backupFile in os.listdir(os.path.join(self.workDirectory, subdir)):
+                            if backupFile.split(".")[-1] in ["html"]:
+                                sourceReportFile = os.path.join(
+                                    self.workDirectory, subdir, backupFile)
+                                targetReportFile = os.path.join(
+                                    self.workDirectory, reportFileDir, backupFile)
+                                if os.path.exists(sourceReportFile):
+                                    shutil.copyfile(sourceReportFile, targetReportFile)
                         shutil.make_archive(
                             base_name=os.path.join(
                                 self.workDirectory, reportFileDir, subdir),
@@ -651,7 +652,6 @@ class Regress(object):
                                     runLevels.append(robotRunLevel)
                                 break
                         self.logger.info("  Robot file : [" + str(jobfile) + "] has added to task list. ")
-
                         testName = os.path.basename(jobfile)[:-len(".robot")]
                         workingFolderName = "sub_" + testName + "_" + str(random.randint(100000, 999999))
                         self.taskList.append(
@@ -667,47 +667,8 @@ class Regress(object):
                                             "Will ignore this ...")
                 except robot.errors.DataError:
                     self.logger.warning("  Parse robot file : [" + str(jobfile) + "] error. Will ignore this ...")
-            elif str(jobfile).endswith(".py"):
-                isStandAlone = True
-                with open(file=os.path.abspath(jobfile), mode="r", encoding="utf-8") as fp:
-                    pythonLines = fp.readlines()
-                metadata = {}
-                for pythonLine in pythonLines:
-                    pythonLine = str(pythonLine).strip()
-                    matchObj = re.match(r"^#(\s+)?MetaData(\s+)?(.*)\s+(.*)$", pythonLine, re.IGNORECASE)
-                    if matchObj:
-                        metaKey = matchObj.group(3).strip().upper()
-                        metaValue = matchObj.group(4).strip().upper()
-                        metadata.update(
-                            {
-                                metaKey: metaValue
-                            }
-                        )
-                if "StandAlone".upper() in metadata.keys():
-                    metaValue = metadata["StandAlone".upper()]
-                    if str(metaValue).upper() in ["N", "NO", "NOT"]:
-                        isStandAlone = False
-                if isStandAlone:
-                    pythonRunLevel = 100
-                    if "runLevel".upper() in metadata.keys():
-                        pythonRunLevel = int(str(metadata["runLevel".upper()]))
-                        if pythonRunLevel not in runLevels:
-                            runLevels.append(pythonRunLevel)
-                    self.logger.info("  Python file : [" + str(jobfile) + "] has added to task list. ")
-                    testName = os.path.basename(jobfile)[:-len(".py")]
-                    workingFolderName = "sub_" + testName + "_" + str(random.randint(100000, 999999))
-                    self.taskList.append(
-                        {
-                            "pythonFile": str(os.path.abspath(jobfile)).replace("\\", "/"),
-                            "runLevel": pythonRunLevel,
-                            "workingDirectory": workingFolderName
-                        }
-                    )
-                else:
-                    self.logger.warning("  Python file : [" + str(jobfile) + "] is not standalone suite. " +
-                                        "Will ignore this ...")
             else:
-                self.logger.warning("  Ignore job file [" + str(jobfile) + "] ....")
+                self.logger.warning("  Ignore job file [" + str(jobfile) + "] . Unknown file format.")
             # end of appendJobFile
 
         if self.jobList is not None:
@@ -851,7 +812,8 @@ class Regress(object):
                         executorName = list(set(executorNameList) - set(executorsActive))[0]
                         break
 
-                # Robot文件和Python文件分别运行
+                # 运行具体的Robot文件
+
                 processManagerContext = multiprocessing.get_context("spawn")
                 self.logger.info(
                     "Begin to execute robot test [" + str(taskPos) + "/" + str(len(self.taskList)) + "] "

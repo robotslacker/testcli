@@ -227,7 +227,7 @@ SSH_SPACE           : [ \t]+ -> channel (HIDDEN);
 SSH_SEMICOLON       : ';';
 SSH_CRLF            : CRLF -> popMode;
 SSH_EXPRESSION      :
-    (OBS_TEXT | UNRESERVED | SUBDELIMS | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' | '@' | '{' | '}')+;
+    (OBS_TEXT | UNRESERVED | SUBDELIMS | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' | '@' | '{' | '}' | '|'| ',')+;
 
 mode JobMode;
 JOB_SPACE           : [ \t]+ -> channel (HIDDEN);
