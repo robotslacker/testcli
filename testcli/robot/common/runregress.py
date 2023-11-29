@@ -3,6 +3,7 @@ import copy
 import multiprocessing
 import os
 import logging
+import platform
 import random
 import shutil
 import sys
@@ -58,18 +59,14 @@ class Regress(object):
         self.executorList = []
         self.startTime = time.time()
         self.jobName = None
-        self.buildNumber = None
         self.robotOptions = robotOptions
-        if type(jobList) == list:
+        if isinstance(jobList, list):
             self.jobList = jobList
         else:
             self.jobList = str(jobList).split(",")
         self.workDirectory = workDirectory
         self.testRoot = testRoot
         self.testRunId = testRunId
-
-        # 测试场景的详细信息
-        self.scenarioResult = {}
 
         # 进程日志
         if logger is not None:
@@ -128,6 +125,9 @@ class Regress(object):
             self.logger.info("  Processing robot result file under [" + str(robotTask["workingDirectory"]) + "] ...")
 
             htmlTestSuite = TestSuite()
+            # 记录源文件名，相对路径
+            htmlTestSuite.setSuiteSource(str(os.path.relpath(robotTask["robotFile"], self.testRoot)))
+
             # 对于测试运行中过滤掉的Case，也不会显示在html报告中
             filteredTags = []
             if self.robotOptions is not None:
@@ -139,6 +139,15 @@ class Regress(object):
             # 解析Robot文件，假设悲观原则，即所有测试都失败。失败了也要给测试报告
             robotSourceSuite = TestSuiteBuilder().build(robotTask["robotFile"])
             htmlTestSuite.setSuiteName(robotSourceSuite.name)
+            metaData = {}
+            for metaKey, metaValue in robotSourceSuite.metadata.items():
+                metaData.update(
+                    {
+                        metaKey: metaValue
+                    }
+                )
+            htmlTestSuite.setSuiteMeta(metaData)
+
             testOwnerMap = {}
             for testCase in robotSourceSuite.tests:
                 htmlTestCase = TestCase()
@@ -424,9 +433,10 @@ class Regress(object):
 
     # 整理并生成最后的测试报告
     def generateTestReport(self):
-        if len(self.reportTypes) == 0:
-            # 不需要进行报告输出
-            return
+        # 建立测试报告的目录
+        reportFileDir = os.path.join(self.workDirectory, "report")
+        if not os.path.exists(reportFileDir):
+            os.makedirs(reportFileDir, exist_ok=True)
 
         # 如果有需要，生成JUNIT格式的测试报告
         if "JUNIT" in self.reportTypes:
@@ -435,16 +445,7 @@ class Regress(object):
         # 如果有需要，生成HTML格式的测试报告
         if "HTML" in self.reportTypes:
             try:
-                # 建立报告的保存目录
-                reportFileDir = os.path.join(self.workDirectory, "report")
-                if not os.path.exists(reportFileDir):
-                    os.makedirs(reportFileDir, exist_ok=True)
-
                 # 整理报告内容
-                reportFileDir = os.path.join(self.workDirectory, "report")
-                if not os.path.exists(reportFileDir):
-                    os.makedirs(reportFileDir, exist_ok=True)
-
                 htmlTestResult = TestResult()
                 htmlTestResult.setTitle("Test Report")
                 htmlTestResult.robotOptions = self.robotOptions
@@ -497,17 +498,17 @@ class Regress(object):
                 rebotArgs.append("--splitlog")
                 rebotArgs.append("--nostatusrc")
                 # 遍历目录，将所有的Robot的XML文件合并到程序的参数中
-                m_TestSubXmlList = []
+                testSubXmlList = []
                 for root, dirs, files in os.walk(self.workDirectory):
                     for f in files:
                         if f.endswith(".xml") and f.startswith("sub_"):
-                            m_TestSubXmlList.append(
+                            testSubXmlList.append(
                                 os.path.abspath(os.path.join(root, str(f))))
-                if len(m_TestSubXmlList) == 0:
+                if len(testSubXmlList) == 0:
                     self.logger.error(
                         "No valid test in [" + self.workDirectory + "].")
                 else:
-                    rebotArgs.extend(m_TestSubXmlList)
+                    rebotArgs.extend(testSubXmlList)
                     # 调用Rebot_Cli来合并报表
                     print("Execute Rebot_Cli: ")
                     for arg in rebotArgs:
@@ -533,6 +534,8 @@ class Regress(object):
                         }
                         testCaseReports.append(testCaseReport)
                     testSuiteReport = {
+                        "job": testSuite.getSuiteSource(),
+                        "metadata": testSuite.getSuiteMeta(),
                         "suiteName": testSuite.getSuiteName(),
                         "passedCount": testSuite.getPassedCaseCount(),
                         "errorCount": testSuite.getErrorCaseCount(),
@@ -545,8 +548,7 @@ class Regress(object):
 
                 # 更新描述信息
                 htmlTestResult.setDescription(
-                    "Max Processes   : " + str(self.maxProcess) + '<br>' +
-                    "Total Scenarios : " + str(len(self.scenarioResult)) + '<br>'
+                    "Max Processes   : " + str(self.maxProcess) + '<br>'
                 )
 
                 # 生成报告
@@ -579,6 +581,83 @@ class Regress(object):
                         )
             except Exception as e:
                 raise RegressException(message="Regress failed.", inner_exception=e)
+
+        self.logger.info("Processing test summary ...")
+
+        # 记录所有被过滤掉的Tag标记
+        filteredTags = []
+        if self.robotOptions is not None:
+            robotOptionList = str(self.robotOptions).split()
+            for pos in range(0, len(robotOptionList)):
+                if robotOptionList[pos] == "--exclude" and pos < (len(robotOptionList) - 1):
+                    filteredTags.append(robotOptionList[pos+1])
+
+        # 记录所有需要运行的testcase
+        caseList = []
+        for job in self.jobList:
+            try:
+                robotSuite = TestSuiteBuilder().build(job)
+                cases = []
+                for testCase in robotSuite.tests:
+                    isFilteredCase = False
+                    for resultTestCaseTag in testCase.tags:
+                        if resultTestCaseTag in filteredTags:
+                            isFilteredCase = True
+                            break
+                    cases.append(
+                        {
+                            "caseName": testCase.name,
+                            "caseTags": [str(s) for s in testCase.tags],
+                            "isSkiped": isFilteredCase
+                        }
+                    )
+                caseList.append(
+                    {
+                        "job": str(os.path.relpath(job, self.testRoot)),
+                        "suiteName": robotSuite.name,
+                        "cases": cases
+                    }
+                )
+            except robot.errors.DataError as re:
+                caseList.append(
+                    {
+                        "job": str(os.path.relpath(job, self.testRoot)),
+                        "suiteName": "Unknown",
+                        "errorMsg": re.message,
+                        "cases": []
+                    }
+                )
+
+        # 记录测试结果
+        if "testReport" in self.executorMonitor.keys():
+            testReport = self.executorMonitor["testReport"]
+        else:
+            testReport = []
+
+        # 汇总测试数据，生成summary文件
+        taskSummary = {}
+        taskSummary.update(
+            {
+                "platform": platform.platform(),
+                "processor": platform.processor(),
+                "hostName": platform.node(),
+                "python": platform.python_version(),
+                "pid": os.getpid(),
+                "testRunId": self.testRunId,
+                "maxProcess": self.maxProcess,
+                "scriptTimeout": self.scriptTimeout,
+                "workerTimeout": self.workerTimeout,
+                "startTime": self.executorMonitor["started"],
+                "endTime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                "filteredTags": filteredTags,
+                "jobList": self.jobList,
+                "caseList": caseList,
+                "testReport": testReport
+            }
+        )
+        # 将结果写入文件记录
+        with open(file=os.path.join(reportFileDir, "taskSummary.json"), mode="w", encoding="utf-8") as fp:
+            json.dump(taskSummary, fp=fp, indent=4, ensure_ascii=False)
 
     # 运行回归测试
     def run(self):
@@ -615,7 +694,7 @@ class Regress(object):
         # 系统Robot运行选项
         self.logger.info("robotOptions :[" + str(self.robotOptions) + "].")
 
-        # 构造一个字典，用来标记每个子进程的名称，方便监控作业
+        # 构造字典，用来标记每个子进程的名称，方便监控作业
         executorNameList = []
         for nPos in range(self.maxProcess):
             executorNameList.append("Executor-" + format(nPos, '04d'))
@@ -813,7 +892,6 @@ class Regress(object):
                         break
 
                 # 运行具体的Robot文件
-
                 processManagerContext = multiprocessing.get_context("spawn")
                 self.logger.info(
                     "Begin to execute robot test [" + str(taskPos) + "/" + str(len(self.taskList)) + "] "

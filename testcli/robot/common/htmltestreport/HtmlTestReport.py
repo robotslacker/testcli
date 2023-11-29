@@ -630,6 +630,8 @@ class TestCase(object):
 
 class TestSuite(object):
     def __init__(self):
+        self.suiteSource = None
+        self.suiteMeta = {}
         self.SuiteName = None
         self.TestCases = []
         self.SuiteDescription = ""
@@ -641,6 +643,18 @@ class TestSuite(object):
         self.SuiteStartTime = ""
         self.SuiteElapsedTime = 0  # 用秒来计算的运行时间
         self.SuiteOwnerList = ""  # Suite的所有人，可能包含多个人，多个人用逗号分割
+
+    def getSuiteSource(self):
+        return self.suiteSource
+
+    def setSuiteSource(self, suiteSource):
+        self.suiteSource = suiteSource
+
+    def getSuiteMeta(self):
+        return self.suiteMeta
+
+    def setSuiteMeta(self, suiteMeta):
+        self.suiteMeta = suiteMeta
 
     def getSuiteName(self):
         return self.SuiteName

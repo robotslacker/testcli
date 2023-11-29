@@ -154,6 +154,8 @@ class RunTestCli(object):
             Logon And Execute TEST Script     admin/123456 test.sql test.log
             Logon And Execute TEST Script     admin/123456 test.api test.log
         """
+        # 记录当前目录，执行完后用来还原
+        current_dir = os.getcwd()
         try:
             logger.info('<b>===== Logon_And_Execute_Script</b> [' + str(scriptFileName) + '] ', html=True)
 
@@ -404,6 +406,9 @@ class RunTestCli(object):
             logger.info('traceback.print_exc():\n%s' % traceback.print_exc())
             logger.info('traceback.format_exc():\n%s' % traceback.format_exc())
             raise RuntimeError("TEST Execute failed.")
+        finally:
+            # 不能在Cli脚本内部切换目录，即使内部切换了，外部也必须变更回来
+            os.chdir(current_dir)
 
     def Execute_TestCli_Script_With_Reference(
             self,
