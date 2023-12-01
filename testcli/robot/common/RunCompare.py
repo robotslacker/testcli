@@ -639,6 +639,18 @@ class RunCompare(object):
         if str(p_IgnoreTailOrHeadBlank).upper() == 'FALSE':
             self.__compareIgnoreTailOrHeadBlank = False
 
+    def Compare_SetEncoding(self, encoding):
+        """ 设置Compare在工作时候的字符集  """
+        """
+         输入参数：
+              encoding:        Compare在输入时候的默认Encoding
+         返回值：
+             无
+        """
+        self.__compareWorkEncoding = encoding
+        self.__compareDifEncoding = encoding
+        self.__compareRefEncoding = encoding
+
     def Compare_SetWorkEncoding(self, p_szWorkEncoding):
         """ 设置在读取工作文件时候用到的Encoding  """
         """

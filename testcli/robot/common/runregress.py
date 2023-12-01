@@ -326,7 +326,22 @@ class Regress(object):
                 xmlResultFile = os.path.join(self.workDirectory, subDir, subDir + ".xml")
                 if not os.path.exists(xmlResultFile):
                     continue
-                robotResults = ExecutionResult(xmlResultFile)
+                try:
+                    robotResults = ExecutionResult(xmlResultFile)
+                except robot.errors.DataError as rd:
+                    # 文件不完整，修正XML后重新运行
+                    self.logger.error("Result file [" + str(xmlResultFile) + "] is incomplete xml file, fix it.")
+                    with open(xmlResultFile, encoding="UTF-8", mode="r") as infile:
+                        fixed = str(RobotXMLSoupParser(infile, features='xml'))
+                    with open(xmlResultFile, encoding="UTF-8", mode='w') as outfile:
+                        outfile.write(fixed)
+                    try:
+                        robotResults = ExecutionResult(xmlResultFile)
+                    except robot.errors.DataError:
+                        # 文件存在问题，还是无法解析
+                        self.logger.error("Result file [" + str(xmlResultFile) + "] is not valid xml file, ignore it.")
+                        continue
+
                 robotSuiteResultList = []
                 if len(robotResults.suite.suites) == 0:
                     robotSuiteResultList.append(robotResults.suite)
