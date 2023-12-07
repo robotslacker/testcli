@@ -328,7 +328,7 @@ class Regress(object):
                     continue
                 try:
                     robotResults = ExecutionResult(xmlResultFile)
-                except robot.errors.DataError as rd:
+                except robot.errors.DataError:
                     # 文件不完整，修正XML后重新运行
                     self.logger.error("Result file [" + str(xmlResultFile) + "] is incomplete xml file, fix it.")
                     with open(xmlResultFile, encoding="UTF-8", mode="r") as infile:

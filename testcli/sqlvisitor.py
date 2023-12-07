@@ -654,6 +654,16 @@ class SQLVisitor(SQLParserVisitor):
                 parsedObject.update({"sessionName": str(ctx.SSH_EXPRESSION()[0].getText())})
             else:
                 parsedObject.update({"sessionName": None})
+        elif ctx.SSH_SET() is not None:
+            parsedObject.update({"action": "set"})
+            option = str(ctx.SSH_EXPRESSION()[0].getText())
+            value = str(ctx.SSH_EXPRESSION()[1].getText())
+            if (option.startswith('"') and option.endswith('"')) or (option.startswith("'") and option.endswith("'")):
+                option = option[1:-1]
+            if (option.startswith('"') and option.endswith('"')) or (option.startswith("'") and option.endswith("'")):
+                value = value[1:-1]
+            parsedObject.update({"option": option})
+            parsedObject.update({"value": value})
         elif ctx.SSH_DISCONNECT() is not None:
             parsedObject.update({"action": "disconnect"})
         elif ctx.SSH_EXECUTE() is not None:

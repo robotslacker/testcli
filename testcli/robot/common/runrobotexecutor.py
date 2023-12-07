@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
+import time
+import json
 import logging
+import robot.errors
+from robot.api import TestSuiteBuilder
 from robot.api import ExecutionResult
 from robot.run import run_cli as run_robot
 from robot.errors import DataError
@@ -144,24 +148,117 @@ def runRobotExecutor(args):
         logger.info("Runtime args:")
         for robotOption in robotOptions:
             logger.info("    " + str(robotOption))
+
+        # 记录所有被过滤掉的Tag标记
+        filteredTags = []
+        if robotOptions is not None:
+            robotOptionList = str(robotOptions).split()
+            for pos in range(0, len(robotOptionList)):
+                if robotOptionList[pos] == "--exclude" and pos < (len(robotOptionList) - 1):
+                    filteredTags.append(robotOptionList[pos+1])
+
+        # 记录所有需要运行的testcase
+        metaData = {}
+        caseList = []
+        try:
+            robotSuite = TestSuiteBuilder().build(robotFile)
+            for metaKey, metaValue in robotSuite.metadata.items():
+                metaData.update(
+                    {
+                        metaKey: metaValue
+                    }
+                )
+            cases = []
+            for testCase in robotSuite.tests:
+                isFilteredCase = False
+                for resultTestCaseTag in testCase.tags:
+                    if resultTestCaseTag in filteredTags:
+                        isFilteredCase = True
+                        break
+                cases.append(
+                    {
+                        "caseName": testCase.name,
+                        "caseTags": [str(s) for s in testCase.tags],
+                        "isSkiped": isFilteredCase
+                    }
+                )
+            caseList.append(
+                {
+                    "cases": cases
+                }
+            )
+        except robot.errors.DataError as re:
+            raise RegressException("Failed to execute [" + str(robotFile) + "], " + str(re.message))
+
+        # 开始运行测试
+        startTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         rc = run_robot(robotOptions, exit=False)
+        endTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         logger.info("Finished test [" + robotFile + "]. ret=[" + str(rc) + "]")
 
-        # 根据XML文件生成一个测试数据的汇总JSON信息
+        # 分析Robot的运行结果文件，并汇总结果到JSON中
+        robotResults = None
         xmlResultFile = os.path.abspath(os.path.join(workingDirectory, os.path.basename(workingDirectory) + ".xml"),)
         if not os.path.exists(xmlResultFile):
             logger.warning("Result file [" + str(xmlResultFile) + "] is missed. " +
                            "Probably robot run with no invalid test case.")
         else:
             try:
-                ExecutionResult(xmlResultFile).suite
+                robotResults = ExecutionResult(xmlResultFile).suite
             except DataError:
                 # 文件不完整，修正XML后重新运行
+                # 大概率是因为Robot没有运行结束，导致丢失了部分数据
                 logger.info("Result file [" + str(xmlResultFile) + "] is incomplete. Try to fix it.")
                 with open(xmlResultFile, encoding="UTF-8", mode="r") as infile:
                     fixed = str(RobotXMLSoupParser(infile, features='xml'))
                 with open(xmlResultFile, encoding="UTF-8", mode='w') as outfile:
                     outfile.write(fixed)
+                # 修复后尝试重新读取内容
+                try:
+                    robotResults = ExecutionResult(xmlResultFile).suite
+                except DataError as de:
+                    raise RegressException("Failed to analyze test result, "
+                                           "result file is broken. [" + xmlResultFile + "]. " + str(de))
+        if robotResults is None:
+            raise RegressException("Failed to analyze test result, "
+                                   "result file is broken. [" + xmlResultFile + "].  None result.")
+        # 可能是单Suite文件，也可能是多Suite文件，需要分开处理
+        robotSuiteResultList = []
+        if len(robotResults.suites) == 0:
+            robotSuiteResultList.append(robotResults)
+        else:
+            for resultTestSuite in robotResults.suites:
+                robotSuiteResultList.append(resultTestSuite)
+        # 记录测试用例的情况
+        caseResultList = []
+        for robotSuiteResult in robotSuiteResultList:
+            for robotCaseResult in robotSuiteResult.tests:
+                caseResultList.append(
+                    {
+                        "caseName": str(robotCaseResult.name),
+                        "caseStatus": str(robotCaseResult.status),
+                        "startTime": str(robotCaseResult.starttime),
+                        "endTime": str(robotCaseResult.endtime)
+                    }
+                )
+
+        # 汇总测试数据，生成summary文件
+        jobSummary = {}
+        jobSummary.update(
+            {
+                "robotFile": str(os.path.relpath(robotFile, os.environ['TEST_ROOT'])),
+                "suiteName": str(robotSuite.name),
+                "metadata": metaData,
+                "startTime": startTime,
+                "endTime": endTime,
+                "filteredTags": filteredTags,
+                "caseList": caseList,
+                "caseResultList": caseResultList
+            }
+        )
+        # 将结果写入文件记录
+        with open(file=os.path.join(workingDirectory, "jobSummary.json"), mode="w", encoding="utf-8") as fp:
+            json.dump(jobSummary, fp=fp, indent=4, ensure_ascii=False)
 
         # 结束运行测试
         logger.info("End execute [" + robotFile + "].")

@@ -43,6 +43,7 @@ helpMessage = [
             '''
             _SSH CONNECT <remote hostname or ip address> WITH USER <username> KEYFILE <ssh key file location>
             _SSH CONNECT <remote hostname or ip address> WITH USER <username> [PASSWORD <user password>]
+            _SSH SET <option name>=<option value>
             _SSH EXECUTE <remote command>
             _SSH DISCONNECT
             _SSH SAVE <user defined session name>
