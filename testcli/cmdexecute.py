@@ -1371,6 +1371,7 @@ class CmdExecute(object):
                             "script": commandScriptFile
                         }
                     for result in executeSshRequest(
+                            cls=self.cliHandler,
                             requestObject=parseObject,
                     ):
                         # 处理命令行的提示信息

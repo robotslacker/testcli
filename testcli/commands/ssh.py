@@ -7,7 +7,6 @@ from ..common import rewriteStatement
 
 sshSession = {}
 sshCurrentSessionName = "NONAME"
-sshDefaultEncoding = "utf-8"
 
 
 class SshContext:
@@ -18,7 +17,7 @@ class SshContext:
         self.pwd = None
         self.key = None
         self.options = {
-            "encoding": sshDefaultEncoding
+            "encoding": None
         }
         self.sshTransport = None
         self.sftpHandler = None
@@ -128,7 +127,7 @@ def rewriteSshRequest(cls, requestObject, commandScriptFile: str):
         return requestObject, [rewrotedCommand, ]
 
 
-def executeSshRequest(requestObject):
+def executeSshRequest(cls, requestObject):
     global sshSession
     global sshCurrentSessionName
 
@@ -200,17 +199,16 @@ def executeSshRequest(requestObject):
                 }
                 return
             sshContext = sshSession[sshCurrentSessionName]
+            sshEncoding = sshContext.getOption('encoding')
+            if sshEncoding is None:
+                sshEncoding = cls.testOptions.get('SSH_ENCODING')
             if sshContext.getSshTransport() is not None:
                 sshTransport = sshContext.getSshTransport()
                 # 打开SSH访问
                 channel = sshTransport.open_session()
 
                 # 执行远程的命令
-                channel.exec_command(
-                    command=str(command).encode(
-                        encoding=sshContext.getOption('encoding'),
-                        errors="ignore")
-                )
+                channel.exec_command(command=str(command).encode(encoding=sshEncoding, errors="ignore"))
 
                 consoleOutputBytes = bytes()
                 consoleStdErrBytes = bytes()
@@ -230,10 +228,7 @@ def executeSshRequest(requestObject):
                                         "rows": None,
                                         "headers": None,
                                         "columnTypes": None,
-                                        "status": consoleOutputBytes.decode(
-                                            encoding=sshContext.getOption('encoding'),
-                                            errors="ignore"
-                                        )
+                                        "status": consoleOutputBytes.decode(encoding=sshEncoding, errors="ignore")
                                     }
                                     consoleOutputBytes = bytes()
                                 else:
@@ -251,10 +246,7 @@ def executeSshRequest(requestObject):
                                         "rows": None,
                                         "headers": None,
                                         "columnTypes": None,
-                                        "status": consoleStdErrBytes.decode(
-                                            encoding=sshContext.getOption('encoding'),
-                                            errors="ignore"
-                                        )
+                                        "status": consoleStdErrBytes.decode(encoding=sshEncoding, errors="ignore")
                                     }
                                     consoleStdErrBytes = bytes()
                                 else:
@@ -280,10 +272,7 @@ def executeSshRequest(requestObject):
                                 "rows": None,
                                 "headers": None,
                                 "columnTypes": None,
-                                "status": consoleOutputBytes.decode(
-                                        encoding=sshContext.getOption('encoding'),
-                                        errors="ignore"
-                                    )
+                                "status": consoleOutputBytes.decode(encoding=sshEncoding, errors="ignore")
                             }
                             consoleOutputBytes = bytes()
                         else:
@@ -300,10 +289,7 @@ def executeSshRequest(requestObject):
                                 "rows": None,
                                 "headers": None,
                                 "columnTypes": None,
-                                "status": consoleStdErrBytes.decode(
-                                        encoding=sshContext.getOption('encoding'),
-                                        errors="ignore"
-                                    )
+                                "status": consoleStdErrBytes.decode(encoding=sshEncoding, errors="ignore")
                             }
                             consoleStdErrBytes = bytes()
                         else:
@@ -319,10 +305,7 @@ def executeSshRequest(requestObject):
                         "rows": None,
                         "headers": None,
                         "columnTypes": None,
-                        "status": consoleOutputBytes.decode(
-                            encoding=sshContext.getOption('encoding'),
-                            errors="ignore"
-                        )
+                        "status": consoleOutputBytes.decode(encoding=sshEncoding, errors="ignore")
                     }
                 if len(consoleStdErrBytes) != 0:
                     yield {
@@ -331,10 +314,7 @@ def executeSshRequest(requestObject):
                         "rows": None,
                         "headers": None,
                         "columnTypes": None,
-                        "status": consoleStdErrBytes.decode(
-                            encoding=sshContext.getOption('encoding'),
-                            errors="ignore"
-                        )
+                        "status": consoleStdErrBytes.decode(encoding=sshEncoding, errors="ignore")
                     }
 
                 # 获得命令的返回状态

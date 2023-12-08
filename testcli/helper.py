@@ -59,6 +59,9 @@ helpMessage = [
             _SSH SFTP RENAME <file name to rename> <new remote file name>
             _SSH SFTP LISTDIR <file name to list>
             _SSH SFTP TRUNCATE <file name to trancate> <new file size after truncate>
+            
+            Current SSH support option:
+               encoding:               Control the ssh channel.
         ''',
     },
     {

@@ -158,6 +158,11 @@ class TestOptions(object):
                                     "Comments": '',
                                     "Hidden": False})
 
+        self.testOptionList.append({"Name": "SSH_ENCODING",
+                                    "Value": "UTF-8",
+                                    "Comments": 'SSH channel default encoding.',
+                                    "Hidden": False})
+
         self.testOptionList.append({"Name": "COMPARE_DIFFLIB_THRESHOLD",
                                     "Value": 1000,
                                     "Comments": 'Threshold(lines) for use difflib compare algorithm.',
