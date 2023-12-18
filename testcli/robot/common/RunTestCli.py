@@ -311,15 +311,14 @@ class RunTestCli(object):
                 rptResult = dict(json.load(rptFileHandler))
                 rptFileHandler.close()
                 for scenarioId, scenarioResult in rptResult.items():
-                    scenarioResultJson = dict(json.loads(scenarioResult))
-                    if scenarioResultJson["Status"] != "Failed":
-                        logger.info("<b>Scenario:[" + scenarioResultJson["Name"] + "]</b>", html=True)
+                    if scenarioResult["Status"] != "Failed":
+                        logger.info("<b>Scenario:[" + scenarioResult["Name"] + "]</b>", html=True)
                         logger.info("<b>Status: [<font color=\"green\">" + "Successful" + "</font>]</b>", html=True)
                     else:
                         testSuccessful = False  # 有失败的场景，那就标记为失败吧
-                        logger.info("<b>Scenario:[" + scenarioResultJson["Name"] + "]</b>", html=True)
+                        logger.info("<b>Scenario:[" + scenarioResult["Name"] + "]</b>", html=True)
                         logger.info("<b>Status: [<font color=\"red\">" + "Failed" + "</font>]</b>", html=True)
-                        for line in scenarioResultJson["Message"].split('\n'):
+                        for line in scenarioResult["Message"].split('\n'):
                             if line.startswith('-'):
                                 logger.write('<font style="color:Black;background-color:#E0E0E0">' +
                                              html.escape(line[0:7]) + '</font>' +

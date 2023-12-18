@@ -2335,8 +2335,7 @@ class TestSynatx(unittest.TestCase):
             scriptTimeout=300,
             workerTimeout=120,
             logger=None,
-            executorMonitor=None,
-            reportType="HTML,JUNIT"
+            executorMonitor=None
         )
         regressHandler.run()
         regressHandler.generateTestReport()

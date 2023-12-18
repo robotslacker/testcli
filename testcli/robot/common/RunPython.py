@@ -9,7 +9,10 @@ import multiprocessing
 from robot.errors import ExecutionFailed
 from robot.api import logger
 from robot.running.context import EXECUTION_CONTEXTS
-from .xmltodict import XmlFileToDict
+try:
+    from .common.xmltodict import XmlFileToDict
+except ImportError:
+    from common.xmltodict import XmlFileToDict
 
 
 def runPythonScript(scriptFileName, logFileName, pythonPathList):
@@ -55,12 +58,10 @@ class RunPython(object):
         if os.path.exists(pythonPath):
             if pythonPath not in self.pythonPathList:
                 self.pythonPathList.append(pythonPath)
-                logger.info("<b>Append Python Path : " + str(pythonPath) + "</b>", html=True)
-            else:
-                logger.info("<b>Append Python Path : " + str(pythonPath) + " SKIP. Duplicate directory!</b>", html=True)
+                logger.info("<b>Append Python Path : " + str(pythonPath) + ". </b>", html=True)
         else:
             logger.warn(
-                "<b>Append Python Path : " + str(pythonPath) + " SKIP. Directory does not exist!</b>",
+                "<b>Append Python Path : " + str(pythonPath) + ". Directory does not exist!</b>",
                 html=True)
 
     def Execute_Python_Script(self, scriptFileName, logFileName=None):
@@ -159,6 +160,9 @@ class RunPython(object):
                            "  Script          TEXT,"
                            "  Started         DATETIME,"
                            "  Elapsed         NUMERIC,"
+                           "  CommandType     TEXT,"
+                           "  Command         TEXT,"
+                           "  CommandStatus   TEXT,"
                            "  ErrorCode       TEXT,"
                            "  WorkerName      TEXT,"
                            "  SuiteName       TEXT,"
@@ -178,15 +182,16 @@ class RunPython(object):
                 os.path.basename(scriptFileName) + "-" + str(os.getpid()),
                 str(suiteName),
                 str(caseName),
+                "PYTHONSCRIPT",
                 str(os.environ['T_RUNID']),
                 caseName,
                 caseName
             )
             cursor.execute(
                 "Insert Into TestCli_Xlog(Script,Started,Elapsed,"
-                "ErrorCode,WorkerName,SuiteName,CaseName,"
-                "ScenarioId, TestRunId, ScenarioName) "
-                "Values(?,?,?,  ?,?,?,?, ?,?,?)",
+                "ErrorCode,WorkerName,SuiteName,CaseName, "
+                "CommandType, TestRunId, ScenarioId, ScenarioName) "
+                "Values(?,?,?,  ?,?,?,?, ?,?,?,?)",
                 data
             )
             cursor.close()

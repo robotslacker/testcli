@@ -32,9 +32,8 @@ def runRegress(args, executorMonitor=None):
     LOG_FORMAT = "%(asctime)s - %(levelname)9s - %(message)s"
     logFormat = logging.Formatter(LOG_FORMAT)
     fileLogHandler = logging.FileHandler(
-        filename=os.path.join(args["workDirectory"], "runRegress.log"),
-        mode="a",
-        encoding="UTF-8")
+        filename=os.path.join(args["workDirectory"], "runRegress.log"), mode="a", encoding="UTF-8"
+    )
     fileLogHandler.setFormatter(logFormat)
     logger = logging.getLogger("runRegrss")
     logger.setLevel(logging.INFO)
@@ -61,8 +60,6 @@ def runRegress(args, executorMonitor=None):
         workerTimeout=args["workerTimeout"],
         logger=logger,
         executorMonitor=executorMonitor,
-        reportType=args["reportType"],
-        reportLevel=args["reportLevel"],
         testRunId=args["testRunId"]
     )
     executorMonitor["pid"] = os.getpid()
@@ -121,10 +118,6 @@ def runRegress(args, executorMonitor=None):
               help="Specify the timeout limit(seconds) of one suite, Default is -1, means no limit.")
 @click.option("--force", is_flag=True,
               help="Clean all files under working directory if not empty.")
-@click.option("--report", type=str, default="html,junit",
-              help="Specify the report type. html or junit, default is html,junit.",)
-@click.option("--reportlevel", type=str, default="case",
-              help="Specify the report level. case or scenario, default is case.",)
 @click.option("--runid", type=str,
               help="Test run unique id. Default is 0. will save in extend log for later analyze.")
 def cli(
@@ -135,8 +128,6 @@ def cli(
         jobtimeout,
         workertimeout,
         force,
-        report,
-        reportlevel,
         runid
 ):
     # 初始化信号变量
@@ -237,8 +228,6 @@ def cli(
         "testRoot": os.path.join(os.path.dirname(__file__), "robot"),
         "workDirectory": workDirectory,
         "jobList": jobList,
-        "reportType": report,
-        "reportLevel": reportlevel,
         "testRunId": runid
     }
 

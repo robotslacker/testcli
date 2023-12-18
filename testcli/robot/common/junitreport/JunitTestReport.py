@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 from collections import defaultdict
 import xml.etree.ElementTree as xmlEt
+import xml.dom.minidom
 from six import iteritems
 
 
@@ -44,7 +45,7 @@ class TestSuite(object):
         self.stderr = stderr
         self.properties = properties
 
-    def build_xml_doc(self):
+    def buildXmlDoc(self):
         """
         Builds the XML document for the JUnit test suite.
         Produces clean unicode strings and decodes non-unicode with the help of encoding.
@@ -55,11 +56,11 @@ class TestSuite(object):
         test_suite_attributes = dict()
         if any(c.assertions for c in self.test_cases):
             test_suite_attributes["assertions"] = str(sum([int(c.assertions) for c in self.test_cases if c.assertions]))
-        test_suite_attributes["disabled"] = str(len([c for c in self.test_cases if not c.is_enabled]))
-        test_suite_attributes["errors"] = str(len([c for c in self.test_cases if c.is_error()]))
-        test_suite_attributes["failures"] = str(len([c for c in self.test_cases if c.is_failure()]))
+        test_suite_attributes["disabled"] = str(len([c for c in self.test_cases if not c.isEnabled]))
+        test_suite_attributes["errors"] = str(len([c for c in self.test_cases if c.isError()]))
+        test_suite_attributes["failures"] = str(len([c for c in self.test_cases if c.isFailure()]))
         test_suite_attributes["name"] = self.name
-        test_suite_attributes["skipped"] = str(len([c for c in self.test_cases if c.is_skipped()]))
+        test_suite_attributes["skipped"] = str(len([c for c in self.test_cases if c.isSkipped()]))
         test_suite_attributes["tests"] = str(len(self.test_cases))
         test_suite_attributes["time"] = str(sum(c.elapsed_sec for c in self.test_cases if c.elapsed_sec))
 
@@ -176,7 +177,7 @@ class TestSuite(object):
         return xml_element
 
     @staticmethod
-    def to_xml_string(test_suites):
+    def toXmlString(test_suites, prettyFormat=False):
         try:
             iter(test_suites)
         except TypeError:
@@ -185,7 +186,7 @@ class TestSuite(object):
         xml_element = xmlEt.Element("testsuites")
         attributes = defaultdict(int)
         for test_suite in test_suites:
-            ts_xml = test_suite.build_xml_doc()
+            ts_xml = test_suite.buildXmlDoc()
             for key in ["disabled", "errors", "failures", "tests"]:
                 attributes[key] += int(ts_xml.get(key, 0))
             for key in ["time"]:
@@ -196,7 +197,12 @@ class TestSuite(object):
         xml_string = str(xmlEt.tostring(xml_element, encoding="utf-8").decode("utf-8"))
 
         xml_string = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + xml_string
-        return xml_string
+
+        if prettyFormat:
+            dom = xml.dom.minidom.parseString(xml_string)
+            return dom.toprettyxml()
+        else:
+            return xml_string
 
 
 class TestCase(object):
@@ -233,15 +239,15 @@ class TestCase(object):
         self.stdout = stdout
         self.stderr = stderr
 
-        self.is_enabled = True
+        self.isEnabled = True
         self.errors = []
         self.failures = []
         self.skipped = []
         self.allow_multiple_subalements = allow_multiple_subelements
 
-    def add_error_info(self, message=None, output=None, error_type=None):
+    def addErrorInfo(self, message=None, output=None, errorType=None):
         """Adds an error message, output, or both to the test case"""
-        error = {"message": message, "output": output, "type": error_type}
+        error = {"message": message, "output": output, "type": errorType}
         if self.allow_multiple_subalements:
             if message or output:
                 self.errors.append(error)
@@ -252,12 +258,12 @@ class TestCase(object):
                 self.errors[0]["message"] = message
             if output:
                 self.errors[0]["output"] = output
-            if error_type:
-                self.errors[0]["type"] = error_type
+            if errorType:
+                self.errors[0]["type"] = errorType
 
-    def add_failure_info(self, message=None, output=None, failure_type=None):
+    def addFailureInfo(self, message=None, output=None, failureType=None):
         """Adds a failure message, output, or both to the test case"""
-        failure = {"message": message, "output": output, "type": failure_type}
+        failure = {"message": message, "output": output, "type": failureType}
         if self.allow_multiple_subalements:
             if message or output:
                 self.failures.append(failure)
@@ -268,10 +274,10 @@ class TestCase(object):
                 self.failures[0]["message"] = message
             if output:
                 self.failures[0]["output"] = output
-            if failure_type:
-                self.failures[0]["type"] = failure_type
+            if failureType:
+                self.failures[0]["type"] = failureType
 
-    def add_skipped_info(self, message=None, output=None):
+    def addSkippedInfo(self, message=None, output=None):
         """Adds a skipped message, output, or both to the test case"""
         skipped = {"message": message, "output": output}
         if self.allow_multiple_subalements:
@@ -285,14 +291,14 @@ class TestCase(object):
             if output:
                 self.skipped[0]["output"] = output
 
-    def is_failure(self):
+    def isFailure(self):
         """returns true if this test case is a failure"""
         return sum(1 for f in self.failures if f["message"] or f["output"]) > 0
 
-    def is_error(self):
+    def isError(self):
         """returns true if this test case is an error"""
         return sum(1 for e in self.errors if e["message"] or e["output"]) > 0
 
-    def is_skipped(self):
+    def isSkipped(self):
         """returns true if this test case has been skipped"""
         return len(self.skipped) > 0

@@ -1342,7 +1342,7 @@ class TestCli(object):
             cursor.execute(
                 "Insert Into TestCli_Xlog(Script,Started,Elapsed,RawCommand,"
                 "CommandType,Command,CommandStatus,ErrorCode,WorkerName,SuiteName,CaseName,"
-                "ScenarioId, TestRunId, ScenarioName) "
+                "TestRunId, ScenarioId, ScenarioName) "
                 "Values(?,?,?,?,  ?,?,?,?,?,?,?,  ?,?,?)",
                 data
             )

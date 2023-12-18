@@ -204,14 +204,14 @@ def executeSshRequest(cls, requestObject):
                 sshEncoding = cls.testOptions.get('SSH_ENCODING')
             if sshContext.getSshTransport() is not None:
                 sshTransport = sshContext.getSshTransport()
-                # 打开SSH访问
+                # 打开SSH访问， 合并错误输出到当前输出
                 channel = sshTransport.open_session()
+                channel.set_combine_stderr(True)
 
                 # 执行远程的命令
                 channel.exec_command(command=str(command).encode(encoding=sshEncoding, errors="ignore"))
 
                 consoleOutputBytes = bytes()
-                consoleStdErrBytes = bytes()
                 while True:
                     if channel.exit_status_ready():
                         # 程序已经运行结束
@@ -233,24 +233,6 @@ def executeSshRequest(cls, requestObject):
                                     consoleOutputBytes = bytes()
                                 else:
                                     consoleOutputBytes = consoleOutputBytes + readByte
-                            else:
-                                break
-                        # 记录收到的标准错误信息
-                        while True:
-                            if channel.recv_stderr_ready():
-                                readByte = channel.recv_stderr(1)
-                                if readByte == bytes('\n', 'ascii'):
-                                    yield {
-                                        "type": "result",
-                                        "title": None,
-                                        "rows": None,
-                                        "headers": None,
-                                        "columnTypes": None,
-                                        "status": consoleStdErrBytes.decode(encoding=sshEncoding, errors="ignore")
-                                    }
-                                    consoleStdErrBytes = bytes()
-                                else:
-                                    consoleStdErrBytes = consoleStdErrBytes + readByte
                             else:
                                 break
 
@@ -279,23 +261,6 @@ def executeSshRequest(cls, requestObject):
                             consoleOutputBytes = consoleOutputBytes + readByte
                     else:
                         break
-                while True:
-                    if channel.recv_stderr_ready():
-                        readByte = channel.recv_stderr(1)
-                        if readByte == bytes('\n', 'ascii'):
-                            yield {
-                                "type": "result",
-                                "title": None,
-                                "rows": None,
-                                "headers": None,
-                                "columnTypes": None,
-                                "status": consoleStdErrBytes.decode(encoding=sshEncoding, errors="ignore")
-                            }
-                            consoleStdErrBytes = bytes()
-                        else:
-                            consoleStdErrBytes = consoleStdErrBytes + readByte
-                    else:
-                        break
 
                 # 处理回显的最后一行没有回车换行的情况
                 if len(consoleOutputBytes) != 0:
@@ -306,15 +271,6 @@ def executeSshRequest(cls, requestObject):
                         "headers": None,
                         "columnTypes": None,
                         "status": consoleOutputBytes.decode(encoding=sshEncoding, errors="ignore")
-                    }
-                if len(consoleStdErrBytes) != 0:
-                    yield {
-                        "type": "result",
-                        "title": None,
-                        "rows": None,
-                        "headers": None,
-                        "columnTypes": None,
-                        "status": consoleStdErrBytes.decode(encoding=sshEncoding, errors="ignore")
                     }
 
                 # 获得命令的返回状态

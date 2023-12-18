@@ -960,19 +960,12 @@ class RunCompare(object):
                     # 如果有两个内容， 规则是:Scenario:Id:ScenarioName
                     m_ScenarioId = m_SenarioAndId.split(':')[0].strip()
                     m_ScenarioName = ":".join(m_SenarioAndId.split(':')[1:]).strip()
-                    if len(str(m_ScenarioId).strip()) == 0:
-                        m_ScenarioId = str(random.randint(999990001, 999999999))
-                        m_ScenarioName = "Empty ScenarioID at line: " \
-                                         + str(m_nPos) + "-[" + m_ScenarioName + "]"
                     m_ScenarioStartPos = m_nPos
                     m_nPos = m_nPos + 1
                     continue
                 else:
-                    # 如果只有一个内容， 规则是:ScenarioName
-                    m_ScenarioId = str(random.randint(999990001, 999999999))
-                    m_ScenarioName = "Missing ScenarioID/ScenarioName at line: " \
-                                     + str(m_nPos) + "-[" + m_SenarioAndId + "]"
-                    m_ScenarioStartPos = m_nPos
+                    # 如果只有一个内容， 则scenarioId,scenarioName一样
+                    m_ScenarioId = m_ScenarioName = m_SenarioAndId
                     m_nPos = m_nPos + 1
                     continue
 
@@ -1007,7 +1000,7 @@ class RunCompare(object):
             if not bFoundDif:
                 m_ScenarioResults[m_ScenarioId] = \
                     {
-                        "Status": "Successful",
+                        "Status": "PASS",
                         "Name": m_ScenarioName,
                         "message": "",
                         "Id": m_ScenarioId,
@@ -1026,7 +1019,7 @@ class RunCompare(object):
                 m_Message = "\n".join(m_CompareResultList[m_DifStartPos:m_DifEndPos])
                 m_ScenarioResults[m_ScenarioId] = \
                     {
-                        "Status": "FAILURE",
+                        "Status": "FAIL",
                         "message": m_Message,
                         "Name": m_ScenarioName,
                         "Id": m_ScenarioId,
@@ -1038,7 +1031,7 @@ class RunCompare(object):
             if m_CompareResult:
                 m_ScenarioResults[m_TestName] = \
                     {
-                        "Status": "Successful",
+                        "Status": "PASS",
                         "message": "",
                         "Id": -1,
                         "Name": m_TestName,
@@ -1047,7 +1040,7 @@ class RunCompare(object):
             else:
                 m_ScenarioResults[m_TestName] = \
                     {
-                        "Status": "FAILURE",
+                        "Status": "FAIL",
                         "message": "Test failed.",
                         "Id": -1,
                         "Name": m_TestName,
@@ -1062,7 +1055,7 @@ class RunCompare(object):
                 break
         if m_CompareResult:
             for m_ScenarioResult in m_ScenarioResults.values():
-                if m_ScenarioResult["Status"] == "FAILURE":
+                if m_ScenarioResult["Status"] == "FAIL":
                     m_CompareResult = False
                     break
 
