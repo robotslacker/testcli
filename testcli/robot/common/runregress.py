@@ -169,7 +169,6 @@ class Regress(object):
                 htmlTestSuite.setSuiteMeta(jobSummary["metadata"])
 
                 # 首先加载全部数据，全部按照ERROR处理，随后根据结果信息二次更新
-                jUnitTestCases = []
                 testOwnerMap = {}
                 for testCase in jobSummary["caseList"]:
                     htmlTestCase = TestCase()
@@ -222,21 +221,32 @@ class Regress(object):
                     htmlTestCase.setDownloadURLLink(robotTask["workingDirectory"] + ".tar")
                     htmlTestSuite.addTestCase(htmlTestCase)
 
-                    # 更新JUNIT测试结果
-                    jUnitTestCase = JunitTestCase(
-                        name=testCaseResult["caseName"],
-                        classname=testCaseResult["caseName"],
-                        elapsed_sec=(caseEndTime - caseStartTime).seconds
-                    )
-                    jUnitTestCases.append(jUnitTestCase)
-
-                # 更新Junit测试结果
-                jUnitTestSuite = JunitTestSuite(jobSummary["suiteName"], jUnitTestCases)
-                jUnitTestSuites.append(jUnitTestSuite)
-
                 # 更新Html运行结果
                 htmlTestSuite.SummaryTestCase()
                 htmlTestResult.addSuite(htmlTestSuite)
+
+                # 合并Junit的测试报告
+                self.logger.info("Combing all test reports to junit report ...")
+                for testCase in jobSummary["caseList"]:
+                    junitSuiteName = testCase["caseName"]
+                    jUnitTestCases = []
+                    for scenarioResult in jobSummary["scenarioResultList"]:
+                        if scenarioResult["caseName"] != junitSuiteName:
+                            continue
+                        if scenarioResult["scenarioStatus"] in ["PASS"]:
+                            scenarioStatus = "passed"
+                        else:
+                            scenarioStatus = "failed"
+                        jUnitTestCase = JunitTestCase(
+                            name=scenarioResult["scenarioName"] + "-" + scenarioResult["scenarioId"],
+                            status=scenarioStatus,
+                            classname=scenarioResult["scenarioName"] + "-" + scenarioResult["scenarioId"],
+                            elapsed_sec=scenarioResult["elapsed"]
+                        )
+                        jUnitTestCases.append(jUnitTestCase)
+                    # 更新Junit测试结果
+                    jUnitTestSuite = JunitTestSuite(jobSummary["suiteName"], jUnitTestCases)
+                    jUnitTestSuites.append(jUnitTestSuite)
 
             # 写入Junit的测试结果文件
             with open(file=JunitReportFile, mode="w", encoding="UTF-8") as fp:
@@ -381,7 +391,7 @@ class Regress(object):
                     cases.append(
                         {
                             "caseName": testCase.name,
-                            "caseTags": [str(s) for s in testCase.tags],
+                            "caseTags": [str(s) for s in testCase.tags if s.strip() != "|"],
                             "isSkiped": isFilteredCase
                         }
                     )

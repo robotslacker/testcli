@@ -185,11 +185,14 @@ def generateRobotExecutorReport(
                     ).strftime("%Y-%m-%d %H:%M:%S"))
             else:
                 caseEndTime = ""
+            caseTags = [str(tag).strip() for tag in robotCaseResult.tags if str(tag).strip() != "|"]
             caseResultList.append(
                 {
                     "id": str(robotCaseResult.id),
                     "caseName": str(robotCaseResult.name),
+                    "caseTags": caseTags,
                     "caseStatus": str(robotCaseResult.status),
+                    "message": str(robotCaseResult.message),
                     "startTime": caseStartTime,
                     "endTime": caseEndTime
                 }
@@ -234,15 +237,18 @@ def generateRobotExecutorReport(
                             "elapsed": round(elapsed, 2),
                             "caseName": row["CaseName"],
                             "scenarioName": scenarioName,
-                            "scenarioStatus": scenarioStatus
+                            "scenarioStatus": scenarioStatus,
+                            "scenarioMessage": "",
                         }
                     else:
                         scenarioResultDict[scenarioId].update(
                             {
                                 "elapsed":
                                     round(float(scenarioResultDict[scenarioId]["elapsed"]) + float(row["Elapsed"]), 2),
+                                "caseName": row["CaseName"],
                                 "scenarioName": scenarioName,
-                                "scenarioStatus": scenarioStatus
+                                "scenarioStatus": scenarioStatus,
+                                "scenarioMessage": "",
                             }
                         )
                 xdbFileHandle.close()
@@ -265,15 +271,18 @@ def generateRobotExecutorReport(
                                 "elapsed": 0.00,
                                 "caseName": xLogResult["CaseName"],
                                 "scenarioName": scenarioResult["Name"],
-                                "scenarioStatus": scenarioStatus
+                                "scenarioStatus": scenarioStatus,
+                                "scenarioMessage": scenarioResult["message"],
                             }
                     else:
+                        # 如果一个测试场景反复出现，用最后一个的信息为准
                         scenarioResultDict[scenarioId].update(
                             {
                                 "elapsed": round(scenarioResultDict[scenarioId]["elapsed"], 2),
                                 "caseName": xLogResult["CaseName"],
                                 "scenarioName": scenarioResultDict[scenarioId]["scenarioName"],
-                                "scenarioStatus": scenarioStatus
+                                "scenarioStatus": scenarioStatus,
+                                "scenarioMessage": scenarioResult["message"],
                             }
                         )
                 xlogFile.close()

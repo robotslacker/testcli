@@ -7,5 +7,6 @@ Test Teardown    TestCli Test Clnup
 *** Test Cases ***
 Demo1
     [Documentation]            TestCli基于Robot测试样例
+    [Tags]                     XX   YY
     Execute TestCli Script     demo1.sql    demo1.log
     Compare Files              demo1.log    demo1.ref
