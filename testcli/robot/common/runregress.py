@@ -328,20 +328,6 @@ class Regress(object):
                 testReport.append(testSuiteReport)
             self.executorMonitor["testReport"] = testReport
 
-            # 更新描述信息
-            htmlTestResult.setDescription(
-                "Max Processes   : " + str(self.maxProcess) + '<br>'
-            )
-
-            # 生成报告
-            htmlTestRunner = HTMLTestRunner(title="Test Report")
-            htmlTestRunner.generateReport(
-                result=htmlTestResult,
-                output=os.path.join(reportFileDir, "report.html")
-            )
-            self.logger.info("Combined all test reports. Files saved at [" +
-                             os.path.join(reportFileDir, "report.html") + "]")
-
             # 备份测试结果文件到report目录下
             self.logger.info("Backup test result to report directory ....")
             for subdir in os.listdir(self.workDirectory):
@@ -448,9 +434,36 @@ class Regress(object):
                 "testReport": testReport
             }
         )
-        # 将结果写入文件记录
+        # 将任务汇总结果写入文件记录
         with open(file=os.path.join(reportFileDir, "taskSummary.json"), mode="w", encoding="utf-8") as fp:
             json.dump(taskSummary, fp=fp, indent=4, ensure_ascii=False)
+
+        # Scneario统计
+        scenarioPassed = 0
+        scenarioFailed = 0
+        for testReport in taskSummary["testReport"]:
+            for scenario in testReport["scenarios"]:
+                if scenario["scenarioStatus"] == "PASS":
+                    scenarioPassed = scenarioPassed + 1
+                if scenario["scenarioStatus"] == "FAIL":
+                    scenarioFailed = scenarioFailed + 1
+
+        # 更新描述信息
+        htmlTestResult.setDescription(
+            "Max Processes   : " + str(self.maxProcess) + '<br>' +
+            "Scenario: " + str(scenarioPassed) + "/" + str(scenarioFailed) + "(PASS/FAIL)" + '<br>'
+        )
+
+        # 生成报告
+        htmlTestRunner = HTMLTestRunner(title="Test Report")
+        htmlTestRunner.generateReport(
+            result=htmlTestResult,
+            output=os.path.join(reportFileDir, "report.html")
+        )
+        self.logger.info("Combined all test reports. Files saved at [" +
+                         os.path.join(reportFileDir, "report.html") + "]")
+
+
 
     # 运行回归测试
     def run(self):

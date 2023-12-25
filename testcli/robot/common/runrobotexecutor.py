@@ -261,7 +261,7 @@ def generateRobotExecutorReport(
                 xlogFile = open(os.path.join(root, str(f)), mode='r', encoding='UTF-8')
                 xLogResult = json.load(xlogFile)
                 for scenarioId, scenarioResult in xLogResult["ScenarioResults"].items():
-                    if scenarioResult["Status"] in ["Successful"]:
+                    if scenarioResult["Status"] in ["Successful", "PASS"]:
                         scenarioStatus = "PASS"
                     else:
                         scenarioStatus = "FAIL"
