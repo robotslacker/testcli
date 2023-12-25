@@ -1024,14 +1024,14 @@ def _java_to_py_timestampwithtimezone(conn, rs, col, p_objColumnSQLType=None):
                                        str(ld.getNano() // 1000) + " " + java_val.getOffset().getId(),
                                        "%Y-%m-%d %H:%M:%S %f %z")
         return d
-    elif typeName == "java.sql.Timestamp":
+    elif typeName == ["java.sql.Timestamp", 'dm.jdbc.driver.DmdbTimestamp']:
         ld = java_val.toLocalDateTime()
         d = datetime.datetime.strptime(str(ld.getYear()).zfill(4) + "-" + str(ld.getMonthValue()).zfill(2) + "-" +
                                        str(ld.getDayOfMonth()).zfill(2) + " " + str(ld.getHour()).zfill(2) + ":" +
                                        str(ld.getMinute()).zfill(2) + ":" + str(ld.getSecond()).zfill(2) + " " +
                                        str(ld.getNano() // 1000), "%Y-%m-%d %H:%M:%S %f")
         return d
-    elif typeName in ('oracle.sql.TIMESTAMPTZ', 'oracle.sql.TIMESTAMPLTZ'):
+    elif typeName in ['oracle.sql.TIMESTAMPTZ', 'oracle.sql.TIMESTAMPLTZ']:
         java_val = java_val.offsetDateTimeValue(conn)
         ld = java_val.toLocalDateTime()
         try:
@@ -1044,7 +1044,7 @@ def _java_to_py_timestampwithtimezone(conn, rs, col, p_objColumnSQLType=None):
             d = str(java_val.format(
                 jpype.java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS Z")))
         return d
-    elif typeName in 'org.h2.api.TimestampWithTimeZone':
+    elif typeName in ['org.h2.api.TimestampWithTimeZone', ]:
         java_val = rs.getObject(col, jpype.JClass("java.time.OffsetDateTime"))
         ld = java_val.toLocalDateTime()
         d = datetime.datetime.strptime(str(ld.getYear()).zfill(4) + "-" + str(ld.getMonthValue()).zfill(2) + "-" +

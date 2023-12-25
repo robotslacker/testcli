@@ -212,10 +212,21 @@ class Regress(object):
                         htmlTestCase.setCaseStatus(TestCaseStatus.SUCCESS)
                     else:
                         htmlTestCase.setCaseStatus(TestCaseStatus.ERROR)
-                    caseStartTime = datetime.datetime.strptime(testCaseResult["startTime"], "%Y-%m-%d %H:%M:%S")
-                    caseEndTime = datetime.datetime.strptime(testCaseResult["endTime"], "%Y-%m-%d %H:%M:%S")
+                    try:
+                        caseStartTime = (
+                            datetime.datetime.strptime(testCaseResult["startTime"], "%Y-%m-%d %H:%M:%S"))
+                    except ValueError:
+                        caseStartTime = None
+                    try:
+                        caseEndTime = datetime.datetime.strptime(testCaseResult["endTime"], "%Y-%m-%d %H:%M:%S")
+                    except ValueError:
+                        caseEndTime = None
                     htmlTestCase.setCaseStartTime(testCaseResult["startTime"])
-                    htmlTestCase.setCaseElapsedTime((caseEndTime - caseStartTime).seconds)
+                    if caseStartTime is None or caseEndTime is None:
+                        caseElapsed = 0
+                    else:
+                        caseElapsed = (caseEndTime - caseStartTime).seconds
+                    htmlTestCase.setCaseElapsedTime(caseElapsed)
                     htmlTestCase.setDetailReportLink(
                         robotTask["workingDirectory"] + ".html#" + testCaseResult["id"])
                     htmlTestCase.setDownloadURLLink(robotTask["workingDirectory"] + ".tar")
@@ -462,8 +473,6 @@ class Regress(object):
         )
         self.logger.info("Combined all test reports. Files saved at [" +
                          os.path.join(reportFileDir, "report.html") + "]")
-
-
 
     # 运行回归测试
     def run(self):

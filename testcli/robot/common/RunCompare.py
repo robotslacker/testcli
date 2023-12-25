@@ -925,7 +925,7 @@ class RunCompare(object):
                 # 当前场景结束，记录之前的信息
                 if m_ScenarioId is None:
                     m_ScenarioId = str(random.randint(999990001, 999999999))
-                    m_ScenarioName = "Unexpected Scenario End at Line: " + str(m_nPos)
+                    m_ScenarioName = "Unexpected Scenario End at Line: [" + m_CompareResultList[m_nPos] + "]"
                 m_ScenariosPos[m_ScenarioId] = {
                     "ScenarioStartPos": m_ScenarioStartPos,
                     "ScenarioEndPos": m_nPos,

@@ -897,14 +897,14 @@ class CmdExecute(object):
                 else:
                     self.scenarioName = scenarioName
                     self.scenarioId = scenarioId
-                rewrotedHint = "REWROTED Hint> --[Scenario:" + scenarioId + ":" + scenarioName + "]"
-                yield {
-                    "type": "parse",
-                    "rawCommand": None,
-                    "formattedCommand": None,
-                    "rewrotedCommand": [rewrotedHint, ],
-                    "script": commandScriptFile
-                }
+                    rewrotedHint = "REWROTED Hint> --[Scenario:" + scenarioId + ":" + scenarioName + "]"
+                    yield {
+                        "type": "parse",
+                        "rawCommand": None,
+                        "formattedCommand": None,
+                        "rewrotedCommand": [rewrotedHint, ],
+                        "script": commandScriptFile
+                    }
 
             # 处理各种命令
             if "TESTCLI_DEBUG" in os.environ:

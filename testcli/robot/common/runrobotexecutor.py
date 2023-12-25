@@ -136,34 +136,37 @@ def generateRobotExecutorReport(
     rc = rebot_cli(resultRebotArgs, exit=False)
     logger.info("Finished rebot [" + robotFile + "]. ret=[" + str(rc) + "]")
 
-    # 分析Robot的运行结果文件，并汇总结果到JSON中
-    try:
-        robotResults = ExecutionResult(subXmlReportFile).suite
-    except DataError:
-        # 文件不完整，修正XML后重新运行
-        # 大概率是因为Robot没有运行结束，导致丢失了部分数据
-        logger.info("Result file [" + str(subXmlReportFile) + "] is incomplete. Try to fix it.")
-        with open(subXmlReportFile, encoding="UTF-8", mode="r") as infile:
-            fixed = str(RobotXMLSoupParser(infile, features='xml'))
-        with open(subXmlReportFile, encoding="UTF-8", mode='w') as outfile:
-            outfile.write(fixed)
-        # 修复后尝试重新读取内容
+    robotResults = None
+    # 如果Robot运行结果文件不存在，表示这个Case彻底失败
+    if not os.path.exists(subXmlReportFile):
+        logger.warning("Result file [" + str(subXmlReportFile) + "] is missed. Case blowout.")
+    else:
+        # 分析Robot的运行结果文件，并汇总结果到JSON中
         try:
             robotResults = ExecutionResult(subXmlReportFile).suite
-        except DataError as de:
-            raise RegressException("Failed to analyze test result, "
-                                   "result file is broken. [" + subXmlReportFile + "]. " + str(de))
-    if robotResults is None:
-        raise RegressException("Failed to analyze test result, "
-                               "result file is broken. [" + subXmlReportFile + "].  None result.")
+        except DataError:
+            # 文件不完整，修正XML后重新运行
+            # 大概率是因为Robot没有运行结束，导致丢失了部分数据
+            logger.warning("Result file [" + str(subXmlReportFile) + "] is incomplete. Try to fix it.")
+            with open(subXmlReportFile, encoding="UTF-8", mode="r") as infile:
+                fixed = str(RobotXMLSoupParser(infile, features='xml'))
+            with open(subXmlReportFile, encoding="UTF-8", mode='w') as outfile:
+                outfile.write(fixed)
+            # 修复后尝试重新读取内容
+            try:
+                robotResults = ExecutionResult(subXmlReportFile).suite
+            except DataError as de:
+                raise RegressException("Failed to analyze test result, "
+                                       "result file is broken. [" + subXmlReportFile + "]. " + str(de))
 
     # 可能是单Suite文件，也可能是多Suite文件，需要分开处理
     robotSuiteResultList = []
-    if len(robotResults.suites) == 0:
-        robotSuiteResultList.append(robotResults)
-    else:
-        for resultTestSuite in robotResults.suites:
-            robotSuiteResultList.append(resultTestSuite)
+    if robotResults is not None:
+        if len(robotResults.suites) == 0:
+            robotSuiteResultList.append(robotResults)
+        else:
+            for resultTestSuite in robotResults.suites:
+                robotSuiteResultList.append(resultTestSuite)
 
     # 记录测试用例的情况
     caseResultList = []
@@ -307,6 +310,8 @@ def generateRobotExecutorReport(
         startTime = datetime.datetime.fromtimestamp(os.path.getctime(subXmlReportFile)).strftime("%Y-%m-%d %H:%M:%S")
     if endTime is None:
         endTime = startTime
+    if isinstance(robotOptions, list):
+        robotOptions = " ".join(robotOptions)
     jobSummary.update(
         {
             "robotFile": str(os.path.relpath(robotFile, testRoot)),
@@ -314,7 +319,7 @@ def generateRobotExecutorReport(
             "metadata": metaData,
             "startTime": startTime,
             "endTime": endTime,
-            "robotOptions": " ".join(robotOptions),
+            "robotOptions": robotOptions,
             "filteredTags": filteredTags,
             "caseList": caseList,
             "caseResultList": caseResultList,
