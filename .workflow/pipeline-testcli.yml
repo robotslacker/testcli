@@ -29,9 +29,7 @@ stages:
           - pip install build
           - python -m build --wheel
           - python setup.py install
-          - echo ${GITEE_REPO}
-          - pwd
-          - ''
+          - testcli --selftest
         artifacts:
           - name: BUILD_ARTIFACT
             path:
