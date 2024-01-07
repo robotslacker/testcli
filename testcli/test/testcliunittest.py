@@ -1326,6 +1326,38 @@ class TestSynatx(unittest.TestCase):
                     print(line)
         self.assertTrue(compareResult)
 
+    def test_SQLExecuteMultiSQLInOneLine(self):
+        from ..testcli import TestCli
+
+        scriptFile = "testsqlmultiinoneline.sql"
+
+        scriptBaseFile = os.path.splitext(scriptFile)[0]
+        fullScriptFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptFile))
+        fullRefFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "", scriptBaseFile + ".ref"))
+        fullLogFile = os.path.abspath(os.path.join(tempfile.gettempdir(), scriptBaseFile + ".log"))
+        # fullLogFile = "C:\\temp1\\aa.log"
+
+        # 运行测试程序，开启无头模式(不在控制台上显示任何内容),同时不打印Logo
+        testcli = TestCli(
+            logfilename=fullLogFile,
+            headlessMode=True,
+            script=fullScriptFile
+        )
+        testcli.run_cli()
+
+        # 对文件进行比对，判断返回结果是否吻合
+        compareHandler = POSIXCompare()
+        compareResult, compareReport = compareHandler.compare_text_files(
+            file1=fullLogFile,
+            file2=fullRefFile,
+            CompareIgnoreTailOrHeadBlank=True
+        )
+        if not compareResult:
+            for line in compareReport:
+                if line.startswith("-") or line.startswith("+"):
+                    print(line)
+        self.assertTrue(compareResult)
+
     def test_SQLExecuteWithStartParameter(self):
         from ..testcli import TestCli
 

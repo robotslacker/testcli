@@ -3,6 +3,7 @@ import copy
 import os
 import re
 from .sqlparse import SQLFormatWithPrefix
+from .sqlparse import SQLAnalyze
 from .apiparse import APIRequestObjectFormatWithPrefix
 from .commands.assertExpression import evalExpression
 from .testcliexception import TestCliException
@@ -380,3 +381,48 @@ def parseAPIHints(commandHints: list):
             continue
 
     return commandHintList
+
+
+def splitSqlCommand(sqlCommand: str):
+    """
+        将单行语句中包含的多行语句分解
+        如：  单行语句SELECT 1 FROM DUAL;SELECT 2 FROM DUAL;分解成多行
+
+        找到语句中的分号或者换行符，分段送给解析器，若能够成功解析，则为一个完整SQL
+    """
+    delimiters = [';', '\n']
+
+    # 如果不包含多个语句部分，则直接返回
+    multiSQL = False
+    for delimiter in delimiters:
+        if delimiter in sqlCommand:
+            multiSQL = True
+            break
+    if not multiSQL:
+        return [sqlCommand, ]
+
+    # 有可能存在多个语句
+    splitSqlCommandList = []
+    currentSql = ""
+    for c in sqlCommand:
+        currentSql = currentSql + c
+        # 只有遇到换行符或者分号，才有必要进行分析
+        if c in delimiters:
+            (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+                = SQLAnalyze(currentSql)
+            if ret_errorCode != 0:
+                if re.search(pattern=r'missing.*<EOF>', string=ret_errorMsg):
+                    # 语句没有结束
+                    isFinished = False
+                if re.search(pattern=r'missing.*SQL_SLASH', string=ret_errorMsg):
+                    # 语句没有结束
+                    isFinished = False
+                if re.search(pattern=r'expecting.*<EOF>', string=ret_errorMsg):
+                    # 语句没有结束
+                    isFinished = False
+            if isFinished:
+                splitSqlCommandList.append(currentSql)
+                currentSql = ""
+    if currentSql != "":
+        splitSqlCommandList.append(currentSql)
+    return splitSqlCommandList

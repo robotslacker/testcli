@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from ..globalvar import globalEmbeddScriptScope
-from ..globalvar import localEmbeddScriptScope
 from ..globalvar import lastCommandResult
 
 
@@ -52,4 +51,4 @@ def evalExpression(cls, expression: str):
     globalEmbeddScriptScope["sessionContext"] = sessionContext
     globalEmbeddScriptScope["lastCommandResult"] = lastCommandResult
 
-    return eval(expression, globalEmbeddScriptScope, localEmbeddScriptScope)
+    return eval(expression, globalEmbeddScriptScope)

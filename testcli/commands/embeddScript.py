@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from ..globalvar import globalEmbeddScriptScope
-from ..globalvar import localEmbeddScriptScope
 from ..globalvar import lastCommandResult
 
 
@@ -19,7 +18,7 @@ def executeEmbeddScript(cls, block: str):
     globalEmbeddScriptScope["sessionContext"] = sessionContext
     globalEmbeddScriptScope["lastCommandResult"] = lastCommandResult
     try:
-        exec(block, globalEmbeddScriptScope, localEmbeddScriptScope)
+        exec(block, globalEmbeddScriptScope)
     except Exception as se:
         yield {
             "type": "error",

@@ -2,6 +2,7 @@
 import os
 import sys
 import traceback
+import configparser
 import click
 import pytest
 import platform
@@ -91,6 +92,31 @@ def cli(
         sys.stdout = open(os.devnull, mode="w")
     if not sys.stderr.isatty():
         sys.stderr = open(os.devnull, mode="w")
+
+    # 读取程序需要的配置文件
+    appOptions = None
+    if "TESTCLI_HOME" in os.environ:
+        # 其次尝试读取TESTCLI_HOME/conf/testcli.ini中的信息，如果有，以TESTCLI_HOME/conf/testcli.ini信息为准
+        confFilename = os.path.join(str(os.environ["TESTCLI_HOME"]).strip(), "conf", "testcli.ini")
+        if os.path.exists(confFilename):
+            appOptions = configparser.ConfigParser()
+            appOptions.read(confFilename)
+    if appOptions is None:
+        # 之前的读取都没有找到，以系统默认目录为准
+        confFilename = os.path.join(os.path.dirname(__file__), "conf", "testcli.ini")
+        if os.path.exists(confFilename):
+            appOptions = configparser.ConfigParser()
+            appOptions.read(confFilename)
+        else:
+            raise TestCliException("Config file [" + confFilename + "] missed. " +
+                                   "Please mare sure you have a successful install.")
+
+    # 如果appOptions中存在JAVA_HOME，则设置JAVA_HOME变量
+    userJavaHome = None
+    if appOptions.has_option("Env", "JAVA_HOME"):
+        userJavaHome = appOptions.get("Env", "JAVA_HOME")
+    if userJavaHome is not None:
+        os.environ["JAVA_HOME"] = userJavaHome
 
     try:
         # 如果需要运行在Daemon模式，则直接运行到后台

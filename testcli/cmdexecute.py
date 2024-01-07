@@ -45,6 +45,7 @@ from .common import rewriteConnectRequest
 from .common import parseSQLHints
 from .common import parseAPIHints
 from .common import sortresult
+from .common import splitSqlCommand
 from .testcliexception import TestCliException
 from .globalvar import lastCommandResult
 
@@ -897,14 +898,14 @@ class CmdExecute(object):
                 else:
                     self.scenarioName = scenarioName
                     self.scenarioId = scenarioId
-                rewrotedHint = "REWROTED Hint> --[Scenario:" + scenarioId + ":" + scenarioName + "]"
-                yield {
-                    "type": "parse",
-                    "rawCommand": None,
-                    "formattedCommand": None,
-                    "rewrotedCommand": [rewrotedHint, ],
-                    "script": commandScriptFile
-                }
+                    rewrotedHint = "REWROTED Hint> --[Scenario:" + scenarioId + ":" + scenarioName + "]"
+                    yield {
+                        "type": "parse",
+                        "rawCommand": None,
+                        "formattedCommand": None,
+                        "rewrotedCommand": [rewrotedHint, ],
+                        "script": commandScriptFile
+                    }
 
             # 处理各种命令
             if "TESTCLI_DEBUG" in os.environ:
@@ -1028,6 +1029,7 @@ class CmdExecute(object):
                         pos = pos + 1
                         continue
                     sqlCommand = parseObject["statement"]
+
                     # 根据语句中的变量或者其他定义信息来重写当前语句
                     sqlCommand, rewrotedCommandList = rewriteSQLStatement(
                         cls=self.cliHandler,
@@ -1044,52 +1046,61 @@ class CmdExecute(object):
                             "script": commandScriptFile
                         }
 
-                    # 执行SQL语句
-                    for result in executeSQLStatement(
-                            cls=self,
-                            sql=sqlCommand,
-                            sqlHints=commandHintList):
+                    # 一个SQL语句可能包含多个部分。如分号或者/分割，需要先拆解成多个
+                    sqlCommandList = splitSqlCommand(sqlCommand=sqlCommand)
 
-                        # 处理命令行的提示信息
-                        self.processCommandHint_Rows(result=result, commandHints=commandHintList)
-                        self.processCommandHint_Status(result=result, commandHints=commandHintList)
-                        self.processCommandHint_Message(result=result, commandHints=commandHintList)
+                    # 依次执行SQL语句
+                    for sqlCommand in sqlCommandList:
+                        # 执行SQL语句
+                        sqlIter = 0
+                        for result in executeSQLStatement(
+                                cls=self,
+                                sql=sqlCommand,
+                                sqlHints=commandHintList):
+                            sqlIter = sqlIter + 1
 
-                        # 保留上一次的执行结果
-                        if result["type"] == "result":
-                            lastCommandResult["rows"] = result["rows"]
-                            lastCommandResult["headers"] = result["headers"]
-                            lastCommandResult["status"] = result["status"]
-                            lastCommandResult["errorCode"] = 0
-                        if result["type"] == "error":
-                            lastCommandResult["rows"] = []
-                            lastCommandResult["headers"] = []
-                            lastCommandResult["status"] = result["message"]
-                            lastCommandResult["errorCode"] = 1
+                            # 处理命令行的提示信息
+                            self.processCommandHint_Rows(result=result, commandHints=commandHintList)
+                            self.processCommandHint_Status(result=result, commandHints=commandHintList)
+                            self.processCommandHint_Message(result=result, commandHints=commandHintList)
 
-                        if self.singleLoopMode:
-                            try:
-                                matchCondition = evalExpression(self.cliHandler, self.singleLoopExpression)
-                            except Exception:
-                                matchCondition = False
-                            if matchCondition or (
-                                self.singleLoopMaxIter != -1 and self.singleLoopIter >= self.singleLoopMaxIter
-                            ):
-                                # 符合条件，退出单语句循环
-                                self.singleLoopMode = False
-                                self.singleLoopExpression = None
-                                self.singleLoopInterval = 0
-                                self.singleLoopIter = 0
-                                self.singleLoopMaxIter = -1
-                            else:
-                                # 不符合条件，需要下次继续执行该语句，pos不能加1
-                                time.sleep(self.singleLoopInterval)
-                                self.singleLoopIter = self.singleLoopIter + 1
-                        if not self.singleLoopMode:
-                            # 最后一次执行，要输出结果
-                            yield result
+                            # 保留上一次的执行结果
+                            if result["type"] == "result":
+                                lastCommandResult["rows"] = result["rows"]
+                                lastCommandResult["headers"] = result["headers"]
+                                lastCommandResult["status"] = result["status"]
+                                lastCommandResult["errorCode"] = 0
+                            if result["type"] == "error":
+                                lastCommandResult["rows"] = []
+                                lastCommandResult["headers"] = []
+                                lastCommandResult["status"] = result["message"]
+                                lastCommandResult["errorCode"] = 1
+                            lastCommandResult["sqlIter"] = sqlIter
+
+                            # 对于单句循环模式，只有最后一个返回的结果有意义，其他的结果不作为判断依据
+                            if self.singleLoopMode:
+                                try:
+                                    matchCondition = evalExpression(self.cliHandler, self.singleLoopExpression)
+                                except Exception:
+                                    matchCondition = False
+                                if matchCondition or (
+                                    self.singleLoopMaxIter != -1 and self.singleLoopIter >= self.singleLoopMaxIter
+                                ):
+                                    # 符合条件，退出单语句循环
+                                    self.singleLoopMode = False
+                                    self.singleLoopExpression = None
+                                    self.singleLoopInterval = 0
+                                    self.singleLoopIter = 0
+                                    self.singleLoopMaxIter = -1
+                                else:
+                                    # 不符合条件，需要下次继续执行该语句，pos不能加1
+                                    time.sleep(self.singleLoopInterval)
+                                    self.singleLoopIter = self.singleLoopIter + 1
+                            if not self.singleLoopMode:
+                                # 如果不是单语句循环模式，则每一个查询都需要输出结果
+                                yield result
                     if self.singleLoopMode:
-                        # 如果当前还处于单句循环中，则重复执行语句，即POS位置保持不变
+                        # 对于单句循环，无论该单句包含多少个内容，均重复执行
                         continue
                 elif parseObject["name"] in ["USE"]:
                     for commandResult in userNameSpace(

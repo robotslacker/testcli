@@ -4,7 +4,7 @@ import re
 import codecs
 import time
 import traceback
-from ..globalvar import localEmbeddScriptScope
+from ..globalvar import globalEmbeddScriptScope
 
 
 # 从文件中执行SQL
@@ -36,7 +36,7 @@ def executeFile(cls, scriptFile, argv):
         # 将程序的参数记录到环境信息中
         localargv = [scriptFile]
         localargv.extend(argv)
-        localEmbeddScriptScope["argv"] = localargv
+        globalEmbeddScriptScope["argv"] = localargv
 
         # 处理脚本文件头数据, 文件开头的0xFEFF,codecs.BOM_UTF8忽略不看
         if ord(query[0]) == 0xFEFF:

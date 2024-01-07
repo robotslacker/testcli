@@ -2,8 +2,7 @@
 import fs
 
 # 内嵌脚本执行时候的命名空间
-globalEmbeddScriptScope = {}
-localEmbeddScriptScope = {}
+globalEmbeddScriptScope = globals()
 
 # 最后一次命令执行后的结果，对于SQL和API执行结果也会有所不同
 lastCommandResult = {}
