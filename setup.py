@@ -30,8 +30,6 @@ def open_file(filename):
         return rf.read()
 
 
-readme = open_file("testcli/docs/UserGuide.md")
-
 install_requires = ['JPype1', 'setproctitle', 'urllib3',
                     'click', 'prompt_toolkit', 'paramiko', 'antlr4-python3-runtime==4.11.1',
                     'fs', "psutil", "glom", "hdfs",
@@ -44,7 +42,7 @@ setup(
     name='robotslacker-testcli',
     version=version,
     description='Test Command tool',
-    long_description=readme,
+    long_description='Test Command tool',
     keywords='test command sql api',
     long_description_content_type='text/markdown',
     platforms='any',
@@ -64,7 +62,6 @@ setup(
         'commands/*',
         'plugin/*',
         'test/*',
-        'docs/*',
         'htmldiff/*', 'htmldiff/*/*',
         "robot/*", "robot/*/*", "robot/*/*", "robot/*/*/*", "robot/*/*/*/*",
     ]},
