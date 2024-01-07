@@ -1,0 +1,54 @@
+version: '1.0'
+name: pipeline-testcli
+displayName: 流水线-TestCli
+triggers:
+  trigger: manual
+  push:
+    branches:
+      precise:
+        - master
+  pr:
+    branches:
+      precise:
+        - master
+stages:
+  - name: stage-pipeline
+    displayName: 流水线任务
+    strategy: naturally
+    trigger: auto
+    executor:
+      - RobotSlacker
+    steps:
+      - step: build@python
+        name: build_python
+        displayName: Python 构建
+        pythonVersion: '3.9'
+        commands:
+          - pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+          - python -m pip install --upgrade pip
+          - pip install build
+          - python -m build --wheel
+          - ''
+        artifacts:
+          - name: BUILD_ARTIFACT
+            path:
+              - ./
+        caches: []
+        notify: []
+        strategy:
+          retry: '0'
+      - step: ut@python
+        name: unit_test_python
+        displayName: Python 单元测试
+        pythonVersion: '3.9'
+        commands:
+          - testcli --selftest
+        report:
+          path: report
+          index: index.html
+        checkpoints: []
+        caches: []
+        notify: []
+        strategy:
+          retry: '0'
+        dependsOn: build_python
