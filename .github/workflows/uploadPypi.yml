@@ -1,0 +1,32 @@
+name: Upload Source to PyPI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  upload_source:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.11
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install twine
+
+    - name: Upload Source to PyPI
+      run: |
+        python setup.py sdist
+        twine upload dist/*
+      env:
+        TWINE_USERNAME: uploadTestCli
+        TWINE_PASSWORD: pypi-AgEIcHlwaS5vcmcCJDdkM2Q1MmE2LTkzYmUtNDY2Mi05YTcyLTFjMTA2NTViYWY3NwACHFsxLFsicm9ib3RzbGFja2VyLXRlc3RjbGkiXV0AAixbMixbIjNmMTY4OTZmLWMzYTEtNDU1MS1iM2VhLTA5ZWExYWRiNTE2YyJdXQAABiA7Kyy7TYRbmh_Tu7Zijf1M0jQN3E9qM-g9ja84cXCEvA
