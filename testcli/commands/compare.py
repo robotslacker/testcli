@@ -13,7 +13,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # 默认的比较选项
 compareDefaultOption = {
-    "algorithm": "myers",     # Compare比较算法，有LCS和MYERS
+    "algorithm": "auto",      # Compare比较算法，有LCS和MYERS
     "output": "console",      # Compare结果输出的位置，默认为输出到控制台
     "mask": False,            # 比较中是否按照正则表达式的方式去比较
     "case": False,            # 比较中是否大小写敏感
@@ -283,7 +283,7 @@ class POSIXCompare:
                      CompareWithMask: bool = True,
                      CompareIgnoreCase: bool = False,
                      CompareIgnoreTailOrHeadBlank: bool = False,
-                     compareAlgorithm: str = 'MYERS',
+                     compareAlgorithm: str = 'AUTO',
                      compareAlgorithmDiffLibThresHold: int = 1000):
 
         # 将比较文件加载到数组
@@ -383,10 +383,11 @@ class POSIXCompare:
         # 1：  Compare的结果是否存在dif，True/False
         # 2:   Compare的Dif列表. 注意：LCS算法是一个翻转的列表. MYERS算法里头是一个正序列表
         useCompareAlgorithm = compareAlgorithm.upper()
-        if len(lineno1) > compareAlgorithmDiffLibThresHold or len(lineno2) > compareAlgorithmDiffLibThresHold:
-            useCompareAlgorithm = "DIFFLIB"
-            if "TESTCLI_DEBUG" in os.environ:
-                print("[DEBUG] Large fila compare. Compare algorithm will failback to DIFFLIB.")
+        if useCompareAlgorithm == "AUTO":
+            if len(lineno1) > compareAlgorithmDiffLibThresHold or len(lineno2) > compareAlgorithmDiffLibThresHold:
+                useCompareAlgorithm = "DIFFLIB"
+            else:
+                useCompareAlgorithm = "MYERS"
         if useCompareAlgorithm == "MYERS":
             (compareResult, compareResultList) = \
                     self.compareMyers(
@@ -398,7 +399,7 @@ class POSIXCompare:
         elif useCompareAlgorithm == "DIFFLIB":
             (compareResult, compareResultList) = \
                 self.compareDiffLib(workFileContent, refFileContent, lineno1, lineno2)
-        else:
+        elif useCompareAlgorithm == "LCS":
             (compareResult, compareResultList) = \
                 self.compareLCS(workFileContent, refFileContent,
                                 lineno1, lineno2,
@@ -406,6 +407,8 @@ class POSIXCompare:
                                 p_compare_ignoreCase=CompareIgnoreCase)
             # 翻转数组
             compareResultList = compareResultList[::-1]
+        else:
+            raise DiffException("Unknown compare algorithm [" + str(useCompareAlgorithm) + "]")
 
         # 随后从数组中补充进入被Skip掉的内容
         workLastPos = 0  # 上次Work文件已经遍历到的位置
@@ -473,7 +476,7 @@ class POSIXCompare:
                            CompareIgnoreTailOrHeadBlank: bool = False,
                            CompareWorkEncoding: str = 'UTF-8',
                            CompareRefEncoding: str = 'UTF-8',
-                           compareAlgorithm: str = 'MYERS',
+                           compareAlgorithm: str = 'AUTO',
                            compareAlgorithmDiffLibThresHold: int = 1000,
                            ):
         if not os.path.isfile(file1):

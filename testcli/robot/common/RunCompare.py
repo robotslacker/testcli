@@ -8,6 +8,7 @@ import html
 import sqlite3
 from shutil import copyfile, SameFileError
 from robot.api import logger
+from difflib import SequenceMatcher
 from robot.errors import ExecutionFailed
 from robot.running.context import EXECUTION_CONTEXTS
 from collections import namedtuple
@@ -170,6 +171,33 @@ class POSIXCompare:
 
         return compareResult, compareDiffResult
 
+    @staticmethod
+    def compareDiffLib(x,
+                       y,
+                       linenox,
+                       linenoy
+                       ):
+        compareResult = True
+        compareDiffResult = []
+        for group in SequenceMatcher(None, x, y).get_grouped_opcodes(3):
+            for tag, i1, i2, j1, j2 in group:
+                if tag == 'equal':
+                    # 内容完全相同，标记的行号为日志文件的行号
+                    for nPos in range(i1, i2):
+                        compareDiffResult.append(" {:>{}} ".format(linenox[nPos], 6) + x[nPos])
+                    continue
+                if tag in {'replace', 'delete'}:
+                    # 当前日志有，但是参考日志中没有
+                    compareResult = False
+                    for nPos in range(i1, i2):
+                        compareDiffResult.append("-{:>{}} ".format(linenox[nPos], 6) + x[nPos])
+                if tag in {'replace', 'insert'}:
+                    # 当前日志没有，但是参考日志中有
+                    compareResult = False
+                    for nPos in range(j1, j2):
+                        compareDiffResult.append("+{:>{}} ".format(linenoy[nPos], 6) + y[nPos])
+        return compareResult, compareDiffResult
+
     def compareLCS(self,
                    x,
                    y,
@@ -246,7 +274,9 @@ class POSIXCompare:
                            CompareIgnoreTailOrHeadBlank=False,
                            CompareWorkEncoding='UTF-8',
                            CompareRefEncoding='UTF-8',
-                           compareAlgorithm='LCS'):
+                           compareAlgorithm='AUTO',
+                           compareDifflibThreshold=1000
+                           ):
         if not os.path.isfile(file1):
             raise DiffException('ERROR: %s is not a file' % file1)
         if not os.path.isfile(file2):
@@ -369,17 +399,27 @@ class POSIXCompare:
         # 输出两个信息
         # 1：  Compare的结果是否存在dif，True/False
         # 2:   Compare的Dif列表. 注意：LCS算法是一个翻转的列表. MYERS算法里头是一个正序列表
-        if compareAlgorithm == "MYERS":
+        if compareAlgorithm == "AUTO":
+            if len(workFileContent) > compareDifflibThreshold or len(refFileContent) > compareDifflibThreshold:
+                compareAlgorithm = 'DIFFLIB'
+            else:
+                compareAlgorithm = 'MYERS'
+        if compareAlgorithm == "DIFFLIB":
+            (m_CompareResult, m_CompareResultList) = self.compareDiffLib(
+                workFileContent, refFileContent, lineno1, lineno2)
+        elif compareAlgorithm == "MYERS":
             (m_CompareResult, m_CompareResultList) = self.compareMyers(workFileContent, refFileContent, lineno1,
                                                                        lineno2,
                                                                        p_compare_maskEnabled=CompareWithMask,
                                                                        p_compare_ignoreCase=CompareIgnoreCase)
-        else:
+        elif compareAlgorithm == "LCS":
             (m_CompareResult, m_CompareResultList) = self.compareLCS(workFileContent, refFileContent, lineno1, lineno2,
                                                                      p_compare_maskEnabled=CompareWithMask,
                                                                      p_compare_ignoreCase=CompareIgnoreCase)
             # 翻转数组
             m_CompareResultList = m_CompareResultList[::-1]
+        else:
+            raise ExecutionFailed("Unknown compare algorithm [" + str(compareAlgorithm) + "]", continue_on_failure=True)
         # 随后从数组中补充进入被Skip掉的内容
         m_nWorkLastPos = 0  # 上次Work文件已经遍历到的位置
         m_nRefLastPos = 0  # 上次Ref文件已经遍历到的位置
@@ -454,7 +494,8 @@ class RunCompare(object):
     __compareWorkEncoding = 'UTF-8'
     __compareDifEncoding = 'UTF-8'
     __compareRefEncoding = 'UTF-8'
-    __compareAlgorithm = 'MYERS'  # Diff算法
+    __compareAlgorithm = 'AUTO'  # 默认的Diff算法
+    __compareDifflibThreshold = 1000
 
     def Compare_Ignore_EmptyLine(self, p_IgnoreEmptyLine):
         """ 设置是否在比对的时候忽略空白行  """
@@ -592,10 +633,10 @@ class RunCompare(object):
              无
 
          """
-        if str(algorithm).upper() == 'LCS':
-            self.__compareAlgorithm = 'LCS'
-        if str(algorithm).upper() == 'MYERS':
-            self.__compareAlgorithm = 'MYERS'
+        self.__compareAlgorithm = str(algorithm).upper().strip()
+
+    def Compare_Difflib_Threshold(self, threshold):
+        self.__compareDifflibThreshold = threshold
 
     def Compare_Enable_Mask(self, p_CompareWithMask):
         """ 设置是否在比对的时候考虑正则表达式  """
@@ -805,7 +846,8 @@ class RunCompare(object):
                 self.__compareIgnoreTailOrHeadBlank,
                 CompareWorkEncoding=self.__compareWorkEncoding,
                 CompareRefEncoding=self.__compareRefEncoding,
-                compareAlgorithm=self.__compareAlgorithm
+                compareAlgorithm=self.__compareAlgorithm,
+                compareDifflibThreshold=self.__compareDifflibThreshold
             )
         except DiffException as de:
             logger.info('Fatal Diff Exception:: ' + de.message)

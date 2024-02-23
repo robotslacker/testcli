@@ -179,6 +179,7 @@ def cli(
             testpath = os.path.abspath(os.path.join(os.path.dirname(__file__), "test", "testcliunittest.py"))
             pytest.main(
                 args=[
+                    "-p", "no:cacheprovider",
                     "-vs",
                     testpath,
                 ],

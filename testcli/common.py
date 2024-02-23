@@ -423,6 +423,6 @@ def splitSqlCommand(sqlCommand: str):
             if isFinished:
                 splitSqlCommandList.append(currentSql)
                 currentSql = ""
-    if currentSql != "":
+    if currentSql.strip() != "":
         splitSqlCommandList.append(currentSql)
     return splitSqlCommandList

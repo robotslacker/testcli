@@ -6,7 +6,7 @@ Current compare settings:
 +--------+--------------+---------------+---------------+
 |   ##   |    Option    | Current value | Default value |
 +--------+--------------+---------------+---------------+
-|      1 | algorithm    | myers         | myers         |
+|      1 | algorithm    | auto          | AUTO          |
 |      2 | output       | console       | console       |
 |      3 | mask         | False         | False         |
 |      4 | case         | False         | False         |
@@ -21,7 +21,7 @@ Current compare settings:
 +--------+--------------+---------------+---------------+
 |   ##   |    Option    | Current value | Default value |
 +--------+--------------+---------------+---------------+
-|      1 | algorithm    | myers         | myers         |
+|      1 | algorithm    | auto          | AUTO          |
 |      2 | output       | console       | console       |
 |      3 | mask         | True          | False         |
 |      4 | case         | True          | False         |
@@ -36,7 +36,7 @@ Current compare settings:
 +--------+--------------+---------------+---------------+
 |   ##   |    Option    | Current value | Default value |
 +--------+--------------+---------------+---------------+
-|      1 | algorithm    | myers         | myers         |
+|      1 | algorithm    | AUTO          | AUTO          |
 |      2 | output       | console       | console       |
 |      3 | mask         | False         | False         |
 |      4 | case         | False         | False         |
@@ -56,7 +56,7 @@ Current compare settings:
 +--------+--------------+---------------+---------------+
 |   ##   |    Option    | Current value | Default value |
 +--------+--------------+---------------+---------------+
-|      1 | algorithm    | myers         | myers         |
+|      1 | algorithm    | AUTO          | AUTO          |
 |      2 | output       | console       | console       |
 |      3 | mask         | False         | False         |
 |      4 | case         | False         | False         |

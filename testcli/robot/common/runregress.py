@@ -7,11 +7,14 @@ import platform
 import random
 import shutil
 import sys
+import re
 import time
 import datetime
 import json
 import threading
+import configparser
 
+import mysql.connector
 import psutil
 import robot.errors
 from robot.api import TestSuiteBuilder
@@ -21,13 +24,15 @@ from .runrobotexecutor import runRobotExecutor
 from .runrobotexecutor import generateRobotExecutorReport
 from .htmltestreport.HtmlTestReport import HTMLTestRunner
 from .htmltestreport.HtmlTestReport import TestResult
-from .regressexception import RegressException
 from .htmltestreport.HtmlTestReport import TestSuite
 from .htmltestreport.HtmlTestReport import TestCase
 from .htmltestreport.HtmlTestReport import TestCaseStatus
 from .runrobotexecutor import RobotXMLSoupParser
 from .junitreport.JunitTestReport import TestSuite as JunitTestSuite
 from .junitreport.JunitTestReport import TestCase as JunitTestCase
+from .mysqlutil import MYSQLUtil
+from .regressexception import RegressException
+
 
 # 默认的系统最大并发作业数
 DEFAULT_MAX_PROCESS = 3
@@ -47,7 +52,8 @@ class Regress(object):
             workerTimeout=-1,
             scriptTimeout=-1,
             executorMonitor=None,
-            testRunId=0
+            testRunId=0,
+            testResultDb=None
     ):
         if executorMonitor is None:
             executorMonitor = {}
@@ -65,6 +71,8 @@ class Regress(object):
         self.workDirectory = workDirectory
         self.testRoot = testRoot
         self.testRunId = testRunId
+        self.testResultDb = testResultDb
+        self.appOptions = None
 
         # 进程日志
         if logger is not None:
@@ -95,6 +103,23 @@ class Regress(object):
                 self.scriptTimeout = -1
         else:
             self.scriptTimeout = int(scriptTimeout)
+
+        # 应用程序的配置选项
+        if "TESTCLI_HOME" in os.environ:
+            # 其次尝试读取TESTCLI_HOME/conf/testcli.ini中的信息，如果有，以TESTCLI_HOME/conf/testcli.ini信息为准
+            confFilename = os.path.join(str(os.environ["TESTCLI_HOME"]).strip(), "conf", "testcli.ini")
+            if os.path.exists(confFilename):
+                self.appOptions = configparser.ConfigParser()
+                self.appOptions.read(confFilename)
+        if self.appOptions is None:
+            # 之前的读取都没有找到，以系统默认目录为准
+            confFilename = os.path.join(os.path.dirname(__file__), "..", "..", "conf", "testcli.ini")
+            if os.path.exists(confFilename):
+                self.appOptions = configparser.ConfigParser()
+                self.appOptions.read(confFilename)
+            else:
+                raise RegressException("Config file [" + confFilename + "] missed. " +
+                                       "Please mare sure you have a successful install.")
 
     # 整理并生成最后的测试报告
     def generateTestReport(self):
@@ -413,12 +438,12 @@ class Regress(object):
                             "scenarios": jobSummary["scenarioResultList"]
                         }
                     )
-            except robot.errors.DataError as re:
+            except robot.errors.DataError as ex:
                 caseList.append(
                     {
                         "job": str(os.path.relpath(task["robotFile"], self.testRoot)),
                         "suiteName": "Unknown",
-                        "errorMsg": re.message,
+                        "errorMsg": ex.message,
                         "cases": []
                     }
                 )
@@ -448,6 +473,248 @@ class Regress(object):
         # 将任务汇总结果写入文件记录
         with open(file=os.path.join(reportFileDir, "taskSummary.json"), mode="w", encoding="utf-8") as fp:
             json.dump(taskSummary, fp=fp, indent=4, ensure_ascii=False)
+
+        # 如果需要将测试结果插入数据库，则插入数据库
+        saveTestResultToDb = False
+        resultDbHost = None
+        resultDbPort = None
+        resultDbUser = None
+        resultDbPasswd = None
+        resultDbService = None
+        if self.testResultDb is None:
+            try:
+                resultDbHost = self.appOptions.get("resultdb", "host")
+                resultDbPort = self.appOptions.get("resultdb", "port")
+                resultDbUser = self.appOptions.get("resultdb", "user")
+                resultDbPasswd = self.appOptions.get("resultdb", "passwd")
+                resultDbService = self.appOptions.get("resultdb", "service")
+                saveTestResultToDb = True
+            except (configparser.NoSectionError, configparser.NoSectionError):
+                pass
+        else:
+            # user/pass@ip:port/service
+            matchObj = re.match(pattern=r"^(.*?)/(.*?)@(.*?):(\d+)/(.*?)$", string=self.testResultDb)
+            if matchObj is not None:
+                resultDbUser = str(matchObj.group(1))
+                resultDbPasswd = str(matchObj.group(2))
+                resultDbHost = str(matchObj.group(3))
+                resultDbPort = int(matchObj.group(4))
+                resultDbService = str(matchObj.group(5))
+                saveTestResultToDb = True
+            else:
+                self.logger.warning("Invalid resultdb parameter. skip presist test result.")
+        if saveTestResultToDb:
+            self.logger.info("Log test result into rdb ...")
+            sql = ""
+            try:
+                testResultDbHandler = MYSQLUtil()
+                testResultDbHandler.connect(
+                    host=resultDbHost,
+                    port=resultDbPort,
+                    user=resultDbUser,
+                    passwd=resultDbPasswd,
+                    database=resultDbService
+                )
+                # TESTCLI_RESULTDB_JOBS
+                sql = """
+                    CREATE TABLE IF NOT EXISTS TESTCLI_RESULTDB_JOBS
+                    (
+                        testRunId          VARCHAR(200),
+                        platform           VARCHAR(200),
+                        hostName           VARCHAR(200),
+                        pid                Int,
+                        maxProcess         Int,
+                        scriptTimeout      Int,
+                        workerTimeout      Int,
+                        startTime          DateTime,
+                        endTime            DateTime,
+                        robotOptions       VARCHAR(500),
+                        filteredTags       VARCHAR(500),
+                        jobList            VARCHAR(5000)
+                    )
+                """
+                testResultDbHandler.execute(sql=sql)
+                dbValues = {
+                    "testRunId": taskSummary["testRunId"],
+                    "platform": taskSummary["platform"],
+                    "hostName": taskSummary["hostName"],
+                    "pid": taskSummary["pid"],
+                    "maxProcess": taskSummary["maxProcess"],
+                    "scriptTimeout": taskSummary["scriptTimeout"],
+                    "workerTimeout": taskSummary["workerTimeout"],
+                    "startTime": datetime.datetime.strptime(taskSummary["startTime"], "%Y-%m-%d %H:%M:%S"),
+                    "endTime": datetime.datetime.strptime(taskSummary["endTime"], "%Y-%m-%d %H:%M:%S"),
+                    "robotOptions": str(taskSummary["robotOptions"]),
+                    "filteredTags": str(taskSummary["filteredTags"]),
+                    "jobList": str(taskSummary["jobList"])
+                }
+                sql = ("INSERT INTO TESTCLI_RESULTDB_JOBS({keys}) VALUES ({values})"
+                       .format(keys=",".join(dbValues.keys()), values=",".join(['%s'] * len(dbValues))))
+                testResultDbHandler.execute(sql, data=tuple(dbValues.values()))
+                # TESTCLI_RESULTDB_CASES
+                sql = """
+                    CREATE TABLE IF NOT EXISTS TESTCLI_RESULTDB_CASES
+                    (
+                        testRunId          VARCHAR(200),
+                        job                VARCHAR(200),
+                        suiteName          VARCHAR(200),
+                        caseName           VARCHAR(200),
+                        caseTags           VARCHAR(200),
+                        isSkiped           tinyint
+                    )
+                """
+                testResultDbHandler.execute(sql=sql)
+                dbValues = []
+                for caseLists in taskSummary["caseList"]:
+                    for cases in caseLists["cases"]:
+                        dbValues.append(
+                            {
+                                "testRunId": taskSummary["testRunId"],
+                                "job": caseLists["job"],
+                                "suiteName": caseLists["suiteName"],
+                                "caseName": cases["caseName"],
+                                "caseTags": str(cases["caseTags"]),
+                                "isSkiped": cases["isSkiped"]
+                            }
+                        )
+                if len(dbValues) != 0:
+                    sql = ("INSERT INTO TESTCLI_RESULTDB_CASES({keys}) VALUES ({values})"
+                           .format(keys=",".join(dbValues[0].keys()), values=",".join(['%s'] * len(dbValues[0]))))
+                    testResultDbHandler.executemany(sql, data=[s.values() for s in dbValues])
+                # TESTCLI_RESULTDB_REPORT_CASES
+                sql = """
+                    CREATE TABLE IF NOT EXISTS TESTCLI_RESULTDB_REPORT_CASES
+                    (
+                        testRunId          VARCHAR(200),
+                        job                VARCHAR(200),
+                        suiteName          VARCHAR(200),
+                        workingDirectory   VARCHAR(200),
+                        caseId             VARCHAR(200),
+                        caseName           VARCHAR(200),                        
+                        caseTags           VARCHAR(200),
+                        caseStatus         VARCHAR(200),
+                        caseMessage        VARCHAR(5000),
+                        startTime          DateTime,
+                        endTime            DateTime
+                    )
+                """
+                testResultDbHandler.execute(sql=sql)
+                dbValues = []
+                for testReport in taskSummary["testReport"]:
+                    for case in testReport["cases"]:
+                        dbValues.append(
+                            {
+                                "testRunId": taskSummary["testRunId"],
+                                "job": testReport["job"],
+                                "suiteName": testReport["suiteName"],
+                                "workingDirectory": testReport["workingDirectory"],
+                                "caseId": case["id"],
+                                "caseName": case["caseName"],
+                                "caseTags": str(case["caseTags"]),
+                                "caseStatus": str(case["caseStatus"]),
+                                "caseMessage": str(case["message"]),
+                                "startTime":
+                                    datetime.datetime.strptime(case["startTime"], "%Y-%m-%d %H:%M:%S"),
+                                "endTime":
+                                    datetime.datetime.strptime(case["endTime"], "%Y-%m-%d %H:%M:%S")
+                            }
+                        )
+                if len(dbValues) != 0:
+                    sql = ("INSERT INTO TESTCLI_RESULTDB_REPORT_CASES({keys}) VALUES ({values})"
+                           .format(keys=",".join(dbValues[0].keys()), values=",".join(['%s'] * len(dbValues[0]))))
+                    testResultDbHandler.executemany(sql, data=[s.values() for s in dbValues])
+                # TESTCLI_RESULTDB_REPORT_SCENARIOS
+                sql = """
+                    CREATE TABLE IF NOT EXISTS TESTCLI_RESULTDB_REPORT_SCENARIOS
+                    (
+                        testRunId          VARCHAR(200),
+                        job                VARCHAR(200),
+                        suiteName          VARCHAR(200),
+                        workingDirectory   VARCHAR(200),
+                        scenarioId         VARCHAR(200),
+                        scenarioName       VARCHAR(200),
+                        caseName           VARCHAR(200),                        
+                        scenarioStatus     VARCHAR(200),
+                        scenarioMessage    VARCHAR(5000),
+                        elapsed            float
+                    )
+                """
+                testResultDbHandler.execute(sql=sql)
+                dbValues = []
+                for testReport in taskSummary["testReport"]:
+                    for scenario in testReport["scenarios"]:
+                        dbValues.append(
+                            {
+                                "testRunId": taskSummary["testRunId"],
+                                "job": testReport["job"],
+                                "suiteName": testReport["suiteName"],
+                                "workingDirectory": testReport["workingDirectory"],
+                                "scenarioId": scenario["scenarioId"],
+                                "scenarioName": scenario["scenarioName"],
+                                "caseName": scenario["caseName"],
+                                "scenarioStatus": str(scenario["scenarioStatus"]),
+                                "scenarioMessage": str(scenario["scenarioMessage"]),
+                                "elapsed": scenario["elapsed"],
+                            }
+                        )
+                if len(dbValues) != 0:
+                    sql = ("INSERT INTO TESTCLI_RESULTDB_REPORT_SCENARIOS({keys}) VALUES ({values})"
+                           .format(keys=",".join(dbValues[0].keys()), values=",".join(['%s'] * len(dbValues[0]))))
+                    testResultDbHandler.executemany(sql, data=[s.values() for s in dbValues])
+                testResultDbHandler.commit()
+                testResultDbHandler.disConnect()
+            except mysql.connector.Error as me:
+                self.logger.warning("Log test result into rdb failed. " + str(me.msg))
+                self.logger.warning("Log test result into rdb. sql = [" + str(sql) + "]")
+
+        #          "platform": platform.platform(),
+        #         "processor": platform.processor(),
+        #         "hostName": platform.node(),
+        #         "python": platform.python_version(),
+        #         "pid": os.getpid(),
+        #         "testRunId": self.testRunId,
+        #         "maxProcess": self.maxProcess,
+        #         "scriptTimeout": self.scriptTimeout,
+        #         "workerTimeout": self.workerTimeout,
+        #         "startTime": self.executorMonitor["started"],
+        #         "endTime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+        #         "robotOptions": self.robotOptions,
+        #         "filteredTags": filteredTags,
+        #         "jobList": self.jobList,
+        #         "caseList": caseList,
+        #                 "suiteName": "Unknown",
+        #                 "errorMsg": re.message,
+        #                     "caseName": testCase.name,
+        #                     "caseTags": [str(s) for s in testCase.tags if s.strip() != "|"],
+        #                     "isSkiped": isFilteredCase
+        #         "testReport"
+        #                     "job": str(os.path.relpath(task["robotFile"], self.testRoot)),
+        #                     "suiteName": robotSuite.name,
+        #                     "workingDirectory": task["workingDirectory"],
+        #                     "cases": jobSummary["caseResultList"],
+        #                     "scenarios": jobSummary["scenarioResultList"]
+        #    "suiteName": str(robotSuite.name),
+        #     "metadata": metaData,
+        #     "startTime": startTime,
+        #     "endTime": endTime,
+        #     "robotOptions": robotOptions,
+        #     "filteredTags": filteredTags,
+        #     "caseList": caseList,
+        #     "caseResultList": caseResultList,
+        #            "id": str(robotCaseResult.id),
+        #             "caseName": str(robotCaseResult.name),
+        #             "caseTags": caseTags,
+        #             "caseStatus": str(robotCaseResult.status),
+        #             "message": str(robotCaseResult.message),
+        #             "startTime": caseStartTime,
+        #             "endTime": caseEndTime
+        #    "scenarioResultList": scenarioResultList
+        #             "scenarioId": key,
+        #             "scenarioName": value["scenarioName"],
+        #             "caseName": value["caseName"],
+        #             "scenarioStatus": value["scenarioStatus"],
+        #             "scenarioMessage": value["scenarioMessage"],
+        #             "elapsed": value["elapsed"]
 
         # Scneario统计
         scenarioPassed = 0

@@ -33,6 +33,7 @@ from .commands.compare import POSIXCompare
 from .commands.compare import compareMaskLines
 from .commands.compare import compareSkipLines
 from .commands.compare import compareOption
+from .commands.compare import compareDefaultOption
 from .commands.monitor import stopMonitorManager
 
 OFLAG_LOGFILE = 1
@@ -150,9 +151,13 @@ class TestCli(object):
         urllib3.disable_warnings()
 
         # 如果没有标准输出和标准错误输出，则不输出。不报错
+        self.__sysstdout_origin = None
         if not sys.stdout.isatty():
+            self.__sysstdout_origin = sys.stdout
             sys.stdout = open(os.devnull, mode="w")
+        self.__sysstderr_origin = None
         if not sys.stderr.isatty():
+            self.__sysstderr_origin = sys.stderr
             sys.stderr = open(os.devnull, mode="w")
 
         # 多语言集处理，设置字符集
@@ -161,6 +166,9 @@ class TestCli(object):
             self.testOptions.set("RESULT_ENCODING", resultCharset)
         if resultCharset is not None:                   # 客户端结果字符集
             self.testOptions.set("RESULT_ENCODING", resultCharset)
+
+        # 设置Compare的默认算法
+        compareDefaultOption["algorithm"] = self.testOptions.get("COMPARE_DEFAULT_METHOD")
 
         # 当前进程名称. 如果有参数传递，以参数为准.  如果没有，用MAIN加进程ID来标记
         if workerName == "MAIN":
@@ -543,6 +551,12 @@ class TestCli(object):
         # 关闭xlog的文件句柄
         if self.xlogFileHandle is not None:
             self.xlogFileHandle.close()
+
+        # 还原sys.stdout和sys.stderr
+        if self.__sysstdout_origin is not None:
+            sys.stdout = self.__sysstdout_origin
+        if self.__sysstderr_origin is not None:
+            sys.stderr = self.__sysstderr_origin
 
     # 逐条处理语句
     # 如果执行成功，返回true

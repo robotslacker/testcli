@@ -33,6 +33,7 @@ def open_file(filename):
 install_requires = ['JPype1', 'setproctitle', 'urllib3',
                     'click', 'prompt_toolkit', 'paramiko', 'antlr4-python3-runtime==4.11.1',
                     'fs', "psutil", "glom", "hdfs",
+                    "mysql.connector",
                     "python-multipart", "pytest-xdist", "pytest", 'fastapi', 'uvicorn',
                     "coloredlogs", "robotframework", "beautifulsoup4", "lxml",
                     "pytest", "pytest-html"

@@ -815,6 +815,8 @@ class SQLVisitor(SQLParserVisitor):
             compareOptions.update({"algorithm": "lcs"})
         if ctx.COMPARE_MYERS() is not None:
             compareOptions.update({"algorithm": "myers"})
+        if ctx.COMPARE_DIFFLIB() is not None:
+            compareOptions.update({"algorithm": "difflib"})
         if ctx.COMPARE_ENCODING() is not None:
             if ctx.COMPARE_WORK() is not None:
                 compareOptions.update({"workEncoding": (ctx.COMPARE_EXPRESSION()[0].getText())})

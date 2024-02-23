@@ -163,9 +163,14 @@ class TestOptions(object):
                                     "Comments": 'SSH channel default encoding.',
                                     "Hidden": False})
 
+        self.testOptionList.append({"Name": "COMPARE_DEFAULT_METHOD",
+                                    "Value": "AUTO",
+                                    "Comments": 'Default compare algorithm.',
+                                    "Hidden": False})
+
         self.testOptionList.append({"Name": "COMPARE_DIFFLIB_THRESHOLD",
                                     "Value": 1000,
-                                    "Comments": 'Threshold(lines) for use difflib compare algorithm.',
+                                    "Comments": 'Threshold(lines) for use difflib in auto compare algorithm.',
                                     "Hidden": False})
 
         self.testOptionList.append({"Name": "NAMESPACE",

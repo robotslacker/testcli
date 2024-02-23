@@ -232,6 +232,7 @@ class RunTestCli(object):
             sys.__stdout__.write('===== SQLMAP2     [' + str(os.environ.get("SQLCLI_SQLMAPPING")) + ']\n')
 
             sys.__stdout__.write('===== Starting .....\n')
+            sys.__stdout__.flush()
             if not self.__EnableConsoleOutPut:
                 myConsole = None
                 myHeadLessMode = True
@@ -288,6 +289,9 @@ class RunTestCli(object):
                           xlogoverwrite=False,
                           suitename=m_SuiteName,
                           casename=m_TestName)
+            sys.__stdout__.write('===== Start TestCli [' + str(cli.version) +
+                                 '] with script [' + str(scriptFileName) + '] \n')
+            sys.__stdout__.flush()
             logger.info('<b>===== Start TestCli [' + str(cli.version) +
                         '] with script</b> [' + str(scriptFileName) + '] ', html=True)
             if not self.__EnableConsoleOutPut:
@@ -353,6 +357,7 @@ class RunTestCli(object):
 
             logger.info('<b>===== End TestCli with result</b> [' + str(cliResult) + '] ', html=True)
             sys.__stdout__.write('===== End TestCli with result [' + str(cliResult) + '] \n')
+            sys.__stdout__.flush()
             if self.__BreakWithError and (cliResult != 0) and not self.__EnableConsoleOutPut:
                 # 如果日志信息少于30K，则全部打印
                 # 只有在没有打印日志的时候，才有必要把最后的失败日志给打印出来，否则不打印
@@ -383,6 +388,7 @@ class RunTestCli(object):
                     logger.info(row.replace("\n", ""))
                 logger.info(' =====  Test Break with Error ========')
                 sys.__stdout__.write(' =====  Test Break with Error ========\n')
+                sys.__stdout__.flush()
                 raise RuntimeError("Test Execute failed.")
 
             # 运行失败，标记错误信息

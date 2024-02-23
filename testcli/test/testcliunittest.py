@@ -2187,11 +2187,12 @@ class TestSynatx(unittest.TestCase):
             file2=fullRefFile,
             CompareIgnoreTailOrHeadBlank=True
         )
+        msg = ""
         if not compareResult:
             for line in compareReport:
                 if line.startswith("-") or line.startswith("+"):
-                    print(line)
-        self.assertTrue(compareResult)
+                    msg = msg + line + "\n"
+        self.assertTrue(compareResult, msg=msg)
 
         # 删除指定的dif文件
         fullDiffFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "testcomparework.dif"))

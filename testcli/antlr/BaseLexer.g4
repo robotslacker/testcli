@@ -284,6 +284,8 @@ COMPARE_WORK        : 'WORK';
 COMPARE_REFERENCE   : 'REFERENCE';
 COMPARE_LCS         : 'LCS';
 COMPARE_MYERS       : 'MYERS';
+COMPARE_DIFFLIB     : 'DIFFLIB';
+COMPARE_AUTO        : 'AUTO';
 COMPARE_EXPRESSION  :
     (OBS_TEXT | UNRESERVED | PCTENCODED | DoubleQuoteString | SingleQuoteString | ':' | '/' | '\\' | '{' |'}')+;
 

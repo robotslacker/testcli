@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+from ..commands.compare import compareDefaultOption
 from ..testcliexception import TestCliException
 
 
@@ -94,6 +95,18 @@ def setOptions(cls, options):
                 "message": "Option is valid integer only."
             }
             return
+
+    # 处理Compare算法选项
+    if optionName.upper() == "COMPARE_DEFAULT_METHOD":
+        # 设置Compare的默认算法
+        optionValue = str(optionValue)
+        if optionValue.strip().upper() not in ["AUTO", "MYERS", "DIFFLIB", "LCS"]:
+            yield {
+                "type": "error",
+                "message": "Available option are ['AUTO', 'MYERS', 'DIFFLIB', 'LCS']."
+            }
+            return
+        compareDefaultOption["algorithm"] = str(optionValue)
 
     # 处理DEBUG选项
     if optionName.upper() == "DEBUG":

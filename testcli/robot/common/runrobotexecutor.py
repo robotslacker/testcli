@@ -300,6 +300,7 @@ def generateRobotExecutorReport(
                     "scenarioName": value["scenarioName"],
                     "caseName": value["caseName"],
                     "scenarioStatus": value["scenarioStatus"],
+                    "scenarioMessage": value["scenarioMessage"],
                     "elapsed": value["elapsed"]
                 }
             )

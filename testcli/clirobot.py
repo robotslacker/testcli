@@ -11,6 +11,7 @@ import logging
 import coloredlogs
 import multiprocessing
 import traceback
+from time import strftime, localtime
 from multiprocessing import Manager
 from .robot.common.runregress import Regress, RegressException
 
@@ -60,7 +61,8 @@ def runRegress(args, executorMonitor=None):
         workerTimeout=args["workerTimeout"],
         logger=logger,
         executorMonitor=executorMonitor,
-        testRunId=args["testRunId"]
+        testRunId=args["testRunId"],
+        testResultDb=args["testResultDb"],
     )
     executorMonitor["pid"] = os.getpid()
     executorMonitor["maxProcess"] = args["maxProcess"]
@@ -119,7 +121,9 @@ def runRegress(args, executorMonitor=None):
 @click.option("--force", is_flag=True,
               help="Clean all files under working directory if not empty.")
 @click.option("--runid", type=str,
-              help="Test run unique id. Default is 0. will save in extend log for later analyze.")
+              help="Test run unique id. Default is timestamp+host+pid. will save in extend log for later analyze.")
+@click.option("--resultdb", type=str,
+              help="Will save test result into database for later analyze.")
 def cli(
         job,
         jobgroup,
@@ -128,7 +132,8 @@ def cli(
         jobtimeout,
         workertimeout,
         force,
-        runid
+        runid,
+        resultdb
 ):
     # 初始化信号变量
     # 捕捉信号，处理服务中断的情况
@@ -154,6 +159,10 @@ def cli(
         logger=logger,
         isatty=True
     )
+
+    # 默认的RunId为 时间戳+主机名+PID
+    if runid is None:
+        runid = strftime("%Y-%m-%d %H:%M:%S", localtime()) + "-" + str(platform.node()) + "-" + str(os.getpid())
 
     # 整理任务列表，把Job和JobGroup的内容都添加到一起
     jobList = []
@@ -228,7 +237,8 @@ def cli(
         "testRoot": os.path.join(os.path.dirname(__file__), "robot"),
         "workDirectory": workDirectory,
         "jobList": jobList,
-        "testRunId": runid
+        "testRunId": runid,
+        "testResultDb": resultdb
     }
 
     # 运行回归测试
@@ -316,6 +326,7 @@ def cli(
         logger.info("Finished. Please read report from [%s]." % htmlReportFile)
     else:
         logger.info("Finished. Please read log uner [%s]." % workDirectory)
+  
     sys.exit(exitCode)
 
 
