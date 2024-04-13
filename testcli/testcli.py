@@ -285,7 +285,7 @@ class TestCli(object):
         for root, dirs, files in os.walk(
                 os.path.join(os.path.dirname(__file__), "jlib")):
             for file in files:
-                if file.startswith("h2") and file.endswith(".jar"):
+                if file.startswith("h2-") and file.endswith(".jar"):
                     h2JarFile = os.path.abspath(os.path.join(root, str(file)))
                     break
             if h2JarFile is not None:
@@ -445,10 +445,10 @@ class TestCli(object):
         if self.appOptions is not None:
             for row in self.appOptions.items("driver"):
                 m_DriverName = None
-                m_JarFullFileName = []
+                driverJarList = []
                 m_JDBCURL = None
                 m_JDBCProp = None
-                m_jar_filename = None
+                driverJarFileName = None
                 m_DatabaseType = row[0].strip()
                 for m_driversection in str(row[1]).split(','):
                     m_driversection = m_driversection.strip()
@@ -467,23 +467,24 @@ class TestCli(object):
                             m_JDBCProp = self.appOptions.get(m_driversection, "jdbcprop")
                         except (configparser.NoSectionError, configparser.NoOptionError):
                             m_JDBCProp = None
-                    if m_jar_filename is None:
+                    if driverJarFileName is None:
                         try:
-                            m_jar_filename = self.appOptions.get(m_driversection, "filename")
-                            if os.path.exists(os.path.join(jlibDirectory, m_jar_filename)):
-                                m_JarFullFileName.append(os.path.abspath(os.path.join(jlibDirectory, m_jar_filename)))
-                                if "TESTCLI_DEBUG" in os.environ:
-                                    print("Load jar ..! [" +
-                                          os.path.join(jlibDirectory, m_jar_filename) + "]")
-                                m_jar_filename = None
-                            else:
-                                if "TESTCLI_DEBUG" in os.environ:
-                                    print("Driver file does not exist! [" +
-                                          os.path.join(jlibDirectory, m_jar_filename) + "]")
+                            for driverJarFileName in self.appOptions.get(m_driversection, "filename").split(','):
+                                driverJarFileName = driverJarFileName.strip()
+                                if os.path.exists(os.path.join(jlibDirectory, driverJarFileName)):
+                                    driverJarList.append(os.path.abspath(os.path.join(jlibDirectory, driverJarFileName)))
+                                    if "TESTCLI_DEBUG" in os.environ:
+                                        print("Load jar ..! [" +
+                                              os.path.join(jlibDirectory, driverJarFileName) + "]")
+                                    driverJarFileName = None
+                                else:
+                                    if "TESTCLI_DEBUG" in os.environ:
+                                        print("Driver file does not exist! [" +
+                                              os.path.join(jlibDirectory, driverJarFileName) + "]")
                         except (configparser.NoSectionError, configparser.NoOptionError):
-                            m_jar_filename = None
+                            driverJarFileName = None
                 jarConfig = {"ClassName": m_DriverName,
-                             "FullName": m_JarFullFileName,
+                             "FullName": driverJarList,
                              "JDBCURL": m_JDBCURL,
                              "JDBCProp": m_JDBCProp,
                              "Database": m_DatabaseType}
@@ -572,7 +573,8 @@ class TestCli(object):
                                             'Version: ' + self.version + ' | ' +
                                             (
                                                 "Not Connected." if self.db_conn is None
-                                                else "Connected with " + self.db_username + "/******@" + self.db_url
+                                                else "Connected with " + str(self.db_username) +
+                                                     "/******@" + str(self.db_url)
                                             )) + ' | ' +
                                          ' Type "_HELP" to get help information.' + ' | ' +
                                          ' Type "_EXIT" to exit app.' + ' | ' +

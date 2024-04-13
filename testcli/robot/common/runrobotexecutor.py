@@ -156,8 +156,8 @@ def generateRobotExecutorReport(
             try:
                 robotResults = ExecutionResult(subXmlReportFile).suite
             except DataError as de:
-                raise RegressException("Failed to analyze test result, "
-                                       "result file is broken. [" + subXmlReportFile + "]. " + str(de))
+                logger.error("Failed to analyze test result, "
+                             "result file is broken. [" + subXmlReportFile + "]. " + str(de))
 
     # 可能是单Suite文件，也可能是多Suite文件，需要分开处理
     robotSuiteResultList = []

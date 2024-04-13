@@ -94,10 +94,6 @@ IPV6
             : '[' (HEX | ':' | '.') + ']'
             ;
 
-CONNECT_PORT
-            : CONNECT_COLON DIGIT+
-            ;
-
 fragment CONNECT_DOUBLEQUOTE
             : '"' (~'"' | '\\' ('\r'? '\n' | .))* '"'
             ;

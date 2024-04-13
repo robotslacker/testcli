@@ -18,7 +18,7 @@ SQL> select * from aaa;
 2 rows selected.
 SQL> drop table xxx;
 Table "XXX" not found; SQL statement:
-drop table xxx [42102-200]
+drop table xxx [42102-224]
 SQL> delete from aaa where id =6;
 1 row affected.
 SQL>

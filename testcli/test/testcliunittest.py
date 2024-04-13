@@ -61,7 +61,7 @@ class TestSynatx(unittest.TestCase):
                 'host': '10.15.1.19',
                 'name': 'CONNECT',
                 'password': 'password',
-                'port': 6231,
+                'port': '6231',
                 'service': 'xdb',
                 'username': 'user'
             }, ret_CommandSplitResult)
@@ -80,7 +80,7 @@ class TestSynatx(unittest.TestCase):
                 'host': '10.15.1.19',
                 'name': 'CONNECT',
                 'password': 'password',
-                'port': 6231,
+                'port': '6231',
                 'service': 'xdb',
                 'username': 'user'
             }, ret_CommandSplitResult)
@@ -99,7 +99,7 @@ class TestSynatx(unittest.TestCase):
                 'host': '10.15.1.19',
                 'name': 'CONNECT',
                 'password': 'password',
-                'port': 6231,
+                'port': '6231',
                 'service': 'xdb',
                 'username': 'user'
             }, ret_CommandSplitResult)
@@ -110,7 +110,7 @@ class TestSynatx(unittest.TestCase):
         self.assertTrue(isFinished)
         self.assertEqual({'name': 'CONNECT', 'password': 'Dameng123', 'username': 'SYSDBA'}, ret_CommandSplitResult)
         self.assertEqual(1, ret_errorCode)
-        self.assertEqual("line1:25  mismatched input ':62310' expecting <EOF> ", ret_errorMsg)
+        self.assertEqual("line1:25  mismatched input ':' expecting <EOF> ", ret_errorMsg)
 
         # connect with local h2 mem
         (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
@@ -149,7 +149,7 @@ class TestSynatx(unittest.TestCase):
                           'host': '192.168.1.72',
                           'name': 'CONNECT',
                           'password': '123456',
-                          'port': 1521,
+                          'port': '1521',
                           'username': '"工具人1号"',
                           'service': 'xe'
                           }, ret_CommandSplitResult)
@@ -166,7 +166,7 @@ class TestSynatx(unittest.TestCase):
                           'host': '192.168.1.72',
                           'name': 'CONNECT',
                           'password': '123456',
-                          'port': 1521,
+                          'port': '1521',
                           'service': 'xe',
                           'username': 'system'}, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
@@ -197,7 +197,7 @@ class TestSynatx(unittest.TestCase):
                           'host': '127.0.0.1',
                           'name': 'CONNECT',
                           'password': 'sa',
-                          'port': 19091,
+                          'port': '19091',
                           'service': 'mem:test',
                           'username': 'sa'}, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
@@ -213,7 +213,7 @@ class TestSynatx(unittest.TestCase):
                           'host': '[0:0:0:0:0:ffff:192.1.56.10]',
                           'name': 'CONNECT',
                           'password': 'sa',
-                          'port': 19091,
+                          'port': '19091',
                           'service': 'mem:test',
                           'username': 'sa'}, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
@@ -229,7 +229,7 @@ class TestSynatx(unittest.TestCase):
                           'host': '[FE80::5689:98FF:FE14]',
                           'name': 'CONNECT',
                           'password': 'sa',
-                          'port': 19091,
+                          'port': '19091',
                           'service': 'mem:test',
                           'username': 'sa'}, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
@@ -250,7 +250,7 @@ class TestSynatx(unittest.TestCase):
                     {'parameterName': 'dd', 'parameterValue': 'yy'}
                 ],
                 'password': 'bb',
-                'port': 6231,
+                'port': '6231',
                 'username': 'aa'
             }, ret_CommandSplitResult)
         self.assertEqual(0, ret_errorCode)
@@ -1320,11 +1320,12 @@ class TestSynatx(unittest.TestCase):
             file2=fullRefFile,
             CompareIgnoreTailOrHeadBlank=True
         )
+        msg = "\n"
         if not compareResult:
             for line in compareReport:
                 if line.startswith("-") or line.startswith("+"):
-                    print(line)
-        self.assertTrue(compareResult)
+                    msg = msg + line + "\n"
+        self.assertTrue(compareResult, msg)
 
     def test_SQLExecuteMultiSQLInOneLine(self):
         from ..testcli import TestCli
@@ -1394,7 +1395,7 @@ class TestSynatx(unittest.TestCase):
     def test_SQLExecuteWithSQLCLI_CONNECTION_URL(self):
         from ..testcli import TestCli
 
-        h2JarFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "jlib", "h2-1.4.200.jar"))
+        h2JarFile = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "jlib", "h2-2.2.224.jar"))
         jarList = [h2JarFile, ]
         jdbcconnect(jclassname="org.h2.Driver",
                     url="jdbc:h2:mem:test;TRACE_LEVEL_SYSTEM_OUT=0;TRACE_LEVEL_FILE=0",
@@ -1649,11 +1650,15 @@ class TestSynatx(unittest.TestCase):
             file2=fullRefFile,
             CompareIgnoreTailOrHeadBlank=True
         )
+        msg = "\n"
         if not compareResult:
             for line in compareReport:
                 if line.startswith("-") or line.startswith("+"):
-                    print(line)
-        self.assertTrue(compareResult)
+                    msg = msg + line + "\n"
+        self.assertTrue(
+            expr=compareResult,
+            msg=msg
+        )
 
     def test_SQLJobManager(self):
         from ..testcli import TestCli
@@ -1681,12 +1686,15 @@ class TestSynatx(unittest.TestCase):
             file2=fullRefFile,
             CompareIgnoreTailOrHeadBlank=True
         )
+        msg = "\n"
         if not compareResult:
             for line in compareReport:
                 if line.startswith("-") or line.startswith("+"):
-                    print(line)
-
-        self.assertTrue(compareResult)
+                    msg = msg + line + "\n"
+        self.assertTrue(
+            expr=compareResult,
+            msg=msg
+        )
 
     def test_APIAnalyze_MultiPart(self):
         scriptFile = "testapisynatx-multipart.api"

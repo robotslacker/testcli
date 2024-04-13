@@ -107,7 +107,7 @@ def connectDb(cls, connectProperties, timeout: int = -1):
                 yield {
                     "type": "error",
                     "message": "Unknown database [" + str(connectProperties["driverSchema"]) + "]. " +
-                               "Connect Failed. Missed configuration in conf/testcli.ini."
+                               "Connect Failed. Missed jdbc configuration in conf/testcli.ini."
                 }
                 return
             # 读取配置文件，判断随后JPype连接的时候使用具体哪一个Jar包
@@ -117,6 +117,7 @@ def connectDb(cls, connectProperties, timeout: int = -1):
             jdbcProp = ""
             for jarConfig in cls.db_connectionConf:
                 jarList.extend(jarConfig["FullName"])
+            jarList = list(set(jarList))
             for jarConfig in cls.db_connectionConf:
                 if jarConfig["Database"].upper() == str(connectProperties["driverSchema"]).upper():
                     driverClass = jarConfig["ClassName"]
@@ -128,7 +129,7 @@ def connectDb(cls, connectProperties, timeout: int = -1):
                 yield {
                     "type": "error",
                     "message": "Unknown database [" + str(connectProperties["driverSchema"]) + "]. " +
-                               "Connect Failed. Missed configuration in conf/testcli.ini."
+                               "Connect Failed. Missed jdbcurl configuration in conf/testcli.ini."
                 }
                 return
 

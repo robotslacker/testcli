@@ -374,7 +374,7 @@ class SQLVisitor(SQLParserVisitor):
         return parsedObject, errorCode, errorMsg
 
     def visitConnectPort(self, ctx: SQLParser.ConnectPortContext):
-        parsedObject = {'port': int(ctx.getText().replace(":", ""))}
+        parsedObject = {'port': ctx.getText()}
 
         # 获取错误代码
         errorCode = 0

@@ -19,13 +19,13 @@ Total [2] jobs started.
 SQL> _job wait all;
 All jobs finished.
 SQL> select * from testtab order by id;
-+--------+----+--------+
-|   ##   | ID |  COL1  |
-+--------+----+--------+
-|      1 | 10 | Master |
-|      2 | 20 | slave1 |
-|      3 | 30 | slave2 |
-+--------+----+--------+
++--------+----+------------+
+|   ##   | ID |    COL1    |
++--------+----+------------+
+|      1 | 10 | Master     |
+|      2 | 20 | slave1     |
+|      3 | 30 | slave2     |
++--------+----+------------+
 3 rows selected.
 SQL> _exit
 Disconnected.

@@ -29,29 +29,29 @@ class APIClientErrorListener(ErrorListener):
         super().syntaxError(recognizer, offendingSymbol, line, column, msg, e)
 
 
-def APIRequestStringFormatWithPrefix(commentSQLScript, outputPrefix=""):
+def APIRequestStringFormatWithPrefix(commentAPIScript, outputPrefix=""):
     bAPIPrefix = 'API> '
 
-    # 如果是完全空行的内容，则直接返回SQL前缀
-    if len(commentSQLScript) == 0:
+    # 如果是完全空行的内容，则直接返回API前缀
+    if len(commentAPIScript) == 0:
         return bAPIPrefix
 
     # 把所有的API换行, 第一行加入[API >]， 随后加入[   >]
     formattedString = None
-    commentSQLLists = commentSQLScript.split('\n')
-    if len(commentSQLScript) >= 1:
-        # 如果原来的内容最后一个字符就是回车换行符，split函数会在后面补一个换行符，这里要去掉，否则前端显示就会多一个空格
-        if commentSQLScript[-1] == "\n":
-            del commentSQLLists[-1]
+    if len(commentAPIScript) >= 1:
+        # 如果原来的内容最后一个字符就是回车换行符，要去掉，否则前端显示就会多一个空格
+        if commentAPIScript[-1] == "\n":
+            commentAPIScript = commentAPIScript[:-1]
+    commentAPILists = commentAPIScript.split('\n')
 
     # 拼接字符串
-    for pos in range(0, len(commentSQLLists)):
+    for pos in range(0, len(commentAPILists)):
         if pos == 0:
-            formattedString = outputPrefix + bAPIPrefix + commentSQLLists[pos]
+            formattedString = outputPrefix + bAPIPrefix + commentAPILists[pos]
         else:
             formattedString = \
-                formattedString + '\n' + outputPrefix + bAPIPrefix + commentSQLLists[pos]
-        if len(commentSQLLists[pos].strip()) != 0:
+                formattedString + '\n' + outputPrefix + bAPIPrefix + commentAPILists[pos]
+        if len(commentAPILists[pos].strip()) != 0:
             bAPIPrefix = '   > '
     return formattedString
 

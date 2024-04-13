@@ -667,55 +667,6 @@ class Regress(object):
                 self.logger.warning("Log test result into rdb failed. " + str(me.msg))
                 self.logger.warning("Log test result into rdb. sql = [" + str(sql) + "]")
 
-        #          "platform": platform.platform(),
-        #         "processor": platform.processor(),
-        #         "hostName": platform.node(),
-        #         "python": platform.python_version(),
-        #         "pid": os.getpid(),
-        #         "testRunId": self.testRunId,
-        #         "maxProcess": self.maxProcess,
-        #         "scriptTimeout": self.scriptTimeout,
-        #         "workerTimeout": self.workerTimeout,
-        #         "startTime": self.executorMonitor["started"],
-        #         "endTime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-        #         "robotOptions": self.robotOptions,
-        #         "filteredTags": filteredTags,
-        #         "jobList": self.jobList,
-        #         "caseList": caseList,
-        #                 "suiteName": "Unknown",
-        #                 "errorMsg": re.message,
-        #                     "caseName": testCase.name,
-        #                     "caseTags": [str(s) for s in testCase.tags if s.strip() != "|"],
-        #                     "isSkiped": isFilteredCase
-        #         "testReport"
-        #                     "job": str(os.path.relpath(task["robotFile"], self.testRoot)),
-        #                     "suiteName": robotSuite.name,
-        #                     "workingDirectory": task["workingDirectory"],
-        #                     "cases": jobSummary["caseResultList"],
-        #                     "scenarios": jobSummary["scenarioResultList"]
-        #    "suiteName": str(robotSuite.name),
-        #     "metadata": metaData,
-        #     "startTime": startTime,
-        #     "endTime": endTime,
-        #     "robotOptions": robotOptions,
-        #     "filteredTags": filteredTags,
-        #     "caseList": caseList,
-        #     "caseResultList": caseResultList,
-        #            "id": str(robotCaseResult.id),
-        #             "caseName": str(robotCaseResult.name),
-        #             "caseTags": caseTags,
-        #             "caseStatus": str(robotCaseResult.status),
-        #             "message": str(robotCaseResult.message),
-        #             "startTime": caseStartTime,
-        #             "endTime": caseEndTime
-        #    "scenarioResultList": scenarioResultList
-        #             "scenarioId": key,
-        #             "scenarioName": value["scenarioName"],
-        #             "caseName": value["caseName"],
-        #             "scenarioStatus": value["scenarioStatus"],
-        #             "scenarioMessage": value["scenarioMessage"],
-        #             "elapsed": value["elapsed"]
-
         # Scneario统计
         scenarioPassed = 0
         scenarioFailed = 0

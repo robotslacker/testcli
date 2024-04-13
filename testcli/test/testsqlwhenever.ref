@@ -10,8 +10,8 @@ SQL> select 1+2 from dual;
 +--------+---+
 1 row selected.
 SQL> select a from aaa;
-Table "AAA" not found; SQL statement:
-select a from aaa [42102-200]
+Table "AAA" not found (this database is empty); SQL statement:
+select a from aaa [42104-224]
 SQL> select 3+4 from dual;
 +--------+---+
 |   ##   | 7 |
@@ -29,6 +29,6 @@ SQL> select 1+2 from dual;
 +--------+---+
 1 row selected.
 SQL> select a from aaa;
-Table "AAA" not found; SQL statement:
-select a from aaa [42102-200]
+Table "AAA" not found (this database is empty); SQL statement:
+select a from aaa [42104-224]
 Disconnected with [3].
