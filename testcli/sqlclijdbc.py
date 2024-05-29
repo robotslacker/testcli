@@ -774,7 +774,7 @@ def _to_year(conn, rs, col, p_objColumnSQLType=None):
         return
     java_cal = jpype.JClass("java.util.Calendar").getInstance()
     java_cal.setTime(java_val)
-    return java_cal.get(1)
+    return int(java_cal.get(1))
 
 
 def _to_bit(conn, rs, col, p_objColumnSQLType=None):

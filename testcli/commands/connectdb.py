@@ -154,6 +154,8 @@ def connectDb(cls, connectProperties, timeout: int = -1):
                 jdbcURL = jdbcURL.replace("${port}", str(cls.db_port))
             if connectProperties["service"] is not None:
                 jdbcURL = jdbcURL.replace("${service}", connectProperties["service"])
+            else:
+                jdbcURL = jdbcURL.replace("${service}", "")
             if connectProperties["driverType"] is not None:
                 jdbcURL = jdbcURL.replace("${driverType}", connectProperties["driverType"])
 

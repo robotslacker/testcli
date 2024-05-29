@@ -382,6 +382,23 @@ def parseAPIHints(commandHints: list):
 
     return commandHintList
 
+def isClosedBracket(s):
+    # 首先去除SQL中的''和""信息 (重复的''表示单引号，重复的""表示双引号，是普通字符)
+    s = s.replace("‘'", '').replace('“"', '')
+    bClosedBracket = True
+    lastEncloseChar = ""
+    for c in s:
+        if c in ['"', "'"] and lastEncloseChar == c and not bClosedBracket:
+            # 遇到单引号或者双引号，并且上一个也是相同引号，且语句没结束，则结束
+            bClosedBracket = True
+            lastEncloseChar = ""
+            continue
+        if c in ['"', "'"] and bClosedBracket:
+            # 第一次遇到单引号或者双引号
+            bClosedBracket = False
+            lastEncloseChar = c
+            continue
+    return bClosedBracket
 
 def splitSqlCommand(sqlCommand: str):
     """
@@ -408,18 +425,21 @@ def splitSqlCommand(sqlCommand: str):
         currentSql = currentSql + c
         # 只有遇到换行符或者分号，才有必要进行分析
         if c in delimiters:
-            (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
-                = SQLAnalyze(currentSql)
-            if ret_errorCode != 0:
-                if re.search(pattern=r'missing.*<EOF>', string=ret_errorMsg):
-                    # 语句没有结束
-                    isFinished = False
-                if re.search(pattern=r'missing.*SQL_SLASH', string=ret_errorMsg):
-                    # 语句没有结束
-                    isFinished = False
-                if re.search(pattern=r'expecting.*<EOF>', string=ret_errorMsg):
-                    # 语句没有结束
-                    isFinished = False
+            if not isClosedBracket(currentSql):
+                isFinished = False
+            else:
+                (isFinished, ret_CommandSplitResult, ret_errorCode, ret_errorMsg) \
+                    = SQLAnalyze(currentSql)
+                if ret_errorCode != 0:
+                    if re.search(pattern=r'missing.*<EOF>', string=ret_errorMsg):
+                        # 语句没有结束
+                        isFinished = False
+                    if re.search(pattern=r'missing.*SQL_SLASH', string=ret_errorMsg):
+                        # 语句没有结束
+                        isFinished = False
+                    if re.search(pattern=r'expecting.*<EOF>', string=ret_errorMsg):
+                        # 语句没有结束
+                        isFinished = False
             if isFinished:
                 splitSqlCommandList.append(currentSql)
                 currentSql = ""
