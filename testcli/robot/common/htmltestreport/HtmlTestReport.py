@@ -59,7 +59,6 @@ class HtmlFileTemplate(object):
     }
 
     DEFAULT_TITLE = 'Unit Test Report'
-    DEFAULT_DESCRIPTION = 'No detail infomation'
 
     # ------------------------------------------------------------------------
     # HTML Template
@@ -182,6 +181,7 @@ class HtmlFileTemplate(object):
         %(ending)s
         %(chart_script1)s
         %(chart_script2)s
+        %(chart_script3)s
     </div>
 </body>
 </html>
@@ -213,7 +213,7 @@ class HtmlFileTemplate(object):
                     label: {
                         show: true,
                         position: 'center',
-                        formatter: '{title|' + 'Overall pass rate' +'}'+ '\\n\\r' + '{percent|%(PassPercent)s}',
+                        formatter: '{title|' + 'Case overall pass rate' +'}'+ '\\n\\r' + '{percent|%(PassPercent)s}',
                         rich: {
                             title:{
                                 fontSize: 20,
@@ -318,6 +318,68 @@ class HtmlFileTemplate(object):
                 },
           ]
         };
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+    </script>
+    """  # variables: (PassPercent, Pass, fail, error)
+
+    ECHARTS_SCRIPT_3 = """
+    <script type="text/javascript">
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('chart3'));
+
+        // 指定图表的配置项和数据
+        var option = {
+            tooltip : {
+                trigger: 'item',
+                formatter: "{a} <br/>{b} : {c} ({d}%%)"
+            },
+            color: ['LightGreen', 'Orange', 'OrangeRed'],
+            legend: {
+                orient: 'vertical',
+                left: 'left',
+                data: ['Pass','Fail','Error']
+            },
+            series : [
+                {
+                    name: 'Test report',
+                    type: 'pie',
+                    radius: ['50%%', '70%%'],
+                    center: ['50%%', '60%%'],
+                    label: {
+                        show: true,
+                        position: 'center',
+                        formatter: '{title|' + 'Scenario overall pass rate' +'}'+ '\\n\\r' + '{percent|%(PassPercent)s}',
+                        rich: {
+                            title:{
+                                fontSize: 20,
+                                fontFamily : "Lucida Console",
+                                color:'#454c5c'
+                            },
+                            percent: {
+                                fontFamily : "Lucida Console",
+                                fontSize: 16,
+                                color:'#6c7a89',
+                                lineHeight:30,
+                            },
+                        }
+                    },
+                    data:[
+                        {value:%(Pass)s, name:'Succ'},
+                        {value:%(fail)s, name:'Fail'},
+                        {value:%(error)s, name:'Error'}
+                    ],
+                    itemStyle: {
+                        emphasis: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    }
+                }
+            ]
+        };
+
         // 使用刚指定的配置项和数据显示图表。
         myChart.setOption(option);
     </script>
@@ -428,9 +490,9 @@ class HtmlFileTemplate(object):
     %(parameters)s
     </div>
     <div style="float: left;width:100%%;">
-        <div style="float: left;width:40%%;"><p class='description'>%(description)s</p></div>
         <div id="chart1" style="width:30%%;height:300px;float:left;"></div>
-        <div id="chart2" style="width:30%%;height:300px;float:left;"></div>
+        <div id="chart2" style="width:40%%;height:300px;float:left;"></div>
+        <div id="chart3" style="width:30%%;height:300px;float:left;"></div>
     </div>
 """  # variables: (title, parameters, description)
 
@@ -554,9 +616,36 @@ class TestCaseStatus(Enum):
     def __str__(self):
         return self.name
 
+class TestScenarioStatus(Enum):
+    UNKNOWN = 0
+    SUCCESS = 1
+    FAILURE = 2
+    ERROR = 3
+
+    def __str__(self):
+        return self.name
+
+class TestScenario(object):
+    def __init__(self):
+        self.scenarioName = None
+        self.scenarioStatus = TestScenarioStatus.UNKNOWN
+        self.scenarioDescription = ""
+
+    def setScenarioName(self, scenarioName):
+        self.scenarioName = scenarioName
+
+    def setScenarioStatus(self, scenarioStatus):
+        self.scenarioStatus = scenarioStatus
+
+    def setScenarioDescription(self, scenarioDescription):
+        self.scenarioDescription = scenarioDescription
+
+    def getScenarioStatus(self):
+        return self.scenarioStatus
 
 class TestCase(object):
     def __init__(self):
+        self.scenarios = []
         self.CaseName = None
         self.CaseStatus = TestCaseStatus.UNKNOWN
         self.CaseDescription = ""
@@ -627,6 +716,11 @@ class TestCase(object):
     def setDetailReportLink(self, p_DetailReportLink):
         self.DetailReportLink = p_DetailReportLink
 
+    def addScenario(self, scenario):
+        self.scenarios.append(scenario)
+
+    def getScenarios(self):
+        return self.scenarios
 
 class TestSuite(object):
     def __init__(self):
@@ -635,9 +729,12 @@ class TestSuite(object):
         self.SuiteName = None
         self.TestCases = []
         self.SuiteDescription = ""
-        self.PassedCaseCount = 0
-        self.FailedCaseCount = 0
-        self.ErrorCaseCount = 0
+        self.passedCaseCount = 0
+        self.failedCaseCount = 0
+        self.errorCaseCount = 0
+        self.passedScenarioCount = 0
+        self.failedScenarioCount = 0
+        self.errorScenarioCount = 0
         self.sid = 0
         self.max_tid = 1
         self.SuiteStartTime = ""
@@ -691,11 +788,21 @@ class TestSuite(object):
         self.TestCases = []
         for m_case in m_OldCases:
             if m_case.getCaseStatus() == TestCaseStatus.SUCCESS:
-                self.PassedCaseCount = self.PassedCaseCount + 1
+                self.passedCaseCount = self.passedCaseCount + 1
             if m_case.getCaseStatus() == TestCaseStatus.FAILURE:
-                self.FailedCaseCount = self.FailedCaseCount + 1
+                self.failedCaseCount = self.failedCaseCount + 1
             if m_case.getCaseStatus() == TestCaseStatus.ERROR:
-                self.ErrorCaseCount = self.ErrorCaseCount + 1
+                self.errorCaseCount = self.errorCaseCount + 1
+
+            # 从Case中统计测试场景的数据
+            for scenario in m_case.getScenarios():
+                if scenario.getScenarioStatus() == TestScenarioStatus.SUCCESS:
+                    self.passedScenarioCount = self.passedScenarioCount + 1
+                if scenario.getScenarioStatus() == TestScenarioStatus.FAILURE:
+                    self.failedScenarioCount = self.failedScenarioCount + 1
+                if scenario.getScenarioStatus() == TestScenarioStatus.ERROR:
+                    self.errorScenarioCount = self.errorScenarioCount + 1
+
             # 从Suite中查找最早的StartTime以及累计ElapsedTime
             if self.getSuiteStartTime() == "":
                 self.setSuiteStartTime(m_case.getCaseStartTime())
@@ -724,13 +831,13 @@ class TestSuite(object):
         self.SuiteDescription = p_SuiteDescription
 
     def getPassedCaseCount(self):
-        return self.PassedCaseCount
+        return self.passedCaseCount
 
     def getFailedCaseCount(self):
-        return self.FailedCaseCount
+        return self.failedCaseCount
 
     def getErrorCaseCount(self):
-        return self.ErrorCaseCount
+        return self.errorCaseCount
 
     def setSID(self, p_SID):
         self.sid = p_SID
@@ -745,14 +852,17 @@ class TestSuite(object):
 class TestResult(object):
     def __init__(self):
         self.TestSuites = []
-        self.pass_count = 0
-        self.fail_count = 0
-        self.error_count = 0
+        self.maxProcess = 0
+        self.passedCaseCount = 0
+        self.failedCaseCount = 0
+        self.errorCaseCount = 0
+        self.passedScenarioCount = 0
+        self.failedScenarioCount = 0
+        self.errorScenarioCount = 0
         self.max_sid = 1
         self.starttime = ""
         self.elapsedtime = 0
         self.Title = "Unknown title"
-        self.Description = "No description"
         self.robotOptions = ""
         self.lock = threading.Lock()
 
@@ -762,11 +872,8 @@ class TestResult(object):
     def setTitle(self, p_Title):
         self.Title = p_Title
 
-    def getDescription(self):
-        return self.Description
-
-    def setDescription(self, p_Description):
-        self.Description = p_Description
+    def setMaxProcess(self, maxProcess):
+        self.maxProcess = maxProcess
 
     def getTestStartTime(self):
         return self.starttime
@@ -786,9 +893,12 @@ class TestResult(object):
 
         try:
             # 更新TestResult的全局统计信息
-            self.pass_count = self.pass_count + p_TestSuite.PassedCaseCount
-            self.fail_count = self.fail_count + p_TestSuite.FailedCaseCount
-            self.error_count = self.error_count + p_TestSuite.ErrorCaseCount
+            self.passedCaseCount = self.passedCaseCount + p_TestSuite.passedCaseCount
+            self.failedCaseCount = self.failedCaseCount + p_TestSuite.failedCaseCount
+            self.errorCaseCount = self.errorCaseCount + p_TestSuite.errorCaseCount
+            self.passedScenarioCount = self.passedScenarioCount + p_TestSuite.passedScenarioCount
+            self.failedScenarioCount = self.failedScenarioCount + p_TestSuite.failedScenarioCount
+            self.errorScenarioCount = self.errorScenarioCount + p_TestSuite.errorScenarioCount
             if self.getTestStartTime() == "":
                 self.setTestStartTime(p_TestSuite.getSuiteStartTime())
             elif self.getTestStartTime() > p_TestSuite.getSuiteStartTime():
@@ -807,17 +917,13 @@ class TestResult(object):
 
 class HTMLTestRunner(HtmlFileTemplate):
 
-    def __init__(self, title=None, description=None):
+    def __init__(self, title=None):
         self.stopTime = 0
 
         if title is None:
             self.title = self.DEFAULT_TITLE
         else:
             self.title = title
-        if description is None:
-            self.description = self.DEFAULT_DESCRIPTION
-        else:
-            self.description = description
 
     def getReportAttributes(self, result: TestResult):
         if self:
@@ -828,23 +934,39 @@ class HTMLTestRunner(HtmlFileTemplate):
         """
         startTime = str(result.starttime)
         duration = strftime("%H:%M:%S", gmtime(int(result.elapsedtime)))
-        status = []
+        caseStatus = []
+        scenarioStatus = []
 
-        if result.pass_count:
-            status.append('Pass %s' % result.pass_count)
-        if result.fail_count:
-            status.append('Fail %s' % result.fail_count)
-        if result.error_count:
-            status.append('Error %s' % result.error_count)
-        if status:
-            status = ' '.join(status)
+        if result.passedCaseCount:
+            caseStatus.append('Pass %s' % result.passedCaseCount)
+        if result.failedCaseCount:
+            caseStatus.append('Fail %s' % result.failedCaseCount)
+        if result.errorCaseCount:
+            caseStatus.append('Error %s' % result.errorCaseCount)
+        if caseStatus:
+            caseStatus = ' '.join(caseStatus)
         else:
-            status = 'none'
+            caseStatus = 'none'
+
+        if result.passedScenarioCount:
+            scenarioStatus.append('Pass %s' % result.passedScenarioCount)
+        if result.failedScenarioCount:
+            scenarioStatus.append('Fail %s' % result.failedScenarioCount)
+        if result.errorScenarioCount:
+            scenarioStatus.append('Error %s' % result.errorScenarioCount)
+        if caseStatus:
+            scenarioStatus = ' '.join(scenarioStatus)
+        else:
+            scenarioStatus = 'none'
+
+        # 模板替换的内容必须为字符串，所以这里必须强制转换为字符串类型
         return [
             ('Start time', startTime),
             ('End time', strftime("%Y-%m-%d %H:%M:%S", localtime())),
             ('Elapsed', duration),
-            ('Status', status),
+            ('Max Process', str(result.maxProcess)),
+            ('Case Status', caseStatus),
+            ('Scenario Status', scenarioStatus),
         ]
 
     def generateReport(self, result, output):
@@ -853,8 +975,13 @@ class HTMLTestRunner(HtmlFileTemplate):
         heading = self._generate_heading(result)
         report = self._generate_report(result)
         ending = self._generate_ending()
+        # 统计所有测试用例的成功失败比例
         chart1 = self._generate_chart1(result)
+        # 按用户统计所有测试用例的成功失败比例
         chart2 = self._generate_chart2(result)
+        # 统计所有测试场景的成功失败比例
+        chart3 = self._generate_chart3(result)
+
         htmlContents = self.HTML_TMPL % dict(
             title=saxutils.escape(self.title),
             generator=generator,
@@ -863,7 +990,8 @@ class HTMLTestRunner(HtmlFileTemplate):
             report=report,
             ending=ending,
             chart_script1=chart1,
-            chart_script2=chart2
+            chart_script2=chart2,
+            chart_script3=chart3,
         )
         # 生成html文件
         m_OutputHandler = open(output, "w", encoding='utf8')
@@ -906,9 +1034,7 @@ class HTMLTestRunner(HtmlFileTemplate):
             a_lines.append(line)
         heading = self.HEADING_TMPL % dict(
             title=saxutils.escape(result.getTitle()),
-            parameters=''.join(a_lines),
-            # 对描述信息不进行转义，以保证其中的换行符显示
-            description=result.getDescription(),
+            parameters=''.join(a_lines)
         )
         return heading
 
@@ -951,26 +1077,26 @@ class HTMLTestRunner(HtmlFileTemplate):
 
         report = self.REPORT_TMPL % dict(
             test_list=''.join(rows),
-            count=str(result.pass_count + result.fail_count + result.error_count),
-            Pass=str(result.pass_count),
-            fail=str(result.fail_count),
+            count=str(result.passedCaseCount + result.failedCaseCount + result.errorCaseCount),
+            Pass=str(result.passedCaseCount),
+            fail=str(result.failedCaseCount),
             starttime=result.starttime,
             elapsedtime=strftime("%H:%M:%S", gmtime(int(result.elapsedtime))),
-            error=str(result.error_count),
+            error=str(result.errorCaseCount),
         )
         return report
 
     def _generate_chart1(self, result):
-        m_TotalCaseCount = result.pass_count + result.fail_count + result.error_count
-        if m_TotalCaseCount == 0:
+        totalCaseCount = result.passedCaseCount + result.failedCaseCount + result.errorCaseCount
+        if totalCaseCount == 0:
             m_PassPercent = "-----"
         else:
-            m_PassPercent = str("{:.2f}".format(result.pass_count / m_TotalCaseCount * 100)) + "%"
+            m_PassPercent = str("{:.2f}".format(result.passedCaseCount / totalCaseCount * 100)) + "%"
         chart = self.ECHARTS_SCRIPT_1 % dict(
             PassPercent=m_PassPercent,
-            Pass=str(result.pass_count),
-            fail=str(result.fail_count),
-            error=str(result.error_count),
+            Pass=str(result.passedCaseCount),
+            fail=str(result.failedCaseCount),
+            error=str(result.errorCaseCount),
         )
         return chart
 
@@ -1034,6 +1160,20 @@ class HTMLTestRunner(HtmlFileTemplate):
             userdata_error=m_TestCaseOwnerErrorParameter,
             userdata_fail=m_TestCaseOwnerFailParameter,
             userdata_pass=m_TestCaseOwnerPassParameter,
+        )
+        return chart
+
+    def _generate_chart3(self, result):
+        totalScenarioCount = result.passedScenarioCount + result.failedScenarioCount + result.errorScenarioCount
+        if totalScenarioCount == 0:
+            passPercent = "-----"
+        else:
+            passPercent = str("{:.2f}".format(result.passedScenarioCount / totalScenarioCount * 100)) + "%"
+        chart = self.ECHARTS_SCRIPT_3 % dict(
+            PassPercent=passPercent,
+            Pass=str(result.passedScenarioCount),
+            fail=str(result.failedScenarioCount),
+            error=str(result.errorScenarioCount),
         )
         return chart
 

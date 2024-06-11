@@ -26,7 +26,9 @@ from .htmltestreport.HtmlTestReport import HTMLTestRunner
 from .htmltestreport.HtmlTestReport import TestResult
 from .htmltestreport.HtmlTestReport import TestSuite
 from .htmltestreport.HtmlTestReport import TestCase
+from .htmltestreport.HtmlTestReport import TestScenario
 from .htmltestreport.HtmlTestReport import TestCaseStatus
+from .htmltestreport.HtmlTestReport import TestScenarioStatus
 from .runrobotexecutor import RobotXMLSoupParser
 from .junitreport.JunitTestReport import TestSuite as JunitTestSuite
 from .junitreport.JunitTestReport import TestCase as JunitTestCase
@@ -132,6 +134,7 @@ class Regress(object):
             # 整理报告内容
             htmlTestResult = TestResult()
             htmlTestResult.setTitle("Test Report")
+            htmlTestResult.setMaxProcess(self.maxProcess)
             htmlTestResult.robotOptions = self.robotOptions
 
             # 为Junit单独准备一个目录，来放置Junit结果
@@ -255,6 +258,20 @@ class Regress(object):
                     htmlTestCase.setDetailReportLink(
                         robotTask["workingDirectory"] + ".html#" + testCaseResult["id"])
                     htmlTestCase.setDownloadURLLink(robotTask["workingDirectory"] + ".tar")
+
+                    # 更新测试场景数据
+                    for scenarioResult in jobSummary["scenarioResultList"]:
+                        if scenarioResult["caseName"] == testCaseResult["caseName"]:
+                            testScenario = TestScenario()
+                            testScenario.setScenarioName(scenarioResult["scenarioName"])
+                            if scenarioResult["scenarioStatus"] == "PASS":
+                                testScenario.setScenarioStatus(TestScenarioStatus.SUCCESS)
+                            elif scenarioResult["scenarioStatus"] == "FAIL":
+                                testScenario.setScenarioStatus(TestScenarioStatus.FAILURE)
+                            else:
+                                testScenario.setScenarioStatus(TestScenarioStatus.ERROR)
+                            testScenario.setScenarioDescription("")
+                            htmlTestCase.addScenario(copy.deepcopy(testScenario))
                     htmlTestSuite.addTestCase(htmlTestCase)
 
                 # 更新Html运行结果
@@ -666,22 +683,6 @@ class Regress(object):
             except mysql.connector.Error as me:
                 self.logger.warning("Log test result into rdb failed. " + str(me.msg))
                 self.logger.warning("Log test result into rdb. sql = [" + str(sql) + "]")
-
-        # Scneario统计
-        scenarioPassed = 0
-        scenarioFailed = 0
-        for testReport in taskSummary["testReport"]:
-            for scenario in testReport["scenarios"]:
-                if scenario["scenarioStatus"] == "PASS":
-                    scenarioPassed = scenarioPassed + 1
-                if scenario["scenarioStatus"] == "FAIL":
-                    scenarioFailed = scenarioFailed + 1
-
-        # 更新描述信息
-        htmlTestResult.setDescription(
-            "Max Processes   : " + str(self.maxProcess) + '<br>' +
-            "Scenario: " + str(scenarioPassed) + "/" + str(scenarioFailed) + "(PASS/FAIL)" + '<br>'
-        )
 
         # 生成报告
         htmlTestRunner = HTMLTestRunner(title="Test Report")

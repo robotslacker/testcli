@@ -2234,11 +2234,16 @@ class TestSynatx(unittest.TestCase):
             file2=fullRefFile,
             CompareIgnoreTailOrHeadBlank=True
         )
+
+        msg = "\n"
         if not compareResult:
             for line in compareReport:
                 if line.startswith("-") or line.startswith("+"):
-                    print(line)
-        self.assertTrue(compareResult)
+                    msg = msg + line + "\n"
+        self.assertTrue(
+            expr=compareResult,
+            msg=msg
+        )
 
     def test_sqllogmaskandfilter(self):
         from ..testcli import TestCli

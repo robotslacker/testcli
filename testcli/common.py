@@ -87,6 +87,46 @@ def rewriteStatement(cls, statement: str, commandScriptFile: str):
         else:
             # 没有任何可以替换的了
             break
+
+    # 随后尝试被替换内容是否为当前应用变量，环境变量
+    while True:
+        # 替换脚本中的变量信息
+        # 替换： 一： 系统的环境变量,即${env}
+        # 替换： 二:  系统内嵌脚本中的变量${eval}
+        match_obj = re.search(r"\${(.*?)}", statement, re.IGNORECASE | re.DOTALL)
+        if match_obj:
+            beforeRewriteStatement = statement
+            searchResult = str(match_obj.group(0))
+            varName = str(match_obj.group(1)).strip()
+
+            # 先尝试在MAPPING文件中进行查找替换
+            mappingResult = cls.cmdMappingHandler.RewriteWord(commandScriptFile, varName)
+            if varName != mappingResult:
+                statement = statement.replace(searchResult, str(mappingResult))
+
+            # 尝试本地变量
+            try:
+                evalResult = evalExpression(cls, varName)
+                if varName != evalResult:
+                    statement = statement.replace(searchResult, str(evalResult))
+            except NameError:
+                # 非本地变量
+                pass
+            except Exception as ex:
+                if "TESTCLI_DEBUG" in os.environ:
+                    raise TestCliException("evalExpression Error 2[" + varName + "]: [" + repr(ex) + "].")
+
+            # 尝试环境变量
+            if varName in os.environ:
+                statement = statement.replace(searchResult, os.environ[varName])
+
+            if statement == beforeRewriteStatement:
+                # 循环替换再也没有发生变化
+                break
+        else:
+            # 没有任何可以替换的了
+            break
+
     return statement
 
 

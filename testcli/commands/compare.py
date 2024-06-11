@@ -272,6 +272,11 @@ class POSIXCompare:
                     compareResult = False
                     for nPos in range(j1, j2):
                         compareDiffResult.append("+{:>{}} ".format(linenoy[nPos], 6) + y[nPos])
+        if compareResult:
+            # 文件完全相等
+            compareDiffResult.clear()
+            for nPos in range(0, len(x)):
+                compareDiffResult.append(" {:>{}} ".format(linenox[nPos], 6) + x[nPos])
         return compareResult, compareDiffResult
 
     def compare_text(self,
