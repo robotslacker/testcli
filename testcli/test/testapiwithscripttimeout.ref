@@ -20,6 +20,9 @@ API> ### aaa
 REWROTED API> Your API has been changed to:
 REWROTED    > GET http://127.0.0.1:8000/timeoutTest
 REWROTED    >     ?requestId=1
+REWROTED    > Accept: application/json
+REWROTED    > X-Language: zh_CN
+REWROTED    > Content-Type: application/json
 {
     "content": {
         "status": "OK"
@@ -40,6 +43,9 @@ API> ### aaa
 REWROTED API> Your API has been changed to:
 REWROTED    > GET http://127.0.0.1:8000/timeoutTest
 REWROTED    >     ?requestId=1
+REWROTED    > Accept: application/json
+REWROTED    > X-Language: zh_CN
+REWROTED    > Content-Type: application/json
 Testcli-0000: Request timeout limit script threshold [15] reached.
 API> _exit
 Testcli-0000: Script Timeout (15) expired. Abort this Script.

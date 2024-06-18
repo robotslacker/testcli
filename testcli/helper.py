@@ -322,9 +322,7 @@ helpMessage = [
         "synatx":
             '''
         _CONNECT /[MEM|META]
-        _CONNECT <user>/<pass>
-        _CONNECT <user>/<pass>@jdbc:<driver>{:<driverType>}/<host>{:<port>}{/<service>}                
-        _CONNECT <user>/<pass>@jdbc:<driver>{:<driverType>}/<host>{:<port>}{/<service>}?<param1=value1&param2=value2...>
+        _CONNECT {<user>/<pass>@}jdbc:<driver>{:<driverType>}/{<host>{:<port>}}/{<service>}                
         
         Example:
             _connect user/pass@jdbc:mysql:tcp://[2001:251:e000:1::c0a8:230]:3306/mydb

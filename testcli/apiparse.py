@@ -69,9 +69,13 @@ def APIRequestObjectFormatWithPrefix(headerPrefix, requestObject, outputPrefix):
     if "httpFields" in requestObject:
         fieldSigin = "?"
         for httpFieldName, httpFieldValue in requestObject["httpFields"].items():
-            formattedString = formattedString + "\n" + outputPrefix + '   >     ' \
-                              + fieldSigin + str(httpFieldName) + "=" + str(httpFieldValue)
+            formattedString = (formattedString + "\n" + outputPrefix + '   >     ' +
+                               fieldSigin + str(httpFieldName) + "=" + str(httpFieldValue))
             fieldSigin = "&"
+    if "headers" in requestObject:
+        for headerName, headerValue in requestObject["headers"].items():
+            formattedString = (formattedString + "\n" + outputPrefix + '   > ' +
+                               headerName + ": " + headerValue)
     if "contents" in requestObject:
         formattedString = formattedString + "\n" + outputPrefix + "   > "
         for content in requestObject["contents"]:

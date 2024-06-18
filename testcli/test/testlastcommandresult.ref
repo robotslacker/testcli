@@ -42,6 +42,9 @@ API> ### aaa
 REWROTED API> Your API has been changed to:
 REWROTED    > GET http://127.0.0.1:8000/health
 REWROTED    >     ?requestId=1
+REWROTED    > Accept: application/json
+REWROTED    > X-Language: zh_CN
+REWROTED    > Content-Type: application/json
 {
     "content": {
         "status": "OK"

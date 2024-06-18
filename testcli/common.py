@@ -222,6 +222,27 @@ def rewriteAPIStatement(cls, requestObject: [], commandScriptFile: str):
         statement=rawRequestObject["httpRequestTarget"],
         commandScriptFile=commandScriptFile)
 
+    if "headers" in rawRequestObject:
+        httpRequestHeaders = copy.copy(rawRequestObject["headers"])
+        # 开始替换
+        for headerName, headerValue in httpRequestHeaders.items():
+            newHttpRequestHeaderName = rewriteStatement(
+                cls=cls,
+                statement=headerName,
+                commandScriptFile=commandScriptFile)
+            newHttpRequestHeaderValue = rewriteStatement(
+                cls=cls,
+                statement=headerValue,
+                commandScriptFile=commandScriptFile)
+            if newHttpRequestHeaderName == headerName and newHttpRequestHeaderValue == headerValue:
+                pass
+            else:
+                httpRequestHeaders.update(
+                    {newHttpRequestHeaderName: newHttpRequestHeaderValue}
+                )
+    else:
+        httpRequestHeaders = None
+
     # 替换正文信息
     if "contents" in rawRequestObject:
         httpRequestContents = copy.copy(rawRequestObject["contents"])
@@ -285,6 +306,8 @@ def rewriteAPIStatement(cls, requestObject: [], commandScriptFile: str):
         requestObject["contents"] = httpRequestContents
     if httpRequestFields is not None:
         requestObject["httpFields"] = httpRequestFields
+    if httpRequestHeaders is not None:
+        requestObject["headers"] = httpRequestHeaders
 
     # 语句发生了变化
     if rawRequestObject != requestObject:

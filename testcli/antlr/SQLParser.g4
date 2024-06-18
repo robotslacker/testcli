@@ -28,9 +28,9 @@ connectlocal
      ;
 
 connectjdbc
-        : CONNECT (connectUserInfo (CONNECT_AT)?)
+        : CONNECT (connectUserInfo (CONNECT_AT)?)?
           (connectDriver CONNECT_COLON connectDriverSchema CONNECT_COLON (connectDriverType CONNECT_COLON)? CONNECT_DASH
-          connectHost (CONNECT_COLON connectPort)? ((CONNECT_SLASH | CONNECT_COLON) (connectService)?)? )?
+          (connectHost (CONNECT_COLON connectPort)?)? ((CONNECT_SLASH | CONNECT_COLON) (connectService)?)? )?
           (CONNECT_QUESTION connectParameters)?
         ;
 

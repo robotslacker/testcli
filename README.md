@@ -6,12 +6,14 @@
 本项目是一个主要用Python语言完成，基于命令行下运行的、精致的、小巧的测试工具。      
 目前比较全面的覆盖了SQL测试，简单的覆盖了API测试。  
 
-工程包含两个部分：
+工程包含两个主要部分：
 1. testcli  
-交互命令行工具，用来执行SQL脚本、API脚本等，可以独立使用，作为工作小工具；
+交互命令行工具，用来执行SQL脚本、API脚本等。工具也可以独立使用，作为日常工作小助手。   
+作为日常工作小助手的时候，testcli提供了针对不同后端数据库的统一入口工具。  
 2. clirobot 
-语句命令行工具，用来执行Robot测试程序。
-clirobot是基于RobotFrameWork的脚本构建，这个工程中提供了针对TestCli的扩展宏，也提供了运行Python单体程序，Pytest测试程序的宏。
+测试命令行工具，用来执行Robot测试程序。
+clirobot是基于RobotFrameWork的脚本构建，这个工程中提供了针对TestCli的扩展宏，也提供了运行Python单体程序，Pytest测试程序的宏。 
+clirobot作为一个测试框架， 提供了并发、超时的处理能力， 提供了统计报表的能力。  
 
 
 ***
@@ -24,14 +26,14 @@ clirobot是基于RobotFrameWork的脚本构建，这个工程中提供了针对T
 * 工具内置了一些方便的功能，这些工具用在测试和日常维护方面，会带来很大便利。比如：
   * 方便地用来快速的生成随机数据文件 
   * 内置了Hint的功能，在执行语句后能够根据Hint完成信息过滤、信息掩码、附加排序等
-    * 这些可以确保输出的结果文件更加稳定，避免程序结果文件收到噪音干扰
+    * 这些可以确保输出的结果文件更加稳定，避免程序结果文件受到噪音干扰
   * 使用TermOut，FeedBack，ECHO来控制显示输出的内容
-    * 同样目的是为了使得结果文件更加稳定，避免程序结果文件收到噪音干扰
+    * 这些也是为了确保结果文件更加稳定，避免程序结果文件受到噪音干扰
   * 使用ECHO来生成一些临时性的文件
   * 使用COMPARE来进行文件级别的内容比对，比对过程中支持了正则表达过滤，正则表达掩码
-    * 通常我们把经过验证的、正确的结果存盘为参考文件
+    * 通常我们把经过人工验证的、正确的结果保存为参考文件
     * 当参考文件和当前输出存在不一致的现象，则说明存在测试脚本的潜在问题或者代码行为存在潜在问题。
-  * 脚本内使用SSH来完成远程主机命令的操作，文件的上传和下载
+  * 脚本内可以使用SSH来完成远程主机命令的操作，文件的上传和下载
   * 使用JobManager（任务管理器）来并行执行多个脚本
     * 并行多脚本操作主要用来测试多测试之间需要严格控制时序、验证并发锁冲突的测试
     * 提供了聚合点的完整支持，如多个脚本运行到同一个时刻点后等待
@@ -39,7 +41,7 @@ clirobot是基于RobotFrameWork的脚本构建，这个工程中提供了针对T
     * 监控管理器提供了简单的性能监控、性能数据记录能力
     * 不建议复杂的压力测试或者稳定性测试依赖MonitorManager，大压力下使用第三方的JMeter能获得更好的测试效果和更完善的监控能力
   * 支持在测试脚本中嵌入Python语法来完成一些常规难以完整的验证
-    * 建议将脚本进行模块化封装后，再直接嵌入模块的调用，避免直接在脚本中嵌入复杂Python脚本后的阅读性下降问题
+    * 建议将脚本进行模块化封装后，再直接嵌入模块的调用，避免直接在脚本中嵌入复杂Python脚本后的可阅读性、可维护性下降问题
   * 使用LOAD SCRIPT来加载用户自己提供的Python文件作为测试内嵌Python语法的扩展
   * 使用LOAD PLUGIN来加载用户自己提供的Python文件作为新的脚本命令
   * 支持对测试脚本中的变量信息进行宏替换，包括基于映射文件的替换，基于应用变量的替换，基于环境变量的替换
@@ -102,7 +104,7 @@ clirobot是基于RobotFrameWork的脚本构建，这个工程中提供了针对T
 ***
 
 ### 这个工具不能做什么
-这个工具的存在目的不是为了替代各种数据库的命令行工具，如Oracle的SQLPlus，MYSQL的mysql等  
+这个工具的存在目的不是为了替代各种数据库的命令行工具，如Oracle的SQLPlus命令，MYSQL的mysql命令等  
 这个工具的存在目的是在尽可能地兼容这些命令行工具的同时提供测试工作需要的相关特性。    
 选择了Python作为代码开发工具，Python本身部署的复杂性和对环境的依赖性决定了这个工具无法作为交付产品的功能之一提供给客户。  
 这个工具的存在目的不是为了替代PostMan，JMeter等测试工具。
@@ -115,10 +117,10 @@ clirobot是基于RobotFrameWork的脚本构建，这个工程中提供了针对T
 ### 安装
 安装的前提有：
    * 有一个Python 3.6以上的环境
-   * 安装JDK8或者JDK11  （目前我的调试环境和测试环境均为JDK11，已知JDK8无问题，未对其他JDK环境进行验证） 
-   * 对于Windows平台，需要提前安装微软的C++编译器（或者CMake，未测试，原因是jpype1使用了JNI技术，需要动态编译）  
+   * 安装JDK8或者JDK11  （目前我的调试环境和测试环境均为JDK11，已知JDK8无问题，未对其他JDK环境进行验证）    
+   * 对于Windows平台，需要提前安装微软的C++编译器 (或者MinGW)  
    * 对于Linux平台，  需要提前安装gcc编译器
-     yum install -y gcc-c++ gcc  
+     yum install -y gcc  
    * 对于MAC平台，  需要提前安装gcc编译器    
      brew install gcc  
 
@@ -141,10 +143,10 @@ clirobot是基于RobotFrameWork的脚本构建，这个工程中提供了针对T
    fastapi                  ：程序自身的测试需要，并不是运行必须项
    uvicorn                  ：程序自身的测试需要，并不是运行必须项
    
-   coloredlogs              : 颜色化的日志输出，testRobot需要
-   robotframework           : Python命令行驱动测试框架，testRobot需要
-   beautifulsoup4           : 测试报告格式化输出，testRobot需要
-   lxml                     : 测试报告结果处理，testRobot需要
+   coloredlogs              : 颜色化的日志输出，testcliRobot需要
+   robotframework           : Python命令行驱动测试框架，testcliRobot需要
+   beautifulsoup4           : 测试报告格式化输出，testcliRobot需要
+   lxml                     : 测试报告结果处理，testcliRobot需要
    ```
 
 利用pip来安装：
@@ -177,44 +179,29 @@ cachedir: .pytest_cache
 Usage: testcli [OPTIONS]
 
 Options:
+  --version                Show TestCli version.
   --logon TEXT             SQL logon user name and password. user/pass
-  --namespace TEXT         Command default name space(SQL|API). Default is
-                           depend on file suffix.
-
-  --execute TEXT           Execute command script.
-  --reference TEXT         Test result reference.
   --logfile TEXT           Log every command and its results to file.
-  --xlogoverwrite          Overwrite extended log if old file exists. Default
-                           is false.
-
-  --xlog TEXT              Save command extended log.
+  --execute TEXT           Execute command script.
   --commandmap TEXT        Command mapping file.
-  --profile TEXT           Startup profile. Default is none.
+  --nologo                 Execute with no-logo mode.
+  --xlog TEXT              Save command extended log.
+  --xlogoverwrite          Overwrite extended log if old file exists. Default is false
   --clientcharset TEXT     Set client charset. Default is UTF-8.
-  --resultcharset TEXT     Set result charset. Default is same to
-                           clientCharset.
-
-  --scripttimeout INTEGER  Script timeout(seconds). Default is -1, means no
-                           limit.
-
+  --resultcharset TEXT     Set result charset. Default is same to clientCharset.
+  --profile TEXT           Startup profile.
+  --scripttimeout INTEGER  Script timeout(seconds).
+  --namespace TEXT         Command default name space(SQL|API). Default is depend on file suffix.
+  --selftest               Run self test and exit.
   --suitename TEXT         Test suite name.
   --casename TEXT          Test case name.
-  --runid TEXT             Test run unique id. Default is 0. will save in
-                           extend log for later analyze.
-
   --silent                 Run script in silent mode, no console output.
                            Default is false.
-
   --daemon                 Run script in daemon mode. Default is false.
-  --debug                  Run in debug mode. Default is False.
   --pidfile TEXT           Set pid file path and filename. Default is no pid
                            control.
-
-  --selftest               Run self test and exit.
-  --version                Show TestCli version.
-  --nologo                 Execute with no-logo mode.
   --help                   Show this message and exit.
-      
+    
 ```
 
 ##### --version 
@@ -250,7 +237,7 @@ user/pass : 数据库连接的用户名和口令
 成功执行这个命令的前提是你已经在环境变量中设置了数据库连接的必要信息。  
 这里的必要信息是指：
    环境变量：  TESTCLI_CONNECTION_URL
-   参数格式：  jdbc:[数据库类型]:[数据库通讯协议]://[数据库主机地址]:[数据库端口号]/[数据库服务名]
+   参数格式：  jdbc:[数据库类型]:[数据库通讯协议:]//[数据库主机地址]:[数据库端口号]/[数据库服务名]
 ```
 
 ##### --logfile   
@@ -327,7 +314,7 @@ Disconnected.
 (base) type test.sql
 select * from test_tab;
 
-注意： 即使你的脚本中不包含Exit/Quit语句，在TestCli执行完当前脚本后，他也会自动执行exit语句
+注意： 即使你的脚本中不包含Exit/Quit语句，在TestCli执行完当前脚本后，也会自动执行exit语句
 ```
 
 ##### --commandmap   
@@ -335,7 +322,7 @@ select * from test_tab;
 在命令执行的时候，指定命令的映射文件信息  
 提供映射信息文件的目的是为了解决一个测试场景。  
 即：有的测试脚本需要反复多次的运行，其区别仅仅是部分参数信息的不同。  
-需要注意的是，映射文件仅仅是一种用来支撑上述测试场景的做法，实际上还可以使用变量方法，具体使用哪一种方法，要看测试的实际需要。
+需要注意的是，映射文件仅仅是一种用来支撑上述测试场景的做法，实际上还可以使用程序变量、环境变量等方法，具体使用哪一种方法，要看测试的实际需要。
 
 ```
 # aa.map以下是一个典型的映射文件, 这里我们将TAB映射为了TAB1
@@ -546,14 +533,9 @@ Disconnected.
 
 是否打印PID信息到指定的文件中，默认是不打印，即不产生pidfile文件  
 
-##### --runid
-
-为每次测试提供一个唯一ID，ID会被记录到扩展日志中，作为日后统计分析的需要
-
 ##### --help          
 
-显示本帮助信息并退出
-
+显示本帮助信息并退出  
 #### 驱动程序的下载和配置
 TestCli是一个基于JDBC的数据库工具，基于JDBC操作数据库的前提当前环境下有对应的数据库连接jar包。 
 
@@ -567,13 +549,16 @@ TestCli是一个基于JDBC的数据库工具，基于JDBC操作数据库的前�
 配置例子:
 
 ```
-[env]
-JAVA_HOME=${PATH}
-
 [driver]
 oracle=oracle_driver
 mysql=mysql_driver
-.... 
+postgresql=postgresql_driver
+duckdb=duckdb_driver
+
+[postgresql_driver]
+filename=postgresql-42.2.12.jar
+driver=org.postgresql.Driver
+jdbcurl=jdbc:postgresql://${host}:${port}/${service}
 
 [oracle_driver]
 filename=ojdbc8.jar
@@ -584,12 +569,12 @@ jdbcurl=jdbc:oracle:thin:@${host}:${port}/${service}
 filename=mysql-connector-java-8.0.20.jar
 driver=com.mysql.cj.jdbc.Driver
 jdbcurl=jdbc:mysql://${host}:${port}/${service}
-```
-配置文件说明：  
-    env.JAVA_HOME: 配置程序使用的JAVA_HOME信息。   
-    这个参数可以不配置，如果不配置，程序讲读取操作系统的JAVA_HOME变量定义。  
-    这个参数如果配置，将优先使用这个参数，而不再去读取系统环境信息。  
 
+[duckdb_driver]
+filename=duckdb_jdbc-1.0.0.jar
+driver=org.duckdb.DuckDBDriver
+jdbcurl=jdbc:duckdb:${service}
+```
 
 如果数据库要新增其他数据库的连接，则应仿效上述配置例子。  
 其中：  
@@ -611,36 +596,27 @@ jdbcurl=jdbc:mysql://${host}:${port}/${service}
 (base) TestCli 
 TestCli Release 0.1.1
 SQL> _help
-+--------+-------------+----------------------------------------------------------------------------+-----------+
-|   ##   |   COMMAND   |                                  SUMMARY                                   | NAMESPACE |
-+--------+-------------+----------------------------------------------------------------------------+-----------+
-|      1 | EXIT        | exit current script with exitValue (Default is 0)                          | ALL       |
-|      2 | QUIT        | force exit current script with exitValue (Default is 0)                    | ALL       |
-|      3 | LOAD        | load external map/driver/plugin files.                                     | ALL       |
-|      4 | SSH         | Remote SSH operation.                                                      | ALL       |
-|      5 | COMPARE     | Diff test result and reference log.                                        | ALL       |
-|      6 | ECHO        | echo some message to file.                                                 | ALL       |
-|      7 | SPOOL       | spool following command and command output to file.                        | ALL       |
-|      8 | JOB         | Run slave script in parallel.                                              | ALL       |
-|      9 | DATA        | Generate test random data.                                                 | ALL       |
-|     10 | SLEEP       | sleep app some time                                                        | ALL       |
-|     11 | ASSERT      | Execute the assertion. Determine whether the specified conditions are met. | ALL       |
-|     12 | USE         | Switch the namespace of the current script.                                | ALL       |
-|     13 | HOST        | Execute local system commands.                                             | ALL       |
-|     14 | SET         | Set/View app runtime options.                                              | ALL       |
-|     15 | START       | Run sub command script.                                                    | ALL       |
-|     16 | SCRIPT      | Run embedded python script.                                                | ALL       |
-|     17 | MONITOR     | Monitor system perference.                                                 | ALL       |
-|     18 | SPOOL       | Print subsequent run commands and results to the specified file.           | ALL       |
-|     19 | IF          | Conditional statement.                                                     | ALL       |
-|     20 | LOOP        | LOOP statement.                                                            | ALL       |
-|     21 | CONNECT     | Connect to JDBC database.                                                  | SQL       |
-|     22 | SQL         | Execute sql statement.                                                     | SQL       |
-|     23 | SQLSESSION  | SQL session management.                                                    | SQL       |
-|     24 | HTTPSET     | Set http request behavior.                                                 | API       |
-|     25 | HTTP        | Execute http statement.                                                    | API       |
-|     26 | HTTPSESSION | Http session management.                                                   | API       |
-+--------+-------------+----------------------------------------------------------------------------+-----------+
++--------+---------+----------------------------------------------------------------------------+
+|   ##   | COMMAND |                                  SUMMARY                                   |
++--------+---------+----------------------------------------------------------------------------+
+|      1 | EXIT    | exit current script with exitValue (Default is 0)                          |
+|      2 | QUIT    | force exit current script with exitValue (Default is 0)                    |
+|      3 | LOAD    | load external map/driver/plugin files.                                     |
+|      4 | SSH     | Remote SSH operation.                                                      |
+|      5 | COMPARE | Diff test result and reference log.                                        |
+|      6 | ECHO    | echo some message to file.                                                 |
+|      7 | SPOOL   | spool following command and command output to file.                        |
+|      8 | JOB     | Run slave script in parallel.                                              |
+|      9 | DATA    | Generate test random data.                                                 |
+|     10 | SLEEP   | sleep app some time                                                        |
+|     11 | ASSERT  | Execute the assertion. Determine whether the specified conditions are met. |
+|     12 | USE     | Switch the namespace of the current script.                                |
+|     13 | HOST    | Execute local system commands.                                             |
+|     14 | SET     | Set/View app runtime options.                                              |
+|     15 | START   | Run sub command script.                                                    |
+|     16 | SCRIPT  | Run embedded python script.                                                |
+|     17 | SPOOL   | Print subsequent run commands and results to the specified file.           |
++--------+---------+----------------------------------------------------------------------------+
 Use "_HELP <command>" to get detail help messages.
 ```
 这里显示的是TestCli自身支持的命令(示例，并不是全部语句)，不包括SQL语句，API执行语句部分。  
@@ -684,49 +660,48 @@ SQL> _help compare
 ```
     SQL> _set
     Current Options:
-    +--------+---------------------------+----------------------+-----------------------------------------------------+
-    |   ##   |            Name           |        Value         |                       Comments                      |
-    +--------+---------------------------+----------------------+-----------------------------------------------------+
-    |      1 | WHENEVER_ERROR            | CONTINUE             |                                                     |
-    |      2 | PAGE                      | OFF                  | ON|OFF                                              |
-    |      3 | ECHO                      | ON                   | ON|OFF                                              |
-    |      4 | TIMING                    | OFF                  | ON|OFF                                              |
-    |      5 | TIME                      | OFF                  | ON|OFF                                              |
-    |      6 | FEEDBACK                  | ON                   | ON|OFF                                              |
-    |      7 | TERMOUT                   | ON                   | ON|OFF                                              |
-    |      8 | SQL_FETCHSIZE             | 10000                |                                                     |
-    |      9 | LOB_LENGTH                | 20                   |                                                     |
-    |     10 | FLOAT_FORMAT              | %.7g                 |                                                     |
-    |     11 | DECIMAL_FORMAT            |                      |                                                     |
-    |     12 | DATE_FORMAT               | %Y-%m-%d             |                                                     |
-    |     13 | DATETIME_FORMAT           | %Y-%m-%d %H:%M:%S.%f |                                                     |
-    |     14 | TIME_FORMAT               | %H:%M:%S.%f          |                                                     |
-    |     15 | DATETIME-TZ_FORMAT        | %Y-%m-%d %H:%M:%S %z |                                                     |
-    |     16 | OUTPUT_SORT_ARRAY         | ON                   | Print Array output with sort order. ON|OFF          |
-    |     17 | OUTPUT_PREFIX             |                      | Output Prefix                                       |
-    |     18 | OUTPUT_ERROR_PREFIX       |                      | Error Output Prefix                                 |
-    |     19 | OUTPUT_FORMAT             | TAB                  | TAB|CSV                                             |
-    |     20 | OUTPUT_CSV_HEADER         | OFF                  | ON|OFF                                              |
-    |     21 | OUTPUT_CSV_DELIMITER      | ,                    |                                                     |
-    |     22 | OUTPUT_CSV_QUOTECHAR      |                      |                                                     |
-    |     23 | SQLCONN_RETRYTIMES        | 1                    | Connect retry times.                                |
-    |     24 | CONNURL                   |                      | Connection URL                                      |
-    |     25 | CONNSCHEMA                |                      | Current DB schema                                   |
-    |     26 | SQL_EXECUTE               | PREPARE              | DIRECT|PREPARE                                      |
-    |     27 | JOBMANAGER                | OFF                  | ON|OFF                                              |
-    |     28 | JOBMANAGER_METAURL        |                      |                                                     |
-    |     29 | SCRIPT_TIMEOUT            | -1                   |                                                     |
-    |     30 | SQL_TIMEOUT               | -1                   |                                                     |
-    |     31 | API_TIMEOUT               | -1                   |                                                     |
-    |     32 | SCRIPT_ENCODING           | UTF-8                |                                                     |
-    |     33 | RESULT_ENCODING           | UTF-8                |                                                     |
-    |     34 | SSH_ENCODING              | UTF-8                | SSH channel default encoding.                       |
-    |     35 | COMPARE_DIFFLIB_THRESHOLD | 1000                 | Threshold(lines) for use difflib compare algorithm. |
-    |     36 | NAMESPACE                 | SQL                  | Script Namespace, SQL|API                           |
-    |     37 | MONITORMANAGER            | OFF                  | ON|OFF                                              |
-    |     38 | API_HTTPSVERIFY           | OFF                  | ON|OFF (Default)                                    |
-    |     39 | API_HTTPPROXY             |                      | Proxy address of http request. (Default)            |
-    +--------+---------------------------+----------------------+-----------------------------------------------------+    
+    +--------+----------------------+----------------------+--------------------------------------------+
+    |   ##   |         Name         |        Value         |                  Comments                  |
+    +--------+----------------------+----------------------+--------------------------------------------+
+    |      1 | WHENEVER_ERROR       | CONTINUE             |                                            |
+    |      2 | PAGE                 | OFF                  | ON|OFF                                     |
+    |      3 | ECHO                 | ON                   | ON|OFF                                     |
+    |      4 | TIMING               | OFF                  | ON|OFF                                     |
+    |      5 | TIME                 | OFF                  | ON|OFF                                     |
+    |      6 | FEEDBACK             | ON                   | ON|OFF                                     |
+    |      7 | TERMOUT              | ON                   | ON|OFF                                     |
+    |      8 | SQL_FETCHSIZE        | 10000                |                                            |
+    |      9 | LOB_LENGTH           | 20                   |                                            |
+    |     10 | FLOAT_FORMAT         | %.7g                 |                                            |
+    |     11 | DECIMAL_FORMAT       |                      |                                            |
+    |     12 | DATE_FORMAT          | %Y-%m-%d             |                                            |
+    |     13 | DATETIME_FORMAT      | %Y-%m-%d %H:%M:%S.%f |                                            |
+    |     14 | TIME_FORMAT          | %H:%M:%S.%f          |                                            |
+    |     15 | DATETIME-TZ_FORMAT   | %Y-%m-%d %H:%M:%S %z |                                            |
+    |     16 | OUTPUT_SORT_ARRAY    | ON                   | Print Array output with sort order. ON|OFF |
+    |     17 | OUTPUT_PREFIX        |                      | Output Prefix                              |
+    |     18 | OUTPUT_ERROR_PREFIX  |                      | Error Output Prefix                        |
+    |     19 | OUTPUT_FORMAT        | TAB                  | TAB|CSV                                    |
+    |     20 | OUTPUT_CSV_HEADER    | OFF                  | ON|OFF                                     |
+    |     21 | OUTPUT_CSV_DELIMITER | ,                    |                                            |
+    |     22 | OUTPUT_CSV_QUOTECHAR |                      |                                            |
+    |     23 | SQLCONN_RETRYTIMES   | 1                    | Connect retry times.                       |
+    |     24 | CONNURL              |                      | Connection URL                             |
+    |     25 | CONNSCHEMA           |                      | Current DB schema                          |
+    |     26 | SQL_EXECUTE          | PREPARE              | DIRECT|PREPARE                             |
+    |     27 | JOBMANAGER           | OFF                  | ON|OFF                                     |
+    |     28 | JOBMANAGER_METAURL   |                      |                                            |
+    |     29 | SCRIPT_TIMEOUT       | -1                   |                                            |
+    |     30 | SQL_TIMEOUT          | -1                   |                                            |
+    |     31 | API_TIMEOUT          | -1                   |                                            |
+    |     32 | SCRIPT_ENCODING      | UTF-8                |                                            |
+    |     33 | RESULT_ENCODING      | UTF-8                |                                            |
+    |     34 | NAMESPACE            | SQL                  | Script Namespace, SQL|API                  |
+    |     35 | MONITORMANAGER       | OFF                  | ON|OFF                                     |
+    |     36 | API_HTTPSVERIFY      | OFF                  | ON|OFF (Default)                           |
+    |     37 | API_HTTPPROXY        |                      | Proxy address of http request. (Default)   |    
+    +--------+----------------------+----------------------+--------------------------------------------+
+    
     没有任何参数的set命令将会列出程序所有的配置情况。
 ```
 
@@ -1159,24 +1134,6 @@ Database disconnected.
 ```
 &emsp; 对于SQL语句块，TestCli将被等待语句结束符后把全部的SQL一起送给SQL引擎（不包括语句结束符）。
 
-##### 执行单行SQL语句
-&emsp; 单行SQL结束符为分号【 ；】 比如：
-```
-    SQL> CREATE TABLE TEST_TAB (ID INT);
-    0 row affected.
-    SQL> 
-```
-
-##### 单行SQL语句中包含多个语句
-&emsp; 每个SQL语句的分隔符【 ；】 比如：
-```
-    SQL> DROP TABLE TEST_TAB IF EXISTS; CREATE TABLE TEST_TAB (ID INT);
-    0 row affected.
-    0 row affected.
-    SQL>
-```
-
-##### 执行多行SQL语句
 * 对于多行SQL语句的格式要求：  
    多行SQL语句是指不能在一行内写完，需要分成多行来写的SQL语句。  
    多行SQL语句的判断依据是： 语句用如下内容作为关键字开头
@@ -1184,7 +1141,7 @@ Database disconnected.
     'CREATE' | 'REPLACE' | 'ALTER'|  '+ | 'OR')+ ('PROCEDURE'|'FUNCTION'|'CLASS'|'TRIGGER'|'PACKAGE'
 
 ```
-
+##### 执行多行SQL语句
 &emsp; 多行SQL结束符为分号【 ；】 比如：
 ```
     SQL> CREATE TABLE TEST_TAB
@@ -1196,7 +1153,6 @@ Database disconnected.
     对于多行SQL语句，同样也可以使用行首的【/】作为多行语句的结束符
 ```
 &emsp; 对于SQL多行语句，TestCli将被等待语句结束符后把全部的SQL一起送给SQL引擎（包括可能的语句结束符分号）。
-
 
 ##### 其他SQL语句
 * 其他SQL语句  
@@ -1867,7 +1823,7 @@ sessionContext是一个字典结果。
                                                frmt可以不提供，默认为%H:%M:%S
      {random_timestamp(start, end, frmt)}      表示一个随机的时间戳， 时间区间为 start到end，日期格式为frmt
                                                frmt可以不提供，默认为%Y-%m-%d %H:%M:%S
-     {random_boolean())                        表示一个随机的Boolean，可能为0，也可能为1
+     {random_boolean()}                        表示一个随机的Boolean，可能为0，也可能为1
      {current_unixtimestamp()}                 unix时间戳格式表示的系统当前时间
      {column_name: macro()}                    一个带有列名的宏定义，其中macro()的写法参考前面的写法
      {value(:column_name)}                     根据列名，引用之前的一个定义
@@ -2488,7 +2444,7 @@ SQL> _JOB timer slave_finished;
    通过指定WORKER的数量来确定监控采集程序占用的线程数目，默认情况下，这个数字为3  
 
 2. 创建监控任务
-   1. TAG选项：
+   * TAG选项：
    所有的监控任务都必须有TAG选项，用来指定需要采集的指标项目。    
    目前，支持的TAG包括：   
    ```
@@ -2501,10 +2457,10 @@ SQL> _JOB timer slave_finished;
         disk                  # 磁盘使用情况统计
         process               # 进程使用情况统计
    ```
-   2. FREQ选项：
+   * FREQ选项：
    FREQ不是必须的，但是在循环检测中设置必要的FREQ是必要的。  
    如果不设置，FREQ的默认值为30，即30秒采集一次数值  
-   3. 针对NETWORK的选项  
+   * 针对NETWORK的选项  
    ``` 
    NAME  网卡的名称； 可以不填写，不填写意味着查看所有网卡。也可以用通配符表示，如 NAME='eth.*'
    ```
@@ -2524,7 +2480,7 @@ SQL> _JOB timer slave_finished;
        netin:         瞬时网络下行流量，单位为byte/秒
        netout:        瞬时网络上行流量，单位为byte/秒
    ```
-   4. 针对DISK的选项
+   *  针对DISK的选项
    ``` 
    NAME  磁盘的名称； 可以不填写，不填写意味着查看所有磁盘。也可以用通配符表示，如 NAME='PhysicalDrive[12]'  
    ```
@@ -2544,7 +2500,7 @@ SQL> _JOB timer slave_finished;
        read_speed:   磁盘读取速率，单位为byte/秒
        write_speed:  磁盘写入速率，单位为byte/秒
    ```
-   5. 针对MEMORY的选项
+   *  针对MEMORY的选项
    采集的结果信息包括：
    ```
        available:   系统当前可用内存，包括未使用的物理内存、可用缓存
@@ -2556,7 +2512,7 @@ SQL> _JOB timer slave_finished;
    ```
         _MONITOR CREATE TASK task1 TAG=memory FREQ=10; 
    ```
-   6. 针对进程的选项  
+   *  针对进程的选项  
    ``` 
    NAME             进程的名称。可以省略，或者通配符方式表示。需要注意的是，Linux的机制下，对于名称较长的进程，系统会自动截断。  
    EXE              进程的执行文件。可以省略，或者通配符方式表示。需要注意的是，EXE可能为全路径，即包含路径信息。  
@@ -2584,7 +2540,7 @@ SQL> _JOB timer slave_finished;
    ```
         _MONITOR CREATE TASK task1 TAG=process NAME=SunloginRemote.exe FREQ=3; 
    ```
-   7. 针对CPU数量统计    
+   *  针对CPU数量统计    
    cpu_count             统计核心CPU的数量（按照内核数量统计）  
    cpu_count_physical    统计物理CPU的数量  
    以下是一个采集CPU数据的例子：
@@ -2593,7 +2549,7 @@ SQL> _JOB timer slave_finished;
         _MONITOR CREATE TASK task2 TAG=cpu_count_physical; 
    ```
    注意： 针对CPU数量采集设置FREQ是毫无意义的，系统也不会重复采集该数据。  
-   8. CPU使用率统计    
+   *  CPU使用率统计    
    以下是一个采集CPU使用率的例子：
    ```
         _MONITOR CREATE TASK task1 TAG=cpu_percent FREQ=10; 
@@ -2602,7 +2558,7 @@ SQL> _JOB timer slave_finished;
    ``` 
         ratio:           CPU使用率比例（百分比）
    ```
-   9. CPU时间统计  
+   *  CPU时间统计  
           以下是一个采集CPU时间的例子：
           ```
               _MONITOR CREATE TASK task1 TAG=cpu_times FREQ=10;
@@ -2717,8 +2673,6 @@ Usage: testclirobot [OPTIONS]
 
 Options:
   --job TEXT               Specify robot job file or directory.  [required]
-  --jobgroup TEXT          Specify robot job list file. Each line represents
-                           one job.
   --work TEXT              Specify the work directory(ALL FILES IN THIS
                            DIRECTORY WILL BE CLEANED).  [required]
   --parallel INTEGER       Specify the parallelism of the job, default is 1,
@@ -2729,18 +2683,16 @@ Options:
                            Default is -1, means no limit.
   --force                  Clean all files under working directory if not
                            empty.
-  --runid TEXT             Test run unique id. Default is 0. will save in
-                           extend log for later analyze.
+  --report TEXT            Specify the report type. html or junit, default is
+                           html,junit.
+  --reportlevel TEXT       Specify the report level. case or scenario, default
+                           is case.                           
   --help                   Show this message and exit.
 ```
 ##### --job
-指定需要运行的测试脚本位置，参数可以为特定的某个robot文件，也可以是特定的某个目录。  
-如果给定参数是目录，则目录下所有的robot文件都会被运行。    
+指定需要运行的测试脚本位置，参数可以为特定的某个robot文件，也可以是特定的某个目录。
+如果给定参数是目录，则目录下所有的robot文件都会被运行。  
 如果需要运行多个目录或者多个文件，则可以在命令行里头一同指定，多个目录或者文件参数中间用逗号分隔即可。
-
-##### --jobgroup
-指定一个测试脚本的描述文件  
-用于当测试任务比较多的时候，将具体的JOB记录在一个文本文件中。  
 
 ##### --work
 指定测试的工作目录位置，所有的结果信息（包括程序运行日志），报告信息都将存放在该目录下。  
@@ -2760,8 +2712,16 @@ Options:
 在达到到这个时间后，正在运行的任务会被终止，后续运行队列上的任务将会被继续运行。  
 这里的时间统计并不是精准统计，只是一个相对大概。即使超时时间到达，后续也还有报告整理等  工作要做，停止也需要一段时间。
 
-#####  --runid
-在扩展日志中会记录这个ID信息，用于需要保存多次测试记录，并区分每个测试记录的时候使用
+#####  --report
+标记测试报告的展示类型，可以为JUNIT或者HTML。 默认是两者都生成，即JUNIT,HTML  
+HTML的报告生成位置为：  <T_WORK>/report  
+JUNIT的报告生成位置为：  <T_WORK>/report/junitreport
+
+#####  --reportlevel
+测试报告的展示层级，可以为CASE或者SCENARIO。 默认是CASE。  
+CASE表示生成报告的细粒度到测试用例层面；  
+SCENARIO表示生成报告的细粒度到测试场景层面；
+使用SCENARIO需要在TestCli脚本中配合利用Hint信息来标记Scenario。
 
 #####  --force
 控制是否强制清空工作目录。 如果制定了force，则运行前会强行清空工作目录下的所有文件（包括子目录）
@@ -3078,7 +3038,7 @@ TestCli
 │  LICENSE.txt                                        # 许可信息描述，没啥不许可的，Github非要提供一个不可
 │  README.md                                          # 说明文档
 │  setup.py                                           # 打包配置
-│  build.bat                                          # 编译构建当前运行包
+│  uploadpypi.bat                                     # 上传当前发布包到Pypi网站
 │
 └─testcli
     │  apiparse.py                                    # API语句解析，将Antlr访问结果转为Object
@@ -3300,7 +3260,7 @@ TestCli是一个控制台应用，但是你也可以直接绕过控制台应用�
 ```
 例子：
 ```
-    testcliHandler = TestCli(HeadlessMode=True, namespace='SQL')
+    testcliHandler = TestCli(namespace='SQL')
     for result in testcliHandler.cmdExecuteHandler.runStatement(
             statement="_Connect admin/123456@jdbc:linkoopdb:tcp://192.168.10.74:9105/ldb\nselect 1+3 from dual;"
     ):
@@ -3314,7 +3274,7 @@ TestCli是一个控制台应用，但是你也可以直接绕过控制台应用�
 ```
 例子2（结果会一次性返回，不会包含统计信息、提示信息等）：
 ```
-    testcliHandler = TestCli(HeadlessMode=True, namespace='SQL')
+    testcliHandler = TestCli(namespace='SQL')
     command = "_Connect admin/123456@jdbc:linkoopdb:tcp://192.168.10.74:9105/ldb\nselect 1+3 from dual;"
     testcliHandler.DoCommand(command)
     print("rsult = " + str(testcliHandler.getLastCommandResult()))

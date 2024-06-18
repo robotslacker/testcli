@@ -372,7 +372,8 @@ def connect(jclassname, url, driverArgs=None, jars=None, libs=None, timeoutLimit
         Properties = jpype.java.util.Properties
         info = Properties()
         for k, v in driverArgs.items():
-            info.setProperty(k, v)
+            if v is not None:
+                info.setProperty(k, v)
         dargs = [info]
     else:
         dargs = driverArgs
