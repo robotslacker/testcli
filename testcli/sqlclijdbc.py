@@ -1025,7 +1025,7 @@ def _java_to_py_timestampwithtimezone(conn, rs, col, p_objColumnSQLType=None):
                                        str(ld.getNano() // 1000) + " " + java_val.getOffset().getId(),
                                        "%Y-%m-%d %H:%M:%S %f %z")
         return d
-    elif typeName == ["java.sql.Timestamp", 'dm.jdbc.driver.DmdbTimestamp']:
+    elif typeName in ["java.sql.Timestamp", 'dm.jdbc.driver.DmdbTimestamp']:
         ld = java_val.toLocalDateTime()
         d = datetime.datetime.strptime(str(ld.getYear()).zfill(4) + "-" + str(ld.getMonthValue()).zfill(2) + "-" +
                                        str(ld.getDayOfMonth()).zfill(2) + " " + str(ld.getHour()).zfill(2) + ":" +
