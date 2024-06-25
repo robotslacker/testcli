@@ -152,11 +152,11 @@ class TestCli(object):
 
         # 如果没有标准输出和标准错误输出，则不输出。不报错
         self.__sysstdout_origin = None
-        if not sys.stdout.isatty():
+        if sys.stdout.closed or not sys.stdout.isatty():
             self.__sysstdout_origin = sys.stdout
             sys.stdout = open(os.devnull, mode="w")
         self.__sysstderr_origin = None
-        if not sys.stderr.isatty():
+        if sys.stderr.closed or not sys.stderr.isatty():
             self.__sysstderr_origin = sys.stderr
             sys.stderr = open(os.devnull, mode="w")
 

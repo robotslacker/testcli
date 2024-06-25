@@ -1011,6 +1011,9 @@ class SQLVisitor(SQLParserVisitor):
             parsedObject.update({'optionName': expression_list[0]})
         if len(expression_list) >= 2:
             optionValue = " ".join(expression_list[1:])
+            if ((optionValue.startswith('"') and optionValue.endswith('"')) or
+                    (optionValue.startswith("'") and optionValue.endswith("'"))):
+                optionValue = optionValue[1:-1]
             parsedObject.update({"optionValue": optionValue})
 
         # 获取错误代码

@@ -49,8 +49,9 @@ def getcommandResult(cls, rowcount):
                 columnFormat = columnFormat.replace("%Y", "%04Y")
             return p_column.strftime(columnFormat)
         elif type(p_column) == datetime.datetime:
-            if p_columntype in ["TIMESTAMP WITH TIME ZONE",
-                                "TIMESTAMP WITH LOCAL TIME ZONE"]:
+            if p_columntype in ["TIMESTAMP_WITH_TIMEZONE",
+                                "TIME_WITH_TIMEZONE",
+                                "TIMESTAMP_WITH_LOCAL_TIME_ZONE"]:
                 columnFormat = cls.testOptions.get("DATETIME-TZ_FORMAT")
             else:
                 columnFormat = cls.testOptions.get("DATETIME_FORMAT")

@@ -668,8 +668,10 @@ class Cursor(object):
                 converter = _DEFAULT_CONVERTERS["VARCHAR"]
             elif columnClassName in ['oracle.sql.TIMESTAMPTZ']:
                 converter = _DEFAULT_CONVERTERS["TIMESTAMP_WITH_TIMEZONE"]
+            elif columnClassName in ['dm.jdbc.driver.DmdbTimestamp']:
+                converter = _DEFAULT_CONVERTERS["TIMESTAMP_WITH_TIMEZONE"]
             elif columnClassName in ['oracle.sql.TIMESTAMPLTZ']:
-                converter = _DEFAULT_CONVERTERS["TIMESTAMP WITH LOCAL TIME ZONE"]
+                converter = _DEFAULT_CONVERTERS["TIMESTAMP_WITH_LOCAL_TIME_ZONE"]
             elif columnClassName.upper().find("BFILE") != -1:
                 converter = _DEFAULT_CONVERTERS["BFILE"]
             elif columnTypeName in ['YEAR']:              # mysql数据类型
@@ -1025,12 +1027,27 @@ def _java_to_py_timestampwithtimezone(conn, rs, col, p_objColumnSQLType=None):
                                        str(ld.getNano() // 1000) + " " + java_val.getOffset().getId(),
                                        "%Y-%m-%d %H:%M:%S %f %z")
         return d
-    elif typeName in ["java.sql.Timestamp", 'dm.jdbc.driver.DmdbTimestamp']:
+    elif typeName in ["java.sql.Timestamp"]:
         ld = java_val.toLocalDateTime()
         d = datetime.datetime.strptime(str(ld.getYear()).zfill(4) + "-" + str(ld.getMonthValue()).zfill(2) + "-" +
                                        str(ld.getDayOfMonth()).zfill(2) + " " + str(ld.getHour()).zfill(2) + ":" +
                                        str(ld.getMinute()).zfill(2) + ":" + str(ld.getSecond()).zfill(2) + " " +
-                                       str(ld.getNano() // 1000), "%Y-%m-%d %H:%M:%S %f")
+                                       str(ld.getNano() // 1000),
+                                       "%Y-%m-%d %H:%M:%S %f")
+        return d
+    elif typeName in ["dm.jdbc.driver.DmdbTimestamp"]:
+        ld = java_val.toLocalDateTime()
+        timeZoneOffset = java_val.getTimezone()
+        if timeZoneOffset >= 0:
+            offsetId = "+"
+        else:
+            offsetId = "-"
+        offsetId = offsetId + str(int(timeZoneOffset / 60)).zfill(2) + ":" + str(int(timeZoneOffset % 60)).zfill(2)
+        d = datetime.datetime.strptime(str(ld.getYear()).zfill(4) + "-" + str(ld.getMonthValue()).zfill(2) + "-" +
+                                       str(ld.getDayOfMonth()).zfill(2) + " " + str(ld.getHour()).zfill(2) + ":" +
+                                       str(ld.getMinute()).zfill(2) + ":" + str(ld.getSecond()).zfill(2) + " " +
+                                       str(ld.getNano() // 1000) + " " + offsetId,
+                                       "%Y-%m-%d %H:%M:%S %f %z")
         return d
     elif typeName in ['oracle.sql.TIMESTAMPTZ', 'oracle.sql.TIMESTAMPLTZ']:
         java_val = java_val.offsetDateTimeValue(conn)
@@ -1156,8 +1173,9 @@ _DEFAULT_CONVERTERS = {
     'ARRAY':                            _java_to_py_array,
     'VARBINARY':                        _to_varbinary,
     'LONGVARBINARY':                    _to_varbinary,
+    'TIME WITH TIME ZONE':              _java_to_py_timestampwithtimezone,
     'TIMESTAMP_WITH_TIMEZONE':          _java_to_py_timestampwithtimezone,
-    'TIMESTAMP WITH LOCAL TIME ZONE':   _java_to_py_timestampwithtimezone,
+    'TIMESTAMP_WITH_LOCAL_TIME_ZONE':   _java_to_py_timestampwithtimezone,
     'TIME':                             _to_time,
     'YEAR':                             _to_year,
     'BINARY':                           _to_binary,
