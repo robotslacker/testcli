@@ -1154,13 +1154,18 @@ class TestCli(object):
                 if row[pos] is None:
                     if columnTypes is not None:
                         if columnTypes[pos] in ("VARCHAR", "LONGVARCHAR", "CHAR", "CLOB", "NCLOB"):
-                            m_row = m_row + m_csv_quotechar + m_csv_quotechar
+                            m_row = m_row + m_csv_quotechar + self.testOptions.get("OUTPUT_CSV_NULL") + m_csv_quotechar
+                        else:
+                            m_row = m_row + self.testOptions.get("OUTPUT_CSV_NULL") 
                 else:
                     if columnTypes is None:
                         m_row = m_row + str(row[pos])
                     else:
                         if columnTypes[pos] in ("VARCHAR", "LONGVARCHAR", "CHAR", "CLOB", "NCLOB"):
-                            m_row = m_row + m_csv_quotechar + str(row[pos]) + m_csv_quotechar
+                            m_row = (
+                                    m_row + m_csv_quotechar +
+                                    str(row[pos]).replace("\n", "\\n").replace("\t", "\\t")
+                                    + m_csv_quotechar)
                         else:
                             m_row = m_row + str(row[pos])
                 if pos != len(row) - 1:

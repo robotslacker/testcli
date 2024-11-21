@@ -100,6 +100,10 @@ class TestOptions(object):
                                     "Value": "",
                                     "Comments": '',
                                     "Hidden": False})
+        self.testOptionList.append({"Name": "OUTPUT_CSV_NULL",
+                                    "Value": "\\N",
+                                    "Comments": '',
+                                    "Hidden": False})
 
         self.testOptionList.append({"Name": "SQLCONN_RETRYTIMES",
                                     "Value": "1",
@@ -258,5 +262,5 @@ class TestOptions(object):
                                         "Comments": 'User session variable'})
             return True
 
-        # 对于不认识的参数信息，直接抛出到上一级别，做CommmonNotFound处理
+        # 对于不认识的参数信息，直接抛出到上一级别，做CommandNotFound处理
         return False
