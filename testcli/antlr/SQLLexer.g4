@@ -169,7 +169,7 @@ SESSION_SAVEURL
 SESSION_SHOW
         : 'SHOW';
 SESSION_NAME
-            : String
+            : (OBS_TEXT | UNRESERVED | PCTENCODED | CONNECT_DOUBLEQUOTE | CONNECT_SINGLEQUOTE | '{' | '}')+
             ;
 SESSION_END
         : ';'->mode(DEFAULT_MODE)
