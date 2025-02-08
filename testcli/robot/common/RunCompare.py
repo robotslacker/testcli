@@ -171,32 +171,69 @@ class POSIXCompare:
 
         return compareResult, compareDiffResult
 
-    @staticmethod
-    def compareDiffLib(x,
-                       y,
-                       linenox,
-                       linenoy
+    def compareDiffLib(self,
+                       logContents,
+                       refContents,
+                       originalLinePosOfLogContents,
+                       originalLinePosOfRefContents,
+                       pCompareMaskEnabled=False,
+                       pCompareIgnoreCase=False
                        ):
-        compareResult = True
         compareDiffResult = []
-        for group in SequenceMatcher(None, x, y).get_grouped_opcodes(3):
+        import sys
+        for group in SequenceMatcher(None, logContents, refContents).get_grouped_opcodes(3):
             for tag, i1, i2, j1, j2 in group:
                 if tag == 'equal':
                     # 内容完全相同，标记的行号为日志文件的行号
                     for nPos in range(i1, i2):
-                        compareDiffResult.append(" {:>{}} ".format(linenox[nPos], 6) + x[nPos])
+                        compareDiffResult.append(" {:>{}} ".format(originalLinePosOfLogContents[nPos], 6) + logContents[nPos])
                     continue
                 if tag in {'replace', 'delete'}:
                     # 当前日志有，但是参考日志中没有
-                    compareResult = False
                     for nPos in range(i1, i2):
-                        compareDiffResult.append("-{:>{}} ".format(linenox[nPos], 6) + x[nPos])
+                        compareDiffResult.append("-{:>{}} ".format(originalLinePosOfLogContents[nPos], 6) + logContents[nPos])
                 if tag in {'replace', 'insert'}:
                     # 当前日志没有，但是参考日志中有
-                    compareResult = False
                     for nPos in range(j1, j2):
-                        compareDiffResult.append("+{:>{}} ".format(linenoy[nPos], 6) + y[nPos])
-        return compareResult, compareDiffResult
+                        compareDiffResult.append("+{:>{}} ".format(originalLinePosOfRefContents[nPos], 6) + refContents[nPos])
+
+        if pCompareMaskEnabled or pCompareIgnoreCase:
+            # 由于DiffLib不会进行正则匹配，所以这里对匹配的结果进行二次过滤
+            newCompareDiffResult = []
+            tmpCompareDiffResultOfLogContents = []
+            originalLinePosOfTmpCompareDiffResultLogContents = []
+            tmpCompareDiffResultOfRefContents = []
+            originalLinePosOfTmpCompareDiffResultRefContents = []
+            for logContents in compareDiffResult:
+                if logContents.startswith(" "):
+                    if len(tmpCompareDiffResultOfLogContents) != 0 or len(tmpCompareDiffResultOfRefContents) != 0:
+                        (newCompareResult, newCompareResultContents) = self.compareMyers(
+                            a_lines=tmpCompareDiffResultOfLogContents,
+                            b_lines=tmpCompareDiffResultOfRefContents,
+                            a_lineno=originalLinePosOfTmpCompareDiffResultLogContents,
+                            b_lineno=originalLinePosOfTmpCompareDiffResultRefContents,
+                            p_compare_maskEnabled=pCompareMaskEnabled,
+                            p_compare_ignoreCase=pCompareIgnoreCase
+                        )
+                        if not newCompareDiffResult:
+                            newCompareDiffResult.extend(newCompareResultContents)
+                        else:
+                            for nPos in range(0, len(tmpCompareDiffResultOfLogContents)):
+                                newCompareDiffResult.append(" {:>{}} ".format(originalLinePosOfTmpCompareDiffResultLogContents[nPos], 6) + tmpCompareDiffResultOfLogContents[nPos])
+                        tmpCompareDiffResultOfLogContents.clear()
+                        tmpCompareDiffResultOfRefContents.clear()
+                        originalLinePosOfTmpCompareDiffResultLogContents.clear()
+                        originalLinePosOfTmpCompareDiffResultRefContents.clear()
+                    newCompareDiffResult.append(logContents)
+                elif logContents.startswith("-"):
+                    tmpCompareDiffResultOfLogContents.append(logContents[8:])
+                    originalLinePosOfTmpCompareDiffResultLogContents.append(int(logContents[1:8]))
+                else:
+                    tmpCompareDiffResultOfRefContents.append(logContents[8:])
+                    originalLinePosOfTmpCompareDiffResultRefContents.append(int(logContents[1:8]))
+            return len(newCompareDiffResult) == 0, newCompareDiffResult
+        else:
+            return len(compareDiffResult) == 0, compareDiffResult
 
     def compareLCS(self,
                    x,
@@ -405,17 +442,31 @@ class POSIXCompare:
             else:
                 compareAlgorithm = 'MYERS'
         if compareAlgorithm == "DIFFLIB":
-            (m_CompareResult, m_CompareResultList) = self.compareDiffLib(
-                workFileContent, refFileContent, lineno1, lineno2)
+            (m_CompareResult, m_CompareResultList) = (
+                self.compareDiffLib(
+                    workFileContent, refFileContent, lineno1, lineno2,
+                    pCompareMaskEnabled=CompareWithMask,
+                    pCompareIgnoreCase=CompareIgnoreCase
+                )
+            )
         elif compareAlgorithm == "MYERS":
-            (m_CompareResult, m_CompareResultList) = self.compareMyers(workFileContent, refFileContent, lineno1,
-                                                                       lineno2,
-                                                                       p_compare_maskEnabled=CompareWithMask,
-                                                                       p_compare_ignoreCase=CompareIgnoreCase)
+            (m_CompareResult, m_CompareResultList) = (
+                self.compareMyers(
+                    workFileContent, refFileContent,
+                    lineno1, lineno2,
+                    p_compare_maskEnabled=CompareWithMask,
+                    p_compare_ignoreCase=CompareIgnoreCase
+                )
+            )
         elif compareAlgorithm == "LCS":
-            (m_CompareResult, m_CompareResultList) = self.compareLCS(workFileContent, refFileContent, lineno1, lineno2,
-                                                                     p_compare_maskEnabled=CompareWithMask,
-                                                                     p_compare_ignoreCase=CompareIgnoreCase)
+            (m_CompareResult, m_CompareResultList) = (
+                self.compareLCS(
+                    workFileContent, refFileContent,
+                    lineno1, lineno2,
+                    p_compare_maskEnabled=CompareWithMask,
+                    p_compare_ignoreCase=CompareIgnoreCase
+                )
+            )
             # 翻转数组
             m_CompareResultList = m_CompareResultList[::-1]
         else:
