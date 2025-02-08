@@ -180,7 +180,6 @@ class POSIXCompare:
                        pCompareIgnoreCase=False
                        ):
         compareDiffResult = []
-        import sys
         for group in SequenceMatcher(None, logContents, refContents).get_grouped_opcodes(3):
             for tag, i1, i2, j1, j2 in group:
                 if tag == 'equal':
@@ -326,7 +325,7 @@ class POSIXCompare:
         workFileContent = open(file1, mode='r', encoding=CompareWorkEncoding).readlines()
         refFileContent = open(file2, mode='r', encoding=CompareRefEncoding).readlines()
 
-        # linno用来记录行号，在最后输出打印的时候，显示的是原始文件信息，而不是修正后的信息
+        # lineno用来记录行号，在最后输出打印的时候，显示的是原始文件信息，而不是修正后的信息
         lineno1 = []
         lineno2 = []
         for m_nPos in range(0, len(workFileContent)):
@@ -334,7 +333,7 @@ class POSIXCompare:
         for m_nPos in range(0, len(refFileContent)):
             lineno2.append(m_nPos + 1)
 
-        # 去掉filecontent中的回车换行
+        # 去掉fileContent中的回车换行
         for m_nPos in range(0, len(workFileContent)):
             if workFileContent[m_nPos].endswith('\n'):
                 workFileContent[m_nPos] = workFileContent[m_nPos][:-1]
@@ -342,7 +341,7 @@ class POSIXCompare:
             if refFileContent[m_nPos].endswith('\n'):
                 refFileContent[m_nPos] = refFileContent[m_nPos][:-1]
 
-        # 去掉fileconent中的首尾空格
+        # 去掉fileContent中的首尾空格
         if CompareIgnoreTailOrHeadBlank:
             for m_nPos in range(0, len(workFileContent)):
                 workFileContent[m_nPos] = workFileContent[m_nPos].lstrip().rstrip()
@@ -958,11 +957,11 @@ class RunCompare(object):
             xlogFileHandle.close()
 
         # 生成Scenario分析结果
-        m_ScenarioStartPos = 0  # 当前Senario开始的位置
+        m_ScenarioStartPos = 0  # 当前Scenario开始的位置
         m_ScenarioResults = {}
         m_ScenariosPos = {}
 
-        # 首先记录下来每一个Senario的开始位置，结束位置
+        # 首先记录下来每一个Scenario的开始位置，结束位置
         m_nPos = 0
         m_ScenarioName = None
         m_ScenarioId = None
@@ -1044,28 +1043,28 @@ class RunCompare(object):
                         "ScenarioId": m_ScenarioId,
                         "ScenarioName": m_ScenarioName,
                     }
-                m_SenarioAndId = ""
+                m_ScenarioAndId = ""
                 if matchObj1:
-                    m_SenarioAndId = matchObj1.group(3).strip()
+                    m_ScenarioAndId = matchObj1.group(3).strip()
                 if matchObj2:
-                    m_SenarioAndId = matchObj2.group(3).strip()
-                if len(m_SenarioAndId.split(':')) >= 2:
+                    m_ScenarioAndId = matchObj2.group(3).strip()
+                if len(m_ScenarioAndId.split(':')) >= 2:
                     # 如果有两个内容， 规则是:Scenario:Id:ScenarioName
-                    m_ScenarioId = m_SenarioAndId.split(':')[0].strip()
-                    m_ScenarioName = ":".join(m_SenarioAndId.split(':')[1:]).strip()
+                    m_ScenarioId = m_ScenarioAndId.split(':')[0].strip()
+                    m_ScenarioName = ":".join(m_ScenarioAndId.split(':')[1:]).strip()
                     m_ScenarioStartPos = m_nPos
                     m_nPos = m_nPos + 1
                     continue
                 else:
                     # 如果只有一个内容， 则scenarioId,scenarioName一样
-                    m_ScenarioId = m_ScenarioName = m_SenarioAndId
+                    m_ScenarioId = m_ScenarioName = m_ScenarioAndId
                     m_nPos = m_nPos + 1
                     continue
 
             # 不是什么特殊内容，这里是标准文本
             m_nPos = m_nPos + 1
 
-        # 最后一个Senario的情况记录下来
+        # 最后一个Scenario的情况记录下来
         if m_ScenarioId is not None:
             m_ScenariosPos[m_ScenarioId] = {
                 "ScenarioStartPos": m_ScenarioStartPos,
@@ -1074,11 +1073,11 @@ class RunCompare(object):
                 "ScenarioName": m_ScenarioName,
             }
 
-        # 遍历每一个Senario的情况
-        for m_ScenarioId, m_Senario_Pos in m_ScenariosPos.items():
-            m_StartPos = m_Senario_Pos['ScenarioStartPos']
-            m_EndPos = m_Senario_Pos['ScenarioEndPos']
-            m_ScenarioName = m_Senario_Pos['ScenarioName']
+        # 遍历每一个Scenario的情况
+        for m_ScenarioId, m_Scenario_Pos in m_ScenariosPos.items():
+            m_StartPos = m_Scenario_Pos['ScenarioStartPos']
+            m_EndPos = m_Scenario_Pos['ScenarioEndPos']
+            m_ScenarioName = m_Scenario_Pos['ScenarioName']
             bFoundDif = False
             m_DifStartPos = 0
             for m_nPos in range(m_StartPos, m_EndPos):
@@ -1140,7 +1139,7 @@ class RunCompare(object):
                         "Elapsed": 0
                     }
 
-        # 遍历所有Scneario的结果，如果全部为SUCCESSFUL，则Case为成功，否则为失败
+        # 遍历所有Scenario的结果，如果全部为SUCCESSFUL，则Case为成功，否则为失败
         m_CompareResult = True
         for m_LineItem in m_CompareResultList:
             if m_LineItem.startswith('-') or m_LineItem.startswith('+'):
@@ -1233,8 +1232,6 @@ class RunCompare(object):
                 logger.write("  ===== Skip line        [" + str(row) + "]")
             for row in self.__maskLines:
                 logger.write("  ===== Mask line        [" + str(row) + "]")
-            if "TEST_INCLUDEPRIORITIES" in os.environ:
-                logger.write("  ===== IncludePriorities [" + str(os.environ["TEST_INCLUDEPRIORITIES"]) + "]")
 
             # 生成dif文件
             m_CompareResultFile = open(m_DifFullFileName, 'w', encoding=self.__compareDifEncoding)
