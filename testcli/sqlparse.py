@@ -65,7 +65,7 @@ def SQLFormatWithPrefix(p_szCommentSQLScript, p_szOutputPrefix=""):
 
 def SQLAnalyze(sqlCommandPlainText, defaultNameSpace="SQL"):
     """ 分析SQL语句，返回如下内容：
-        MulitLineSQLHint                该SQL是否为完整SQL， True：完成， False：不完整，需要用户继续输入
+        MultiLineSQLHint                该SQL是否为完整SQL， True：完成， False：不完整，需要用户继续输入
         SQLSplitResults                 包含所有SQL信息的一个数组，每一个SQL作为一个元素
         SQLSplitResultsWithComments     包含注释信息的SQL语句信息，数组长度和SQLSplitResults相同
         SQLHints                        SQL的其他各种标志信息，根据SQLSplitResultsWithComments中的注释内容解析获得

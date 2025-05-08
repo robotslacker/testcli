@@ -178,7 +178,8 @@ class CmdExecute(object):
                         statementFinished = True
                     if currentStatement.strip().endswith("\n/"):
                         # 遇到了顶行的/，不管是不是复合语句，直接结束
-                        statementFinished = True
+                        if ret_errorMsg.find("mismatched input '<EOF>") == -1:
+                            statementFinished = True
                     if statementFinished:
                         if currentStatement.strip().startswith("_"):
                             # 内部语句，且语句已经结束
