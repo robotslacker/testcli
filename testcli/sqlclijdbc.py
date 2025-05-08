@@ -931,6 +931,15 @@ def _javaobj_to_pyobj(p_javaobj, p_objColumnSQLType=None):
                                        str(p_javaobj.getSecond()).zfill(2) + " " +
                                        str(p_javaobj.getNano() // 1000), "%Y-%m-%d %H:%M:%S %f")
         return d
+    elif typeName == 'dm.jdbc.driver.DmdbTimestamp':
+        d = datetime.datetime.strptime(str(p_javaobj.getYear()).zfill(4) + "-" +
+                                       str(p_javaobj.getMonth()).zfill(2) + "-" +
+                                       str(p_javaobj.getDay()).zfill(2) + " " +
+                                       str(p_javaobj.getHours()).zfill(2) + ":" +
+                                       str(p_javaobj.getMinutes()).zfill(2) + ":" +
+                                       str(p_javaobj.getSeconds()).zfill(2) + " " +
+                                       str(p_javaobj.getNanos() // 1000), "%Y-%m-%d %H:%M:%S %f")
+        return d
     elif typeName == "oracle.sql.TIMESTAMP":
         ld = p_javaobj.toJdbc().toLocalDateTime()
         d = datetime.datetime.strptime(str(ld.getYear()).zfill(4) + "-" + str(ld.getMonthValue()).zfill(2) + "-" +
