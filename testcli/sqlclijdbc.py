@@ -931,14 +931,19 @@ def _javaobj_to_pyobj(p_javaobj, p_objColumnSQLType=None):
                                        str(p_javaobj.getSecond()).zfill(2) + " " +
                                        str(p_javaobj.getNano() // 1000), "%Y-%m-%d %H:%M:%S %f")
         return d
-    elif typeName == 'dm.jdbc.driver.DmdbTimestamp':
-        d = datetime.datetime.strptime(str(p_javaobj.getYear()).zfill(4) + "-" +
-                                       str(p_javaobj.getMonth()).zfill(2) + "-" +
-                                       str(p_javaobj.getDay()).zfill(2) + " " +
-                                       str(p_javaobj.getHours()).zfill(2) + ":" +
-                                       str(p_javaobj.getMinutes()).zfill(2) + ":" +
-                                       str(p_javaobj.getSeconds()).zfill(2) + " " +
-                                       str(p_javaobj.getNanos() // 1000), "%Y-%m-%d %H:%M:%S %f")
+    elif typeName == "dm.jdbc.driver.DmdbTimestamp":
+        ld = p_javaobj.toLocalDateTime()
+        timeZoneOffset = p_javaobj.getTimezone()
+        if timeZoneOffset >= 0:
+            offsetId = "+"
+        else:
+            offsetId = "-"
+        offsetId = offsetId + str(int(timeZoneOffset / 60)).zfill(2) + ":" + str(int(timeZoneOffset % 60)).zfill(2)
+        d = datetime.datetime.strptime(str(ld.getYear()).zfill(4) + "-" + str(ld.getMonthValue()).zfill(2) + "-" +
+                                       str(ld.getDayOfMonth()).zfill(2) + " " + str(ld.getHour()).zfill(2) + ":" +
+                                       str(ld.getMinute()).zfill(2) + ":" + str(ld.getSecond()).zfill(2) + "." +
+                                       str(ld.getNano() // 1000) ,
+                                       "%Y-%m-%d %H:%M:%S.%f")
         return d
     elif typeName == "oracle.sql.TIMESTAMP":
         ld = p_javaobj.toJdbc().toLocalDateTime()
@@ -1045,19 +1050,20 @@ def _java_to_py_timestampwithtimezone(conn, rs, col, p_objColumnSQLType=None):
                                        "%Y-%m-%d %H:%M:%S %f")
         return d
     elif typeName in ["dm.jdbc.driver.DmdbTimestamp"]:
-        ld = java_val.toLocalDateTime()
-        timeZoneOffset = java_val.getTimezone()
-        if timeZoneOffset >= 0:
-            offsetId = "+"
-        else:
-            offsetId = "-"
-        offsetId = offsetId + str(int(timeZoneOffset / 60)).zfill(2) + ":" + str(int(timeZoneOffset % 60)).zfill(2)
-        d = datetime.datetime.strptime(str(ld.getYear()).zfill(4) + "-" + str(ld.getMonthValue()).zfill(2) + "-" +
-                                       str(ld.getDayOfMonth()).zfill(2) + " " + str(ld.getHour()).zfill(2) + ":" +
-                                       str(ld.getMinute()).zfill(2) + ":" + str(ld.getSecond()).zfill(2) + " " +
-                                       str(ld.getNano() // 1000) + " " + offsetId,
-                                       "%Y-%m-%d %H:%M:%S %f %z")
-        return d
+        return str(rs.getString(col))
+        # ld = java_val.toLocalDateTime()
+        # timeZoneOffset = java_val.getTimezone()
+        # if timeZoneOffset >= 0:
+        #     offsetId = "+"
+        # else:
+        #     offsetId = "-"
+        # offsetId = offsetId + str(int(timeZoneOffset / 60)).zfill(2) + ":" + str(int(timeZoneOffset % 60)).zfill(2)
+        # d = datetime.datetime.strptime(str(ld.getYear()).zfill(4) + "-" + str(ld.getMonthValue()).zfill(2) + "-" +
+        #                                str(ld.getDayOfMonth()).zfill(2) + " " + str(ld.getHour()).zfill(2) + ":" +
+        #                                str(ld.getMinute()).zfill(2) + ":" + str(ld.getSecond()).zfill(2) + " " +
+        #                                str(ld.getNano() // 1000) + " " + offsetId,
+        #                                "%Y-%m-%d %H:%M:%S %f %z")
+        # return d
     elif typeName in ['oracle.sql.TIMESTAMPTZ', 'oracle.sql.TIMESTAMPLTZ']:
         java_val = java_val.offsetDateTimeValue(conn)
         ld = java_val.toLocalDateTime()

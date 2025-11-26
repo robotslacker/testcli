@@ -178,8 +178,7 @@ class CmdExecute(object):
                         statementFinished = True
                     if currentStatement.strip().endswith("\n/"):
                         # 遇到了顶行的/，不管是不是复合语句，直接结束
-                        if ret_errorMsg.find("mismatched input '<EOF>") == -1:
-                            statementFinished = True
+                        statementFinished = True
                     if statementFinished:
                         if currentStatement.strip().startswith("_"):
                             # 内部语句，且语句已经结束
@@ -1366,6 +1365,9 @@ class CmdExecute(object):
                     ):
                         yield result
                 elif parseObject["name"] in ["SSH"]:
+                    if self.ifMode and not self.ifCondition:
+                        pos = pos + 1
+                        continue
                     # SSH的命令输出，由于控制台的反馈存在多行的问题，所以需要合并返回内容到一行，再放到lastCommandResult中
                     consoleOutput = []
                     parseObject, rewrotedCommandList = rewriteSshRequest(

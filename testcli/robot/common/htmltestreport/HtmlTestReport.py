@@ -533,10 +533,10 @@ class HtmlFileTemplate(object):
         %(test_list)s
         <tr id='total_row'>
             <td>Summary</td>
-            <td align='right'>%(count)s</td>
-            <td align='right'>%(Pass)s</td>
-            <td align='right'>%(fail)s</td>
-            <td align='right'>%(error)s</td>
+            <td align='right'>%(count)s/%(ScenarioCount)s</td>
+            <td align='right'>%(Pass)s/%(ScenarioPass)s</td>
+            <td align='right'>%(fail)s/%(ScenarioFail)s</td>
+            <td align='right'>%(error)s/%(ScenarioError)s</td>
             <td align='center'>--------</td>            
             <td align='center'>%(starttime)s</td>
             <td align='center'>%(elapsedtime)s</td>
@@ -557,7 +557,7 @@ class HtmlFileTemplate(object):
         <td align='center'>%(owner)s</td>
         <td align='center'>%(starttime)s</td>
         <td align='center'>%(elapsedtime)s</td>
-        <td colspan=2 align='center'><a href="javascript:showClassDetail('%(cid)s',%(count)s)">Detail</a></td>
+        <td colspan=2 align='center'><a href="javascript:showClassDetail('%(cid)s',%(CaseCount)s)">Detail</a></td>
     </tr>
 """  # variables: (style, desc, count, Pass, fail, error, cid)
 
@@ -1041,6 +1041,7 @@ class HTMLTestRunner(HtmlFileTemplate):
     def _generate_report(self, result):
         rows = []
         nPos = 1
+        result.TestSuites = sorted(result.TestSuites, key=lambda x: x.SuiteName)
         for m_TestSuite in result.TestSuites:
             m_TestSuite.setSID(nPos)
             nPos = nPos + 1
@@ -1048,6 +1049,8 @@ class HTMLTestRunner(HtmlFileTemplate):
                 desc = m_TestSuite.getSuiteName()
             else:
                 desc = m_TestSuite.getSuiteDescription()
+            import sys
+            sys.__stdout__.write(desc + "\n")
 
             if m_TestSuite.getErrorCaseCount() > 0:
                 m_CSSStype = "errorClass"
@@ -1056,18 +1059,22 @@ class HTMLTestRunner(HtmlFileTemplate):
             else:
                 m_CSSStype = "passClass"
             m_TotalCaseCount = \
-                m_TestSuite.getPassedCaseCount() + m_TestSuite.getFailedCaseCount() + m_TestSuite.getErrorCaseCount()
+                    m_TestSuite.getPassedCaseCount() + m_TestSuite.getFailedCaseCount() + m_TestSuite.getErrorCaseCount()
+            m_TotalScenarioCount = \
+                m_TestSuite.passedScenarioCount + m_TestSuite.failedScenarioCount + m_TestSuite.errorScenarioCount
             row = self.REPORT_CLASS_TMPL % dict(
                 style=m_CSSStype,
                 desc=desc,
-                count=m_TotalCaseCount,
-                Pass=m_TestSuite.getPassedCaseCount(),
-                fail=m_TestSuite.getFailedCaseCount(),
-                error=m_TestSuite.getErrorCaseCount(),
+                CaseCount=str(m_TotalCaseCount),
+                count=str(m_TotalCaseCount) + "/" + str(m_TotalScenarioCount),
+                Pass=str(m_TestSuite.getPassedCaseCount()) + "/" + str(m_TestSuite.passedScenarioCount),
+                fail=str(m_TestSuite.getFailedCaseCount()) + "/" + str(m_TestSuite.failedScenarioCount),
+                error=str(m_TestSuite.getErrorCaseCount()) + "/" + str(m_TestSuite.errorScenarioCount),
                 owner=m_TestSuite.getSuiteOwnerList(),
                 starttime=m_TestSuite.getSuiteStartTime(),
                 elapsedtime=strftime("%H:%M:%S", gmtime(int(m_TestSuite.getSuiteElapsedTime()))),
                 cid="c" + str(m_TestSuite.getSID()),
+
             )
             rows.append(row)
 
@@ -1077,6 +1084,10 @@ class HTMLTestRunner(HtmlFileTemplate):
 
         report = self.REPORT_TMPL % dict(
             test_list=''.join(rows),
+            ScenarioCount=str(result.passedScenarioCount + result.failedScenarioCount + result.errorScenarioCount),
+            ScenarioPass=str(result.passedScenarioCount ),
+            ScenarioFail=str(result.failedScenarioCount),
+            ScenarioError=str(result.errorScenarioCount),
             count=str(result.passedCaseCount + result.failedCaseCount + result.errorCaseCount),
             Pass=str(result.passedCaseCount),
             fail=str(result.failedCaseCount),
